@@ -1,0 +1,70 @@
+@import "menu_bar.css";
+
+* {
+    /*global variables*/
+    --top-buttons-color-start: #222;
+    --top-buttons-color-end: #333;
+    --top-buttons-color: linear-gradient(201deg, var(--top-buttons-color-start), var(--top-buttons-color-end));
+
+    --hide-top-duration: 0.2s;
+
+    --font-color: #ccc;
+    --top-index: 32767;
+
+    --top-color-start: #101010;
+    --top-color-end: #212121;
+    --top-color: linear-gradient(31deg, var(--top-color-start), var(--top-color-end));
+
+    --primary-border-radius: 0.5rem;
+    --active-scale: 0.9;
+
+    /*thanks for this bezier mozilla devtools*/
+    --bouncy-transition: cubic-bezier(.68, -0.55, .27, 1.55);
+
+    --music-mode-transition: 0.5s ease;
+
+    /*global styles*/
+    font-family: system-ui, "Noto Sans", "Open Sans", sans-serif;
+    color: var(--font-color);
+    text-align: center;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+select option {
+    background: var(--top-color-start);
+    color: var(--font-color);
+}
+
+pre {
+    font-family: monospace !important;
+}
+
+html, body {
+    height: 100lvh;
+    width: 100%;
+    background: black;
+    overflow-x: clip;
+    scrollbar-width: thin;
+}
+
+.spessafont_main {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    /* theme colors */
+    --primary-color: #510087;
+    --border-color: #6e00b7;
+    --track-color: #333;
+    --track-border-color: #444;
+    --shadow-color: #000;
+}
+
+.spessafont_main.light_mode {
+    --primary-color: #a93bff;
+    --border-color: #510087;
+    --track-color: #ccc;
+    --track-border-color: #444;
+    --shadow-color: #fff;
+}

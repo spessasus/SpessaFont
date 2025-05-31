@@ -1,0 +1,39 @@
+.menu_bar_main {
+    display: flex;
+    width: 100%;
+    background: var(--top-color-end);
+    height: 2rem;
+}
+
+.menu_bar {
+    display: flex;
+    flex-direction: column;
+    width: max-content;
+    font-size: 1.3rem;
+    cursor: pointer;
+
+}
+
+.menu_bar_button, .menu_bar_item {
+    background: var(--top-buttons-color-start);
+    padding: 0.1rem;
+    transition: all 0.2s ease;
+}
+
+.menu_bar_button:hover, .menu_bar_item:hover {
+    filter: brightness(1.8);
+}
+
+.menu_bar_contents {
+    transition: all 0.2s ease;
+    transform: scale(1, 0);
+    transform-origin: top center;
+}
+
+.menu_bar:hover .menu_bar_contents {
+    transform: scale(1);
+}
+
+.menu_bar_contents div:last-child {
+    border-radius: 0 0 0.2rem 0.2rem;
+}
