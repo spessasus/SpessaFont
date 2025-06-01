@@ -1,4 +1,5 @@
 @import "menu_bar.css";
+@import "sound_bank_info.css";
 
 * {
     /*global variables*/
@@ -17,6 +18,7 @@
 
     --primary-border-radius: 0.5rem;
     --active-scale: 0.9;
+    --menu-bar-height: 2.2rem;
 
     /*thanks for this bezier mozilla devtools*/
     --bouncy-transition: cubic-bezier(.68, -0.55, .27, 1.55);
@@ -40,12 +42,14 @@ pre {
     font-family: monospace !important;
 }
 
-html, body {
+#root {
     height: 100lvh;
     width: 100%;
     background: black;
     overflow-x: clip;
     scrollbar-width: thin;
+    display: flex;
+    flex-direction: column;
 }
 
 .spessafont_main {
@@ -59,6 +63,18 @@ html, body {
     --track-color: #333;
     --track-border-color: #444;
     --shadow-color: #000;
+}
+
+.get_user_input {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    z-index: var(--top-index);
+    background: var(--top-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
 }
 
 .spessafont_main.light_mode {

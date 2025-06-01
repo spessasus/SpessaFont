@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint spessafont",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "debug": "debug_scripts/local_core.sh",
+    "release": "debug_scripts/npm_core.sh"
   },
   "dependencies": {
     "@dr.pogodin/react-helmet": "^3.0.2",

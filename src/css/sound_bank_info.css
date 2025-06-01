@@ -1,0 +1,139 @@
+.sound_bank_info, .sound_bank_info_welcome {
+    background: var(--top-color);
+    width: 100%;
+    display: flex;
+    flex-grow: 1;
+    max-height: calc(100vh - var(--menu-bar-height));
+}
+
+.sound_bank_info .editable {
+    margin: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    flex-grow: 2;
+}
+
+.sound_bank_info_welcome {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.sound_bank_info_welcome h3 {
+    margin-top: 10rem;
+}
+
+
+.sound_bank_info input, .sound_bank_info textarea {
+    background: var(--top-color-start);
+    border-radius: var(--primary-border-radius);
+    color: var(--font-color);
+    border: 0.2rem solid var(--top-buttons-color-end);
+    transition: all 0.2s ease;
+    width: 100%;
+    text-align: start;
+    padding: 0.3rem;
+}
+
+.sound_bank_info .fields {
+    width: 100%;
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 1rem;
+    align-items: center;
+    margin: 0.3rem;
+}
+
+.sound_bank_info span {
+    display: contents;
+    grid-template-columns: auto 1fr;
+    width: 100%;
+    align-items: center;
+    column-gap: 1rem;
+}
+
+.sound_bank_info span input {
+    flex-grow: 1;
+}
+
+.sound_bank_info span label {
+    margin-right: 1rem;
+    white-space: nowrap;
+}
+
+.sound_bank_info input:focus {
+    border: 0.2rem solid var(--border-color)
+}
+
+.sound_bank_info .comment {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    margin: 0.3rem;
+    flex: 1;
+}
+
+.sound_bank_info .comment textarea {
+    margin-top: 1rem;
+    flex: 1;
+}
+
+.sound_bank_info #INAM {
+    font-size: 2rem;
+    padding: 0.3rem;
+    margin: 0.3rem;
+}
+
+/* stats */
+.sound_bank_info .stats {
+    margin: 1.3rem;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    overflow-y: scroll;
+    flex: 1;
+    width: min-content;
+}
+
+.sound_bank_info .stats .wrapper {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+
+.sound_bank_info .stats h1 {
+    background: var(--primary-color);
+    width: 100%;
+    padding: 0.4rem;
+
+    border-radius: var(--primary-border-radius);
+}
+
+.sound_bank_info .stats span {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem;
+    margin-top: 1.5rem;
+    border-bottom: solid 0.2rem var(--border-color);
+}
+
+.sound_bank_info .stats .stat_group {
+    border: solid 0.2rem var(--border-color);
+    border-radius: var(--primary-border-radius);
+    padding: 0.5rem;
+    margin-top: 1.5rem;
+}
+
+.sound_bank_info .stats .stat_group span {
+    border: none;
+    margin-top: auto;
+}
+
+.sound_bank_info .stats pre, .sound_bank_info .stats label {
+    font-size: 1rem;
+}
+
+.sound_bank_info .stats pre {
+    font-weight: bold;
+}

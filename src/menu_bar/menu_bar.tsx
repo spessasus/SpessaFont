@@ -1,7 +1,13 @@
 import { MenuBarDropdown, MenuBarItem } from "./dropdown.tsx";
 import type Manager from "../core_backend/manager.ts";
 
-export function MenuBar({ manager }: { manager: Manager }) {
+export function MenuBar({
+    manager,
+    setIsLoading
+}: {
+    manager: Manager;
+    setIsLoading: (v: boolean) => void;
+}) {
     const fLoc = "menuBarLocale.file.";
     const eLoc = "menuBarLocale.edit.";
 
@@ -15,22 +21,41 @@ export function MenuBar({ manager }: { manager: Manager }) {
             if (!file) {
                 return;
             }
+            setIsLoading(true);
             await manager.loadBank(file);
-            console.log(manager.bank?.soundFontInfo);
+            setIsLoading(false);
         };
+    }
+
+    function newFile() {
+        setIsLoading(true);
+        manager.createNewFile().then(() => {
+            setIsLoading(false);
+        });
+    }
+
+    function sf2() {
+        manager.save("sf2");
+    }
+
+    function dls() {
+        manager.save("dls");
     }
 
     return (
         <div className={"menu_bar_main"}>
             <MenuBarDropdown main={fLoc + "file"}>
-                <MenuBarItem text={fLoc + "new"}></MenuBarItem>
+                <MenuBarItem click={newFile} text={fLoc + "new"}></MenuBarItem>
                 <MenuBarItem
                     click={openFile}
                     text={fLoc + "open"}
                 ></MenuBarItem>
-                <MenuBarItem text={fLoc + "close"}></MenuBarItem>
-                <MenuBarItem text={fLoc + "saveSF2"}></MenuBarItem>
-                <MenuBarItem text={fLoc + "saveDLS"}></MenuBarItem>
+                <MenuBarItem
+                    click={() => manager.close()}
+                    text={fLoc + "close"}
+                ></MenuBarItem>
+                <MenuBarItem click={sf2} text={fLoc + "saveSF2"}></MenuBarItem>
+                <MenuBarItem click={dls} text={fLoc + "saveDLS"}></MenuBarItem>
                 <MenuBarItem text={fLoc + "saveSF3"}></MenuBarItem>
             </MenuBarDropdown>
             <MenuBarDropdown main={eLoc + "edit"}>

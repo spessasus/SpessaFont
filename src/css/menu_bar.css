@@ -1,8 +1,8 @@
 .menu_bar_main {
     display: flex;
     width: 100%;
-    background: var(--top-color-end);
-    height: 2rem;
+    background: var(--primary-color);
+    height: var(--menu-bar-height);
 }
 
 .menu_bar {
@@ -15,7 +15,7 @@
 }
 
 .menu_bar_button, .menu_bar_item {
-    background: var(--top-buttons-color-start);
+    background: var(--primary-color);
     padding: 0.2rem 0.5rem;
     transition: all 0.2s ease;
 }
