@@ -6,7 +6,7 @@ import { DEFAULT_LOCALE, getUserLocale } from "./settings/get_user_locale.ts";
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 import { MainPageHeader } from "./head.tsx";
-import { HelmetProvider } from "@dr.pogodin/react-helmet";
+import Manager from "./core_backend/manager.ts";
 
 function App() {
     const localeList = {
@@ -27,13 +27,17 @@ function App() {
             fallbackLng: DEFAULT_LOCALE
         })
         .then();
+
+    const context = new AudioContext({
+        sampleRate: 48000,
+        latencyHint: "interactive"
+    });
+    const manager = new Manager(context);
     return (
-        <HelmetProvider>
-            <div className={"spessafont_main"}>
-                <MainPageHeader></MainPageHeader>
-                <MenuBar></MenuBar>
-            </div>
-        </HelmetProvider>
+        <div className={"spessafont_main"}>
+            <MainPageHeader></MainPageHeader>
+            <MenuBar manager={manager}></MenuBar>
+        </div>
     );
 }
 

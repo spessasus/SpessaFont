@@ -16,7 +16,7 @@
 
 .menu_bar_button, .menu_bar_item {
     background: var(--top-buttons-color-start);
-    padding: 0.1rem;
+    padding: 0.2rem 0.5rem;
     transition: all 0.2s ease;
 }
 

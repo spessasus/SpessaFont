@@ -1,12 +1,12 @@
 export const MenuBarLocale = {
     file: {
         file: "File",
-        new: "New...",
-        open: "Open...",
-        close: "Close...",
-        saveSF2: "Save SF2...",
-        exportDLS: "Export as DLS...",
-        exportSF3: "Export as SF3..."
+        new: "New",
+        open: "Open",
+        close: "Close",
+        saveSF2: "Save SF2",
+        saveDLS: "Export DLS",
+        saveSF3: "Export SF3"
     },
     edit: {
         edit: "Edit",
