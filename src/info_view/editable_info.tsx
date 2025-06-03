@@ -11,6 +11,9 @@ export function EditableBankInfo({ bank }: { bank: BasicSoundBank }) {
     const [prod, setProd] = useState("");
     const [copy, setCopy] = useState("");
     const [cmt, setCmt] = useState("");
+    useEffect(() => {
+        document.title = `SpessaFont - ${name}`;
+    }, [name]);
 
     useEffect(() => {
         const inf = (fourcc: SoundFontInfoType): string => {

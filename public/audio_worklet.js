@@ -51,6 +51,7 @@ class PlaybackProcessor extends AudioWorkletProcessor {
             outChr[0].set(chr[0]);
             outChr[1].set(chr[1]);
         }
+        this.port.postMessage(this.dryData.length);
         return true;
     }
 }

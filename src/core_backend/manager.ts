@@ -13,6 +13,7 @@ import type { TFunction } from "i18next";
 // audio worklet processor operates at that
 const BLOCK_SIZE = 128;
 const CHUNK_COUNT = 8; // 16 * 128 = 1024
+const MAX_CHUNKS_QUEUED = 10;
 
 type AudioChunk = [Float32Array, Float32Array];
 type AudioChunks = AudioChunk[];
@@ -31,27 +32,9 @@ export default class Manager {
     bank: BasicSoundBank | undefined;
     setBank: (bank: BasicSoundBank | undefined) => void;
 
-    // dry: AudioBuffer;
-    // rev: AudioBuffer;
-    // chr: AudioBuffer;
+    audioChunksQueued: number = 0;
 
-    bufferSize = CHUNK_COUNT;
     intervalID = 0;
-    // dry block
-    // dBlock = [
-    //     new Float32Array(this.blockSize),
-    //     new Float32Array(this.blockSize)
-    // ];
-    // // reverb block
-    // rBlock = [
-    //     new Float32Array(this.blockSize),
-    //     new Float32Array(this.blockSize)
-    // ];
-    // // chorus block
-    // cBlock = [
-    //     new Float32Array(this.blockSize),
-    //     new Float32Array(this.blockSize)
-    // ];
 
     private worklet: AudioWorkletNode | undefined;
 
@@ -72,15 +55,6 @@ export default class Manager {
         this.chorus = new FancyChorus(this.analyser);
         this.reverb = getReverbProcessor(context).conv;
         this.reverb.connect(this.analyser);
-
-        // const opt = {
-        //     sampleRate: this.context.sampleRate,
-        //     numberOfChannels: 2,
-        //     length: this.bufferSize
-        // };
-        // this.dry = new AudioBuffer(opt);
-        // this.rev = new AudioBuffer(opt);
-        // this.chr = new AudioBuffer(opt);
         SpessaSynthLogging(true, true, true, true);
     }
 
@@ -104,13 +78,13 @@ export default class Manager {
         this.worklet.connect(this.analyser, 0);
         this.worklet.connect(this.reverb, 1);
         this.worklet.connect(this.chorus.input, 2);
+        this.worklet.port.onmessage = (e) => (this.audioChunksQueued = e.data);
 
         this.intervalID = setInterval(this.audioLoop.bind(this));
     }
 
     audioLoop() {
-        const synTime = this.processor.currentSynthTime;
-        if (synTime > this.context.currentTime) {
+        if (this.audioChunksQueued > MAX_CHUNKS_QUEUED) {
             return;
         }
 
