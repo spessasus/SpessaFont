@@ -1,5 +1,5 @@
 .modulator_main {
-    width: max-content;
+    width: auto;
     background: var(--top-buttons-color);
     margin: 0.5rem;
     padding: 0.1rem;
@@ -7,6 +7,15 @@
     border: solid var(--track-border-color) 1px;
     display: flex;
     align-items: center;
+    --source-picker-height: 2rem;
+    transition: all 0.2s ease;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.modulator_main.selected {
+    border-color: var(--border-color);
+    filter: brightness(1.5);
 }
 
 .modulator_main svg {
@@ -25,7 +34,7 @@
 .modulator_title {
     display: flex;
     flex-direction: column;
-    margin: 1rem;
+    margin: 1rem 0 1rem 1rem;
 }
 
 .modulator_title h3 {
@@ -52,7 +61,7 @@
     align-items: center;
     border-radius: var(--primary-border-radius);
     border: solid var(--track-border-color) 1px;
-    margin: 0.5rem;
+    margin: 0.5rem 1rem;
 }
 
 .modulator_main .source_pair {
@@ -64,4 +73,13 @@
 .modulator_main .amount_input, .modulator_main .transform_selector {
     font-size: 1rem;
     margin: 0.5rem;
+}
+
+.amount_input {
+    text-align: end;
+    width: 6rem;
+}
+
+.destination_picker {
+    margin-right: 1rem;
 }

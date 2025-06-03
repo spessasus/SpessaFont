@@ -38,6 +38,7 @@ export function MIDIPlayer({ manager }: { manager: Manager }) {
         if (paused) {
             return (
                 <div
+                    className={"menu_bar_item"}
                     onClick={() => {
                         manager.resumeMIDI();
                         setPaused(false);
@@ -49,6 +50,7 @@ export function MIDIPlayer({ manager }: { manager: Manager }) {
         } else {
             return (
                 <div
+                    className={"menu_bar_item"}
                     onClick={() => {
                         manager.pauseMIDI();
                         setPaused(true);
@@ -82,7 +84,7 @@ export function MIDIPlayer({ manager }: { manager: Manager }) {
         }
 
         return (
-            <div className="midi_time_display">
+            <div className="midi_time_display menu_bar_item">
                 {formatTime(currentTime)} / {formatTime(duration)}
             </div>
         );
@@ -90,8 +92,15 @@ export function MIDIPlayer({ manager }: { manager: Manager }) {
 
     if (midi === undefined) {
         return (
-            <div className={"flex_menu_bar"}>
-                <div onClick={playMIDI}>{t("menuBarLocale.midi.play")}</div>
+            <div className={"menu_bar"}>
+                <div className={"menu_bar_button"}>
+                    {t("menuBarLocale.midi.player")}
+                </div>
+                <div className={"menu_bar_contents"}>
+                    <div className={"menu_bar_item"} onClick={playMIDI}>
+                        {t("menuBarLocale.midi.play")}
+                    </div>
+                </div>
             </div>
         );
     } else {
@@ -102,14 +111,19 @@ export function MIDIPlayer({ manager }: { manager: Manager }) {
             name = new TextDecoder("Shift_JIS").decode(midi.rawMidiName);
         }
         name = name || midi.fileName;
-        name = name.length > 20 ? name.substring(0, 20) + "..." : name;
+        name = name.length > 10 ? name.substring(0, 10) + "..." : name;
         return (
-            <div className={"flex_menu_bar"}>
-                <div onClick={playMIDI}>
-                    <i>{name}</i>
+            <div className={"menu_bar"}>
+                <div className={"menu_bar_button"}>
+                    {t("menuBarLocale.midi.player")}
                 </div>
-                <PauseComponent />
-                <TimeDisplay />
+                <div className={"menu_bar_contents"}>
+                    <div onClick={playMIDI} className={"menu_bar_item"}>
+                        <i>{name}</i>
+                    </div>
+                    <PauseComponent />
+                    <TimeDisplay />
+                </div>
             </div>
         );
     }

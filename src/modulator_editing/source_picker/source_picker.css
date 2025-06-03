@@ -11,6 +11,11 @@
     background: transparent;
     border: none;
     font-size: 1rem;
+    text-align: center;
+}
+
+.source_picker input {
+    width: 6ch;
 }
 
 .source_picker select {

@@ -18,6 +18,7 @@ export const MenuBarLocale = {
         delete: "Delete"
     },
     midi: {
+        player: "MIDI Player",
         play: "Play MIDI",
         pause: "Pause",
         resume: "Resume"

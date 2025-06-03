@@ -10,6 +10,20 @@ import {
     type ModulatorCurveType
 } from "../curve_picker/curve_picker.tsx";
 import { ModulatorDiagram } from "../diagram.tsx";
+import { DestinationPicker } from "../destination_picker.tsx";
+
+type ModulatorProps = {
+    modulator: Modulator;
+    setModulator: (m: Modulator) => void;
+    deleteModulator: () => void;
+    modulatorNumber: number;
+    activeModPickerId: string | null;
+    setActiveModPickerId: (i: string) => void;
+    setSelected: (s: boolean) => void;
+    selected: boolean;
+};
+
+const AMOUNT_PREFIX = "× ";
 
 export function ModulatorView({
     modulator,
@@ -17,15 +31,10 @@ export function ModulatorView({
     deleteModulator,
     modulatorNumber,
     activeModPickerId,
-    setActiveModPickerId
-}: {
-    modulator: Modulator;
-    setModulator: (m: Modulator) => void;
-    deleteModulator: () => void;
-    modulatorNumber: number;
-    activeModPickerId: string | null;
-    setActiveModPickerId: (i: string) => void;
-}) {
+    setActiveModPickerId,
+    setSelected,
+    selected
+}: ModulatorProps) {
     const { t } = useTranslation();
 
     function setDestination(dest: generatorTypes) {
@@ -75,7 +84,14 @@ export function ModulatorView({
     }
 
     return (
-        <div className={"modulator_main"}>
+        <div
+            onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                    setSelected(!selected);
+                }
+            }}
+            className={`modulator_main ${selected ? "selected" : ""}`}
+        >
             <div className={"modulator_title"}>
                 <h3>
                     {t("modulatorLocale.modulator")} #{modulatorNumber}
@@ -138,18 +154,30 @@ export function ModulatorView({
                 </div>
                 <ModulatorDiagram></ModulatorDiagram>
                 <input
-                    type={"number"}
-                    min={-12700}
-                    max={12700}
-                    className={"pretty_input amount_input"}
-                    placeholder={t("modulatorLocale.amount")}
-                    value={modulator.transformAmount}
-                    onChange={(e) =>
-                        setAmount(
-                            parseInt(e.target.value) ||
-                                modulator.transformAmount
-                        )
-                    }
+                    type="text"
+                    className="pretty_input amount_input"
+                    placeholder={`${AMOUNT_PREFIX} ${t("modulatorLocale.amount")}`}
+                    value={`${AMOUNT_PREFIX}${modulator.transformAmount}`}
+                    onChange={(e) => {
+                        const rawValue = e.target.value;
+                        const numericPart = rawValue
+                            .replace(AMOUNT_PREFIX, "")
+                            .trim();
+
+                        if (numericPart === "") {
+                            setAmount(0);
+                            return;
+                        }
+
+                        const parsed = parseInt(numericPart, 10);
+                        if (
+                            !isNaN(parsed) &&
+                            parsed >= -12700 &&
+                            parsed <= 12700
+                        ) {
+                            setAmount(parsed);
+                        }
+                    }}
                 />
                 <select
                     className={"pretty_outline transform_selector"}
@@ -166,14 +194,10 @@ export function ModulatorView({
                     </option>
                 </select>
             </div>
-            <input
-                value={modulator.modulatorDestination}
-                onChange={(e) =>
-                    setDestination(
-                        parseInt((e.target as HTMLInputElement).value)
-                    )
-                }
-            />
+            <DestinationPicker
+                destination={modulator.modulatorDestination}
+                setDestination={setDestination}
+            ></DestinationPicker>
         </div>
     );
 }

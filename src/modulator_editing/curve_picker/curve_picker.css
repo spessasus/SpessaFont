@@ -6,7 +6,7 @@
 }
 
 .modulator_curve {
-    height: 2rem;
+    height: var(--source-picker-height);
     border-radius: var(--primary-border-radius);
 }
 
@@ -15,12 +15,17 @@
     z-index: var(--top-index);
     display: flex;
     flex-wrap: wrap;
-    min-width: 30rem;
+    min-width: 25rem;
     top: 4rem;
     align-items: center;
     justify-content: center;
-    left: -8.1rem;
+    left: -10.7rem;
     padding: 0.3rem;
+}
+
+.modulator_curve_showcase .modulator_curve {
+    height: calc(var(--source-picker-height) * 2);
+    border-radius: var(--primary-border-radius);
 }
 
 .modulator_curve_pick {

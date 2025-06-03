@@ -1,15 +1,15 @@
 export const GeneratorLocale = {
-    keyRange: "Key Range",
-    velocityRange: "Velocity Range",
+    keyRange: "Key Range", // not modulated
+    velocityRange: "Velocity Range", // not modulated
 
     attenuation: "Attenuation",
     pan: "Pan",
-    loopingMode: "Looping Mode",
-    rootKey: "Root Key",
+    loopingMode: "Looping Mode", // not modulated
+    overridingRootKey: "Root Key", // not modulated
 
     semitoneTuning: "Semitone Tuning",
     centTuning: "Cent Tuning",
-    scaleTuning: "Scale Tuning",
+    scaleTuning: "Scale Tuning", // not modulated
 
     filterCutoff: "Filter Cutoff",
     filterResonance: "Filter Resonance",
@@ -42,12 +42,12 @@ export const GeneratorLocale = {
     vibLfoFrequency: "Vib LFO Frequency",
     vibLfoToPitch: "Vib LFO To Pitch",
 
-    exclusiveClass: "Exclusive Class",
+    exclusiveClass: "Exclusive Class", // not modulated
     chorusLevel: "Chorus Level",
     reverbLevel: "Reverb Level",
 
-    fixedKey: "Fixed Key",
-    fixedVelocity: "Fixed Velocity",
+    fixedKey: "Fixed Key", // not modulated
+    fixedVelocity: "Fixed Velocity", // not modulated
 
     sampleStartOffset: "Sample Start Offset",
     sampleEndOffset: "Sample End Offset",

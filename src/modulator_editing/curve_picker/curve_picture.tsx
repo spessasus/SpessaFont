@@ -5,6 +5,14 @@ import type { ModulatorCurveType } from "./curve_picker.tsx";
 const MARGIN = 10;
 const ARROW_HEAD_SIZE = 3;
 const CURVE_MARGIN = 15;
+const WIDTH = 100;
+const HEIGHT = 100;
+
+const curveKey = (c: ModulatorCurveType) =>
+    `${c.curveType}-${c.bipolar}-${c.positive}`;
+
+// Cache map
+const curveCanvasCache: Record<string, HTMLCanvasElement> = {};
 
 function getCurveValue(curve: ModulatorCurveType, value: number): number {
     const polarity = curve.bipolar;
@@ -15,42 +23,111 @@ function getCurveValue(curve: ModulatorCurveType, value: number): number {
     const convex = (v: number) => Math.sqrt(1 - (1 - v) * (1 - v));
     switch (curve.curveType) {
         case modulatorCurveTypes.linear:
-            if (polarity) {
-                // bipolar curve
-                return value * 2 - 1;
-            }
-            return value;
-
+            return polarity ? value * 2 - 1 : value;
         case modulatorCurveTypes.switch:
-            // switch
             value = value > 0.5 ? 1 : 0;
-            if (polarity) {
-                // multiply
-                return value * 2 - 1;
-            }
-            return value;
-
+            return polarity ? value * 2 - 1 : value;
         case modulatorCurveTypes.concave:
-            if (polarity) {
-                value = value * 2 - 1;
-                if (value < 0) {
-                    return -concave(-value);
-                }
-                return concave(value);
-            }
-            return concave(value);
-
+            value = polarity ? value * 2 - 1 : value;
+            return value < 0 ? -concave(-value) : concave(value);
         case modulatorCurveTypes.convex:
-            // look up the value
-            if (polarity) {
-                value = value * 2 - 1;
-                if (value < 0) {
-                    return -convex(-value);
-                }
-                return convex(value);
-            }
-            return convex(value);
+            value = polarity ? value * 2 - 1 : value;
+            return value < 0 ? -convex(-value) : convex(value);
     }
+}
+
+// Renders and caches an offscreen canvas
+function getOrCreateCurveCanvas(curve: ModulatorCurveType): HTMLCanvasElement {
+    if (curveCanvasCache[curveKey(curve)]) {
+        return curveCanvasCache[curveKey(curve)];
+    }
+
+    const offscreenCanvas = document.createElement("canvas");
+    offscreenCanvas.width = WIDTH;
+    offscreenCanvas.height = HEIGHT;
+    const ctx = offscreenCanvas.getContext("2d");
+    if (!ctx) {
+        return offscreenCanvas;
+    }
+
+    ctx.clearRect(0, 0, WIDTH, HEIGHT);
+
+    // Draw axis arrows
+    ctx.strokeStyle = "white";
+    ctx.lineCap = "round";
+    ctx.lineWidth = 3;
+
+    ctx.beginPath();
+    if (curve.bipolar) {
+        ctx.moveTo(MARGIN, HEIGHT / 2);
+        ctx.lineTo(WIDTH - MARGIN, HEIGHT / 2);
+        ctx.moveTo(WIDTH - MARGIN, HEIGHT / 2);
+        ctx.lineTo(
+            WIDTH - MARGIN - ARROW_HEAD_SIZE,
+            HEIGHT / 2 - ARROW_HEAD_SIZE
+        );
+        ctx.moveTo(WIDTH - MARGIN, HEIGHT / 2);
+        ctx.lineTo(
+            WIDTH - MARGIN - ARROW_HEAD_SIZE,
+            HEIGHT / 2 + ARROW_HEAD_SIZE
+        );
+
+        ctx.moveTo(WIDTH / 2, HEIGHT - MARGIN);
+        ctx.lineTo(WIDTH / 2, MARGIN);
+        ctx.moveTo(WIDTH / 2, MARGIN);
+        ctx.lineTo(WIDTH / 2 - ARROW_HEAD_SIZE, MARGIN + ARROW_HEAD_SIZE);
+        ctx.moveTo(WIDTH / 2, MARGIN);
+        ctx.lineTo(WIDTH / 2 + ARROW_HEAD_SIZE, MARGIN + ARROW_HEAD_SIZE);
+    } else {
+        ctx.moveTo(0, HEIGHT - MARGIN);
+        ctx.lineTo(WIDTH - MARGIN, HEIGHT - MARGIN);
+        ctx.moveTo(WIDTH - MARGIN, HEIGHT - MARGIN);
+        ctx.lineTo(
+            WIDTH - MARGIN - ARROW_HEAD_SIZE,
+            HEIGHT - MARGIN - ARROW_HEAD_SIZE
+        );
+        ctx.moveTo(WIDTH - MARGIN, HEIGHT - MARGIN);
+        ctx.lineTo(
+            WIDTH - MARGIN - ARROW_HEAD_SIZE,
+            HEIGHT - MARGIN + ARROW_HEAD_SIZE
+        );
+
+        ctx.moveTo(MARGIN, HEIGHT);
+        ctx.lineTo(MARGIN, MARGIN);
+        ctx.moveTo(MARGIN, MARGIN);
+        ctx.lineTo(MARGIN - ARROW_HEAD_SIZE, MARGIN + ARROW_HEAD_SIZE);
+        ctx.moveTo(MARGIN, MARGIN);
+        ctx.lineTo(MARGIN + ARROW_HEAD_SIZE, MARGIN + ARROW_HEAD_SIZE);
+    }
+    ctx.stroke();
+
+    // Draw curve
+    const actualWidth = WIDTH - CURVE_MARGIN * 2;
+    const actualHeight = HEIGHT - CURVE_MARGIN * 2;
+    ctx.lineWidth = 7;
+    ctx.strokeStyle = "#6e00b7";
+    ctx.beginPath();
+
+    let firstVal = getCurveValue(curve, 0);
+    if (curve.bipolar) {
+        firstVal = (firstVal + 1) / 2;
+    }
+    firstVal = 1 - firstVal;
+    ctx.moveTo(CURVE_MARGIN, CURVE_MARGIN + firstVal * actualHeight);
+
+    for (let i = 0; i < actualWidth + 1; i++) {
+        let v = getCurveValue(curve, i / actualWidth);
+        if (curve.bipolar) {
+            v = (v + 1) / 2;
+        }
+        v = 1 - v;
+        ctx.lineTo(i + CURVE_MARGIN, CURVE_MARGIN + v * actualHeight);
+    }
+
+    ctx.stroke();
+
+    curveCanvasCache[curveKey(curve)] = offscreenCanvas;
+    return offscreenCanvas;
 }
 
 export function ModulatorCurvePicture({
@@ -70,85 +147,19 @@ export function ModulatorCurvePicture({
         if (!ctx) {
             return;
         }
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // draw arrows
-        ctx.strokeStyle = "white";
-        ctx.lineCap = "round";
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        let horizArrowStart: number[];
-        let horizArrowEnd: number[];
-        let vertiArrowStart: number[];
-        let vertiArrowEnd: number[];
-        if (curve.bipolar) {
-            horizArrowStart = [MARGIN, canvas.height / 2];
-            horizArrowEnd = [canvas.width - MARGIN, canvas.height / 2];
-            vertiArrowStart = [canvas.width / 2, canvas.height - MARGIN];
-            vertiArrowEnd = [canvas.width / 2, MARGIN];
-        } else {
-            horizArrowStart = [0, canvas.height - MARGIN];
-            horizArrowEnd = [canvas.width - MARGIN, canvas.height - MARGIN];
-            vertiArrowStart = [MARGIN, canvas.height];
-            vertiArrowEnd = [MARGIN, MARGIN];
-        }
-        ctx.moveTo(horizArrowStart[0], horizArrowStart[1]);
-        ctx.lineTo(horizArrowEnd[0], horizArrowEnd[1]);
-        ctx.lineTo(
-            horizArrowEnd[0] - ARROW_HEAD_SIZE,
-            horizArrowEnd[1] - ARROW_HEAD_SIZE
-        );
-        ctx.lineTo(horizArrowEnd[0], horizArrowEnd[1]);
-        ctx.lineTo(
-            horizArrowEnd[0] - ARROW_HEAD_SIZE,
-            horizArrowEnd[1] + ARROW_HEAD_SIZE
-        );
-        ctx.stroke();
-        // vertical
-        ctx.beginPath();
-        ctx.moveTo(vertiArrowStart[0], vertiArrowStart[1]);
-        ctx.lineTo(vertiArrowEnd[0], vertiArrowEnd[1]);
-        ctx.lineTo(
-            vertiArrowEnd[0] - ARROW_HEAD_SIZE,
-            vertiArrowEnd[1] + ARROW_HEAD_SIZE
-        );
-        ctx.lineTo(vertiArrowEnd[0], vertiArrowEnd[1]);
-        ctx.lineTo(
-            vertiArrowEnd[0] + ARROW_HEAD_SIZE,
-            vertiArrowEnd[1] + ARROW_HEAD_SIZE
-        );
-        ctx.stroke();
-
-        // draw the curve
-        const actualWidth = canvas.width - CURVE_MARGIN * 2;
-        const actualHeight = canvas.height - CURVE_MARGIN * 2;
-        ctx.lineWidth = 7;
-        ctx.strokeStyle = "#6e00b7";
-        ctx.beginPath();
-        let firstVal = getCurveValue(curve, 0);
-        if (curve.bipolar) {
-            firstVal = (firstVal + 1) / 2;
-        }
-        firstVal = 1 - firstVal;
-        ctx.moveTo(CURVE_MARGIN, CURVE_MARGIN + firstVal * actualHeight);
-        for (let i = 0; i < actualWidth + 1; i++) {
-            let v = getCurveValue(curve, i / actualWidth);
-            if (curve.bipolar) {
-                v = (v + 1) / 2;
-            }
-            v = 1 - v;
-            ctx.lineTo(i + CURVE_MARGIN, CURVE_MARGIN + v * actualHeight);
-        }
-        ctx.stroke();
-    }, [curve, curve.bipolar]);
+        const cached = getOrCreateCurveCanvas(curve);
+        ctx.clearRect(0, 0, WIDTH, HEIGHT);
+        ctx.drawImage(cached, 0, 0);
+    }, [curve]);
 
     return (
         <canvas
             ref={canvasRef}
             className="modulator_curve"
             title={`${curve.curveType} positive: ${curve.positive} bipolar: ${curve.bipolar}`}
-            width={100}
-            height={100}
+            width={WIDTH}
+            height={HEIGHT}
         />
     );
 }

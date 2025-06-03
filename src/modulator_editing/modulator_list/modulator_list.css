@@ -5,3 +5,11 @@
     width: 100%;
     align-items: center;
 }
+
+.modulator_list .action_buttons {
+    display: flex;
+}
+
+.modulator_list .modulator_list_button:hover {
+    filter: brightness(1.8);
+}

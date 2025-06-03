@@ -32,8 +32,18 @@ export function ModulatorSourcePicker({
     };
 
     const handleMidiCCChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const cc = parseInt(e.target.value) || source.sourceIndex;
-        setSource({ usesCC: true, sourceIndex: cc });
+        const input = e.target.value;
+        const match = input.match(/^CC#(\d{1,3})$/);
+
+        if (match) {
+            const cc = parseInt(match[1], 10);
+            if (cc >= 0 && cc <= 127) {
+                setSource({ usesCC: true, sourceIndex: cc });
+            }
+        } else if (input === "CC#") {
+            // Allow temporary empty state like "CC#" while typing
+            setSource({ usesCC: true, sourceIndex: 0 });
+        }
     };
 
     return (
@@ -67,13 +77,12 @@ export function ModulatorSourcePicker({
             {isCC && (
                 <input
                     className="midi_cc_selector"
-                    type="number"
-                    min={0}
-                    max={127}
-                    value={source.sourceIndex}
+                    type="text"
+                    value={`CC#${source.sourceIndex}`}
                     onChange={handleMidiCCChange}
                 />
             )}
+
             {!isCC && (
                 // phantom input to even out the width
                 <input

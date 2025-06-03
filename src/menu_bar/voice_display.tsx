@@ -2,6 +2,10 @@ import type { SpessaSynthProcessor } from "spessasynth_core";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+const CANVAS_WIDTH = 100;
+const CANVAS_HEIGHT = 50;
+const FFT_SIZE = 1024;
+
 export function VoiceDisplay({
     analyser,
     processor
@@ -18,38 +22,27 @@ export function VoiceDisplay({
             return;
         }
 
-        analyser.fftSize = 1024;
-        const bufferLength = analyser.fftSize;
+        analyser.fftSize = FFT_SIZE;
+        const bufferLength = analyser.frequencyBinCount; // frequencyBinCount = fftSize / 2
         const dataArray = new Uint8Array(bufferLength);
 
         const draw = () => {
             requestAnimationFrame(draw);
 
             analyser.getByteTimeDomainData(dataArray);
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
             ctx.lineWidth = 2;
             ctx.strokeStyle = "white";
             ctx.beginPath();
+            ctx.moveTo(0, (dataArray[0] / 255) * CANVAS_HEIGHT);
 
-            const sliceWidth = canvas.width / bufferLength;
-            let x = 0;
-
-            for (let i = 0; i < bufferLength; i++) {
-                const v = dataArray[i] / 128;
-                const y = (v * canvas.height) / 2;
-
-                if (i === 0) {
-                    ctx.moveTo(x, y);
-                } else {
-                    ctx.lineTo(x, y);
-                }
-
-                x += sliceWidth;
+            for (let i = 0; i < dataArray.length; i++) {
+                const val = dataArray[i] / 255;
+                const xPos = CANVAS_WIDTH * (i / dataArray.length);
+                ctx.lineTo(xPos, val * CANVAS_HEIGHT);
             }
 
-            ctx.lineTo(canvas.width, canvas.height / 2);
             ctx.stroke();
         };
 
@@ -79,7 +72,11 @@ export function VoiceDisplay({
     return (
         <div className={"flex_menu_bar voice_display"}>
             <VoiceDisplay />
-            <canvas ref={canvasRef} width={100} height={50} />
+            <canvas
+                ref={canvasRef}
+                width={CANVAS_WIDTH}
+                height={CANVAS_HEIGHT}
+            />
         </div>
     );
 }

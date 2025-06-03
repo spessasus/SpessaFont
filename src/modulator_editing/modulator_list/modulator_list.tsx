@@ -12,11 +12,20 @@ export function ModulatorList({
     setModulatorList: (l: Modulator[]) => void;
 }) {
     const { t } = useTranslation();
+    const [selectedMods, setSelectedMods] = useState<boolean[]>(
+        Array(modulatorList.length).fill(false)
+    );
 
     const newModulator = () => {
         const mod = new Modulator(0x0, 0x0, 48, 0, 0);
         const newList = [mod, ...modulatorList];
         setModulatorList(newList);
+    };
+
+    const deleteSelected = () => {
+        const newList = modulatorList.filter((_m, i) => !selectedMods[i]);
+        setModulatorList(newList);
+        setSelectedMods(Array(newList.length).fill(false));
     };
 
     const [activeModPickerId, setActiveModPickerId] = useState<string | null>(
@@ -25,11 +34,27 @@ export function ModulatorList({
 
     return (
         <div className={"modulator_list"}>
-            <div onClick={newModulator} className={"modulator_main"}>
-                <h2 style={{ cursor: "pointer" }}>
-                    {t("modulatorLocale.newModulator")}
-                </h2>
+            <div className={"action_buttons"}>
+                <div
+                    onClick={newModulator}
+                    className={"modulator_main modulator_list_button"}
+                >
+                    <h2 style={{ cursor: "pointer" }}>
+                        {t("modulatorLocale.actions.newModulator")}
+                    </h2>
+                </div>
+                {selectedMods.some((s) => s) && (
+                    <div
+                        onClick={deleteSelected}
+                        className={"modulator_main modulator_list_button"}
+                    >
+                        <h2 style={{ cursor: "pointer" }}>
+                            {t("modulatorLocale.actions.deleteSelected")}
+                        </h2>
+                    </div>
+                )}
             </div>
+
             {modulatorList.map((mod, i) => {
                 const setMod = (m: Modulator) => {
                     const newList = [...modulatorList];
@@ -42,6 +67,12 @@ export function ModulatorList({
                     setModulatorList(newList);
                 };
 
+                const setSelected = (s: boolean) => {
+                    const newSelected = [...selectedMods];
+                    newSelected[i] = s;
+                    setSelectedMods(newSelected);
+                };
+
                 return (
                     <ModulatorView
                         key={i}
@@ -51,6 +82,8 @@ export function ModulatorList({
                         deleteModulator={deleteMod}
                         setActiveModPickerId={setActiveModPickerId}
                         activeModPickerId={activeModPickerId}
+                        selected={selectedMods[i]}
+                        setSelected={setSelected}
                     ></ModulatorView>
                 );
             })}

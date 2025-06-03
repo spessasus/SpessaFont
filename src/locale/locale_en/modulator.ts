@@ -1,6 +1,10 @@
 export const ModulatorLocale = {
     modulator: "Modulator",
-    newModulator: "Add a New Modulator",
+    actions: {
+        newModulator: "New Modulator",
+        deleteSelected: "Delete Selected"
+    },
+
     delete: "Delete",
     sources: {
         noController: "No Controller = 1",
