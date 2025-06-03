@@ -4,3 +4,8 @@
     align-items: center;
     flex-grow: 2;
 }
+
+.default_modulators_title {
+    padding: 0.5rem;
+    border-bottom: solid 0.2rem var(--border-color);
+}

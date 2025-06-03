@@ -6,8 +6,24 @@
     align-items: center;
 }
 
+.modulator_list .list_contents {
+    overflow-y: auto;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+}
+
 .modulator_list .action_buttons {
     display: flex;
+    margin: 0;
+    align-items: center;
+    justify-content: center;
+}
+
+
+.modulator_list .modulator_list_button {
+    padding: 0.5rem;
+    cursor: pointer;
 }
 
 .modulator_list .modulator_list_button:hover {

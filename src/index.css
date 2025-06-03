@@ -131,3 +131,11 @@ input[type=number] {
 .responsive_button:active {
     transform: scale(var(--active-scale));
 }
+
+.pretty_outline {
+    background: var(--top-buttons-color-end);
+    padding: 0.5rem;
+    border-radius: var(--primary-border-radius);
+    border: solid var(--track-border-color) 1px;
+    font-size: 1rem;
+}

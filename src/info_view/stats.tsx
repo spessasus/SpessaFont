@@ -103,6 +103,11 @@ export function BankInfoStats({
                     </pre>
                 </span>
             </div>
+
+            <span style={{ marginTop: 0, border: "none" }}>
+                <label>{t("poweredBy")}</label>
+                <pre>spessasynth_core</pre>
+            </span>
         </div>
     );
 }

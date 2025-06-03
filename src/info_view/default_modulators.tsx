@@ -22,8 +22,12 @@ export function DefaultModulatorList({ manager }: { manager: Manager }) {
 
     return (
         <div className={"default_modulators"}>
-            <h2>{t("bankInfo.defaultModulators")}</h2>
+            <h2 className={"default_modulators_title"}>
+                {t("bankInfo.defaultModulatorsFor")}{" "}
+                <i>{manager.getBankName(t)}</i>:
+            </h2>
             <ModulatorList
+                clipboardManager={manager.clipboard}
                 modulatorList={dmods}
                 setModulatorList={setDefaultModulators}
             ></ModulatorList>

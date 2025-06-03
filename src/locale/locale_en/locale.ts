@@ -17,6 +17,7 @@ export const localeEnglish = {
         copyright:
             "Created by Spessasus using spessasynth_core and spessasynth_lib."
     },
+    poweredBy: "Powered by",
 
     getUserInput: "Press anywhere to start the app",
 

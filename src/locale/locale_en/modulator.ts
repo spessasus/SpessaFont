@@ -1,8 +1,7 @@
 export const ModulatorLocale = {
     modulator: "Modulator",
     actions: {
-        newModulator: "New Modulator",
-        deleteSelected: "Delete Selected"
+        modulators: "Modulators" // plural
     },
 
     delete: "Delete",

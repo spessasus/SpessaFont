@@ -7,8 +7,15 @@ import {
     SpessaSynthSequencer
 } from "spessasynth_core";
 import { FancyChorus, getReverbProcessor } from "spessasynth_lib";
+import { ClipBoardManager } from "../clipboard_manager.ts";
+import type { TFunction } from "i18next";
 
-const BUFFER_TIME_MULTIPLIER = 1;
+// audio worklet processor operates at that
+const BLOCK_SIZE = 128;
+const CHUNK_COUNT = 8; // 16 * 128 = 1024
+
+type AudioChunk = [Float32Array, Float32Array];
+type AudioChunks = AudioChunk[];
 
 export default class Manager {
     context: AudioContext;
@@ -19,32 +26,34 @@ export default class Manager {
     chorus: FancyChorus;
     reverb: ConvolverNode;
 
+    clipboard = new ClipBoardManager();
+
     bank: BasicSoundBank | undefined;
     setBank: (bank: BasicSoundBank | undefined) => void;
 
-    dry: AudioBuffer;
-    rev: AudioBuffer;
-    chr: AudioBuffer;
+    // dry: AudioBuffer;
+    // rev: AudioBuffer;
+    // chr: AudioBuffer;
 
-    bufferSize = 4096;
-    blockSize = 128;
+    bufferSize = CHUNK_COUNT;
     intervalID = 0;
     // dry block
-    dBlock = [
-        new Float32Array(this.blockSize),
-        new Float32Array(this.blockSize)
-    ];
-    // reverb block
-    rBlock = [
-        new Float32Array(this.blockSize),
-        new Float32Array(this.blockSize)
-    ];
-    // chorus block
-    cBlock = [
-        new Float32Array(this.blockSize),
-        new Float32Array(this.blockSize)
-    ];
-    private bufferTime: number;
+    // dBlock = [
+    //     new Float32Array(this.blockSize),
+    //     new Float32Array(this.blockSize)
+    // ];
+    // // reverb block
+    // rBlock = [
+    //     new Float32Array(this.blockSize),
+    //     new Float32Array(this.blockSize)
+    // ];
+    // // chorus block
+    // cBlock = [
+    //     new Float32Array(this.blockSize),
+    //     new Float32Array(this.blockSize)
+    // ];
+
+    private worklet: AudioWorkletNode | undefined;
 
     constructor(
         context: AudioContext,
@@ -52,13 +61,11 @@ export default class Manager {
     ) {
         this.context = context;
         this.setBank = setBank;
-        this.bufferTime =
-            (this.bufferSize / this.context.sampleRate) *
-            BUFFER_TIME_MULTIPLIER;
         this.processor = new SpessaSynthProcessor(context.sampleRate, {
             effectsEnabled: true,
             initialTime: context.currentTime
         });
+
         this.analyser = new AnalyserNode(this.context);
         this.analyser.connect(this.context.destination);
         this.sequencer = new SpessaSynthSequencer(this.processor);
@@ -66,83 +73,79 @@ export default class Manager {
         this.reverb = getReverbProcessor(context).conv;
         this.reverb.connect(this.analyser);
 
-        const opt = {
-            sampleRate: this.context.sampleRate,
-            numberOfChannels: 2,
-            length: this.bufferSize
-        };
-        this.dry = new AudioBuffer(opt);
-        this.rev = new AudioBuffer(opt);
-        this.chr = new AudioBuffer(opt);
+        // const opt = {
+        //     sampleRate: this.context.sampleRate,
+        //     numberOfChannels: 2,
+        //     length: this.bufferSize
+        // };
+        // this.dry = new AudioBuffer(opt);
+        // this.rev = new AudioBuffer(opt);
+        // this.chr = new AudioBuffer(opt);
         SpessaSynthLogging(true, true, true, true);
     }
 
-    setBufferSize(size: number) {
-        if (size % this.blockSize !== 0) {
-            throw new Error(`Buffer size must be a multiple of ${size}`);
-        }
-        this.bufferSize = size;
-        this.bufferTime =
-            (this.bufferSize / this.context.sampleRate) *
-            BUFFER_TIME_MULTIPLIER;
+    getBankName(t: TFunction<"translation", undefined>) {
+        return this.bank?.soundFontInfo?.["INAM"] || t("bankInfo.unnamed");
     }
 
     async resumeContext() {
         await this.context.resume();
         clearInterval(this.intervalID);
         console.log("setting up audio loop");
+        await this.context.audioWorklet.addModule("./audio_worklet.js");
+        this.worklet = new AudioWorkletNode(
+            this.context,
+            "playback-processor",
+            {
+                outputChannelCount: [2, 2, 2],
+                numberOfOutputs: 3
+            }
+        );
+        this.worklet.connect(this.analyser, 0);
+        this.worklet.connect(this.reverb, 1);
+        this.worklet.connect(this.chorus.input, 2);
+
         this.intervalID = setInterval(this.audioLoop.bind(this));
     }
 
     audioLoop() {
-        if (
-            this.processor.currentSynthTime >
-            this.context.currentTime + this.bufferTime
-        ) {
+        const synTime = this.processor.currentSynthTime;
+        if (synTime > this.context.currentTime) {
             return;
         }
 
-        let filled = 0;
-        const synTime = this.processor.currentSynthTime;
+        const dry: AudioChunks = [];
+        const rev: AudioChunks = [];
+        const chr: AudioChunks = [];
 
-        while (filled < this.bufferSize) {
+        for (let i = 0; i < CHUNK_COUNT; i++) {
             // clear data
-            this.dBlock.forEach((v) => v.fill(0));
-            this.rBlock.forEach((v) => v.fill(0));
-            this.cBlock.forEach((v) => v.fill(0));
+            const d: AudioChunk = [
+                new Float32Array(BLOCK_SIZE),
+                new Float32Array(BLOCK_SIZE)
+            ];
+            const r: AudioChunk = [
+                new Float32Array(BLOCK_SIZE),
+                new Float32Array(BLOCK_SIZE)
+            ];
+            const c: AudioChunk = [
+                new Float32Array(BLOCK_SIZE),
+                new Float32Array(BLOCK_SIZE)
+            ];
 
             // render!
             this.sequencer.processTick();
-            this.processor.renderAudio(this.dBlock, this.rBlock, this.cBlock);
+            this.processor.renderAudio(d, r, c);
             // copy out
-            this.dry.copyToChannel(this.dBlock[0], 0, filled);
-            this.dry.copyToChannel(this.dBlock[1], 1, filled);
-            this.rev.copyToChannel(this.rBlock[0], 0, filled);
-            this.rev.copyToChannel(this.rBlock[1], 1, filled);
-            this.chr.copyToChannel(this.cBlock[0], 0, filled);
-            this.chr.copyToChannel(this.cBlock[1], 1, filled);
-            filled += this.blockSize;
+            dry.push(d);
+            chr.push(c);
+            rev.push(r);
         }
 
-        const out = this.analyser;
-        const oscDry = new AudioBufferSourceNode(this.context, {
-            buffer: this.dry
-        });
-        oscDry.connect(out);
-
-        const oscChr = new AudioBufferSourceNode(this.context, {
-            buffer: this.chr
-        });
-        oscChr.connect(this.chorus.input);
-
-        const oscRev = new AudioBufferSourceNode(this.context, {
-            buffer: this.rev
-        });
-        oscRev.connect(this.reverb);
-
-        oscDry.start(synTime);
-        oscChr.start(synTime);
-        oscRev.start(synTime);
+        // send to worklet
+        if (this.worklet) {
+            this.worklet.port.postMessage([dry, rev, chr]);
+        }
     }
 
     async createNewFile() {

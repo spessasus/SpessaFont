@@ -79,10 +79,6 @@ export function MenuBar({
             <MenuBarDropdown main={eLoc + "edit"}>
                 <MenuBarItem text={eLoc + "undo"}></MenuBarItem>
                 <MenuBarItem text={eLoc + "redo"}></MenuBarItem>
-                <MenuBarItem text={eLoc + "copy"}></MenuBarItem>
-                <MenuBarItem text={eLoc + "paste"}></MenuBarItem>
-                <MenuBarItem text={eLoc + "cut"}></MenuBarItem>
-                <MenuBarItem text={eLoc + "delete"}></MenuBarItem>
             </MenuBarDropdown>
             <MIDIPlayer manager={manager}></MIDIPlayer>
             <div style={{ flex: 1 }}></div>

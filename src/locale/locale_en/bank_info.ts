@@ -14,10 +14,12 @@ export const BankInfoLocale = {
     samples: "Samples:",
     instruments: "Instruments:",
     presets: "Presets:",
+    unnamed: "Unnamed",
 
     compressed: "Compressed:",
     count: "Count:",
     generatorCount: "Generator Count:",
     modulatorCount: "Modulator Count:",
+    defaultModulatorsFor: "Default Modulators for",
     defaultModulators: "Default Modulators:"
 };
