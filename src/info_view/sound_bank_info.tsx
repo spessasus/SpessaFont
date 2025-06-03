@@ -1,16 +1,21 @@
-import type { BasicSoundBank } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import { EditableBankInfo } from "./editable_info.tsx";
 import { BankInfoStats } from "./stats.tsx";
+import "./sound_bank_info.css";
+import "./default_modulators.css";
+import { useState } from "react";
+import { DefaultModulatorList } from "./default_modulators.tsx";
+import type Manager from "../core_backend/manager.ts";
 
 export function SoundBankInfo({
-    bank,
+    manager,
     isLoading
 }: {
-    bank: BasicSoundBank | undefined;
+    manager: Manager;
     isLoading: boolean;
 }) {
     const { t } = useTranslation();
+    const [defaultMods, setDefaultMods] = useState(false);
 
     if (isLoading) {
         return (
@@ -19,6 +24,7 @@ export function SoundBankInfo({
             </div>
         );
     }
+    const bank = manager.bank;
 
     if (bank === undefined) {
         return (
@@ -30,10 +36,29 @@ export function SoundBankInfo({
         );
     }
 
+    function toggleDefaultModulators() {
+        setDefaultMods(!defaultMods);
+    }
+
+    if (defaultMods) {
+        return (
+            <div className={"sound_bank_info"}>
+                <DefaultModulatorList manager={manager}></DefaultModulatorList>
+                <BankInfoStats
+                    bank={bank}
+                    toggleDefaultModulators={toggleDefaultModulators}
+                ></BankInfoStats>
+            </div>
+        );
+    }
+
     return (
         <div className={"sound_bank_info"}>
             <EditableBankInfo bank={bank}></EditableBankInfo>
-            <BankInfoStats bank={bank}></BankInfoStats>
+            <BankInfoStats
+                bank={bank}
+                toggleDefaultModulators={toggleDefaultModulators}
+            ></BankInfoStats>
         </div>
     );
 }

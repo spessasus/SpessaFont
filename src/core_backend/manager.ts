@@ -1,17 +1,21 @@
 import {
     BasicSoundBank,
     loadSoundFont,
+    type MIDI,
     SpessaSynthLogging,
     SpessaSynthProcessor,
     SpessaSynthSequencer
 } from "spessasynth_core";
 import { FancyChorus, getReverbProcessor } from "spessasynth_lib";
 
+const BUFFER_TIME_MULTIPLIER = 1;
+
 export default class Manager {
     context: AudioContext;
 
     processor: SpessaSynthProcessor;
     sequencer: SpessaSynthSequencer;
+    analyser: AnalyserNode;
     chorus: FancyChorus;
     reverb: ConvolverNode;
 
@@ -48,15 +52,19 @@ export default class Manager {
     ) {
         this.context = context;
         this.setBank = setBank;
-        this.bufferTime = (this.bufferSize / this.context.sampleRate) * 10;
+        this.bufferTime =
+            (this.bufferSize / this.context.sampleRate) *
+            BUFFER_TIME_MULTIPLIER;
         this.processor = new SpessaSynthProcessor(context.sampleRate, {
             effectsEnabled: true,
             initialTime: context.currentTime
         });
+        this.analyser = new AnalyserNode(this.context);
+        this.analyser.connect(this.context.destination);
         this.sequencer = new SpessaSynthSequencer(this.processor);
-        this.chorus = new FancyChorus(context.destination);
+        this.chorus = new FancyChorus(this.analyser);
         this.reverb = getReverbProcessor(context).conv;
-        this.reverb.connect(context.destination);
+        this.reverb.connect(this.analyser);
 
         const opt = {
             sampleRate: this.context.sampleRate,
@@ -74,7 +82,9 @@ export default class Manager {
             throw new Error(`Buffer size must be a multiple of ${size}`);
         }
         this.bufferSize = size;
-        this.bufferTime = (this.bufferSize / this.context.sampleRate) * 10;
+        this.bufferTime =
+            (this.bufferSize / this.context.sampleRate) *
+            BUFFER_TIME_MULTIPLIER;
     }
 
     async resumeContext() {
@@ -114,10 +124,11 @@ export default class Manager {
             filled += this.blockSize;
         }
 
+        const out = this.analyser;
         const oscDry = new AudioBufferSourceNode(this.context, {
             buffer: this.dry
         });
-        oscDry.connect(this.context.destination);
+        oscDry.connect(out);
 
         const oscChr = new AudioBufferSourceNode(this.context, {
             buffer: this.chr
@@ -141,8 +152,14 @@ export default class Manager {
         this.updateBank(bank);
     }
 
+    clearCache() {
+        this.processor.clearCache();
+    }
+
     close() {
         delete this.bank;
+        this.sequencer.pause();
+        this.clearCache();
         this.setBank(undefined);
     }
 
@@ -171,11 +188,24 @@ export default class Manager {
     updateBank(bank: BasicSoundBank) {
         this.bank = bank;
         this.processor.soundfontManager.reloadManager(this.bank);
+        this.sequencer.currentTime -= 0.1;
         this.setBank(this.bank);
     }
 
     async loadBank(file: File) {
         const buf = await file.arrayBuffer();
         this.updateBank(loadSoundFont(buf));
+    }
+
+    playMIDI(mid: MIDI) {
+        this.sequencer.loadNewSongList([mid]);
+    }
+
+    pauseMIDI() {
+        this.sequencer.pause();
+    }
+
+    resumeMIDI() {
+        this.sequencer.play();
     }
 }

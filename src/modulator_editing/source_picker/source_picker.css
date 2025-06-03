@@ -1,0 +1,18 @@
+.source_picker {
+    display: flex;
+    flex-direction: row;
+    margin: 0.2rem;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.source_picker input, .source_picker select {
+    color: var(--font-color);
+    background: transparent;
+    border: none;
+    font-size: 1rem;
+}
+
+.source_picker select {
+    cursor: pointer;
+}

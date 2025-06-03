@@ -1,7 +1,13 @@
 import type { BasicSoundBank } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 
-export function BankInfoStats({ bank }: { bank: BasicSoundBank }) {
+export function BankInfoStats({
+    bank,
+    toggleDefaultModulators
+}: {
+    bank: BasicSoundBank;
+    toggleDefaultModulators: () => void;
+}) {
     const { t } = useTranslation();
 
     // count generators and modulators
@@ -40,13 +46,14 @@ export function BankInfoStats({ bank }: { bank: BasicSoundBank }) {
                 <pre>{bank.soundFontInfo["ISFT"]}</pre>
             </span>
 
-            <span>
+            <span
+                onClick={toggleDefaultModulators}
+                className={
+                    "default_modulators_button responsive_button hover_brightness"
+                }
+            >
                 <label>{t("bankInfo.defaultModulators")}</label>
-                <pre>
-                    {bank.customDefaultModulators
-                        ? bank.defaultModulators.length
-                        : 0}
-                </pre>
+                <pre>{bank.defaultModulators.length}</pre>
             </span>
 
             <div className={"stat_group"}>

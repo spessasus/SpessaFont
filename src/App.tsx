@@ -10,6 +10,8 @@ import { GetUserInput } from "./get_user_input.tsx";
 import { useRef, useState } from "react";
 import { BasicSoundBank } from "spessasynth_core";
 import { SoundBankInfo } from "./info_view/sound_bank_info.tsx";
+import { PresetList } from "./preset_list/preset_list.tsx";
+import { MainContentStates } from "./main_content_states.ts";
 
 const localeList = {
     en: { translation: localeEnglish }
@@ -38,13 +40,40 @@ const context = new AudioContext({
 function App() {
     const [bank, setBank] = useState<BasicSoundBank>();
     const [isLoading, setIsLoading] = useState(false);
+    const [contentState, setContentState] = useState(MainContentStates.stats);
 
     const managerRef = useRef<Manager>(new Manager(context, setBank));
     const manager = managerRef.current;
+
+    function MainContent() {
+        switch (contentState) {
+            default:
+                return <div>ERROR</div>;
+
+            case MainContentStates.stats:
+                return (
+                    <SoundBankInfo
+                        manager={manager}
+                        isLoading={isLoading}
+                    ></SoundBankInfo>
+                );
+        }
+    }
+
     return (
         <div className={"spessafont_main"}>
-            <MenuBar manager={manager} setIsLoading={setIsLoading}></MenuBar>
-            <SoundBankInfo bank={bank} isLoading={isLoading}></SoundBankInfo>
+            <MenuBar
+                setContentState={setContentState}
+                contentState={contentState}
+                manager={manager}
+                setIsLoading={setIsLoading}
+            ></MenuBar>
+            <div className={"main_content"}>
+                <PresetList bank={bank}></PresetList>
+                <div className={"main_content_window"}>
+                    <MainContent></MainContent>
+                </div>
+            </div>
             <GetUserInput manager={manager}></GetUserInput>
         </div>
     );

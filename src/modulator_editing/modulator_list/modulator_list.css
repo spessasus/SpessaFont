@@ -1,0 +1,7 @@
+.modulator_list {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    width: 100%;
+    align-items: center;
+}

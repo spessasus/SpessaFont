@@ -1,4 +1,6 @@
 declare module "spessasynth_core" {
+    import { BasicMIDI } from "spessasynth_core";
+
     /**
      * midi_loader.js
      * purpose:
@@ -10,9 +12,6 @@ declare module "spessasynth_core" {
      * Supported formats are .mid and .rmi files.
      */
     export class MIDI extends BasicMIDI {
-        copyright: string;
-        rawMidiName: Uint8Array;
-        midiName: string;
         /**
          * @param fileByteArray {IndexedByteArray}
          * @returns {{type: string, size: number, data: IndexedByteArray}}
@@ -27,6 +26,4 @@ declare module "spessasynth_core" {
          */
         constructor(arrayBuffer: ArrayBuffer, fileName?: string);
     }
-
-    import { BasicMIDI } from "./basic_midi.js";
 }

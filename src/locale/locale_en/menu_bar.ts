@@ -16,5 +16,13 @@ export const MenuBarLocale = {
         paste: "Paste",
         cut: "Cut",
         delete: "Delete"
-    }
+    },
+    midi: {
+        play: "Play MIDI",
+        pause: "Pause",
+        resume: "Resume"
+    },
+
+    voices: "Voices:",
+    settings: "Settings"
 };

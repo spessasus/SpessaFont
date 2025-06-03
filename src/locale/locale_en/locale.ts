@@ -1,4 +1,8 @@
 import { MenuBarLocale } from "./menu_bar.ts";
+import { BankInfoLocale } from "./bank_info.ts";
+import { PresetListLocale } from "./preset_list.ts";
+import { ModulatorLocale } from "./modulator.ts";
+import { GeneratorLocale } from "./generator.ts";
 
 /**
  *
@@ -16,30 +20,6 @@ export const localeEnglish = {
 
     getUserInput: "Press anywhere to start the app",
 
-    bankInfo: {
-        name: "Bank's name",
-        engineer: "Engineer",
-        creationDate: "Creation Date",
-        product: "Product",
-        copyright: "Copyright",
-        description: "Description",
-
-        stats: "Stats:",
-        version: "Version:",
-        software: "Software:",
-        engine: "Sound Engine:",
-
-        samples: "Samples:",
-        instruments: "Instruments:",
-        presets: "Presets:",
-
-        compressed: "Compressed:",
-        count: "Count:",
-        generatorCount: "Generator Count:",
-        modulatorCount: "Modulator Count:",
-        defaultModulators: "Default Modulators:"
-    },
-
     synthInit: {
         genericLoading: "Loading...",
         loadingSoundfont: "Loading SoundFont...",
@@ -55,5 +35,9 @@ export const localeEnglish = {
     no: "No",
     none: "None",
     githubPage: "Project page",
-    menuBarLocale: MenuBarLocale
+    menuBarLocale: MenuBarLocale,
+    modulatorLocale: ModulatorLocale,
+    generatorLocale: GeneratorLocale,
+    bankInfo: BankInfoLocale,
+    presetList: PresetListLocale
 };

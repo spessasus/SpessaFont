@@ -29,6 +29,7 @@ export function EditableBankInfo({ bank }: { bank: BasicSoundBank }) {
     return (
         <div className={"editable"}>
             <input
+                className={"pretty_input"}
                 id={"INAM"}
                 onChange={(e) => {
                     bank.soundFontInfo["INAM"] = e.target.value;
@@ -42,6 +43,7 @@ export function EditableBankInfo({ bank }: { bank: BasicSoundBank }) {
                 <span>
                     <label htmlFor={"IENG"}>{t("bankInfo.engineer")}</label>
                     <input
+                        className={"pretty_input"}
                         id={"IENG"}
                         onChange={(e) => {
                             bank.soundFontInfo["IENG"] = e.target.value;
@@ -55,6 +57,7 @@ export function EditableBankInfo({ bank }: { bank: BasicSoundBank }) {
                 <span>
                     <label htmlFor={"ICRD"}>{t("bankInfo.creationDate")}</label>
                     <input
+                        className={"pretty_input"}
                         id={"ICRD"}
                         onChange={(e) => {
                             bank.soundFontInfo["ICRD"] = e.target.value;
@@ -68,6 +71,7 @@ export function EditableBankInfo({ bank }: { bank: BasicSoundBank }) {
                 <span>
                     <label htmlFor={"IPRD"}>{t("bankInfo.product")}</label>
                     <input
+                        className={"pretty_input"}
                         id={"IPRD"}
                         onChange={(e) => {
                             bank.soundFontInfo["IPRD"] = e.target.value;
@@ -81,6 +85,7 @@ export function EditableBankInfo({ bank }: { bank: BasicSoundBank }) {
                 <span>
                     <label htmlFor={"ICOP"}>{t("bankInfo.copyright")}</label>
                     <input
+                        className={"pretty_input"}
                         id={"ICOP"}
                         onChange={(e) => {
                             bank.soundFontInfo["ICOP"] = e.target.value;
@@ -94,6 +99,7 @@ export function EditableBankInfo({ bank }: { bank: BasicSoundBank }) {
             <div className={"comment"}>
                 <label htmlFor={"ICMT"}>{t("bankInfo.description")}</label>
                 <textarea
+                    className={"pretty_input"}
                     id={"ICMT"}
                     onChange={(e) => {
                         bank.soundFontInfo["ICMT"] = e.target.value;

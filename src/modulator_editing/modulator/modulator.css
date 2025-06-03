@@ -1,0 +1,67 @@
+.modulator_main {
+    width: max-content;
+    background: var(--top-buttons-color);
+    margin: 0.5rem;
+    padding: 0.1rem;
+    border-radius: var(--primary-border-radius);
+    border: solid var(--track-border-color) 1px;
+    display: flex;
+    align-items: center;
+}
+
+.modulator_main svg {
+    color: var(--font-color);
+    margin-left: -0.5rem;
+}
+
+.modulator_main h2 {
+    padding: 1rem;
+}
+
+.modulator_main * {
+    user-select: none;
+}
+
+.modulator_title {
+    display: flex;
+    flex-direction: column;
+    margin: 1rem;
+}
+
+.modulator_title h3 {
+    white-space: break-spaces;
+    width: min-content;
+}
+
+.modulator_main .pretty_outline {
+    background: var(--top-buttons-color-end);
+    padding: 0.5rem;
+    border-radius: var(--primary-border-radius);
+    border: solid var(--track-border-color) 1px;
+    font-size: 1rem;
+}
+
+.modulator_title span {
+    display: block;
+    cursor: pointer;
+    margin-top: 0.5rem;
+}
+
+.modulator_main .transform_box {
+    display: flex;
+    align-items: center;
+    border-radius: var(--primary-border-radius);
+    border: solid var(--track-border-color) 1px;
+    margin: 0.5rem;
+}
+
+.modulator_main .source_pair {
+    display: flex;
+    flex-direction: column;
+    margin-left: 1rem;
+}
+
+.modulator_main .amount_input, .modulator_main .transform_selector {
+    font-size: 1rem;
+    margin: 0.5rem;
+}

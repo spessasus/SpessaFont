@@ -1,15 +1,25 @@
 import { MenuBarDropdown, MenuBarItem } from "./dropdown.tsx";
 import type Manager from "../core_backend/manager.ts";
+import { MIDIPlayer } from "./midi_player.tsx";
+import { VoiceDisplay } from "./voice_display.tsx";
+import "./menu_bar.css";
+import { useTranslation } from "react-i18next";
+import { MainContentStates } from "../main_content_states.ts";
 
 export function MenuBar({
     manager,
-    setIsLoading
+    setIsLoading,
+    contentState,
+    setContentState
 }: {
     manager: Manager;
     setIsLoading: (v: boolean) => void;
+    contentState: number;
+    setContentState: (s: number) => void;
 }) {
     const fLoc = "menuBarLocale.file.";
     const eLoc = "menuBarLocale.edit.";
+    const { t } = useTranslation();
 
     function openFile() {
         const input = document.createElement("input");
@@ -42,6 +52,14 @@ export function MenuBar({
         manager.save("dls");
     }
 
+    function setState() {
+        if (contentState === MainContentStates.settings) {
+            setContentState(MainContentStates.stats);
+        } else {
+            setContentState(MainContentStates.settings);
+        }
+    }
+
     return (
         <div className={"menu_bar_main"}>
             <MenuBarDropdown main={fLoc + "file"}>
@@ -66,6 +84,15 @@ export function MenuBar({
                 <MenuBarItem text={eLoc + "cut"}></MenuBarItem>
                 <MenuBarItem text={eLoc + "delete"}></MenuBarItem>
             </MenuBarDropdown>
+            <MIDIPlayer manager={manager}></MIDIPlayer>
+            <div style={{ flex: 1 }}></div>
+            <VoiceDisplay
+                analyser={manager.analyser}
+                processor={manager.processor}
+            ></VoiceDisplay>
+            <div className={"menu_bar_button"} onClick={setState}>
+                {t("menuBarLocale.settings")}
+            </div>
         </div>
     );
 }

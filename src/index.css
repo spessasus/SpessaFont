@@ -1,6 +1,3 @@
-@import "menu_bar.css";
-@import "sound_bank_info.css";
-
 * {
     /*global variables*/
     --top-buttons-color-start: #222;
@@ -18,7 +15,7 @@
 
     --primary-border-radius: 0.5rem;
     --active-scale: 0.9;
-    --menu-bar-height: 2.2rem;
+    --menu-bar-height: 3rem;
 
     /*thanks for this bezier mozilla devtools*/
     --bouncy-transition: cubic-bezier(.68, -0.55, .27, 1.55);
@@ -83,4 +80,54 @@ pre {
     --track-color: #ccc;
     --track-border-color: #444;
     --shadow-color: #fff;
+}
+
+.main_content {
+    width: 100%;
+    background: var(--top-color);
+    display: flex;
+    flex-grow: 1;
+    max-height: calc(100vh - var(--menu-bar-height));
+}
+
+.main_content_window {
+    width: 100%;
+    display: flex;
+    flex-grow: 1;
+    max-height: calc(100vh - var(--menu-bar-height));
+}
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+.pretty_input {
+    background: var(--top-color-start);
+    border-radius: var(--primary-border-radius);
+    color: var(--font-color);
+    border: 0.2rem solid var(--top-buttons-color-end);
+    transition: all 0.2s ease;
+    text-align: start;
+    padding: 0.3rem;
+}
+
+.pretty_input:focus {
+    border: 0.2rem solid var(--border-color)
+}
+
+.hover_brightness:hover {
+    filter: brightness(1.8);
+}
+
+.responsive_button {
+    transition: all 0.2s ease;
+}
+
+.responsive_button:active {
+    transform: scale(var(--active-scale));
 }

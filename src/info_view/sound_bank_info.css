@@ -1,13 +1,11 @@
 .sound_bank_info, .sound_bank_info_welcome {
-    background: var(--top-color);
     width: 100%;
+    height: 100%;
     display: flex;
-    flex-grow: 1;
-    max-height: calc(100vh - var(--menu-bar-height));
 }
 
 .sound_bank_info .editable {
-    margin: 1rem;
+    margin: 1rem 0.5rem;
     display: flex;
     flex-direction: column;
     align-items: start;
@@ -22,18 +20,6 @@
 
 .sound_bank_info_welcome h3 {
     margin-top: 10rem;
-}
-
-
-.sound_bank_info input, .sound_bank_info textarea {
-    background: var(--top-color-start);
-    border-radius: var(--primary-border-radius);
-    color: var(--font-color);
-    border: 0.2rem solid var(--top-buttons-color-end);
-    transition: all 0.2s ease;
-    width: 100%;
-    text-align: start;
-    padding: 0.3rem;
 }
 
 .sound_bank_info .fields {
@@ -62,10 +48,6 @@
     white-space: nowrap;
 }
 
-.sound_bank_info input:focus {
-    border: 0.2rem solid var(--border-color)
-}
-
 .sound_bank_info .comment {
     width: 100%;
     display: flex;
@@ -87,12 +69,12 @@
 
 /* stats */
 .sound_bank_info .stats {
-    margin: 1.3rem;
+    margin: 1.3rem 0.5rem;
     display: flex;
     flex-direction: column;
     text-align: center;
     overflow-y: scroll;
-    flex: 1;
+    flex-grow: 0;
     width: min-content;
 }
 
@@ -106,9 +88,9 @@
     background: var(--primary-color);
     width: 100%;
     padding: 0.4rem;
-
     border-radius: var(--primary-border-radius);
 }
+
 
 .sound_bank_info .stats span {
     display: flex;
@@ -124,6 +106,20 @@
     padding: 0.5rem;
     margin-top: 1.5rem;
 }
+
+.sound_bank_info .stats .default_modulators_button {
+    background: var(--primary-color);
+    width: 100%;
+    padding: 0.4rem;
+    border-radius: var(--primary-border-radius);
+    border: none;
+    cursor: pointer;
+}
+
+.default_modulators_button * {
+    cursor: pointer;
+}
+
 
 .sound_bank_info .stats .stat_group span {
     border: none;
