@@ -1,0 +1,51 @@
+.settings {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 1rem;
+}
+
+.settings_display {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    overflow-y: auto;
+    align-items: baseline;
+    justify-content: center;
+}
+
+.settings .settings_group {
+    background: var(--top-buttons-color);
+    border: solid 1px var(--track-border-color);
+    border-radius: var(--primary-border-radius);
+    width: max-content;
+    margin: 0.5rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.setting {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0.5rem;
+    padding: 0.5rem;
+    background: var(--top-buttons-color);
+    border: solid 1px var(--track-border-color);
+    border-radius: var(--primary-border-radius);
+    width: 100%;
+}
+
+.setting input, .setting select {
+    font-size: 1rem;
+    text-align: center;
+}
+
+
+.setting input {
+    width: 4rem;
+
+}

@@ -8,6 +8,7 @@
 
 .menu_bar_main * {
     user-select: none;
+    white-space: nowrap;
 }
 
 .menu_bar {
@@ -54,6 +55,19 @@
 
 .menu_bar_button:hover, .menu_bar_item:hover, .flex_menu_bar div:hover {
     filter: brightness(1.8);
+}
+
+.settings_button {
+    color: var(--font-color);
+    height: var(--menu-bar-height);
+}
+
+.settings_button svg {
+    transition: all 0.2s ease;
+}
+
+.settings_button:hover svg {
+    transform: rotate(90deg);
 }
 
 .menu_bar_contents {

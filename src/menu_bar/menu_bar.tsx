@@ -5,6 +5,7 @@ import { VoiceDisplay } from "./voice_display.tsx";
 import "./menu_bar.css";
 import { useTranslation } from "react-i18next";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
+import { Gear } from "./gear.tsx";
 
 // @ts-expect-error chromium check is here
 const isChrome: boolean = window["chrome"] !== undefined;
@@ -14,13 +15,15 @@ export function MenuBar({
     audioEngine,
     openTab,
     closeTab,
-    manager
+    manager,
+    showMidiPlayer
 }: {
     audioEngine: AudioEngine;
     toggleSettings: () => void;
     openTab: (b?: File) => void;
     closeTab: () => void;
     manager: SoundBankManager;
+    showMidiPlayer: boolean;
 }) {
     const fLoc = "menuBarLocale.file.";
     const eLoc = "menuBarLocale.edit.";
@@ -80,15 +83,27 @@ export function MenuBar({
                 <MenuBarItem click={undo} text={eLoc + "undo"}></MenuBarItem>
                 <MenuBarItem click={redo} text={eLoc + "redo"}></MenuBarItem>
             </MenuBarDropdown>
-            <MIDIPlayer audioEngine={audioEngine}></MIDIPlayer>
+            {showMidiPlayer && (
+                <MIDIPlayer audioEngine={audioEngine}></MIDIPlayer>
+            )}
+            <a
+                className={"menu_bar_button"}
+                href={"https://github.com/spessasus/SpessaFont"}
+                target={"_blank"}
+            >
+                {t("githubPage")}
+            </a>
             {isChrome && <MenuBarDropdown main={"firefox"}></MenuBarDropdown>}
             <div style={{ flex: 1 }}></div>
             <VoiceDisplay
                 analyser={audioEngine.analyser}
                 processor={audioEngine.processor}
             ></VoiceDisplay>
-            <div className={"menu_bar_button"} onClick={toggleSettings}>
-                {t("menuBarLocale.settings")}
+            <div
+                className={"menu_bar_button settings_button"}
+                onClick={toggleSettings}
+            >
+                <Gear />
             </div>
         </div>
     );

@@ -1,8 +1,14 @@
 import { MenuBar } from "./menu_bar/menu_bar.tsx";
-import { localeEnglish } from "./locale/locale_en/locale.ts";
 import { loadSettings } from "./settings/save_load/load.ts";
-import { UNSET_LANGUAGE } from "./settings/save_load/settings_typedef.ts";
-import { DEFAULT_LOCALE, getUserLocale } from "./settings/get_user_locale.ts";
+import {
+    applyAudioSettings,
+    getSetting,
+    UNSET_LANGUAGE
+} from "./settings/save_load/settings_typedef.ts";
+import {
+    DEFAULT_LOCALE,
+    getUserLocale
+} from "./settings/save_load/get_user_locale.ts";
 import i18next from "i18next";
 import { initReactI18next, useTranslation } from "react-i18next";
 import SoundBankManager from "./core_backend/sound_bank_manager.ts";
@@ -14,13 +20,11 @@ import { Settings } from "./settings/settings.tsx";
 import { TabList } from "./tab_list/tab_list.tsx";
 import { BankEditor } from "./bank_editor/bank_editor.tsx";
 import { type BasicSoundBank, loadSoundFont } from "spessasynth_core";
-
-const localeList = {
-    en: { translation: localeEnglish }
-};
+import { LocaleList } from "./locale/locale_list.ts";
 
 // apply locale
-let targetLocale = loadSettings().lang;
+const initialSettings = loadSettings();
+let targetLocale = getSetting("lang", initialSettings);
 if (targetLocale === UNSET_LANGUAGE) {
     targetLocale = getUserLocale();
 }
@@ -28,7 +32,7 @@ if (targetLocale === UNSET_LANGUAGE) {
 i18next
     .use(initReactI18next)
     .init({
-        resources: localeList,
+        resources: LocaleList,
         lng: targetLocale,
         fallbackLng: DEFAULT_LOCALE
     })
@@ -42,6 +46,8 @@ const context = new AudioContext({
 // shared audio engine, the bank will swap on switching tabs
 const audioEngine = new AudioEngine(context);
 
+applyAudioSettings(initialSettings, audioEngine.processor);
+
 // shared clipboard
 const clipboardManager = new ClipBoardManager();
 
@@ -52,10 +58,13 @@ function App() {
     const currentManager = tabs[activeTab];
     const [isLoading, setIsLoading] = useState(false);
     const [settings, setSettings] = useState(false);
+    const [theme, setTheme] = useState(getSetting("theme", initialSettings));
 
     useEffect(() => {
         if (tabs.length > 0 && tabs[activeTab]) {
             tabs[activeTab].sendBankToSynth();
+        } else {
+            audioEngine.pauseMIDI();
         }
     }, [activeTab, tabs]);
 
@@ -133,11 +142,14 @@ function App() {
 
     const showTabList = !settings;
     const showEditor = !settings && !isLoading && tabs.length > 0;
-    const showWelcome = tabs.length < 1;
+    const showWelcome = tabs.length < 1 && !settings;
 
     return (
-        <div className="spessafont_main">
+        <div
+            className={`spessafont_main ${theme === "light" ? "light_mode" : ""}`}
+        >
             <MenuBar
+                showMidiPlayer={tabs.length > 0}
                 toggleSettings={toggleSettings}
                 audioEngine={audioEngine}
                 openTab={openNewBankTab}
@@ -153,7 +165,7 @@ function App() {
                 />
             )}
 
-            {settings && <Settings engine={audioEngine} />}
+            {settings && <Settings setTheme={setTheme} engine={audioEngine} />}
 
             {isLoading && (
                 <div className="welcome">

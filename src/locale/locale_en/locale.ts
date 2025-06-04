@@ -3,6 +3,7 @@ import { BankInfoLocale } from "./bank_info.ts";
 import { PresetListLocale } from "./preset_list.ts";
 import { ModulatorLocale } from "./modulator.ts";
 import { GeneratorLocale } from "./generator.ts";
+import { SettingsLocale } from "./settings.ts";
 
 /**
  *
@@ -41,5 +42,6 @@ export const localeEnglish = {
     modulatorLocale: ModulatorLocale,
     generatorLocale: GeneratorLocale,
     bankInfo: BankInfoLocale,
-    presetList: PresetListLocale
+    presetList: PresetListLocale,
+    settingsLocale: SettingsLocale
 };
