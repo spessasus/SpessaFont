@@ -5,3 +5,14 @@ This ~will be~ an online SoundFont/DLS editor based on [spessasynth_lib](https:/
 This is also my first TypeScript and react project.
 
 Stay tuned!
+
+### Development (and testing it for yourself)
+1. Clone
+2. `npm install`
+3. `npm run dev`
+
+
+### Build for production
+1. Clone
+2. `npm install`
+3. `npm run build`
