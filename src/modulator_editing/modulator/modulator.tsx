@@ -38,33 +38,38 @@ export function ModulatorView({
     const { t } = useTranslation();
 
     function setDestination(dest: generatorTypes) {
-        modulator.modulatorDestination = dest;
-        setModulator(modulator);
+        const mod = Modulator.copy(modulator);
+        mod.modulatorDestination = dest;
+        setModulator(mod);
     }
 
     function setAmount(amount: number) {
-        modulator.transformAmount = amount;
-        setModulator(modulator);
+        const mod = Modulator.copy(modulator);
+        mod.transformAmount = amount;
+        setModulator(mod);
     }
 
     function setTransformType(t: number) {
         if (t !== 0 && t !== 2) {
             return;
         }
-        modulator.transformType = t;
-        setModulator(modulator);
+        const mod = Modulator.copy(modulator);
+        mod.transformType = t;
+        setModulator(mod);
     }
 
     function setSource(s: ModulatorSource) {
-        modulator.sourceIndex = s.sourceIndex;
-        modulator.sourceUsesCC = s.usesCC ? 1 : 0;
-        setModulator(modulator);
+        const mod = Modulator.copy(modulator);
+        mod.sourceIndex = s.sourceIndex;
+        mod.sourceUsesCC = s.usesCC ? 1 : 0;
+        setModulator(mod);
     }
 
     function setSecSource(s: ModulatorSource) {
-        modulator.secSrcIndex = s.sourceIndex;
-        modulator.secSrcUsesCC = s.usesCC ? 1 : 0;
-        setModulator(modulator);
+        const mod = Modulator.copy(modulator);
+        mod.secSrcIndex = s.sourceIndex;
+        mod.secSrcUsesCC = s.usesCC ? 1 : 0;
+        setModulator(mod);
     }
 
     function setCurveType(c: ModulatorCurveType) {

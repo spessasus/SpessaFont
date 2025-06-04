@@ -54,7 +54,7 @@ export function SoundBankInfo({
 
     return (
         <div className={"sound_bank_info"}>
-            <EditableBankInfo bank={bank}></EditableBankInfo>
+            <EditableBankInfo manager={manager}></EditableBankInfo>
             <BankInfoStats
                 bank={bank}
                 toggleDefaultModulators={toggleDefaultModulators}

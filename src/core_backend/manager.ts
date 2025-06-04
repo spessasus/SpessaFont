@@ -9,10 +9,12 @@ import {
 import { FancyChorus, getReverbProcessor } from "spessasynth_lib";
 import { ClipBoardManager } from "../clipboard_manager.ts";
 import type { TFunction } from "i18next";
+import type { HistoryAction } from "./history.ts";
+import { logInfo } from "../utils/core_utils.ts";
 
 // audio worklet processor operates at that
 const BLOCK_SIZE = 128;
-const CHUNK_COUNT = 8; // 16 * 128 = 1024
+const CHUNK_COUNT = 16; // 16 * 128 = 2048
 const MAX_CHUNKS_QUEUED = 10;
 
 type AudioChunk = [Float32Array, Float32Array];
@@ -28,6 +30,9 @@ export default class Manager {
     reverb: ConvolverNode;
 
     clipboard = new ClipBoardManager();
+
+    history: HistoryAction[] = [];
+    undoHistory: HistoryAction[] = [];
 
     bank: BasicSoundBank | undefined;
     setBank: (bank: BasicSoundBank | undefined) => void;
@@ -138,6 +143,48 @@ export default class Manager {
         this.sequencer.pause();
         this.clearCache();
         this.setBank(undefined);
+    }
+
+    modifyBank(action: HistoryAction) {
+        if (!this.bank) {
+            return;
+        }
+        action.do(this.bank);
+        this.history.push(action);
+        this.undoHistory.length = 0;
+        // update synth engine
+        this.clearCache();
+    }
+
+    redoBankModification() {
+        if (!this.bank || this.undoHistory.length < 1) {
+            return;
+        }
+        const action = this.undoHistory.pop();
+        if (!action) {
+            return;
+        }
+        action.do(this.bank);
+        logInfo(`Redid. Remaining undo history: ${this.undoHistory.length}`);
+        this.history.push(action);
+        this.clearCache();
+    }
+
+    undoBankModification() {
+        if (!this.bank || this.history.length < 1) {
+            return;
+        }
+        const action = this.history.pop();
+
+        if (!action) {
+            return;
+        }
+
+        action.undo(this.bank);
+        logInfo(`Undid. Remaining history: ${this.history.length}`);
+        this.undoHistory.push(action);
+        // update synth engine
+        this.clearCache();
     }
 
     save(format: "sf2" | "dls") {

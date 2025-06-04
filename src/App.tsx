@@ -7,7 +7,7 @@ import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 import Manager from "./core_backend/manager.ts";
 import { GetUserInput } from "./get_user_input.tsx";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BasicSoundBank } from "spessasynth_core";
 import { SoundBankInfo } from "./info_view/sound_bank_info.tsx";
 import { PresetList } from "./preset_list/preset_list.tsx";
@@ -44,6 +44,29 @@ function App() {
 
     const managerRef = useRef<Manager>(new Manager(context, setBank));
     const manager = managerRef.current;
+
+    useEffect(() => {
+        function handleKeyDown(e: KeyboardEvent) {
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key) {
+                    case "z":
+                        manager.undoBankModification();
+                        break;
+                    case "y":
+                        manager.redoBankModification();
+                        break;
+                    default:
+                        return;
+                }
+            }
+        }
+
+        window.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [manager]);
 
     function MainContent() {
         switch (contentState) {

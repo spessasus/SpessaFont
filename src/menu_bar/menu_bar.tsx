@@ -60,6 +60,14 @@ export function MenuBar({
         }
     }
 
+    function undo() {
+        manager.undoBankModification();
+    }
+
+    function redo() {
+        manager.redoBankModification();
+    }
+
     return (
         <div className={"menu_bar_main"}>
             <MenuBarDropdown main={fLoc + "file"}>
@@ -77,8 +85,8 @@ export function MenuBar({
                 <MenuBarItem text={fLoc + "saveSF3"}></MenuBarItem>
             </MenuBarDropdown>
             <MenuBarDropdown main={eLoc + "edit"}>
-                <MenuBarItem text={eLoc + "undo"}></MenuBarItem>
-                <MenuBarItem text={eLoc + "redo"}></MenuBarItem>
+                <MenuBarItem click={undo} text={eLoc + "undo"}></MenuBarItem>
+                <MenuBarItem click={redo} text={eLoc + "redo"}></MenuBarItem>
             </MenuBarDropdown>
             <MIDIPlayer manager={manager}></MIDIPlayer>
             <div style={{ flex: 1 }}></div>
