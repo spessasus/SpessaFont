@@ -1,14 +1,15 @@
-import type { BasicSoundBank } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
+import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 
 export function BankInfoStats({
-    bank,
+    manager,
     toggleDefaultModulators
 }: {
-    bank: BasicSoundBank;
+    manager: SoundBankManager;
     toggleDefaultModulators: () => void;
 }) {
     const { t } = useTranslation();
+    const bank = manager.bank;
 
     // count generators and modulators
     let instrumentGens = 0;
@@ -35,15 +36,15 @@ export function BankInfoStats({
             <h1>{t("bankInfo.stats")}</h1>
             <span>
                 <label>{t("bankInfo.version")}</label>
-                <pre>{bank.soundFontInfo["ifil"]}</pre>
+                <pre>{manager.getInfo("ifil")}</pre>
             </span>
             <span>
                 <label>{t("bankInfo.engine")}</label>
-                <pre>{bank.soundFontInfo["isng"]}</pre>
+                <pre>{manager.getInfo("isng")}</pre>
             </span>
             <span>
                 <label>{t("bankInfo.software")}</label>
-                <pre>{bank.soundFontInfo["ISFT"]}</pre>
+                <pre>{manager.getInfo("ISFT")}</pre>
             </span>
 
             <span

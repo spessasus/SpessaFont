@@ -77,7 +77,10 @@ declare module "spessasynth_core" {
     };
 
     export class BasicSoundBank {
-        soundFontInfo: Record<SoundFontInfoType, string | IndexedByteArray>;
+        soundFontInfo: Record<
+            SoundFontInfoType,
+            string | IndexedByteArray | undefined
+        >;
         presets: BasicPreset[];
         samples: BasicSample[];
         instruments: BasicInstrument[];

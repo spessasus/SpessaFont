@@ -55,10 +55,16 @@ function App() {
     const [tabs, setTabs] = useState<SoundBankManager[]>([]);
     const [activeTab, setActiveTab] = useState<number>(0); // index in tabs[]
     const { t } = useTranslation();
-    const currentManager = tabs[activeTab];
+    const currentManager: SoundBankManager | undefined = tabs[activeTab];
     const [isLoading, setIsLoading] = useState(false);
     const [settings, setSettings] = useState(false);
     const [theme, setTheme] = useState(getSetting("theme", initialSettings));
+
+    // only re-renders tab list when needed
+    for (const m of tabs) {
+        // clear the callback
+        m.changeCallback = () => {};
+    }
 
     useEffect(() => {
         if (tabs.length > 0 && tabs[activeTab]) {
@@ -72,6 +78,9 @@ function App() {
 
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
+            if (!currentManager) {
+                return;
+            }
             if (e.ctrlKey || e.metaKey) {
                 switch (e.key) {
                     case "z":
@@ -158,6 +167,7 @@ function App() {
             />
             {showTabList && (
                 <TabList
+                    currentManager={currentManager}
                     activeTab={activeTab}
                     closeTab={closeTab}
                     setActiveTab={setActiveTab}
@@ -175,7 +185,7 @@ function App() {
 
             {showEditor && (
                 <BankEditor
-                    manager={tabs[activeTab]}
+                    manager={currentManager}
                     audioEngine={audioEngine}
                     clipboardManager={clipboardManager}
                 />

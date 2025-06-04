@@ -6,6 +6,7 @@ import { useState } from "react";
 import { DefaultModulatorList } from "./default_modulators/default_modulators.tsx";
 import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import type { ClipBoardManager } from "../core_backend/clipboard_manager.ts";
+import { useTranslation } from "react-i18next";
 
 export function SoundBankInfo({
     manager,
@@ -14,9 +15,11 @@ export function SoundBankInfo({
     manager: SoundBankManager;
     clipboard: ClipBoardManager;
 }) {
+    const { t } = useTranslation();
     const [defaultMods, setDefaultMods] = useState(false);
-
-    const bank = manager.bank;
+    const [name, setName] = useState(
+        manager.getBankName(t("bankInfo.unnamed"))
+    );
 
     function toggleDefaultModulators() {
         setDefaultMods(!defaultMods);
@@ -30,7 +33,7 @@ export function SoundBankInfo({
                     clipboard={clipboard}
                 ></DefaultModulatorList>
                 <BankInfoStats
-                    bank={bank}
+                    manager={manager}
                     toggleDefaultModulators={toggleDefaultModulators}
                 ></BankInfoStats>
             </div>
@@ -39,9 +42,13 @@ export function SoundBankInfo({
 
     return (
         <div className={"sound_bank_info"}>
-            <EditableBankInfo manager={manager}></EditableBankInfo>
+            <EditableBankInfo
+                name={name}
+                setName={setName}
+                manager={manager}
+            ></EditableBankInfo>
             <BankInfoStats
-                bank={bank}
+                manager={manager}
                 toggleDefaultModulators={toggleDefaultModulators}
             ></BankInfoStats>
         </div>

@@ -20,7 +20,7 @@ export const localeEnglish = {
     },
     poweredBy: "Powered by",
     firefox: "Consider using Firefox for the best performance",
-
+    unsavedChanges: "This file has unsaved changes.",
     getUserInput: "Press anywhere to start the app",
 
     synthInit: {

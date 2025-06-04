@@ -1,6 +1,7 @@
 import {
     BasicSoundBank,
     loadSoundFont,
+    type SoundFontInfoType,
     SpessaSynthProcessor,
     type SpessaSynthSequencer
 } from "spessasynth_core";
@@ -32,7 +33,15 @@ export default class SoundBankManager {
     }
 
     getBankName(unnamed: string) {
-        return this.bank.soundFontInfo?.["INAM"] || unnamed;
+        return this.getInfo("INAM") || unnamed;
+    }
+
+    getInfo(fourCC: SoundFontInfoType) {
+        return this.bank.soundFontInfo?.[fourCC]?.toString() || "";
+    }
+
+    getTabName(unnamed: string) {
+        return `${this.dirty ? "* " : ""}${this.getBankName(unnamed)}`;
     }
 
     clearCache() {
@@ -61,10 +70,11 @@ export default class SoundBankManager {
         const blob = new Blob([binary.buffer]);
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = `${this.bank.soundFontInfo["INAM"] || "unnamed"}.${format}`;
+        a.download = `${this.getBankName("Unnamed")}.${format}`;
         console.log(a);
         a.click();
         this.dirty = false;
+        this.changeCallback();
     }
 
     sendBankToSynth() {
@@ -75,13 +85,18 @@ export default class SoundBankManager {
     modifyBank(action: HistoryAction) {
         this.history.do(this, action);
         this.dirty = true;
+        this.changeCallback();
     }
 
     undo() {
         this.history.undo(this);
+        this.changeCallback();
     }
 
     redo() {
         this.history.redo(this);
+        this.changeCallback();
     }
+
+    changeCallback: () => void = () => {};
 }

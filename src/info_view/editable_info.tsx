@@ -33,10 +33,17 @@ class SetBankInfo implements HistoryAction {
     }
 }
 
-export function EditableBankInfo({ manager }: { manager: SoundBankManager }) {
+export function EditableBankInfo({
+    manager,
+    name,
+    setName
+}: {
+    manager: SoundBankManager;
+    name: string;
+    setName: (n: string) => void;
+}) {
     const { t } = useTranslation();
 
-    const [name, setName] = useState("");
     const [date, setDate] = useState("");
     const [engi, setEngi] = useState("");
     const [prod, setProd] = useState("");
@@ -49,18 +56,15 @@ export function EditableBankInfo({ manager }: { manager: SoundBankManager }) {
     const bank = manager.bank;
 
     useEffect(() => {
-        const inf = (fourcc: SoundFontInfoType): string => {
-            return bank?.soundFontInfo[fourcc]?.toString() || "";
-        };
         if (bank !== undefined) {
-            setName(inf("INAM"));
-            setDate(inf("ICRD"));
-            setEngi(inf("IENG"));
-            setProd(inf("IPRD"));
-            setCopy(inf("ICOP"));
-            setCmt(inf("ICMT"));
+            setName(manager.getInfo("INAM"));
+            setDate(manager.getInfo("ICRD"));
+            setEngi(manager.getInfo("IENG"));
+            setProd(manager.getInfo("IPRD"));
+            setCopy(manager.getInfo("ICOP"));
+            setCmt(manager.getInfo("ICMT"));
         }
-    }, [bank]);
+    }, [bank, manager, setName]);
 
     return (
         <div className={"editable"}>
@@ -71,7 +75,7 @@ export function EditableBankInfo({ manager }: { manager: SoundBankManager }) {
                     manager.modifyBank(
                         new SetBankInfo(
                             setName,
-                            bank.soundFontInfo["INAM"].toString(),
+                            manager.getInfo("INAM"),
                             e.target.value,
                             "INAM"
                         )
@@ -91,7 +95,7 @@ export function EditableBankInfo({ manager }: { manager: SoundBankManager }) {
                             manager.modifyBank(
                                 new SetBankInfo(
                                     setEngi,
-                                    bank.soundFontInfo["IENG"].toString(),
+                                    manager.getInfo("IENG"),
                                     e.target.value,
                                     "IENG"
                                 )
@@ -111,7 +115,7 @@ export function EditableBankInfo({ manager }: { manager: SoundBankManager }) {
                             manager.modifyBank(
                                 new SetBankInfo(
                                     setDate,
-                                    bank.soundFontInfo["ICRD"].toString(),
+                                    manager.getInfo("ICRD"),
                                     e.target.value,
                                     "ICRD"
                                 )
@@ -131,7 +135,7 @@ export function EditableBankInfo({ manager }: { manager: SoundBankManager }) {
                             manager.modifyBank(
                                 new SetBankInfo(
                                     setProd,
-                                    bank.soundFontInfo["IPRD"].toString(),
+                                    manager.getInfo("IPRD"),
                                     e.target.value,
                                     "IPRD"
                                 )
@@ -150,8 +154,8 @@ export function EditableBankInfo({ manager }: { manager: SoundBankManager }) {
                         onChange={(e) => {
                             manager.modifyBank(
                                 new SetBankInfo(
-                                    setProd,
-                                    bank.soundFontInfo["ICOP"].toString(),
+                                    setCopy,
+                                    manager.getInfo("ICOP"),
                                     e.target.value,
                                     "ICOP"
                                 )
@@ -171,7 +175,7 @@ export function EditableBankInfo({ manager }: { manager: SoundBankManager }) {
                         manager.modifyBank(
                             new SetBankInfo(
                                 setCmt,
-                                bank.soundFontInfo["ICMT"].toString(),
+                                manager.getInfo("ICMT"),
                                 e.target.value,
                                 "ICMT"
                             )
