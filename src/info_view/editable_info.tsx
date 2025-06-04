@@ -1,7 +1,7 @@
 import type { BasicSoundBank, SoundFontInfoType } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
-import type Manager from "../core_backend/manager.ts";
+import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import type { HistoryAction } from "../core_backend/history.ts";
 
 class SetBankInfo implements HistoryAction {
@@ -33,7 +33,7 @@ class SetBankInfo implements HistoryAction {
     }
 }
 
-export function EditableBankInfo({ manager }: { manager: Manager }) {
+export function EditableBankInfo({ manager }: { manager: SoundBankManager }) {
     const { t } = useTranslation();
 
     const [name, setName] = useState("");
@@ -61,10 +61,6 @@ export function EditableBankInfo({ manager }: { manager: Manager }) {
             setCmt(inf("ICMT"));
         }
     }, [bank]);
-
-    if (!bank) {
-        return <div>ERROR</div>;
-    }
 
     return (
         <div className={"editable"}>

@@ -18,6 +18,7 @@ export const localeEnglish = {
             "Created by Spessasus using spessasynth_core and spessasynth_lib."
     },
     poweredBy: "Powered by",
+    firefox: "Consider using Firefox for the best performance",
 
     getUserInput: "Press anywhere to start the app",
 

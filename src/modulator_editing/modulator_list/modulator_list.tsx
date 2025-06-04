@@ -3,7 +3,7 @@ import { ModulatorView } from "../modulator/modulator.tsx";
 import "./modulator_list.css";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
-import type { ClipBoardManager } from "../../clipboard_manager.ts";
+import type { ClipBoardManager } from "../../core_backend/clipboard_manager.ts";
 
 type ModulatorListProps = {
     modulatorList: Modulator[];
@@ -82,7 +82,7 @@ export function ModulatorList({
                         onClick={copyToCliboard}
                         className={"modulator_main modulator_list_button"}
                     >
-                        <h3>{t("menuBarLocale.edit.copy")}</h3>
+                        {t("menuBarLocale.edit.copy")}
                     </div>
                 )}
                 {hasSelectedMods && (
@@ -90,7 +90,7 @@ export function ModulatorList({
                         onClick={deleteSelected}
                         className={"modulator_main modulator_list_button"}
                     >
-                        <h3>{t("menuBarLocale.edit.delete")}</h3>
+                        {t("menuBarLocale.edit.delete")}
                     </div>
                 )}
             </div>

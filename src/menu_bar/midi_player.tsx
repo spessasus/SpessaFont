@@ -1,26 +1,22 @@
-import type Manager from "../core_backend/manager.ts";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { MIDI, RMIDINFOChunks } from "spessasynth_core";
+import type { AudioEngine } from "../core_backend/audio_engine.ts";
 
-export function MIDIPlayer({ manager }: { manager: Manager }) {
+export function MIDIPlayer({ audioEngine }: { audioEngine: AudioEngine }) {
     const { t } = useTranslation();
     const [midi, setMidi] = useState<MIDI>();
 
     useEffect(() => {
         if (midi !== undefined) {
-            manager.playMIDI(midi);
+            audioEngine.playMIDI(midi);
         }
-    }, [midi, manager]);
-
-    if (manager.bank === undefined) {
-        return <></>;
-    }
+    }, [midi, audioEngine]);
 
     function playMIDI() {
         const input = document.createElement("input");
         input.type = "file";
-        input.accept = ".mid,.midi,.rmi,.xmf,.mxmf,.smf";
+        input.accept = ".mid,.midi,.rmi,.xmf,.mxmf,.smf,.kar";
         input.onchange = async () => {
             if (input.files?.[0] === undefined) {
                 return;
@@ -34,13 +30,13 @@ export function MIDIPlayer({ manager }: { manager: Manager }) {
     }
 
     function PauseComponent() {
-        const [paused, setPaused] = useState(manager.sequencer.paused);
+        const [paused, setPaused] = useState(audioEngine.MIDIPaused);
         if (paused) {
             return (
                 <div
                     className={"menu_bar_item"}
                     onClick={() => {
-                        manager.resumeMIDI();
+                        audioEngine.resumeMIDI();
                         setPaused(false);
                     }}
                 >
@@ -52,7 +48,7 @@ export function MIDIPlayer({ manager }: { manager: Manager }) {
                 <div
                     className={"menu_bar_item"}
                     onClick={() => {
-                        manager.pauseMIDI();
+                        audioEngine.pauseMIDI();
                         setPaused(true);
                     }}
                 >
@@ -64,18 +60,18 @@ export function MIDIPlayer({ manager }: { manager: Manager }) {
 
     function TimeDisplay() {
         const [currentTime, setCurrentTime] = useState(
-            manager.sequencer.currentTime
+            audioEngine.sequencer.currentTime
         );
 
         useEffect(() => {
             const interval = setInterval(() => {
-                setCurrentTime(manager.sequencer.currentTime);
+                setCurrentTime(audioEngine.sequencer.currentTime);
             }, 800);
 
             return () => clearInterval(interval);
         }, []);
 
-        const duration = manager.sequencer.midiData?.duration ?? 0;
+        const duration = audioEngine.sequencer.midiData?.duration ?? 0;
 
         function formatTime(seconds: number): string {
             const min = Math.floor(seconds / 60);

@@ -94,6 +94,8 @@ declare module "spessasynth_core" {
         write(options?: SoundFont2WriteOptions): Uint8Array;
 
         writeDLS(): Uint8Array;
+
+        destroySoundBank(): void;
     }
 
     export const loadSoundFont: (buffer: ArrayBuffer) => BasicSoundBank;

@@ -1,14 +1,13 @@
-import type { Modulator } from "spessasynth_core";
+import { Modulator } from "spessasynth_core";
 
 export class ClipBoardManager {
     private modulatorClipboard: Modulator[] = [];
 
     getModulators() {
-        return this.modulatorClipboard;
+        return this.modulatorClipboard.map((m) => Modulator.copy(m));
     }
 
     setModulators(mods: Modulator[]) {
-        console.log("set modulators", mods);
         this.modulatorClipboard = mods;
     }
 }

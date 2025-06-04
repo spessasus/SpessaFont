@@ -1,11 +1,13 @@
-import type { BasicPreset, BasicSoundBank } from "spessasynth_core";
+import type { BasicPreset } from "spessasynth_core";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./preset_list.css";
+import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 
-export function PresetList({ bank }: { bank: BasicSoundBank | undefined }) {
+export function PresetList({ manager }: { manager: SoundBankManager }) {
     const [searchQuery, setSearchQuery] = useState("");
     const { t } = useTranslation();
+    const bank = manager.bank;
 
     if (bank === undefined) {
         return <></>;

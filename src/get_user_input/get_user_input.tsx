@@ -1,14 +1,15 @@
-import type Manager from "./core_backend/manager.ts";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
+import type { AudioEngine } from "../core_backend/audio_engine.ts";
+import "./get_user_input.css";
 
 // gets user input so the audio context can be resumed
-export function GetUserInput({ manager }: { manager: Manager }) {
+export function GetUserInput({ audioEngine }: { audioEngine: AudioEngine }) {
     const [hidden, setHidden] = useState(false);
     const { t } = useTranslation();
 
     function onClicked() {
-        manager.resumeContext().then(() => {
+        audioEngine.resumeContext().then(() => {
             setHidden(true);
         });
     }

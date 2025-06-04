@@ -3,7 +3,7 @@ import * as React from "react";
 
 type MenuBarProps = {
     main: string;
-    children: React.ReactNode;
+    children?: React.ReactNode;
 };
 
 export function MenuBarItem({

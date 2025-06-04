@@ -1,21 +1,26 @@
 import { MenuBarDropdown, MenuBarItem } from "./dropdown.tsx";
-import type Manager from "../core_backend/manager.ts";
+import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import { MIDIPlayer } from "./midi_player.tsx";
 import { VoiceDisplay } from "./voice_display.tsx";
 import "./menu_bar.css";
 import { useTranslation } from "react-i18next";
-import { MainContentStates } from "../main_content_states.ts";
+import type { AudioEngine } from "../core_backend/audio_engine.ts";
+
+// @ts-expect-error chromium check is here
+const isChrome: boolean = window["chrome"] !== undefined;
 
 export function MenuBar({
-    manager,
-    setIsLoading,
-    contentState,
-    setContentState
+    toggleSettings,
+    audioEngine,
+    openTab,
+    closeTab,
+    manager
 }: {
-    manager: Manager;
-    setIsLoading: (v: boolean) => void;
-    contentState: number;
-    setContentState: (s: number) => void;
+    audioEngine: AudioEngine;
+    toggleSettings: () => void;
+    openTab: (b?: File) => void;
+    closeTab: () => void;
+    manager: SoundBankManager;
 }) {
     const fLoc = "menuBarLocale.file.";
     const eLoc = "menuBarLocale.edit.";
@@ -31,17 +36,12 @@ export function MenuBar({
             if (!file) {
                 return;
             }
-            setIsLoading(true);
-            await manager.loadBank(file);
-            setIsLoading(false);
+            openTab(file);
         };
     }
 
     function newFile() {
-        setIsLoading(true);
-        manager.createNewFile().then(() => {
-            setIsLoading(false);
-        });
+        openTab();
     }
 
     function sf2() {
@@ -52,20 +52,12 @@ export function MenuBar({
         manager.save("dls");
     }
 
-    function setState() {
-        if (contentState === MainContentStates.settings) {
-            setContentState(MainContentStates.stats);
-        } else {
-            setContentState(MainContentStates.settings);
-        }
-    }
-
     function undo() {
-        manager.undoBankModification();
+        manager.undo();
     }
 
     function redo() {
-        manager.redoBankModification();
+        manager.redo();
     }
 
     return (
@@ -77,7 +69,7 @@ export function MenuBar({
                     text={fLoc + "open"}
                 ></MenuBarItem>
                 <MenuBarItem
-                    click={() => manager.close()}
+                    click={closeTab}
                     text={fLoc + "close"}
                 ></MenuBarItem>
                 <MenuBarItem click={sf2} text={fLoc + "saveSF2"}></MenuBarItem>
@@ -88,13 +80,14 @@ export function MenuBar({
                 <MenuBarItem click={undo} text={eLoc + "undo"}></MenuBarItem>
                 <MenuBarItem click={redo} text={eLoc + "redo"}></MenuBarItem>
             </MenuBarDropdown>
-            <MIDIPlayer manager={manager}></MIDIPlayer>
+            <MIDIPlayer audioEngine={audioEngine}></MIDIPlayer>
+            {isChrome && <MenuBarDropdown main={"firefox"}></MenuBarDropdown>}
             <div style={{ flex: 1 }}></div>
             <VoiceDisplay
-                analyser={manager.analyser}
-                processor={manager.processor}
+                analyser={audioEngine.analyser}
+                processor={audioEngine.processor}
             ></VoiceDisplay>
-            <div className={"menu_bar_button"} onClick={setState}>
+            <div className={"menu_bar_button"} onClick={toggleSettings}>
                 {t("menuBarLocale.settings")}
             </div>
         </div>
