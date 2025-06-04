@@ -13,7 +13,7 @@ import { ModulatorDiagram } from "../diagram.tsx";
 import { DestinationPicker } from "../destination_picker.tsx";
 
 type ModulatorProps = {
-    modulator: Modulator;
+    mod: Modulator;
     setModulator: (m: Modulator) => void;
     deleteModulator: () => void;
     modulatorNumber: number;
@@ -26,7 +26,7 @@ type ModulatorProps = {
 const AMOUNT_PREFIX = "× ";
 
 export function ModulatorView({
-    modulator,
+    mod,
     setModulator,
     deleteModulator,
     modulatorNumber,
@@ -38,13 +38,11 @@ export function ModulatorView({
     const { t } = useTranslation();
 
     function setDestination(dest: generatorTypes) {
-        const mod = Modulator.copy(modulator);
         mod.modulatorDestination = dest;
         setModulator(mod);
     }
 
     function setAmount(amount: number) {
-        const mod = Modulator.copy(modulator);
         mod.transformAmount = amount;
         setModulator(mod);
     }
@@ -53,27 +51,24 @@ export function ModulatorView({
         if (t !== 0 && t !== 2) {
             return;
         }
-        const mod = Modulator.copy(modulator);
+
         mod.transformType = t;
         setModulator(mod);
     }
 
     function setSource(s: ModulatorSource) {
-        const mod = Modulator.copy(modulator);
         mod.sourceIndex = s.sourceIndex;
         mod.sourceUsesCC = s.usesCC ? 1 : 0;
         setModulator(mod);
     }
 
     function setSecSource(s: ModulatorSource) {
-        const mod = Modulator.copy(modulator);
         mod.secSrcIndex = s.sourceIndex;
         mod.secSrcUsesCC = s.usesCC ? 1 : 0;
         setModulator(mod);
     }
 
     function setCurveType(c: ModulatorCurveType) {
-        const mod = Modulator.copy(modulator);
         mod.sourceCurveType = c.curveType;
         mod.sourcePolarity = c.bipolar ? 1 : 0;
         mod.sourceDirection = c.positive ? 0 : 1;
@@ -81,7 +76,6 @@ export function ModulatorView({
     }
 
     function setSecCurveType(c: ModulatorCurveType) {
-        const mod = Modulator.copy(modulator);
         mod.secSrcCurveType = c.curveType;
         mod.secSrcPolarity = c.bipolar ? 1 : 0;
         mod.secSrcDirection = c.positive ? 0 : 1;
@@ -114,15 +108,15 @@ export function ModulatorView({
                 <ModulatorSourcePicker
                     setSource={setSource}
                     source={{
-                        usesCC: modulator.sourceUsesCC > 0,
-                        sourceIndex: modulator.sourceIndex
+                        usesCC: mod.sourceUsesCC > 0,
+                        sourceIndex: mod.sourceIndex
                     }}
                 ></ModulatorSourcePicker>
                 <ModulatorSourcePicker
                     setSource={setSecSource}
                     source={{
-                        usesCC: modulator.secSrcUsesCC > 0,
-                        sourceIndex: modulator.secSrcIndex
+                        usesCC: mod.secSrcUsesCC > 0,
+                        sourceIndex: mod.secSrcIndex
                     }}
                 ></ModulatorSourcePicker>
             </div>
@@ -136,9 +130,9 @@ export function ModulatorView({
                         }
                         setNotActive={() => setActiveModPickerId("")}
                         curveType={{
-                            curveType: modulator.sourceCurveType,
-                            bipolar: modulator.sourcePolarity === 1,
-                            positive: modulator.sourceDirection === 0
+                            curveType: mod.sourceCurveType,
+                            bipolar: mod.sourcePolarity === 1,
+                            positive: mod.sourceDirection === 0
                         }}
                         setCurveType={setCurveType}
                     ></ModulatorCurvePicker>
@@ -150,9 +144,9 @@ export function ModulatorView({
                             setActiveModPickerId(`${modulatorNumber}-2`)
                         }
                         curveType={{
-                            curveType: modulator.secSrcCurveType,
-                            bipolar: modulator.secSrcPolarity === 1,
-                            positive: modulator.secSrcDirection === 0
+                            curveType: mod.secSrcCurveType,
+                            bipolar: mod.secSrcPolarity === 1,
+                            positive: mod.secSrcDirection === 0
                         }}
                         setCurveType={setSecCurveType}
                     ></ModulatorCurvePicker>
@@ -162,7 +156,7 @@ export function ModulatorView({
                     type="text"
                     className="pretty_input amount_input"
                     placeholder={`${AMOUNT_PREFIX} ${t("modulatorLocale.amount")}`}
-                    value={`${AMOUNT_PREFIX}${modulator.transformAmount}`}
+                    value={`${AMOUNT_PREFIX}${mod.transformAmount}`}
                     onChange={(e) => {
                         const rawValue = e.target.value;
                         const numericPart = rawValue
@@ -186,7 +180,7 @@ export function ModulatorView({
                 />
                 <select
                     className={"pretty_outline transform_selector"}
-                    value={modulator.transformType}
+                    value={mod.transformType}
                     onChange={(e) =>
                         setTransformType(parseInt(e.target.value) || 0)
                     }
@@ -200,7 +194,7 @@ export function ModulatorView({
                 </select>
             </div>
             <DestinationPicker
-                destination={modulator.modulatorDestination}
+                destination={mod.modulatorDestination}
                 setDestination={setDestination}
             ></DestinationPicker>
         </div>

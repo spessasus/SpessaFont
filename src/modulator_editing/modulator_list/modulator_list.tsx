@@ -117,7 +117,7 @@ export function ModulatorList({
                         <ModulatorView
                             key={i}
                             modulatorNumber={i + 1}
-                            modulator={mod}
+                            mod={Modulator.copy(mod)}
                             setModulator={setMod}
                             deleteModulator={deleteMod}
                             setActiveModPickerId={setActiveModPickerId}
