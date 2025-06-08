@@ -50,8 +50,8 @@ export function EditableBankInfo({
     const [copy, setCopy] = useState("");
     const [cmt, setCmt] = useState("");
     useEffect(() => {
-        document.title = `SpessaFont - ${name}`;
-    }, [name]);
+        document.title = `SpessaFont - ${manager.getBankName(t("bankInfo.unnamed"))}`;
+    }, [manager, t, name]);
 
     const bank = manager.bank;
 
