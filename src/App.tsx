@@ -151,7 +151,8 @@ function App() {
 
     const showTabList = !settings;
     const showEditor = !settings && !isLoading && tabs.length > 0;
-    const showWelcome = tabs.length < 1 && !settings;
+    const showWelcome = tabs.length < 1 && !settings && !isLoading;
+    const showSettings = settings && !isLoading;
 
     return (
         <div
@@ -175,7 +176,9 @@ function App() {
                 />
             )}
 
-            {settings && <Settings setTheme={setTheme} engine={audioEngine} />}
+            {showSettings && (
+                <Settings setTheme={setTheme} engine={audioEngine} />
+            )}
 
             {isLoading && (
                 <div className="welcome">
