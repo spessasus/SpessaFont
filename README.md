@@ -7,12 +7,15 @@ This is also my first TypeScript and react project.
 Stay tuned!
 
 ### Development (and testing it for yourself)
-1. Clone
-2. `npm install`
-3. `npm run dev`
+1. Make sure you have Node.js installed
+2. Clone this repository
+3. `npm install`
+4. `npm run dev`
 
 
 ### Build for production
-1. Clone
-2. `npm install`
-3. `npm run build`
+1. Make sure you have Node.js installed
+2. Clone this repository
+3. Clone
+4. `npm install`
+5. `npm run build`
