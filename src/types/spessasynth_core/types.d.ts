@@ -1,4 +1,6 @@
 declare module "spessasynth_core" {
+    import type { midiControllers } from "./midi/midi_message";
+
     export interface IndexedByteArray extends Uint8Array {
         currentIndex: number;
     }
@@ -15,16 +17,6 @@ declare module "spessasynth_core" {
          */
         currentValue: number;
         /**
-         * The source enumeration for this modulator
-         * @type {number}
-         */
-        sourceEnum: number;
-        /**
-         * The secondary source enumeration for this modulator
-         * @type {number}
-         */
-        secondarySourceEnum: number;
-        /**
          * The generator destination of this modulator
          * @type {generatorTypes}
          */
@@ -39,16 +31,16 @@ declare module "spessasynth_core" {
          * @type {0|2}
          */
         transformType: 0 | 2;
-        sourcePolarity: number;
-        sourceDirection: number;
-        sourceUsesCC: number;
-        sourceIndex: number;
-        sourceCurveType: number;
-        secSrcPolarity: number;
-        secSrcDirection: number;
-        secSrcUsesCC: number;
-        secSrcIndex: number;
-        secSrcCurveType: number;
+        sourcePolarity: 0 | 1;
+        sourceDirection: 0 | 1;
+        sourceUsesCC: 0 | 1;
+        sourceIndex: modulatorSources | midiControllers;
+        sourceCurveType: modulatorCurveTypes;
+        secSrcPolarity: 0 | 1;
+        secSrcDirection: 0 | 1;
+        secSrcUsesCC: 0 | 1;
+        secSrcIndex: modulatorSources | midiControllers;
+        secSrcCurveType: modulatorCurveTypes;
         /**
          * Indicates if the given modulator is chorus or reverb effects modulator.
          * This is done to simulate BASSMIDI effects behavior:
@@ -63,19 +55,35 @@ declare module "spessasynth_core" {
         isEffectModulator: boolean;
 
         /**
-         * creates a modulator
-         * @param srcEnum {number}
-         * @param secSrcEnum {number}
-         * @param destination {generatorTypes|number}
+         * Creates a new SF2 Modulator
+         * @param sourceIndex {modulatorSources|midiControllers}
+         * @param sourceCurveType {modulatorCurveTypes}
+         * @param sourceUsesCC {0|1}
+         * @param sourcePolarity {0|1}
+         * @param sourceDirection {0|1}
+         * @param secSrcIndex {modulatorSources|midiControllers}
+         * @param secSrcCurveType {modulatorCurveTypes}
+         * @param secSrcUsesCC {0|1}
+         * @param secSrcPolarity {0|1}
+         * @param secSrcDirection {0|1}
+         * @param destination {generatorTypes}
          * @param amount {number}
-         * @param transformType {number}
+         * @param transformType {0|2}
          */
         constructor(
-            srcEnum: number,
-            secSrcEnum: number,
-            destination: generatorTypes | number,
+            sourceIndex: modulatorSources | midiControllers,
+            sourceCurveType: modulatorCurveTypes,
+            sourceUsesCC: 0 | 1,
+            sourcePolarity: 0 | 1,
+            sourceDirection: 0 | 1,
+            secSrcIndex: modulatorSources | midiControllers,
+            secSrcCurveType: modulatorCurveTypes,
+            secSrcUsesCC: 0 | 1,
+            secSrcPolarity: 0 | 1,
+            secSrcDirection: 0 | 1,
+            destination: generatorTypes,
             amount: number,
-            transformType: number
+            transformType: 0 | 2
         );
 
         static copy(m: Modulator): Modulator;

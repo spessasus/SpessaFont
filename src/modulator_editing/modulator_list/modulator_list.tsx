@@ -1,4 +1,9 @@
-import { Modulator } from "spessasynth_core";
+import {
+    generatorTypes,
+    Modulator,
+    modulatorCurveTypes,
+    modulatorSources
+} from "spessasynth_core";
 import { ModulatorView } from "../modulator/modulator.tsx";
 import "./modulator_list.css";
 import { useTranslation } from "react-i18next";
@@ -25,7 +30,21 @@ export function ModulatorList({
     );
 
     const newModulator = () => {
-        const mod = new Modulator(0x0, 0x0, 48, 0, 0);
+        const mod = new Modulator(
+            modulatorSources.noController,
+            modulatorCurveTypes.linear,
+            0,
+            0,
+            0,
+            modulatorSources.noController,
+            modulatorCurveTypes.linear,
+            0,
+            0,
+            0,
+            generatorTypes.initialAttenuation,
+            0,
+            0
+        );
         const newList = [mod, ...modulatorList];
         setModulatorList(newList);
     };

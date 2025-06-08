@@ -17,14 +17,18 @@ declare module "spessasynth_core" {
     export interface BasicInstrument {
         instrumentName: string;
         instrumentZones: BasicInstrumentZone[];
+        globalZone: BasicGlobalZone;
     }
 
     export interface BasicZone {
         velRange: SoundFontRange;
         keyRange: SoundFontRange;
-        isGlobal: boolean;
         generators: Generator[];
         modulators: Modulator[];
+    }
+
+    export interface BasicGlobalZone extends BasicZone {
+        copyFrom(zone: BasicZone);
     }
 
     export interface BasicInstrumentZone extends BasicZone {
@@ -45,6 +49,7 @@ declare module "spessasynth_core" {
         morphology: number;
         parentSoundBank: BasicSoundBank;
         presetZones: BasicPresetZone[];
+        globalZone: BasicGlobalZone;
     }
 
     export type SoundFontInfoType =

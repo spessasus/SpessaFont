@@ -2,10 +2,11 @@ import { modulatorSources } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import type { ChangeEvent } from "react";
 import "./source_picker.css";
+import type { midiControllers } from "../../types/spessasynth_core/midi/midi_message";
 
 export type ModulatorSource = {
     usesCC: boolean;
-    sourceIndex: number;
+    sourceIndex: modulatorSources | midiControllers;
 };
 
 export function ModulatorSourcePicker({
