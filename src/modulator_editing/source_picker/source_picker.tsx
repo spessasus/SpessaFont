@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { ChangeEvent } from "react";
 import "./source_picker.css";
 import type { midiControllers } from "../../types/spessasynth_core/midi/midi_message";
+import { ILLEGAL_CC_DESTINATIONS } from "../../core_backend/illlegal_cc_destinations.ts";
 
 export type ModulatorSource = {
     usesCC: boolean;
@@ -38,11 +39,10 @@ export function ModulatorSourcePicker({
 
         if (match) {
             const cc = parseInt(match[1], 10);
-            if (cc >= 0 && cc <= 127) {
+            if (cc >= 0 && cc <= 127 && !ILLEGAL_CC_DESTINATIONS.includes(cc)) {
                 setSource({ usesCC: true, sourceIndex: cc });
             }
         } else if (input === "CC#") {
-            // Allow temporary empty state like "CC#" while typing
             setSource({ usesCC: true, sourceIndex: 0 });
         }
     };

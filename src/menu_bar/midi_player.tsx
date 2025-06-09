@@ -36,8 +36,8 @@ export function MIDIPlayer({ audioEngine }: { audioEngine: AudioEngine }) {
                 <div
                     className={"menu_bar_item"}
                     onClick={() => {
-                        audioEngine.resumeMIDI();
-                        setPaused(false);
+                        audioEngine.toggleMIDI();
+                        setPaused(audioEngine.MIDIPaused);
                     }}
                 >
                     {t("menuBarLocale.midi.resume")}
@@ -48,8 +48,8 @@ export function MIDIPlayer({ audioEngine }: { audioEngine: AudioEngine }) {
                 <div
                     className={"menu_bar_item"}
                     onClick={() => {
-                        audioEngine.pauseMIDI();
-                        setPaused(true);
+                        audioEngine.toggleMIDI();
+                        setPaused(audioEngine.MIDIPaused);
                     }}
                 >
                     {t("menuBarLocale.midi.pause")}

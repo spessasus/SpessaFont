@@ -121,6 +121,14 @@ export class AudioEngine {
         }
     }
 
+    toggleMIDI() {
+        if (this.sequencer.paused) {
+            this.sequencer.play();
+        } else {
+            this.sequencer.pause();
+        }
+    }
+
     playMIDI(mid: MIDI) {
         this.sequencer.loadNewSongList([mid]);
     }
