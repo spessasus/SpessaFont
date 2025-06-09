@@ -5,17 +5,26 @@ import { Setting } from "../setting.tsx";
 
 const NO_DEVICE = "NO_DEVICE";
 
+let midiAccessPersistent: MIDIAccess | null = null;
 let selectedDevicePersistent: MIDIInput | null = null;
+let midiDevices: MIDIInput[] = [];
 
 export function MidiSettings({ engine }: { engine: AudioEngine }) {
     const { t } = useTranslation();
-    const [midiAccess, setMidiAccess] = useState<MIDIAccess | null>(null);
+    const [midiAccess, setMidiAccess] = useState<MIDIAccess | null>(
+        midiAccessPersistent
+    );
     const [midiError, setMidiError] = useState<string | null>(null);
     const [selectedDevice, setSelectedDevice] = useState<MIDIInput | null>(
         selectedDevicePersistent
     );
 
     useEffect(() => {
+        if (midiAccess) {
+            midiAccess.inputs.forEach((i) => {
+                i.onmidimessage = null;
+            });
+        }
         if (selectedDevice !== null) {
             selectedDevice.onmidimessage = (e) => {
                 if (e.data) {
@@ -23,30 +32,7 @@ export function MidiSettings({ engine }: { engine: AudioEngine }) {
                 }
             };
         }
-
-        return () => {
-            if (selectedDevice !== null) {
-                selectedDevice.onmidimessage = null;
-            }
-        };
-    }, [engine.processor, selectedDevice]);
-
-    useEffect(() => {
-        const getMidiAccess = async () => {
-            try {
-                const access = await navigator.requestMIDIAccess({
-                    sysex: true,
-                    software: true
-                });
-                setMidiAccess(access);
-            } catch (error) {
-                console.error("Failed to get MIDI access:", error);
-                setMidiError(error?.toString() || "ERROR");
-            }
-        };
-
-        getMidiAccess().then();
-    }, [t]);
+    }, [engine.processor, midiAccess, selectedDevice]);
 
     if (midiError) {
         return (
@@ -57,7 +43,26 @@ export function MidiSettings({ engine }: { engine: AudioEngine }) {
         );
     }
 
-    if (!midiAccess) {
+    if (!midiAccessPersistent) {
+        const getMidiAccess = async () => {
+            try {
+                const access = await navigator.requestMIDIAccess({
+                    sysex: true,
+                    software: true
+                });
+                midiDevices = [];
+                for (const input of access.inputs) {
+                    midiDevices.push(input[1]);
+                }
+                midiAccessPersistent = access;
+                setMidiAccess(access);
+            } catch (error) {
+                console.error("Failed to get MIDI access:", error);
+                setMidiError(error?.toString() || "ERROR");
+            }
+        };
+
+        getMidiAccess().then();
         return (
             <div className="settings_group">
                 <h2>{t("settingsLocale.midi.title")}</h2>
@@ -66,13 +71,8 @@ export function MidiSettings({ engine }: { engine: AudioEngine }) {
         );
     }
 
-    const inputMap: MIDIInput[] = [];
-    for (const input of midiAccess.inputs) {
-        inputMap.push(input[1]);
-    }
-
     const setDevice = (id: string) => {
-        const input = inputMap.find((i) => i.id === id) || null;
+        const input = midiDevices.find((i) => i.id === id) || null;
         selectedDevicePersistent = input;
         setSelectedDevice(input);
     };
@@ -89,7 +89,7 @@ export function MidiSettings({ engine }: { engine: AudioEngine }) {
                     <option value={NO_DEVICE}>
                         {t("settingsLocale.midi.noInput")}
                     </option>
-                    {inputMap.map((i) => (
+                    {midiDevices.map((i) => (
                         <option key={i.id} value={i.id}>
                             {i.name}
                         </option>

@@ -45,9 +45,8 @@ export function Keyboard({ engine }: { engine: AudioEngine }) {
             }
         };
 
-        const moveHandler = (e: TouchEvent | MouseEvent) => {
-            const touches =
-                e instanceof TouchEvent ? Array.from(e.touches) : [e];
+        const moveHandler = (e: MouseEvent) => {
+            const touches = [e];
 
             const newTouchedKeys = new Set<number>();
 
@@ -119,9 +118,6 @@ export function Keyboard({ engine }: { engine: AudioEngine }) {
             document.removeEventListener("mouseup", onMouseUp);
             kb.removeEventListener("mousemove", onMouseMove);
             kb.removeEventListener("mouseleave", onMouseLeave);
-            kb.removeEventListener("touchstart", moveHandler);
-            kb.removeEventListener("touchmove", moveHandler);
-            kb.removeEventListener("touchend", moveHandler);
         };
     }, [engine.processor]);
 
