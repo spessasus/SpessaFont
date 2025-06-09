@@ -1,13 +1,13 @@
 import { useEffect, useRef } from "react";
 import "./keyboard.css";
 import type { AudioEngine } from "../../core_backend/audio_engine.ts";
+import { KEYBOARD_TARGET_CHANNEL } from "../target_channel.ts";
 
 function isBlackNoteNumber(midiNote: number) {
     const pitchClass = midiNote % 12;
     return [1, 3, 6, 8, 10].includes(pitchClass);
 }
 
-const MIDI_CHANNEL = 0;
 const pressedKeys: Set<number> = new Set();
 let mouseHeld = false;
 
@@ -19,7 +19,7 @@ export function Keyboard({ engine }: { engine: AudioEngine }) {
     useEffect(() => {
         const userNoteOff = (note: number) => {
             pressedKeys.delete(note);
-            engine.processor.noteOff(MIDI_CHANNEL, note);
+            engine.processor.noteOff(KEYBOARD_TARGET_CHANNEL, note);
             const keyEl = keysRef.current[note];
             if (keyEl) {
                 keyEl.classList.remove("pressed");
@@ -38,7 +38,7 @@ export function Keyboard({ engine }: { engine: AudioEngine }) {
             const keyHeight = rect.height;
             const velocity = Math.floor((relativeMouseY / keyHeight) * 127);
 
-            engine.processor.noteOn(MIDI_CHANNEL, note, velocity);
+            engine.processor.noteOn(KEYBOARD_TARGET_CHANNEL, note, velocity);
             const keyEl = keysRef.current[note];
             if (keyEl) {
                 keyEl.classList.add("pressed");

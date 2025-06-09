@@ -80,10 +80,6 @@ select option {
     color: var(--font-color);
 }
 
-pre {
-    font-family: monospace !important;
-}
-
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
     -webkit-appearance: none;
@@ -91,6 +87,10 @@ input[type=number]::-webkit-outer-spin-button {
 
 input[type=number] {
     -moz-appearance: textfield;
+}
+
+.monospaced {
+    font-family: "JetBrains Mono", "Monospaced", monospace;
 }
 
 .pretty_input {

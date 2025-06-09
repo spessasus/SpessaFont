@@ -36,15 +36,15 @@ export function BankInfoStats({
             <h1>{t("bankInfo.stats")}</h1>
             <span>
                 <label>{t("bankInfo.version")}</label>
-                <pre>{manager.getInfo("ifil")}</pre>
+                <pre className={"monospaced"}>{manager.getInfo("ifil")}</pre>
             </span>
             <span>
                 <label>{t("bankInfo.engine")}</label>
-                <pre>{manager.getInfo("isng")}</pre>
+                <pre className={"monospaced"}>{manager.getInfo("isng")}</pre>
             </span>
             <span>
                 <label>{t("bankInfo.software")}</label>
-                <pre>{manager.getInfo("ISFT")}</pre>
+                <pre className={"monospaced"}>{manager.getInfo("ISFT")}</pre>
             </span>
 
             <span
@@ -54,22 +54,26 @@ export function BankInfoStats({
                 }
             >
                 <label>{t("bankInfo.defaultModulators")}</label>
-                <pre>{bank.defaultModulators.length}</pre>
+                <pre className={"monospaced"}>
+                    {bank.defaultModulators.length}
+                </pre>
             </span>
 
             <div className={"stat_group"}>
                 <label>{t("bankInfo.instruments")}</label>
                 <span>
                     <label>{t("bankInfo.count")}</label>
-                    <pre>{bank.instruments.length}</pre>
+                    <pre className={"monospaced"}>
+                        {bank.instruments.length}
+                    </pre>
                 </span>
                 <span>
                     <label>{t("bankInfo.generatorCount")}</label>
-                    <pre>{instrumentGens}</pre>
+                    <pre className={"monospaced"}>{instrumentGens}</pre>
                 </span>
                 <span>
                     <label>{t("bankInfo.modulatorCount")}</label>
-                    <pre>{instrumentMods}</pre>
+                    <pre className={"monospaced"}>{instrumentMods}</pre>
                 </span>
             </div>
 
@@ -77,15 +81,15 @@ export function BankInfoStats({
                 <label>{t("bankInfo.presets")}</label>
                 <span>
                     <label>{t("bankInfo.count")}</label>
-                    <pre>{bank.presets.length}</pre>
+                    <pre className={"monospaced"}>{bank.presets.length}</pre>
                 </span>
                 <span>
                     <label>{t("bankInfo.generatorCount")}</label>
-                    <pre>{presetGens}</pre>
+                    <pre className={"monospaced"}>{presetGens}</pre>
                 </span>
                 <span>
                     <label>{t("bankInfo.modulatorCount")}</label>
-                    <pre>{presetMods}</pre>
+                    <pre className={"monospaced"}>{presetMods}</pre>
                 </span>
             </div>
 
@@ -93,11 +97,11 @@ export function BankInfoStats({
                 <label>{t("bankInfo.samples")}</label>
                 <span>
                     <label>{t("bankInfo.count")}</label>
-                    <pre>{bank.samples.length}</pre>
+                    <pre className={"monospaced"}>{bank.samples.length}</pre>
                 </span>
                 <span>
                     <label>{t("bankInfo.compressed")}</label>
-                    <pre>
+                    <pre className={"monospaced"}>
                         {compressed} (
                         {((compressed / bank.samples.length) * 100).toFixed(0)}
                         %)
@@ -107,7 +111,7 @@ export function BankInfoStats({
 
             <span style={{ marginTop: 0, border: "none" }}>
                 <label>{t("poweredBy")}</label>
-                <pre>spessasynth_core</pre>
+                <pre className={"monospaced"}>spessasynth_core</pre>
             </span>
         </div>
     );

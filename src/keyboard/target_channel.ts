@@ -1,0 +1,1 @@
+export const KEYBOARD_TARGET_CHANNEL = 0;

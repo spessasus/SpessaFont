@@ -151,18 +151,17 @@ declare module "spessasynth_core" {
      */
     export type SoundfontErrorCallback = Error;
 
-    export type EventCallbackData =
-        | NoteOnCallback
-        | NoteOffCallback
-        | DrumChangeCallback
-        | ProgramChangeCallback
-        | ControllerChangeCallback
-        | MuteChannelCallback
-        | PresetListChangeCallback
-        | SynthDisplayCallback
-        | PitchWheelCallback
-        | ChannelPressureCallback
-        | SoundfontErrorCallback;
+    export type EventCallbackData = NoteOnCallback &
+        NoteOffCallback &
+        DrumChangeCallback &
+        ProgramChangeCallback &
+        ControllerChangeCallback &
+        MuteChannelCallback &
+        PresetListChangeCallback &
+        SynthDisplayCallback &
+        PitchWheelCallback &
+        ChannelPressureCallback &
+        SoundfontErrorCallback;
 
     export type SynthProcessorOptions = {
         /**

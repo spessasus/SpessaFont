@@ -1,7 +1,13 @@
 .keyboard_controller {
     display: flex;
-    padding: 1rem;
-    margin: 0.2rem;
+    flex-direction: column;
+    align-items: center;
+    margin: 0.3rem;
     border: var(--track-border-color) 1px solid;
     border-radius: var(--primary-border-radius);
+}
+
+.controller_row {
+    display: flex;
+    margin: 0.5rem;
 }

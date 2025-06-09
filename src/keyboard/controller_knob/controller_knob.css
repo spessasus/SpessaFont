@@ -1,0 +1,108 @@
+.controller_knob_wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0.5rem;
+}
+
+.controller_knob {
+    --controller-size: 3rem;
+
+    height: var(--controller-size);
+    width: var(--controller-size);
+    margin-top: 0.5rem;
+    border-radius: 50%;
+    background: var(--top-buttons-color);
+    border: solid 1px var(--track-border-color);
+    display: flex;
+    align-items: end;
+    justify-content: center;
+    transition: none;
+    cursor: pointer;
+}
+
+.controller_knob:active {
+    filter: brightness(1.8);
+    border-color: var(--primary-color);
+}
+
+.controller_knob:active .knob_head {
+    border-color: var(--border-color);
+}
+
+.knob_head {
+    border-radius: 50%;
+    height: calc(var(--controller-size) / 3);
+    width: calc(var(--controller-size) / 3);
+    background: var(--track-border-color);
+    border: solid 1px var(--top-color-start)
+}
+
+.controller_switch_wrapper {
+    display: flex;
+    height: 100%;
+    align-items: center;
+}
+
+.controller_switch {
+    --track-height: 1.6rem;
+    --track-width: 2.2rem;
+    --thumb-size: 1.5rem;
+    --track-radius: 0.3em;
+
+    position: relative;
+    display: inline-block;
+    width: var(--track-width);
+    height: var(--track-height);
+}
+
+.switch_slider {
+    position: absolute;
+    cursor: pointer;
+    top: 50%;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--track-color);
+    border: solid var(--track-border-color) 1px;
+    transition: 0.2s;
+    border-radius: var(--track-radius);
+    transform: translateY(-50%);
+}
+
+.switch_slider::before {
+    position: absolute;
+    content: "";
+    height: var(--thumb-size);
+    width: var(--thumb-size);
+    left: calc(var(--thumb-size) / -4);
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: var(--track-color);
+    transition: 0.2s var(--bouncy-transition), border 0.1s;
+    border-radius: 50%;
+    border: solid var(--track-border-color) 1px;
+    box-shadow: 0 0 0.125rem rgba(0, 0, 0, 0.2);
+}
+
+.switch_slider:hover::before {
+    border: solid var(--border-color) 1px;
+    filter: brightness(1.2);
+}
+
+.controller_switch.active .switch_slider {
+    background-color: var(--primary-color);
+    border: var(--border-color) 1px solid;
+}
+
+.controller_switch.active .switch_slider::before {
+    transform: translate(calc(var(--track-width) - var(--thumb-size) * 0.66), -50%);
+}
+
+.controller_switch:active .switch_slider::before {
+    transform: translate(calc(var(--track-width) - var(--thumb-size) * 1.2), -50%);
+}
+
+.controller_switch:active input:checked + .switch_slider::before {
+    transform: translate(calc(var(--track-width) - var(--thumb-size) * 0.95), -50%);
+}

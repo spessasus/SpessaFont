@@ -8,9 +8,10 @@
     min-height: calc(var(--current-min-height) * 1vw);
     background: black;
     border-radius: var(--primary-border-radius);
+    overflow: hidden;
     width: 100%;
     touch-action: none;
-    --key-border-radius: 0.4vmin;
+    --key-border-radius: 0.2vmin;
 }
 
 .keyboard .key {

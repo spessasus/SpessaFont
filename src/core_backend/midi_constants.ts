@@ -6,10 +6,28 @@
  structure should be ignored.
  */
 
-import type { midiControllers } from "../types/spessasynth_core/midi/midi_message";
+import { midiControllers } from "spessasynth_core";
 
 export const ILLEGAL_CC_DESTINATIONS: midiControllers[] = [
     0, 6, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
     49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 98, 99, 100,
     101, 120, 121, 122, 123, 124, 125, 126, 127
 ];
+
+const MODULABLE_CCS: number[] = [];
+for (let i = 0; i < 128; i++) {
+    if (!ILLEGAL_CC_DESTINATIONS.includes(i)) {
+        MODULABLE_CCS.push(i);
+    }
+}
+
+export const CC_TOGGLES = [
+    midiControllers.sustainPedal,
+    midiControllers.portamentoOnOff,
+    midiControllers.sostenutoPedal,
+    midiControllers.softPedal,
+    midiControllers.legatoFootswitch,
+    midiControllers.hold2Pedal
+];
+
+export { MODULABLE_CCS };
