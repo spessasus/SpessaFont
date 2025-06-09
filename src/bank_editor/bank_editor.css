@@ -1,0 +1,17 @@
+.main_content {
+    width: 100%;
+    background: var(--top-color);
+    display: flex;
+    min-height: 0;
+    flex-grow: 1;
+    /*max-height: var(--main-content-height);*/
+}
+
+.main_content_window {
+    width: 100%;
+    display: flex;
+    flex-grow: 1;
+    min-height: 0;
+    overflow-y: auto;
+    /*max-height: var(--main-content-height);*/
+}

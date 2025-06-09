@@ -1,4 +1,6 @@
 import {
+    BasicSoundBank,
+    loadSoundFont,
     type MIDI,
     SpessaSynthLogging,
     SpessaSynthProcessor,
@@ -9,7 +11,7 @@ import { logInfo } from "../utils/core_utils.ts";
 
 // audio worklet processor operates at that
 const BLOCK_SIZE = 128;
-const CHUNK_COUNT = 16; // 16 * 128 = 2048
+const CHUNK_COUNT = 4; // 4 * 128 = 512
 const MAX_CHUNKS_QUEUED = 10;
 
 type AudioChunk = [Float32Array, Float32Array];
@@ -35,6 +37,9 @@ export class AudioEngine {
             effectsEnabled: true,
             initialTime: context.currentTime
         });
+        this.processor.soundfontManager.reloadManager(
+            loadSoundFont(BasicSoundBank.getDummySoundfontFile())
+        );
         this.sequencer = new SpessaSynthSequencer(this.processor);
         this.sequencer.preservePlaybackState = true;
         // analyser

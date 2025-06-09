@@ -38,6 +38,7 @@ export const localeEnglish = {
     no: "No",
     none: "None",
     githubPage: "Project page",
+    keyboard: "Keyboard",
     menuBarLocale: MenuBarLocale,
     modulatorLocale: ModulatorLocale,
     generatorLocale: GeneratorLocale,

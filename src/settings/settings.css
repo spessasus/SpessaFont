@@ -2,8 +2,16 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: start;
     padding-top: 1rem;
+    flex-grow: 1;
+}
+
+.settings p {
+    word-wrap: break-word;
+    max-width: 30ch;
+    padding: 1rem;
+    text-align: start;
 }
 
 .settings_display {

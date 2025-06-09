@@ -18,5 +18,12 @@ export const SettingsLocale = {
         },
         reverbLevel: "Reverb Level",
         chorusLevel: "Chorus Level"
+    },
+
+    midi: {
+        title: "MIDI Settings",
+        waitingForAccess: "Waiting for MIDI Access...",
+        midiInput: "MIDI Input",
+        noInput: "No Input"
     }
 };

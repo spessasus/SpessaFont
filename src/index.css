@@ -84,21 +84,6 @@ pre {
     font-family: monospace !important;
 }
 
-.main_content {
-    width: 100%;
-    background: var(--top-color);
-    display: flex;
-    flex-grow: 1;
-    max-height: var(--main-content-height);
-}
-
-.main_content_window {
-    width: 100%;
-    display: flex;
-    flex-grow: 1;
-    max-height: var(--main-content-height);
-}
-
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
     -webkit-appearance: none;
@@ -120,6 +105,22 @@ input[type=number] {
 
 .pretty_input:focus {
     border: 0.2rem solid var(--border-color)
+}
+
+.pretty_button {
+    background: var(--top-color-start);
+    border-radius: var(--primary-border-radius);
+    color: var(--font-color);
+    border: 0.2rem solid var(--top-buttons-color-end);
+    transition: all 0.2s ease;
+    text-align: start;
+    padding: 0.3rem;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.pretty_button:active {
+    transform: scale(var(--active-scale));
 }
 
 .hover_brightness:hover {

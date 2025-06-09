@@ -16,7 +16,8 @@ export function MenuBar({
     openTab,
     closeTab,
     manager,
-    showMidiPlayer
+    showMidiPlayer,
+    toggleKeyboard
 }: {
     audioEngine: AudioEngine;
     toggleSettings: () => void;
@@ -24,6 +25,7 @@ export function MenuBar({
     closeTab: () => void;
     manager: SoundBankManager;
     showMidiPlayer: boolean;
+    toggleKeyboard: () => void;
 }) {
     const fLoc = "menuBarLocale.file.";
     const eLoc = "menuBarLocale.edit.";
@@ -95,6 +97,9 @@ export function MenuBar({
             </a>
             {isChrome && <MenuBarDropdown main={"firefox"}></MenuBarDropdown>}
             <div style={{ flex: 1 }}></div>
+            <div className={"menu_bar_button"} onClick={toggleKeyboard}>
+                {t("keyboard")}
+            </div>
             <VoiceDisplay
                 analyser={audioEngine.analyser}
                 processor={audioEngine.processor}

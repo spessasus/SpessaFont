@@ -21,6 +21,7 @@ import { TabList } from "./tab_list/tab_list.tsx";
 import { BankEditor } from "./bank_editor/bank_editor.tsx";
 import { type BasicSoundBank, loadSoundFont } from "spessasynth_core";
 import { LocaleList } from "./locale/locale_list.ts";
+import { KeyboardController } from "./keyboard/keyboard_controller.tsx";
 
 // apply locale
 const initialSettings = loadSettings();
@@ -57,6 +58,7 @@ function App() {
     const { t } = useTranslation();
     const currentManager: SoundBankManager | undefined = tabs[activeTab];
     const [isLoading, setIsLoading] = useState(false);
+    const [showKeyboard, setShowKeyboard] = useState(false);
     const [settings, setSettings] = useState(false);
     const [theme, setTheme] = useState(getSetting("theme", initialSettings));
 
@@ -165,6 +167,7 @@ function App() {
                 openTab={openNewBankTab}
                 closeTab={() => closeTab(activeTab)}
                 manager={currentManager}
+                toggleKeyboard={() => setShowKeyboard(!showKeyboard)}
             />
             {showTabList && (
                 <TabList
@@ -200,6 +203,10 @@ function App() {
                     <h2>{t("welcome.prompt")}</h2>
                     <h3>{t("welcome.copyright")}</h3>
                 </div>
+            )}
+
+            {showKeyboard && (
+                <KeyboardController engine={audioEngine}></KeyboardController>
             )}
 
             <GetUserInput audioEngine={audioEngine} />

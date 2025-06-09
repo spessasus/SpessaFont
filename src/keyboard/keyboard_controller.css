@@ -1,0 +1,7 @@
+.keyboard_controller {
+    display: flex;
+    padding: 1rem;
+    margin: 0.2rem;
+    border: var(--track-border-color) 1px solid;
+    border-radius: var(--primary-border-radius);
+}
