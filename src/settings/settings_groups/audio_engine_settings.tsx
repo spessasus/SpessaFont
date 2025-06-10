@@ -55,7 +55,7 @@ export function AudioEngineSettings({
                 <input
                     type={"text"}
                     maxLength={4}
-                    className={"pretty_input"}
+                    className={"pretty_input monospaced"}
                     onChange={(e) => setVolume(e.target.value)}
                     value={`${Math.floor(getSetting("volume", settings) * 100)}%`}
                 />
@@ -68,7 +68,7 @@ export function AudioEngineSettings({
                             parseInt(e.target.value) as interpolationTypes
                         )
                     }
-                    className={"pretty_input"}
+                    className={"pretty_input monospaced"}
                     value={getSetting("interpolation", settings)}
                 >
                     <option value={interpolationTypes.nearestNeighbor}>
@@ -87,7 +87,7 @@ export function AudioEngineSettings({
                 <input
                     type={"text"}
                     maxLength={4}
-                    className={"pretty_input"}
+                    className={"pretty_input monospaced"}
                     onChange={(e) => setReverb(e.target.value)}
                     value={`${Math.floor(getSetting("reverbLevel", settings) * 100)}%`}
                 />
@@ -97,7 +97,7 @@ export function AudioEngineSettings({
                 <input
                     type={"text"}
                     maxLength={4}
-                    className={"pretty_input"}
+                    className={"pretty_input monospaced"}
                     onChange={(e) => setChorus(e.target.value)}
                     value={`${Math.floor(getSetting("chorusLevel", settings) * 100)}%`}
                 />

@@ -82,7 +82,7 @@ export function MidiSettings({ engine }: { engine: AudioEngine }) {
             <h2>{t("settingsLocale.midi.title")}</h2>
             <Setting locale={"settingsLocale.midi.midiInput"}>
                 <select
-                    className={"pretty_input"}
+                    className={"pretty_input monospaced"}
                     value={selectedDevice?.id || NO_DEVICE}
                     onChange={(e) => setDevice(e.target.value)}
                 >

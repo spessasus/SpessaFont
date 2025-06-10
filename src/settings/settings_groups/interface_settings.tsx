@@ -50,7 +50,7 @@ export function InterfaceSettings({
             <Setting locale={"settingsLocale.interface.language"}>
                 <select
                     onChange={(e) => setLanguage(e.target.value)}
-                    className={"pretty_input"}
+                    className={"pretty_input monospaced"}
                     value={language}
                 >
                     {Object.keys(LocaleList).map((code, i) => (
@@ -64,7 +64,7 @@ export function InterfaceSettings({
             <Setting locale={"settingsLocale.interface.theme"}>
                 <select
                     onChange={(e) => setAppTheme(e.target.value as ThemeType)}
-                    className={"pretty_input"}
+                    className={"pretty_input monospaced"}
                     value={getSetting("theme", settings)}
                 >
                     <option value={"dark"}>
