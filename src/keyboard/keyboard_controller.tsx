@@ -1,10 +1,12 @@
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import "./keyboard_controller.css";
 import { Keyboard } from "./keyboard/keyboard.tsx";
-import { useEffect, useState } from "react";
+import * as React from "react";
+import { type RefObject, useEffect, useRef, useState } from "react";
 import { midiControllers } from "spessasynth_core";
-import { ControllerKnob } from "./controller_knob/controller_knob.tsx";
+import { Controller } from "./controller_knob/controller.tsx";
 import { KEYBOARD_TARGET_CHANNEL } from "./target_channel.ts";
+import type { ControllerKnobRef } from "./controller_knob/controller_knob.tsx";
 
 const INITIAL_CC_LIST: number[] = [
     midiControllers.modulationWheel,
@@ -20,18 +22,12 @@ const INITIAL_CC_LIST: number[] = [
 ];
 
 export function KeyboardController({ engine }: { engine: AudioEngine }) {
-    const channel = engine.processor.midiAudioChannels[KEYBOARD_TARGET_CHANNEL];
     const [controllers, setControllers] = useState(INITIAL_CC_LIST);
-    const [controllerValues, setControllerValues] = useState<number[]>(
-        INITIAL_CC_LIST.map((cc) => channel.midiControllers[cc] >> 7)
-    );
-
-    useEffect(() => {
-        setControllerValues(
-            controllers.map((cc) => channel.midiControllers[cc] >> 7)
-        );
-    }, [channel.midiControllers, controllers]);
-
+    const knobRefs = useRef<RefObject<ControllerKnobRef | null>[]>([]);
+    INITIAL_CC_LIST.map(() => {
+        const reference = React.createRef<ControllerKnobRef>();
+        knobRefs.current.push(reference);
+    });
     useEffect(() => {
         engine.processor.onEventCall = (e, d) => {
             if (
@@ -39,17 +35,13 @@ export function KeyboardController({ engine }: { engine: AudioEngine }) {
                 d?.channel === KEYBOARD_TARGET_CHANNEL
             ) {
                 const ccV = d.controllerValue;
-                const ccTarget = controllers.findIndex(
-                    (c) => c === d.controllerNumber
-                );
-                if (ccTarget >= 0) {
-                    const newValues = [...controllerValues];
-                    newValues[ccTarget] = ccV;
-                    setControllerValues(newValues);
-                }
+                const cc = d.controllerNumber;
+                knobRefs.current.forEach((r) => {
+                    r?.current?.ccUpdate(cc, ccV);
+                });
             }
         };
-    }, [controllerValues, controllers, engine.processor]);
+    }, [controllers, engine.processor]);
 
     return (
         <div className={"keyboard_controller"}>
@@ -61,21 +53,14 @@ export function KeyboardController({ engine }: { engine: AudioEngine }) {
                         newControllers[i] = cc;
                         setControllers(newControllers);
                     };
-                    const setCCValue = (v: number) => {
-                        engine.processor.controllerChange(
-                            KEYBOARD_TARGET_CHANNEL,
-                            cc,
-                            v
-                        );
-                    };
                     return (
-                        <ControllerKnob
+                        <Controller
                             cc={cc}
-                            ccValue={controllerValues[i]}
-                            setCCValue={setCCValue}
+                            engine={engine}
                             setCC={setCC}
                             key={i}
-                        ></ControllerKnob>
+                            ref={knobRefs.current[i]}
+                        ></Controller>
                     );
                 })}
             </div>

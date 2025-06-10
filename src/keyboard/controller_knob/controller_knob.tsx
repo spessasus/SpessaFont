@@ -1,28 +1,38 @@
-import { midiControllers } from "spessasynth_core";
-import "./controller_knob.css";
-import {
-    CC_TOGGLES,
-    MODULABLE_CCS
-} from "../../core_backend/midi_constants.ts";
-import { useTranslation } from "react-i18next";
-import { getCCLocale } from "../../locale/get_cc_locale.ts";
+import type { AudioEngine } from "../../core_backend/audio_engine.ts";
+import type { midiControllers } from "spessasynth_core";
 import * as React from "react";
-import { type JSX, useMemo, useRef } from "react";
+import {
+    type JSX,
+    type Ref,
+    useImperativeHandle,
+    useMemo,
+    useRef,
+    useState
+} from "react";
+import { KEYBOARD_TARGET_CHANNEL } from "../target_channel.ts";
+import { CC_TOGGLES } from "../../core_backend/midi_constants.ts";
+
+export type ControllerKnobRef = {
+    ccUpdate(c: number, value: number): void;
+};
 
 const MIN_DEG = 40;
 const MAX_DEG = 320;
 
 export function ControllerKnob({
+    engine,
     cc,
-    setCC,
-    ccValue,
-    setCCValue
+    ref
 }: {
+    engine: AudioEngine;
     cc: midiControllers;
-    setCC: (cc: midiControllers) => void;
-    ccValue: number;
-    setCCValue: (v: number) => void;
+    ref: Ref<ControllerKnobRef>;
 }) {
+    const [ccValue, sv] = useState(
+        engine.processor.midiAudioChannels[KEYBOARD_TARGET_CHANNEL]
+            .midiControllers[cc] >> 7
+    );
+    const isToggle = useMemo(() => CC_TOGGLES.includes(cc), [cc]);
     const isMouseDownRef = useRef(false);
 
     const releaseMouse = () => {
@@ -30,6 +40,11 @@ export function ControllerKnob({
     };
     const pressMouse = () => {
         isMouseDownRef.current = true;
+    };
+
+    const setCCValue = (v: number) => {
+        // event callback will update the knob
+        engine.processor.controllerChange(KEYBOARD_TARGET_CHANNEL, cc, v);
     };
 
     const moveHandler = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -49,14 +64,6 @@ export function ControllerKnob({
         );
         setCCValue(ccValue);
     };
-
-    const { t } = useTranslation();
-    const isToggle = useMemo(() => CC_TOGGLES.includes(cc), [cc]);
-    const ccLocales = useMemo(
-        () => MODULABLE_CCS.map((cc) => getCCLocale(cc, t)),
-        [t]
-    );
-
     const toggleCC = () => {
         if (ccValue >= 64) {
             setCCValue(0);
@@ -64,6 +71,15 @@ export function ControllerKnob({
             setCCValue(127);
         }
     };
+
+    useImperativeHandle(ref, () => ({
+        // event callback actually updates the knob
+        ccUpdate(c: number, value: number) {
+            if (c === cc) {
+                sv(value);
+            }
+        }
+    }));
 
     let knobElement: JSX.Element;
     if (isToggle) {
@@ -95,33 +111,9 @@ export function ControllerKnob({
             </div>
         );
     }
+
     return (
         <div className={"controller_knob_wrapper"}>
-            <select
-                className={"pretty_input monospaced"}
-                style={{
-                    fontSize: "1rem",
-                    width: "9ch"
-                }}
-                value={cc}
-                onChange={(e) =>
-                    setCC(
-                        parseInt(e.target.value) ||
-                            midiControllers.modulationWheel
-                    )
-                }
-            >
-                {MODULABLE_CCS.map((cc) => {
-                    return (
-                        <option key={cc} value={cc}>
-                            {"CC#" +
-                                cc.toString().padEnd(5, "\u00A0") +
-                                " - " +
-                                ccLocales[cc]}
-                        </option>
-                    );
-                })}
-            </select>
             {knobElement}
             <p className={"monospaced"}>{ccValue}</p>
         </div>
