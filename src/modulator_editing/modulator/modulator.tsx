@@ -154,7 +154,7 @@ export function ModulatorView({
                 <ModulatorDiagram></ModulatorDiagram>
                 <input
                     type="text"
-                    className="pretty_input amount_input"
+                    className="pretty_input amount_input monospaced"
                     placeholder={`${AMOUNT_PREFIX} ${t("modulatorLocale.amount")}`}
                     value={`${AMOUNT_PREFIX}${mod.transformAmount}`}
                     onChange={(e) => {
@@ -179,7 +179,7 @@ export function ModulatorView({
                     }}
                 />
                 <select
-                    className={"pretty_outline transform_selector"}
+                    className={"pretty_outline transform_selector monospaced"}
                     value={mod.transformType}
                     onChange={(e) =>
                         setTransformType(parseInt(e.target.value) || 0)

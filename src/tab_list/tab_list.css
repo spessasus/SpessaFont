@@ -4,6 +4,7 @@
     overflow-x: auto;
     border-bottom: solid var(--track-border-color) 1px;
     margin-bottom: 0;
+    min-height: 3rem;
 }
 
 .tab {

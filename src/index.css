@@ -90,7 +90,7 @@ input[type=number] {
 }
 
 .monospaced {
-    font-size: 1rem;
+    font-size: 1em;
     font-family: "JetBrains Mono", "Monospaced", monospace;
 }
 

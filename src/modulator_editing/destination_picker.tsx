@@ -11,7 +11,7 @@ export function DestinationPicker({
     const { t } = useTranslation();
     return (
         <select
-            className={"pretty_outline destination_picker"}
+            className={"pretty_outline destination_picker monospaced"}
             value={destination}
             onChange={(e) =>
                 setDestination(

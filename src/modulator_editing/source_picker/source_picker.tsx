@@ -49,7 +49,11 @@ export function ModulatorSourcePicker({
 
     return (
         <div className="source_picker pretty_outline">
-            <select onChange={handleSelectChange} value={selectValue}>
+            <select
+                onChange={handleSelectChange}
+                value={selectValue}
+                className={"monospaced"}
+            >
                 <option value={modulatorSources.noController}>
                     {t("modulatorLocale.sources.noController")}
                 </option>
@@ -77,7 +81,7 @@ export function ModulatorSourcePicker({
             </select>
             {isCC && (
                 <input
-                    className="midi_cc_selector"
+                    className="midi_cc_selector monospaced"
                     type="text"
                     value={`CC#${source.sourceIndex}`}
                     onChange={handleMidiCCChange}
@@ -87,7 +91,7 @@ export function ModulatorSourcePicker({
             {!isCC && (
                 // phantom input to even out the width
                 <input
-                    className="midi_cc_selector"
+                    className="midi_cc_selector monospaced"
                     type="number"
                     min={0}
                     max={127}
