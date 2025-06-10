@@ -9,8 +9,10 @@ import {
     type ControllerKnobRef
 } from "./controller/controller.tsx";
 import { KEYBOARD_TARGET_CHANNEL } from "./target_channel.ts";
-import { ControllerRange } from "../fancy_inputs/controller_range/controller_range.tsx";
-import { useTranslation } from "react-i18next";
+import {
+    type OtherCCRef,
+    OtherControllers
+} from "./controller/other_controllers.tsx";
 
 const INITIAL_CC_LIST: number[] = [
     midiControllers.modulationWheel,
@@ -33,24 +35,38 @@ export function KeyboardController({
     ccOptions: JSX.Element;
 }) {
     const [controllers, setControllers] = useState(INITIAL_CC_LIST);
-    const [val, setVal] = useState(0);
-    const { t } = useTranslation();
     const knobRefs = useRef<RefObject<ControllerKnobRef | null>[]>([]);
     INITIAL_CC_LIST.map(() => {
         const reference = React.createRef<ControllerKnobRef>();
         knobRefs.current.push(reference);
     });
+
+    const pitchRef = useRef<OtherCCRef>(null);
+
     useEffect(() => {
         engine.processor.onEventCall = (e, d) => {
-            if (
-                e === "controllerchange" &&
-                d?.channel === KEYBOARD_TARGET_CHANNEL
-            ) {
-                const ccV = d.controllerValue;
-                const cc = d.controllerNumber;
-                knobRefs.current.forEach((r) => {
-                    r?.current?.ccUpdate(cc, ccV);
-                });
+            if (d?.channel === KEYBOARD_TARGET_CHANNEL) {
+                switch (e) {
+                    case "controllerchange": {
+                        const ccV = d.controllerValue;
+                        const cc = d.controllerNumber;
+                        knobRefs.current.forEach((r) => {
+                            r?.current?.ccUpdate(cc, ccV);
+                        });
+                        break;
+                    }
+
+                    case "pitchwheel":
+                        {
+                            const pitch = (d.MSB << 7) | d.LSB;
+                            pitchRef?.current?.setPitch(pitch);
+                        }
+                        break;
+
+                    case "channelpressure": {
+                        pitchRef?.current?.setPressure(d.pressure);
+                    }
+                }
             }
         };
     }, [controllers, engine.processor]);
@@ -59,13 +75,11 @@ export function KeyboardController({
         <div className={"keyboard_controller"}>
             <Keyboard engine={engine}></Keyboard>
             <div className={"controller_row"}>
-                <ControllerRange
-                    text={t("modulatorLocale.sources.pitchWheel")}
-                    max={100}
-                    min={-100}
-                    onChange={(e) => setVal(e)}
-                    value={val}
-                ></ControllerRange>
+                <OtherControllers
+                    engine={engine}
+                    ref={pitchRef}
+                ></OtherControllers>
+
                 <div className={"controller_row"}>
                     {controllers.map((cc, i) => {
                         const setCC = (cc: number) => {
