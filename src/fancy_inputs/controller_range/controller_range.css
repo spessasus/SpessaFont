@@ -1,0 +1,77 @@
+.controller_range_wrapper {
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.controller_range_visual_wrapper {
+    --track-height: 0.8rem;
+    --thumb-size: 1.5rem;
+    --active-brightness: 0.75;
+    --slider-border-thickness: 1px;
+    --visual-width: 0%;
+    display: flex;
+    position: relative;
+    margin: 0.5rem;
+    height: var(--track-height);
+    transition: all 0.1s;
+    cursor: e-resize;
+    background: var(--track-color);
+    border: solid var(--slider-border-thickness) var(--track-border-color);
+    border-radius: var(--track-height);
+}
+
+.controller_range_visual_wrapper:has(.controller_range:active) {
+    filter: brightness(var(--active-brightness));
+}
+
+.controller_range {
+    cursor: e-resize;
+    width: 100%;
+    opacity: 0;
+    -webkit-appearance: none;
+    top: calc((var(--thumb-size) / 4) * -1);
+    height: var(--thumb-size);
+    position: relative;
+}
+
+.controller_ranger:hover {
+    filter: brightness(1.2);
+}
+
+.controller_range:focus {
+    outline: none;
+}
+
+.controller_range_progress {
+    width: calc(var(--visual-width) + 2 * var(--slider-border-thickness));
+    position: absolute;
+    background: var(--primary-color);
+    border: solid var(--slider-border-thickness) var(--border-color);
+    height: calc(100% + 2 * var(--slider-border-thickness));
+    border-radius: var(--track-height);
+    top: calc(-1 * var(--slider-border-thickness));
+    left: calc(-1 * var(--slider-border-thickness));
+}
+
+.controller_range_thumb {
+    border: solid var(--slider-border-thickness) var(--track-border-color);
+    background: var(--track-color);
+    height: var(--thumb-size);
+    width: var(--thumb-size);
+    border-radius: 50%;
+    position: absolute;
+    top: -0.4rem;
+    left: calc(var(--visual-width) - var(--thumb-size) / 2);
+}
+
+.controller_range_wrapper:hover .controller_range_thumb {
+    border-color: var(--primary-color);
+}
+
+.controller_range_transition .controller_range_thumb,
+.controller_range_transition .controller_range_progress {
+    transition: all 0.2s ease;
+}

@@ -4,9 +4,13 @@ import { Keyboard } from "./keyboard/keyboard.tsx";
 import * as React from "react";
 import { type RefObject, useEffect, useRef, useState } from "react";
 import { midiControllers } from "spessasynth_core";
-import { Controller } from "./controller_knob/controller.tsx";
+import {
+    Controller,
+    type ControllerKnobRef
+} from "./controller/controller.tsx";
 import { KEYBOARD_TARGET_CHANNEL } from "./target_channel.ts";
-import type { ControllerKnobRef } from "./controller_knob/controller_knob.tsx";
+import { ControllerRange } from "../fancy_inputs/controller_range/controller_range.tsx";
+import { useTranslation } from "react-i18next";
 
 const INITIAL_CC_LIST: number[] = [
     midiControllers.modulationWheel,
@@ -23,6 +27,8 @@ const INITIAL_CC_LIST: number[] = [
 
 export function KeyboardController({ engine }: { engine: AudioEngine }) {
     const [controllers, setControllers] = useState(INITIAL_CC_LIST);
+    const [val, setVal] = useState(0);
+    const { t } = useTranslation();
     const knobRefs = useRef<RefObject<ControllerKnobRef | null>[]>([]);
     INITIAL_CC_LIST.map(() => {
         const reference = React.createRef<ControllerKnobRef>();
@@ -47,22 +53,31 @@ export function KeyboardController({ engine }: { engine: AudioEngine }) {
         <div className={"keyboard_controller"}>
             <Keyboard engine={engine}></Keyboard>
             <div className={"controller_row"}>
-                {controllers.map((cc, i) => {
-                    const setCC = (cc: number) => {
-                        const newControllers = [...controllers];
-                        newControllers[i] = cc;
-                        setControllers(newControllers);
-                    };
-                    return (
-                        <Controller
-                            cc={cc}
-                            engine={engine}
-                            setCC={setCC}
-                            key={i}
-                            ref={knobRefs.current[i]}
-                        ></Controller>
-                    );
-                })}
+                <ControllerRange
+                    text={t("modulatorLocale.sources.pitchWheel")}
+                    max={100}
+                    min={-100}
+                    onChange={(e) => setVal(e)}
+                    value={val}
+                ></ControllerRange>
+                <div className={"controller_row"}>
+                    {controllers.map((cc, i) => {
+                        const setCC = (cc: number) => {
+                            const newControllers = [...controllers];
+                            newControllers[i] = cc;
+                            setControllers(newControllers);
+                        };
+                        return (
+                            <Controller
+                                cc={cc}
+                                engine={engine}
+                                setCC={setCC}
+                                key={i}
+                                ref={knobRefs.current[i]}
+                            ></Controller>
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );
