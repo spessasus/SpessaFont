@@ -3,7 +3,7 @@
     flex-direction: column;
     overflow-y: auto;
     overflow-x: auto;
-    width: 100%;
+    align-self: stretch;
     align-items: center;
     flex-grow: 1;
 }
@@ -15,6 +15,7 @@
     flex-direction: column;
     flex-grow: 1;
     overflow-x: auto;
+    align-self: stretch;
 }
 
 .modulator_list .action_buttons {

@@ -66,7 +66,7 @@ export function ModulatorCurvePicker({
                 </>
             ) : (
                 <div
-                    className="responsive_button pretty_outline hover_brightness"
+                    className="pretty_outline hover_brightness responsive_button"
                     onClick={handleClick}
                 >
                     <ModulatorCurvePicture curve={curveType} />

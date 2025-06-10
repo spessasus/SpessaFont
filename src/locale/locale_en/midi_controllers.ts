@@ -1,6 +1,7 @@
 // capitalize all words except ones like the, a, for, and, or, etc...
 export const MidiControllersLocale = {
-    undefined: "Undefined",
+    // translate "Undefined", this is just so JS works fine
+    notDefined: "Undefined",
 
     bankSelect: "Bank Select",
     modulationWheel: "Modulation Wheel",

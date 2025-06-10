@@ -2,7 +2,7 @@ import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import "./keyboard_controller.css";
 import { Keyboard } from "./keyboard/keyboard.tsx";
 import * as React from "react";
-import { type RefObject, useEffect, useRef, useState } from "react";
+import { type JSX, type RefObject, useEffect, useRef, useState } from "react";
 import { midiControllers } from "spessasynth_core";
 import {
     Controller,
@@ -25,7 +25,13 @@ const INITIAL_CC_LIST: number[] = [
     midiControllers.chorusDepth
 ];
 
-export function KeyboardController({ engine }: { engine: AudioEngine }) {
+export function KeyboardController({
+    engine,
+    ccOptions
+}: {
+    engine: AudioEngine;
+    ccOptions: JSX.Element;
+}) {
     const [controllers, setControllers] = useState(INITIAL_CC_LIST);
     const [val, setVal] = useState(0);
     const { t } = useTranslation();
@@ -69,6 +75,7 @@ export function KeyboardController({ engine }: { engine: AudioEngine }) {
                         };
                         return (
                             <Controller
+                                ccOptions={ccOptions}
                                 cc={cc}
                                 engine={engine}
                                 setCC={setCC}

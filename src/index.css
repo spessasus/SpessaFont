@@ -120,10 +120,6 @@ input[type=number] {
     font-size: 1rem;
 }
 
-.pretty_button:active {
-    transform: scale(var(--active-scale));
-}
-
 .hover_brightness:hover {
     filter: brightness(1.8);
 }

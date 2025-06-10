@@ -1,9 +1,8 @@
 import type { midiControllers } from "spessasynth_core";
 import { modulatorSources } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
-import type { ChangeEvent } from "react";
+import type { ChangeEvent, JSX } from "react";
 import "./source_picker.css";
-import { ILLEGAL_CC_DESTINATIONS } from "../../core_backend/midi_constants.ts";
 
 export type ModulatorSource = {
     usesCC: boolean;
@@ -12,10 +11,12 @@ export type ModulatorSource = {
 
 export function ModulatorSourcePicker({
     source,
-    setSource
+    setSource,
+    ccOptions
 }: {
     source: ModulatorSource;
     setSource: (s: ModulatorSource) => void;
+    ccOptions: JSX.Element;
 }) {
     const { t } = useTranslation();
     const isCC = source.usesCC;
@@ -33,18 +34,10 @@ export function ModulatorSourcePicker({
         }
     };
 
-    const handleMidiCCChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const handleMidiCCChange = (e: ChangeEvent<HTMLSelectElement>) => {
         const input = e.target.value;
-        const match = input.match(/^CC#(\d{1,3})$/);
-
-        if (match) {
-            const cc = parseInt(match[1], 10);
-            if (cc >= 0 && cc <= 127 && !ILLEGAL_CC_DESTINATIONS.includes(cc)) {
-                setSource({ usesCC: true, sourceIndex: cc });
-            }
-        } else if (input === "CC#") {
-            setSource({ usesCC: true, sourceIndex: 0 });
-        }
+        const value = parseInt(input);
+        setSource({ usesCC: true, sourceIndex: value });
     };
 
     return (
@@ -80,21 +73,20 @@ export function ModulatorSourcePicker({
                 </option>
             </select>
             {isCC && (
-                <input
+                <select
                     className="midi_cc_selector monospaced"
-                    type="text"
-                    value={`CC#${source.sourceIndex}`}
+                    value={source.sourceIndex}
                     onChange={handleMidiCCChange}
-                />
+                >
+                    {ccOptions}
+                </select>
             )}
 
             {!isCC && (
                 // phantom input to even out the width
                 <input
-                    className="midi_cc_selector monospaced"
-                    type="number"
-                    min={0}
-                    max={127}
+                    className="monospaced"
+                    style={{ width: "8ch" }}
                     disabled={true}
                 />
             )}

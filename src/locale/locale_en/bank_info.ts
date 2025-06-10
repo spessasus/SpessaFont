@@ -6,7 +6,7 @@ export const BankInfoLocale = {
     copyright: "Copyright",
     description: "Description",
 
-    stats: "Stats:",
+    stats: "Information:",
     version: "Version:",
     software: "Software:",
     engine: "Sound Engine:",

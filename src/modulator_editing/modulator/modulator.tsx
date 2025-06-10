@@ -11,6 +11,7 @@ import {
 } from "../curve_picker/curve_picker.tsx";
 import { ModulatorDiagram } from "../diagram.tsx";
 import { DestinationPicker } from "../destination_picker.tsx";
+import type { JSX } from "react";
 
 type ModulatorProps = {
     mod: Modulator;
@@ -21,6 +22,8 @@ type ModulatorProps = {
     setActiveModPickerId: (i: string) => void;
     setSelected: (s: boolean) => void;
     selected: boolean;
+    destinationList: JSX.Element;
+    ccList: JSX.Element;
 };
 
 const AMOUNT_PREFIX = "× ";
@@ -33,7 +36,9 @@ export function ModulatorView({
     activeModPickerId,
     setActiveModPickerId,
     setSelected,
-    selected
+    selected,
+    destinationList,
+    ccList
 }: ModulatorProps) {
     const { t } = useTranslation();
 
@@ -106,6 +111,7 @@ export function ModulatorView({
             </div>
             <div className={"source_pair"}>
                 <ModulatorSourcePicker
+                    ccOptions={ccList}
                     setSource={setSource}
                     source={{
                         usesCC: mod.sourceUsesCC > 0,
@@ -113,6 +119,7 @@ export function ModulatorView({
                     }}
                 ></ModulatorSourcePicker>
                 <ModulatorSourcePicker
+                    ccOptions={ccList}
                     setSource={setSecSource}
                     source={{
                         usesCC: mod.secSrcUsesCC > 0,
@@ -194,6 +201,7 @@ export function ModulatorView({
                 </select>
             </div>
             <DestinationPicker
+                destinationList={destinationList}
                 destination={mod.modulatorDestination}
                 setDestination={setDestination}
             ></DestinationPicker>

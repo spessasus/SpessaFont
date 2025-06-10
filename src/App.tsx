@@ -13,7 +13,7 @@ import i18next from "i18next";
 import { initReactI18next, useTranslation } from "react-i18next";
 import SoundBankManager from "./core_backend/sound_bank_manager.ts";
 import { GetUserInput } from "./get_user_input/get_user_input.tsx";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AudioEngine } from "./core_backend/audio_engine.ts";
 import { ClipBoardManager } from "./core_backend/clipboard_manager.ts";
 import { Settings } from "./settings/settings.tsx";
@@ -22,6 +22,8 @@ import { BankEditor } from "./bank_editor/bank_editor.tsx";
 import { type BasicSoundBank, loadSoundFont } from "spessasynth_core";
 import { LocaleList } from "./locale/locale_list.ts";
 import { KeyboardController } from "./keyboard/keyboard_controller.tsx";
+import { DestinationsOptions } from "./utils/translated_options/destination_options.tsx";
+import { ModulableControllerOptions } from "./utils/translated_options/modulable_controller_options.tsx";
 
 // apply locale
 const initialSettings = loadSettings();
@@ -61,6 +63,17 @@ function App() {
     const [showKeyboard, setShowKeyboard] = useState(false);
     const [settings, setSettings] = useState(false);
     const [theme, setTheme] = useState(getSetting("theme", initialSettings));
+
+    // cached translated options
+    // note: i can't use JSX here as it calls MCO 9 times for some reason?
+    const ccOptions = useMemo(
+        () => ModulableControllerOptions({ t: t, padLength: 5 }),
+        [t]
+    );
+    const destinationOptions = useMemo(
+        () => DestinationsOptions({ t: t }),
+        [t]
+    );
 
     // only re-renders tab list when needed
     for (const m of tabs) {
@@ -191,6 +204,8 @@ function App() {
 
             {showEditor && (
                 <BankEditor
+                    destinationOptions={destinationOptions}
+                    ccOptions={ccOptions}
                     manager={currentManager}
                     audioEngine={audioEngine}
                     clipboardManager={clipboardManager}
@@ -206,7 +221,10 @@ function App() {
             )}
 
             {showKeyboard && (
-                <KeyboardController engine={audioEngine}></KeyboardController>
+                <KeyboardController
+                    ccOptions={ccOptions}
+                    engine={audioEngine}
+                ></KeyboardController>
             )}
 
             <GetUserInput audioEngine={audioEngine} />

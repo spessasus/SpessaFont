@@ -7,19 +7,23 @@ import {
 import { ModulatorView } from "../modulator/modulator.tsx";
 import "./modulator_list.css";
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { type JSX, useState } from "react";
 import type { ClipBoardManager } from "../../core_backend/clipboard_manager.ts";
 
 type ModulatorListProps = {
     modulatorList: Modulator[];
     setModulatorList: (l: Modulator[]) => void;
     clipboardManager: ClipBoardManager;
+    ccOptions: JSX.Element;
+    destinationOptions: JSX.Element;
 };
 
 export function ModulatorList({
     modulatorList,
     setModulatorList,
-    clipboardManager
+    clipboardManager,
+    ccOptions,
+    destinationOptions
 }: ModulatorListProps) {
     const { t } = useTranslation();
     const [selectedMods, setSelectedMods] = useState<boolean[]>(
@@ -134,6 +138,8 @@ export function ModulatorList({
 
                     return (
                         <ModulatorView
+                            destinationList={destinationOptions}
+                            ccList={ccOptions}
                             key={i}
                             modulatorNumber={i + 1}
                             mod={Modulator.copy(mod)}

@@ -5,7 +5,6 @@ export function getCCLocale(cc: number, t: TFunction) {
     const name: string =
         (
             Object.keys(midiControllers) as Array<keyof typeof midiControllers>
-        ).find((key) => midiControllers[key] === cc) || "undefined";
-
+        ).find((key) => midiControllers[key] === cc) || "notDefined";
     return t(`midiControllersLocale.${name}`);
 }

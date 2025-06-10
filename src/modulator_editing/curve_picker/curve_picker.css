@@ -5,6 +5,10 @@
     position: relative;
 }
 
+.modulator_curve_picker * {
+    transition: none;
+}
+
 .modulator_curve {
     height: var(--source-picker-height);
     border-radius: var(--primary-border-radius);

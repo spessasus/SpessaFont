@@ -11,7 +11,7 @@
     background: transparent;
     border: none;
     font-size: 1rem;
-    text-align: center;
+    text-align: start;
 }
 
 .source_picker input {
@@ -20,4 +20,8 @@
 
 .source_picker select {
     cursor: pointer;
+}
+
+.midi_cc_selector {
+    width: 5rem;
 }

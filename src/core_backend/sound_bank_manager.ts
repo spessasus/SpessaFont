@@ -1,4 +1,7 @@
 import {
+    type BasicInstrument,
+    type BasicPreset,
+    type BasicSample,
     BasicSoundBank,
     loadSoundFont,
     type SoundFontInfoType,
@@ -7,10 +10,14 @@ import {
 } from "spessasynth_core";
 import { type HistoryAction, HistoryManager } from "./history.ts";
 
+export type BankEditView = "info" | BasicSample | BasicPreset | BasicInstrument;
+
 export default class SoundBankManager {
     processor: SpessaSynthProcessor;
     sequencer: SpessaSynthSequencer;
     history = new HistoryManager();
+
+    currentView: BankEditView = "info";
 
     bank: BasicSoundBank;
     // unsaved changes

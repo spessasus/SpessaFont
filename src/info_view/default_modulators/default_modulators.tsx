@@ -1,17 +1,21 @@
 import { Modulator } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import { ModulatorList } from "../../modulator_editing/modulator_list/modulator_list.tsx";
-import { useState } from "react";
+import { type JSX, useState } from "react";
 import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
 import type { ClipBoardManager } from "../../core_backend/clipboard_manager.ts";
 import { SetDefaultModulators } from "./set_default_modulators.tsx";
 
 export function DefaultModulatorList({
     manager,
-    clipboard
+    clipboard,
+    ccOptions,
+    destinationOptions
 }: {
     manager: SoundBankManager;
     clipboard: ClipBoardManager;
+    ccOptions: JSX.Element;
+    destinationOptions: JSX.Element;
 }) {
     const [dmods, setDmods] = useState(manager.bank?.defaultModulators);
 
@@ -39,6 +43,8 @@ export function DefaultModulatorList({
                 <i>{manager.getBankName(t("bankInfo.unnamed"))}</i>:
             </h2>
             <ModulatorList
+                destinationOptions={destinationOptions}
+                ccOptions={ccOptions}
                 clipboardManager={clipboard}
                 modulatorList={dmods}
                 setModulatorList={setDefaultModulators}
