@@ -32,8 +32,16 @@ export function MenuList({
     const { t } = useTranslation();
     const setView = useCallback(
         (v: BankEditView) => {
-            sv(v);
+            if (v instanceof BasicSample) {
+                setShowSamples(true);
+            } else if (v instanceof BasicInstrument) {
+                setShowInstruments(true);
+            } else if (v instanceof BasicPreset) {
+                setShowPresets(true);
+            }
+
             setSearchQuery("");
+            sv(v);
         },
         [sv]
     );
@@ -88,6 +96,7 @@ export function MenuList({
             <div className={"item_group"}>
                 {filteredSamples.map((s, i) => (
                     <SampleDisplay
+                        selected={s === view}
                         sample={s}
                         onClick={() => setView(s)}
                         key={i}
@@ -95,7 +104,7 @@ export function MenuList({
                 ))}
             </div>
         ),
-        [filteredSamples, setView]
+        [filteredSamples, setView, view]
     );
 
     const instrumentsGroup = useMemo(
@@ -103,6 +112,7 @@ export function MenuList({
             <div className={"item_group"}>
                 {filteredInstruments.map((inst, i) => (
                     <InstrumentDisplay
+                        selected={inst === view}
                         instrument={inst}
                         onClick={() => setView(inst)}
                         selectSample={(s) => setView(s)}
@@ -111,7 +121,7 @@ export function MenuList({
                 ))}
             </div>
         ),
-        [setView, filteredInstruments]
+        [filteredInstruments, view, setView]
     );
 
     const presetsGroup = useMemo(
@@ -119,6 +129,7 @@ export function MenuList({
             <div className={"item_group"}>
                 {filteredPresets.map((p, i) => (
                     <PresetDisplay
+                        selected={p.preset === view}
                         onClick={() => setView(p.preset)}
                         p={p}
                         selectInstrument={(i) => setView(i)}
@@ -128,8 +139,12 @@ export function MenuList({
                 ))}
             </div>
         ),
-        [filteredPresets, setView]
+        [filteredPresets, setView, view]
     );
+
+    const samplesOpen = showSamples;
+    const instrumentsOpen = showInstruments;
+    const presetsOpen = showPresets;
 
     return (
         <div className={"menu_list_main"}>
@@ -146,27 +161,27 @@ export function MenuList({
                     className={`item_group_header`}
                 >
                     <h2>{t("presetList.samples")}</h2>
-                    <div>{showSamples ? "\u25B2" : "\u25BC"}</div>
+                    <div>{samplesOpen ? "\u25B2" : "\u25BC"}</div>
                 </div>
-                {showSamples && samplesGroup}
+                {samplesOpen && samplesGroup}
 
                 <div
                     onClick={() => setShowInstruments(!showInstruments)}
                     className={`item_group_header`}
                 >
                     <h2>{t("presetList.instruments")}</h2>
-                    <div>{showInstruments ? "\u25B2" : "\u25BC"}</div>
+                    <div>{instrumentsOpen ? "\u25B2" : "\u25BC"}</div>
                 </div>
-                {showInstruments && instrumentsGroup}
+                {instrumentsOpen && instrumentsGroup}
 
                 <div
                     onClick={() => setShowPresets(!showPresets)}
                     className={`item_group_header`}
                 >
                     <h2>{t("presetList.presets")}</h2>
-                    <div>{showPresets ? "\u25B2" : "\u25BC"}</div>
+                    <div>{presetsOpen ? "\u25B2" : "\u25BC"}</div>
                 </div>
-                {showPresets && presetsGroup}
+                {presetsOpen && presetsGroup}
             </div>
             <div className={"search_bar"}>
                 <input

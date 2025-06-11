@@ -36,10 +36,12 @@ export function PresetEditor({
     engine: AudioEngine;
 }) {
     setTimeout(() => {
-        engine.processor.setSystem("gs");
+        if (engine.processor.system !== "gs") {
+            engine.processor.setSystem("gs");
+        }
         engine.processor.midiAudioChannels[
             KEYBOARD_TARGET_CHANNEL
-        ].resetControllers();
+        ].stopAllNotes();
         // set bank
         if (preset.bank !== 128) {
             // disable drums

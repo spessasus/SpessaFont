@@ -1,15 +1,32 @@
 import type { BasicSample } from "spessasynth_core";
 import "./sample_display.css";
+import { useEffect, useRef } from "react";
 
 export function SampleDisplay({
     sample,
-    onClick
+    onClick,
+    selected
 }: {
     sample: BasicSample;
     onClick: () => unknown;
+    selected: boolean;
 }) {
+    const elementRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (selected) {
+            elementRef?.current?.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+        }
+    }, [selected]);
     return (
-        <div className={"sample_display"} onClick={onClick}>
+        <div
+            ref={elementRef}
+            className={`sample_display  ${selected ? "selected" : ""}`}
+            onClick={onClick}
+        >
             <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="16"

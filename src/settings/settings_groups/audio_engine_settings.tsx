@@ -26,7 +26,7 @@ export function AudioEngineSettings({
         const vReal = parseInt(v.replace("%", "")) ?? 100;
         updateSettings({
             ...settings,
-            volume: Math.max(0, Math.min(3, vReal / 100))
+            volume: Math.max(0, Math.min(6, vReal / 100))
         });
     }
 

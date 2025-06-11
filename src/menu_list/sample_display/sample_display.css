@@ -17,6 +17,6 @@
     font-size: 0.9rem;
 }
 
-.sample_display:hover {
+.sample_display:hover, .sample_display.selected {
     background: var(--top-buttons-color-end);
 }

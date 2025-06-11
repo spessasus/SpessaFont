@@ -1,21 +1,33 @@
 import "./instrument_display.css";
 import type { BasicInstrument, BasicSample } from "spessasynth_core";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SampleDisplay } from "../sample_display/sample_display.tsx";
 
 export function InstrumentDisplay({
     instrument,
     selectSample,
-    onClick
+    onClick,
+    selected
 }: {
     instrument: BasicInstrument;
     selectSample: (s: BasicSample) => unknown;
     onClick: () => unknown;
+    selected: boolean;
 }) {
     const [open, setOpen] = useState(false);
+    const elementRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (selected) {
+            elementRef?.current?.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+        }
+    }, [selected]);
     return (
-        <div className={"instrument_item_wrapper"}>
-            <div className={"instrument_item"}>
+        <div className={"instrument_item_wrapper"} ref={elementRef}>
+            <div className={`instrument_item ${selected ? "selected" : ""}}`}>
                 <span className={"triangle"} onClick={() => setOpen(!open)}>
                     {open ? "\u25BC" : "\u25B6"}
                 </span>
@@ -30,6 +42,7 @@ export function InstrumentDisplay({
                 {open &&
                     instrument.instrumentZones.map((z, i) => (
                         <SampleDisplay
+                            selected={false}
                             key={i}
                             sample={z.sample}
                             onClick={() => selectSample(z.sample)}

@@ -1,6 +1,14 @@
 import { MODULABLE_CCS } from "../midi_constants.ts";
-import { getCCLocale } from "../../locale/get_cc_locale.ts";
 import { type TFunction } from "i18next";
+import { midiControllers } from "spessasynth_core";
+
+function getCCLocale(cc: number, t: TFunction) {
+    const name: string =
+        (
+            Object.keys(midiControllers) as Array<keyof typeof midiControllers>
+        ).find((key) => midiControllers[key] === cc) || "notDefined";
+    return t(`midiControllersLocale.${name}`);
+}
 
 export function ModulableControllerOptions({
     padLength = 5,
@@ -9,17 +17,15 @@ export function ModulableControllerOptions({
     padLength: number;
     t: TFunction;
 }) {
-    const ccLocales = MODULABLE_CCS.map((cc) => getCCLocale(cc, t));
     const options = MODULABLE_CCS.map((cc) => {
         return (
             <option key={cc} value={cc}>
                 {"CC#" +
                     cc.toString().padEnd(padLength, "\u00A0") +
                     " - " +
-                    ccLocales[cc]}
+                    getCCLocale(cc, t)}
             </option>
         );
     });
-
     return <>{options}</>;
 }

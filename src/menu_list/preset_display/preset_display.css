@@ -10,7 +10,7 @@
     gap: 1ch;
 }
 
-.preset_item:hover {
+.preset_item:hover, .preset_item.selected {
     background: var(--top-buttons-color-end);
 }
 
@@ -44,5 +44,5 @@
 
 .preset_instruments {
     margin-left: 1rem;
-    margin-right: 1rem;
+    margin-right: 0.5rem;
 }

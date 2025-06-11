@@ -10,7 +10,7 @@
     gap: 1ch;
 }
 
-.instrument_item:hover {
+.instrument_item:hover, .instrument_item.selected {
     background: var(--top-buttons-color-end);
 }
 
@@ -40,5 +40,5 @@
 
 .instrument_samples {
     margin-left: 1rem;
-    margin-right: 1rem;
+    margin-right: 0.5rem;
 }

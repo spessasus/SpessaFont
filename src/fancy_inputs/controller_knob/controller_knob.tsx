@@ -18,8 +18,9 @@ export function ControllerKnob({ min, max, onChange, value }: ControllerProps) {
     const releaseMouse = () => {
         isMouseDownRef.current = false;
     };
-    const pressMouse = () => {
+    const pressMouse = (e: React.MouseEvent<HTMLDivElement>) => {
         isMouseDownRef.current = true;
+        moveHandler(e);
     };
 
     const moveHandler = (e: React.MouseEvent<HTMLDivElement>) => {
