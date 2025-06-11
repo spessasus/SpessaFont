@@ -1,0 +1,44 @@
+.instrument_item_wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.instrument_item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    gap: 1ch;
+}
+
+.instrument_item:hover {
+    background: var(--top-buttons-color-end);
+}
+
+.instrument_item span {
+    font-size: 1em;
+}
+
+.instrument_item_name {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    text-align: end;
+    flex-grow: 1;
+    padding: 0.3rem;
+}
+
+.instrument_item .triangle {
+    color: var(--instrument-item-color);
+    font-size: 0.7rem;
+    width: 0.8em;
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    padding: 0.3rem 0.3rem 0.3rem 0.5rem;
+    flex-grow: 1;
+}
+
+.instrument_samples {
+    margin-left: 1rem;
+    margin-right: 1rem;
+}

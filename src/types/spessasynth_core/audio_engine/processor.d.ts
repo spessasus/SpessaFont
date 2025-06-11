@@ -602,7 +602,7 @@ declare module "spessasynth_core" {
          * @param options {SynthMethodOptions} - additional options for scheduling the message
          */
         processMessage(
-            message: Uint8Array,
+            message: Uint8Array | number[],
             channelOffset?: number,
             force?: boolean,
             options?: SynthMethodOptions

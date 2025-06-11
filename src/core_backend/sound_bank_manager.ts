@@ -36,7 +36,17 @@ export default class SoundBankManager {
         } else {
             this.bank = bank;
         }
+        this.sortPresets();
         this.sendBankToSynth();
+    }
+
+    sortPresets() {
+        this.bank.presets.sort((a, b) => {
+            if (a.bank !== b.bank) {
+                return a.bank - b.bank;
+            }
+            return a.program - b.program;
+        });
     }
 
     getBankName(unnamed: string) {
@@ -74,7 +84,7 @@ export default class SoundBankManager {
                 binary = this.bank.writeDLS();
                 break;
         }
-        const blob = new Blob([binary.buffer]);
+        const blob = new Blob([binary.buffer as ArrayBuffer]);
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
         a.download = `${this.getBankName("Unnamed")}.${format}`;

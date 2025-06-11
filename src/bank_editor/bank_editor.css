@@ -4,7 +4,8 @@
     display: flex;
     min-height: 0;
     flex-grow: 1;
-    /*max-height: var(--main-content-height);*/
+    gap: 0.5rem;
+    padding: 0.5rem;
 }
 
 .main_content_window {
@@ -13,5 +14,4 @@
     flex-grow: 1;
     min-height: 0;
     overflow-y: auto;
-    /*max-height: var(--main-content-height);*/
 }

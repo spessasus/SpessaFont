@@ -1,0 +1,22 @@
+.sample_display {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    text-align: end;
+    flex-grow: 1;
+    padding: 0.3rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+.sample_display svg * {
+    color: var(--sample-item-color);
+}
+
+.sample_display span {
+    font-size: 0.9rem;
+}
+
+.sample_display:hover {
+    background: var(--top-buttons-color-end);
+}

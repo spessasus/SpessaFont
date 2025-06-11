@@ -41,6 +41,10 @@
     --track-color: #333;
     --track-border-color: #444;
 
+    --preset-item-color: darkred;
+    --instrument-item-color: dodgerblue;
+    --sample-item-color: gold;
+
     /*thanks for this bezier mozilla devtools*/
     --bouncy-transition: cubic-bezier(.68, -0.55, .27, 1.55);
 
@@ -73,6 +77,10 @@
 
     --track-color: #fff;
     --track-border-color: #444;
+
+    --preset-item-color: red;
+    --instrument-item-color: deepskyblue;
+    --sample-item-color: yellow;
 }
 
 select option {
@@ -90,7 +98,8 @@ input[type=number] {
 }
 
 .monospaced {
-    font-size: 1em;
+    /* This keeps the jetbrains and regular monospace height the same */
+    font-size: 1rem;
     font-family: "JetBrains Mono", "Monospaced", monospace;
 }
 
@@ -105,7 +114,8 @@ input[type=number] {
 }
 
 .pretty_input:focus {
-    border: 0.2rem solid var(--border-color)
+    border: 0.2rem solid var(--border-color);
+    outline: none;
 }
 
 .pretty_button {

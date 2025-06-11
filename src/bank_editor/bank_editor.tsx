@@ -5,8 +5,12 @@ import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import type { ClipBoardManager } from "../core_backend/clipboard_manager.ts";
 import { SoundBankInfo } from "../info_view/sound_bank_info.tsx";
 import { type JSX, useState } from "react";
-import { PresetList } from "../preset_list/preset_list.tsx";
+import { MenuList } from "../menu_list/menu_list.tsx";
 import "./bank_editor.css";
+import { BasicInstrument, BasicPreset } from "spessasynth_core";
+import { PresetEditor } from "./preset_editor/preset_editor.tsx";
+import { InstrumentEditor } from "./instrument_editor/instrument_editor.tsx";
+import { SampleEditor } from "./sample_editor/sample_editor.tsx";
 
 type BankEditorProps = {
     manager: SoundBankManager;
@@ -31,25 +35,39 @@ export function BankEditor({
     };
 
     function MainContent() {
-        switch (view) {
-            default:
-                return <div>ERROR</div>;
-
-            case "info":
-                return (
-                    <SoundBankInfo
-                        destinationOptions={destinationOptions}
-                        ccOptions={ccOptions}
-                        manager={manager}
-                        clipboard={clipboardManager}
-                    ></SoundBankInfo>
-                );
+        if (view === "info") {
+            return (
+                <SoundBankInfo
+                    destinationOptions={destinationOptions}
+                    ccOptions={ccOptions}
+                    manager={manager}
+                    clipboard={clipboardManager}
+                ></SoundBankInfo>
+            );
         }
+        if (view instanceof BasicPreset) {
+            return (
+                <PresetEditor engine={audioEngine} preset={view}></PresetEditor>
+            );
+        }
+        if (view instanceof BasicInstrument) {
+            return (
+                <InstrumentEditor
+                    engine={audioEngine}
+                    instrument={view}
+                ></InstrumentEditor>
+            );
+        }
+        return <SampleEditor engine={audioEngine} sample={view}></SampleEditor>;
     }
 
     return (
         <div className={"main_content"}>
-            <PresetList manager={manager}></PresetList>
+            <MenuList
+                view={view}
+                sv={updateView}
+                bank={manager.bank}
+            ></MenuList>
             <div className={"main_content_window"}>
                 <MainContent></MainContent>
             </div>

@@ -1,0 +1,48 @@
+.preset_item_wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.preset_item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    gap: 1ch;
+}
+
+.preset_item:hover {
+    background: var(--top-buttons-color-end);
+}
+
+.preset_item span {
+    font-size: 1em;
+}
+
+.preset_item_name {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    text-align: end;
+    flex-grow: 1;
+    padding: 0.3rem 0.3rem 0.3rem 0;
+}
+
+.left_group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem;
+}
+
+.left_group .triangle {
+    color: var(--preset-item-color);
+    font-size: 0.7rem;
+    width: 0.8em;
+    padding: 0.1rem;
+    flex-grow: 1;
+}
+
+.preset_instruments {
+    margin-left: 1rem;
+    margin-right: 1rem;
+}

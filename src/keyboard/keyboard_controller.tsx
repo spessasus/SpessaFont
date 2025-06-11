@@ -1,6 +1,6 @@
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import "./keyboard_controller.css";
-import { Keyboard } from "./keyboard/keyboard.tsx";
+import { Keyboard, type KeyboardPressRef } from "./keyboard/keyboard.tsx";
 import * as React from "react";
 import { type JSX, type RefObject, useEffect, useRef, useState } from "react";
 import { midiControllers } from "spessasynth_core";
@@ -42,6 +42,7 @@ export function KeyboardController({
     });
 
     const pitchRef = useRef<OtherCCRef>(null);
+    const keyboardRef = useRef<KeyboardPressRef>(null);
 
     useEffect(() => {
         engine.processor.onEventCall = (e, d) => {
@@ -55,6 +56,18 @@ export function KeyboardController({
                         });
                         break;
                     }
+
+                    case "stopall":
+                        keyboardRef?.current?.clearAll();
+                        break;
+
+                    case "noteon":
+                        keyboardRef?.current?.pressNote(d?.midiNote || 60);
+                        break;
+
+                    case "noteoff":
+                        keyboardRef?.current?.releaseNote(d?.midiNote || 60);
+                        break;
 
                     case "pitchwheel":
                         {
@@ -73,7 +86,7 @@ export function KeyboardController({
 
     return (
         <div className={"keyboard_controller"}>
-            <Keyboard engine={engine}></Keyboard>
+            <Keyboard ref={keyboardRef} engine={engine}></Keyboard>
             <div className={"controller_row"}>
                 <OtherControllers
                     engine={engine}

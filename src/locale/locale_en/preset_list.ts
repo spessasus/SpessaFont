@@ -1,3 +1,7 @@
 export const PresetListLocale = {
-    search: "Search..."
+    search: "Search...",
+    overview: "Overview",
+    presets: "Presets",
+    instruments: "Instruments",
+    samples: "Samples"
 };

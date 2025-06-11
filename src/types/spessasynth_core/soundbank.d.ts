@@ -1,5 +1,5 @@
 declare module "spessasynth_core" {
-    export interface BasicSample {
+    export class BasicSample {
         sampleName: string;
         sampleRate: number;
         samplePitch: number;
@@ -14,7 +14,7 @@ declare module "spessasynth_core" {
         sampleData: Float32Array | null;
     }
 
-    export interface BasicInstrument {
+    export class BasicInstrument {
         instrumentName: string;
         instrumentZones: BasicInstrumentZone[];
         globalZone: BasicGlobalZone;
@@ -40,7 +40,7 @@ declare module "spessasynth_core" {
         instrument: BasicInstrument;
     }
 
-    export interface BasicPreset {
+    export class BasicPreset {
         presetName: string;
         program: number;
         bank: number;
@@ -95,9 +95,9 @@ declare module "spessasynth_core" {
 
         /**
          * Creates a simple soundfont with one saw wave preset.
-         * @returns {ArrayBufferLike}
+         * @returns {ArrayBuffer}
          */
-        static getDummySoundfontFile(): ArrayBufferLike;
+        static getDummySoundfontFile(): ArrayBuffer;
 
         write(options?: SoundFont2WriteOptions): Uint8Array;
 
