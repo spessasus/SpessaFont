@@ -1,9 +1,9 @@
 import { Modulator } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
-import { ModulatorList } from "../../modulator_editing/modulator_list/modulator_list.tsx";
+import { ModulatorList } from "../../../modulator_editing/modulator_list/modulator_list.tsx";
 import { type JSX, useState } from "react";
-import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
-import type { ClipBoardManager } from "../../core_backend/clipboard_manager.ts";
+import type SoundBankManager from "../../../core_backend/sound_bank_manager.ts";
+import type { ClipBoardManager } from "../../../core_backend/clipboard_manager.ts";
 import { SetDefaultModulators } from "./set_default_modulators.tsx";
 
 export function DefaultModulatorList({

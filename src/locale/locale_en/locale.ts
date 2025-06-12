@@ -5,6 +5,7 @@ import { ModulatorLocale } from "./modulator.ts";
 import { GeneratorLocale } from "./generator.ts";
 import { SettingsLocale } from "./settings.ts";
 import { MidiControllersLocale } from "./midi_controllers.ts";
+import { SampleLocale } from "./sample.ts";
 
 /**
  *
@@ -46,5 +47,6 @@ export const localeEnglish = {
     bankInfo: BankInfoLocale,
     presetList: PresetListLocale,
     settingsLocale: SettingsLocale,
-    midiControllersLocale: MidiControllersLocale
+    midiControllersLocale: MidiControllersLocale,
+    sampleLocale: SampleLocale
 };

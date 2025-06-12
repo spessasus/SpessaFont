@@ -24,7 +24,7 @@ export function Settings({
     const [settings, setSettings] = useState(loadSettings());
 
     const updateSettings = (s: SavedSettingsType) => {
-        applyAudioSettings(s, engine.processor);
+        applyAudioSettings(s, engine);
         saveSettings(s);
         setSettings(s);
     };

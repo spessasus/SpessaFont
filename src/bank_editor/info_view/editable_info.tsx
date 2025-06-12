@@ -1,8 +1,8 @@
 import type { BasicSoundBank, SoundFontInfoType } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
-import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
-import type { HistoryAction } from "../core_backend/history.ts";
+import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
+import type { HistoryAction } from "../../core_backend/history.ts";
 
 class SetBankInfo implements HistoryAction {
     callback: (s: string) => void;

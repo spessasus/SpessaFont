@@ -1,4 +1,4 @@
-import type { HistoryAction } from "../../core_backend/history.ts";
+import type { HistoryAction } from "../../../core_backend/history.ts";
 import { type BasicSoundBank, Modulator } from "spessasynth_core";
 
 export class SetDefaultModulators implements HistoryAction {

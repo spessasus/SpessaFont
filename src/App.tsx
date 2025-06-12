@@ -49,7 +49,7 @@ const context = new AudioContext({
 // shared audio engine, the bank will swap on switching tabs
 const audioEngine = new AudioEngine(context);
 
-applyAudioSettings(initialSettings, audioEngine.processor);
+applyAudioSettings(initialSettings, audioEngine);
 
 // shared clipboard
 const clipboardManager = new ClipBoardManager();

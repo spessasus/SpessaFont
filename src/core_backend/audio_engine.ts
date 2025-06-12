@@ -27,6 +27,8 @@ export class AudioEngine {
     reverb: ConvolverNode;
     intervalID = 0;
 
+    targetNode: GainNode;
+
     audioChunksQueued: number = 0;
 
     private worklet: AudioWorkletNode | undefined;
@@ -45,11 +47,13 @@ export class AudioEngine {
         // analyser
         this.analyser = new AnalyserNode(this.context);
         this.analyser.connect(this.context.destination);
+        this.targetNode = new GainNode(context);
+        this.targetNode.connect(this.analyser);
 
-        this.chorus = new FancyChorus(this.analyser);
+        this.chorus = new FancyChorus(this.targetNode);
 
         this.reverb = getReverbProcessor(context).conv;
-        this.reverb.connect(this.analyser);
+        this.reverb.connect(this.targetNode);
         const isDev = import.meta.env.MODE === "development";
         if (isDev) {
             logInfo("Dev mode on");
@@ -74,7 +78,7 @@ export class AudioEngine {
                 numberOfOutputs: 3
             }
         );
-        this.worklet.connect(this.analyser, 0);
+        this.worklet.connect(this.targetNode, 0);
         this.worklet.connect(this.reverb, 1);
         this.worklet.connect(this.chorus.input, 2);
         this.worklet.port.onmessage = (e) => (this.audioChunksQueued = e.data);
@@ -119,6 +123,10 @@ export class AudioEngine {
         if (this.worklet) {
             this.worklet.port.postMessage([dry, rev, chr]);
         }
+    }
+
+    setVolume(volume: number) {
+        this.targetNode.gain.value = volume;
     }
 
     toggleMIDI() {

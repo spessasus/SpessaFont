@@ -18,7 +18,7 @@ declare module "spessasynth_lib" {
         /** the difference between frequencies of oscillators, in Hz */
         oscillatorFrequencyVariation?: number;
 
-        /** how much will oscillator alter the delay in delay nodes, in second */
+        /** how much will oscillator alter the delay in delay nodes, in seconds */
         oscillatorGain?: number;
     };
 
@@ -59,4 +59,9 @@ declare module "spessasynth_lib" {
         context: BaseAudioContext,
         reverbBuffer: ?AudioBuffer = undefined
     ): { conv: ConvolverNode; promise: Promise<AudioBuffer> };
+
+    export function audioBufferToWav(
+        audioBuffer: AudioBuffer,
+        normalizeAudio: boolean = true
+    ): Blob;
 }

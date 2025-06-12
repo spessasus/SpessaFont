@@ -3,23 +3,24 @@ import "./preset_display.css";
 import type { BasicInstrument, BasicSample } from "spessasynth_core";
 import { useEffect, useRef, useState } from "react";
 import { InstrumentDisplay } from "../instrument_display/instrument_display.tsx";
+import type { BankEditView } from "../../core_backend/sound_bank_manager.ts";
 
 export function PresetDisplay({
     p,
     selectInstrument,
     onClick,
     selectSample,
-    selected
+    view
 }: {
     p: MappedPresetType;
     selectInstrument: (i: BasicInstrument) => unknown;
     selectSample: (s: BasicSample) => unknown;
     onClick: () => unknown;
-    selected: boolean;
+    view: BankEditView;
 }) {
     const [open, setOpen] = useState(false);
     const elementRef = useRef<HTMLDivElement>(null);
-
+    const selected = view === p.preset;
     useEffect(() => {
         if (selected) {
             elementRef?.current?.scrollIntoView({
@@ -50,7 +51,7 @@ export function PresetDisplay({
                 {open &&
                     p.preset.presetZones.map((z, i) => (
                         <InstrumentDisplay
-                            selected={false}
+                            view={view}
                             key={i}
                             instrument={z.instrument}
                             selectSample={selectSample}

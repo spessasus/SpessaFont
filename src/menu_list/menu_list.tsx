@@ -32,15 +32,6 @@ export function MenuList({
     const { t } = useTranslation();
     const setView = useCallback(
         (v: BankEditView) => {
-            if (v instanceof BasicSample) {
-                setShowSamples(true);
-            } else if (v instanceof BasicInstrument) {
-                setShowInstruments(true);
-            } else if (v instanceof BasicPreset) {
-                setShowPresets(true);
-            }
-
-            setSearchQuery("");
             sv(v);
         },
         [sv]
@@ -96,7 +87,7 @@ export function MenuList({
             <div className={"item_group"}>
                 {filteredSamples.map((s, i) => (
                     <SampleDisplay
-                        selected={s === view}
+                        view={view}
                         sample={s}
                         onClick={() => setView(s)}
                         key={i}
@@ -112,7 +103,7 @@ export function MenuList({
             <div className={"item_group"}>
                 {filteredInstruments.map((inst, i) => (
                     <InstrumentDisplay
-                        selected={inst === view}
+                        view={view}
                         instrument={inst}
                         onClick={() => setView(inst)}
                         selectSample={(s) => setView(s)}
@@ -129,7 +120,7 @@ export function MenuList({
             <div className={"item_group"}>
                 {filteredPresets.map((p, i) => (
                     <PresetDisplay
-                        selected={p.preset === view}
+                        view={view}
                         onClick={() => setView(p.preset)}
                         p={p}
                         selectInstrument={(i) => setView(i)}

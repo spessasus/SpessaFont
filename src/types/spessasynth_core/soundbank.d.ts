@@ -10,14 +10,33 @@ declare module "spessasynth_core" {
         sampleLoopEndIndex: number;
         isCompressed: boolean;
         compressedData: Uint8Array | null;
-        useCount: number;
         sampleData: Float32Array | null;
+
+        linkedInstruments: BasicInstrument[];
+
+        getAudioData(): Float32Array;
+
+        linkTo(i: BasicInstrument);
+
+        unlinkFrom(i: BasicInstrument);
     }
 
     export class BasicInstrument {
         instrumentName: string;
         instrumentZones: BasicInstrumentZone[];
+        readonly useCount;
         globalZone: BasicGlobalZone;
+        linkedPresets: BasicPreset[];
+
+        deleteAllZones();
+
+        deleteZone(index: number): boolean;
+
+        linkTo(p: BasicPreset);
+
+        createZone(): BasicInstrumentZone;
+
+        unlinkFrom(p: BasicPreset);
     }
 
     export interface BasicZone {
@@ -25,6 +44,18 @@ declare module "spessasynth_core" {
         keyRange: SoundFontRange;
         generators: Generator[];
         modulators: Modulator[];
+        readonly hasKeyRange: boolean;
+        readonly hasVelRange: boolean;
+
+        copyFrom(z: BasicZone);
+
+        addGenerators(...generators: Generator);
+
+        addModulators(...modulators: Modulator);
+
+        setGenerator(type: generatorTypes, value: number);
+
+        getGeneratorValue(type: generatorTypes, notFoundValue: number): number;
     }
 
     export interface BasicGlobalZone extends BasicZone {
@@ -33,11 +64,15 @@ declare module "spessasynth_core" {
 
     export interface BasicInstrumentZone extends BasicZone {
         sample: BasicSample;
-        useCount: number;
+        readonly useCount: number;
+
+        setSample(s: BasicSample);
     }
 
     export interface BasicPresetZone extends BasicZone {
         instrument: BasicInstrument;
+
+        setInstrument(i: BasicInstrument);
     }
 
     export class BasicPreset {
@@ -50,6 +85,10 @@ declare module "spessasynth_core" {
         parentSoundBank: BasicSoundBank;
         presetZones: BasicPresetZone[];
         globalZone: BasicGlobalZone;
+
+        constructor(b: BasicSoundBank);
+
+        createZone(): BasicPresetZone;
     }
 
     export type SoundFontInfoType =

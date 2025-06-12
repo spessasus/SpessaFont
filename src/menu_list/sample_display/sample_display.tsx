@@ -1,18 +1,19 @@
 import type { BasicSample } from "spessasynth_core";
 import "./sample_display.css";
 import { useEffect, useRef } from "react";
+import type { BankEditView } from "../../core_backend/sound_bank_manager.ts";
 
 export function SampleDisplay({
     sample,
     onClick,
-    selected
+    view
 }: {
     sample: BasicSample;
     onClick: () => unknown;
-    selected: boolean;
+    view: BankEditView;
 }) {
     const elementRef = useRef<HTMLDivElement>(null);
-
+    const selected = view === sample;
     useEffect(() => {
         if (selected) {
             elementRef?.current?.scrollIntoView({

@@ -1,8 +1,5 @@
-import {
-    interpolationTypes,
-    masterParameterType,
-    type SpessaSynthProcessor
-} from "spessasynth_core";
+import { interpolationTypes, masterParameterType } from "spessasynth_core";
+import type { AudioEngine } from "../../core_backend/audio_engine.ts";
 
 export type ThemeType = "dark" | "light";
 
@@ -35,12 +32,10 @@ export function getSetting<K extends keyof SavedSettingsType>(
 
 export function applyAudioSettings(
     settings: SavedSettingsType,
-    processor: SpessaSynthProcessor
+    engine: AudioEngine
 ) {
-    processor.setMasterParameter(
-        masterParameterType.mainVolume,
-        getSetting("volume", settings)
-    );
+    const processor = engine.processor;
+    engine.setVolume(getSetting("volume", settings));
     processor.setMasterParameter(
         masterParameterType.interpolationType,
         getSetting("interpolation", settings)

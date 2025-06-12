@@ -66,7 +66,6 @@ export default class SoundBankManager {
     }
 
     close() {
-        this.bank.destroySoundBank();
         this.clearCache();
     }
 

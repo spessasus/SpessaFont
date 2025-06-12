@@ -3,7 +3,7 @@ import SoundBankManager, {
 } from "../core_backend/sound_bank_manager.ts";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import type { ClipBoardManager } from "../core_backend/clipboard_manager.ts";
-import { SoundBankInfo } from "../info_view/sound_bank_info.tsx";
+import { SoundBankInfo } from "./info_view/sound_bank_info.tsx";
 import { type JSX, useState } from "react";
 import { MenuList } from "../menu_list/menu_list.tsx";
 import "./bank_editor.css";
@@ -58,7 +58,14 @@ export function BankEditor({
                 ></InstrumentEditor>
             );
         }
-        return <SampleEditor engine={audioEngine} sample={view}></SampleEditor>;
+        return (
+            <SampleEditor
+                manager={manager}
+                setView={updateView}
+                engine={audioEngine}
+                sample={view}
+            ></SampleEditor>
+        );
     }
 
     return (
