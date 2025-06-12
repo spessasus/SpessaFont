@@ -7,17 +7,21 @@ import {
 import type { AudioEngine } from "../../core_backend/audio_engine.ts";
 import "./sample_editor.css";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { WaveView } from "./wave_view.tsx";
+import { WaveView } from "./wave_view/wave_view.tsx";
 import SoundBankManager, {
     type BankEditView
 } from "../../core_backend/sound_bank_manager.ts";
 import { useTranslation } from "react-i18next";
 import { audioBufferToWav } from "spessasynth_lib";
 import { KEYBOARD_TARGET_CHANNEL } from "../../keyboard/target_channel.ts";
+import { SampleControl } from "./sample_control/sample_control.tsx";
+import { LinkedInstruments } from "./linked_instruments/linked_instruments.tsx";
+import { ControllerRange } from "../../fancy_inputs/controller_range/controller_range.tsx";
 
 const MIN_SAMPLE_RATE = 8000;
 const MAX_SAMPLE_RATE = 96000;
 const DEFAULT_SAMPLE_GAIN = 0.4;
+const ZOOM_PER_SAMPLE = 5000 / 6_000_000;
 
 const sampleTypes = {
     mono: 0,
@@ -33,7 +37,7 @@ const sampleTypes = {
 type SampleType = keyof typeof sampleTypes;
 type SampleTypeValue = (typeof sampleTypes)[SampleType];
 
-type SamplePlayerState = "stopped" | "playing" | "playing_loop";
+export type SamplePlayerState = "stopped" | "playing" | "playing_loop";
 
 export function SampleEditor({
     engine,
@@ -47,7 +51,14 @@ export function SampleEditor({
     setView: (v: BankEditView) => void;
 }) {
     const { t } = useTranslation();
-    const sampleData = sample.getAudioData();
+    const [sampleData, setSampleDataInternal] = useState(sample.getAudioData());
+    const setSampleData = (data: Float32Array, rate: number) => {
+        setSampleRate(rate);
+        setLoopStart(0);
+        setLoopEnd(data.length - 1);
+        sample.setAudioData(data);
+        setSampleDataInternal(data);
+    };
 
     // make the sample playable
     useEffect(() => {
@@ -78,21 +89,19 @@ export function SampleEditor({
     const [loopStart, setLoopStartInternal] = useState(
         sample.sampleLoopStartIndex
     );
-    const [lsText, setLsText] = useState(loopStart.toString());
     const setLoopStart = (s: number) => {
         s = Math.floor(Math.min(s, loopEnd, sampleData.length - 1));
         sample.sampleLoopStartIndex = s;
         setLoopStartInternal(s);
-        setLsText(s.toString());
+        return s;
     };
 
     const [loopEnd, setLoopEndInternal] = useState(sample.sampleLoopEndIndex);
-    const [leText, setLeText] = useState(loopEnd.toString());
     const setLoopEnd = (e: number) => {
         e = Math.floor(Math.max(e, loopStart, 0));
         sample.sampleLoopEndIndex = e;
         setLoopEndInternal(e);
-        setLeText(e.toString());
+        return e;
     };
     const [name, setNameInternal] = useState(sample.sampleName);
     const setName = (n: string) => {
@@ -101,31 +110,28 @@ export function SampleEditor({
     };
 
     const [sampleRate, setSampleRateInternal] = useState(sample.sampleRate);
-    const [srText, setSrText] = useState(sample.sampleRate.toString());
     const setSampleRate = (r: number) => {
         const newRate = Math.min(MAX_SAMPLE_RATE, Math.max(r, MIN_SAMPLE_RATE));
         sample.sampleRate = newRate;
         setSampleRateInternal(newRate);
-        setSrText(newRate.toString());
+        return newRate;
     };
 
     const originalKey = sample.samplePitch;
-    const [okText, setOkText] = useState(originalKey.toString());
     const setOriginalKey = (k: number) => {
         const key = Math.min(127, Math.max(0, Math.floor(k)));
         sample.samplePitch = key;
-        setOkText(key.toString());
+        return key;
     };
 
-    const [centTuning, setCentTuningInternal] = useState(
+    const [centCorrection, setCentCorrectionInternal] = useState(
         sample.samplePitchCorrection
     );
-    const [ccText, setCcText] = useState(centTuning.toString());
     const setCentCorrection = (t: number) => {
         const tune = Math.min(99, Math.max(-99, Math.floor(t)));
         sample.samplePitchCorrection = tune;
-        setCentTuningInternal(tune);
-        setCcText(tune.toString());
+        setCentCorrectionInternal(tune);
+        return tune;
     };
 
     const [sampleType, setSampleTypeInternal] = useState(
@@ -149,6 +155,7 @@ export function SampleEditor({
     const [playerState, setPlayerState] =
         useState<SamplePlayerState>("stopped");
     const playerRef = useRef<AudioBufferSourceNode | null>(null);
+    const [playbackStart, setPlaybackStart] = useState(0);
 
     const stopSampleInternal = () => {
         if (playerRef.current) {
@@ -169,7 +176,7 @@ export function SampleEditor({
     const playSample = () => {
         stopSampleInternal();
         const player = engine.context.createBufferSource();
-        player.detune.value = centTuning;
+        player.detune.value = centCorrection;
         player.buffer = buffer;
         player.onended = stopPlayer;
         playerRef.current = player;
@@ -178,6 +185,7 @@ export function SampleEditor({
             gain: DEFAULT_SAMPLE_GAIN
         });
         player.connect(gain).connect(engine.targetNode);
+        setPlaybackStart(engine.context.currentTime - 0.1);
         player.start();
         setPlayerState("playing");
     };
@@ -185,7 +193,7 @@ export function SampleEditor({
     const playLoop = () => {
         stopSampleInternal();
         const player = engine.context.createBufferSource();
-        player.detune.value = centTuning;
+        player.detune.value = centCorrection;
         player.buffer = buffer;
         player.loopStart = loopStart / sampleRate;
         player.loopEnd = loopEnd / sampleRate;
@@ -197,12 +205,14 @@ export function SampleEditor({
             gain: DEFAULT_SAMPLE_GAIN
         });
         player.connect(gain).connect(engine.targetNode);
+        setPlaybackStart(engine.context.currentTime - 0.1);
         player.start();
         setPlayerState("playing_loop");
     };
 
     const stopPlayer = () => {
         stopSampleInternal();
+        setPlaybackStart(-1);
         setPlayerState("stopped");
     };
 
@@ -214,15 +224,71 @@ export function SampleEditor({
         console.log(a);
         a.click();
     };
+
+    const [importError, setImportError] = useState("");
+    const [loading, setLoading] = useState(false);
+    const replaceData = () => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "audio/*";
+        input.onchange = async () => {
+            const file = input?.files?.[0];
+            if (!file) {
+                return;
+            }
+            setImportError("");
+            setLoading(true);
+            let audioBuffer: AudioBuffer;
+            try {
+                audioBuffer = await engine.context.decodeAudioData(
+                    await file.arrayBuffer()
+                );
+            } catch {
+                setImportError(t("sampleLocale.tools.invalidAudioFile"));
+                return;
+            } finally {
+                setLoading(false);
+            }
+            if (audioBuffer.numberOfChannels < 0) {
+                setImportError(t("sampleLocale.tools.notEnoughChannels"));
+                return;
+            }
+            const finalData = new Float32Array(audioBuffer.length);
+            if (audioBuffer.numberOfChannels > 1) {
+                const buffers: Float32Array[] = [];
+                for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
+                    buffers.push(audioBuffer.getChannelData(i));
+                }
+                for (let i = 0; i < audioBuffer.length; i++) {
+                    const sum = buffers.reduce((s, buf) => s + buf[i], 0);
+                    finalData[i] = sum / audioBuffer.numberOfChannels;
+                }
+            } else {
+                audioBuffer.copyFromChannel(finalData, 0);
+            }
+
+            setSampleData(finalData, audioBuffer.sampleRate);
+        };
+        input.click();
+    };
+
+    const [zoom, setZoom] = useState(1);
+    const [inputZoom, setInputZoom] = useState(1);
+    const maxZoom = ZOOM_PER_SAMPLE * sampleData.length + 1;
+
     return (
         <div className={"sample_editor"}>
             <WaveView
+                zoom={zoom}
                 setLoopStart={setLoopStart}
                 setLoopEnd={setLoopEnd}
                 data={sampleData}
                 loopStart={loopStart}
                 loopEnd={loopEnd}
                 sampleRate={sampleRate}
+                context={engine.context}
+                playerState={playerState}
+                playbackStartTime={playbackStart}
             ></WaveView>
             <div className={"info_column"}>
                 <div className={"info_split"}>
@@ -235,97 +301,60 @@ export function SampleEditor({
                             onBlur={(e) => setName(e.target.value)}
                         />
                         <div className={"info_row"}>
-                            <div className={"info_field"}>
-                                <span>{t("sampleLocale.sampleRate")}</span>
-                                <input
-                                    className={"pretty_input monospaced"}
-                                    type={"number"}
-                                    min={MIN_SAMPLE_RATE}
-                                    max={MAX_SAMPLE_RATE}
-                                    placeholder={t("sampleLocale.sampleRate")}
-                                    value={srText}
-                                    onBlur={(e) =>
-                                        setSampleRate(
-                                            parseInt(e.target.value) || 0
-                                        )
-                                    }
-                                    onChange={(e) => setSrText(e.target.value)}
-                                />
-                            </div>
+                            <SampleControl
+                                setValue={setSampleRate}
+                                value={sampleRate}
+                                name={t("sampleLocale.sampleRate")}
+                                className={"pretty_input monospaced"}
+                                type={"number"}
+                                min={MIN_SAMPLE_RATE}
+                                max={MAX_SAMPLE_RATE}
+                                placeholder={t("sampleLocale.sampleRate")}
+                            ></SampleControl>
 
-                            <div className={"info_field"}>
-                                <span>{t("sampleLocale.loopStart")}</span>
-                                <input
-                                    className={"pretty_input monospaced"}
-                                    type={"number"}
-                                    min={0}
-                                    max={loopEnd}
-                                    placeholder={t("sampleLocale.loopStart")}
-                                    value={lsText}
-                                    onBlur={(e) =>
-                                        setLoopStart(
-                                            parseInt(e.target.value) || 0
-                                        )
-                                    }
-                                    onChange={(e) => setLsText(e.target.value)}
-                                />
-                            </div>
+                            <SampleControl
+                                setValue={setLoopStart}
+                                value={loopStart}
+                                name={t("sampleLocale.loopStart")}
+                                className={"pretty_input monospaced"}
+                                type={"number"}
+                                min={0}
+                                max={loopEnd}
+                                placeholder={t("sampleLocale.loopStart")}
+                            ></SampleControl>
 
-                            <div className={"info_field"}>
-                                <span>{t("sampleLocale.loopEnd")}</span>
-                                <input
-                                    className={"pretty_input monospaced"}
-                                    type={"number"}
-                                    min={loopStart}
-                                    max={sampleData.length - 1}
-                                    placeholder={t("sampleLocale.loopEnd")}
-                                    value={leText}
-                                    onBlur={(e) =>
-                                        setLoopEnd(
-                                            parseInt(e.target.value) || 0
-                                        )
-                                    }
-                                    onChange={(e) => setLeText(e.target.value)}
-                                />
-                            </div>
+                            <SampleControl
+                                setValue={setLoopEnd}
+                                value={loopEnd}
+                                name={t("sampleLocale.loopEnd")}
+                                className={"pretty_input monospaced"}
+                                type={"number"}
+                                min={loopStart}
+                                max={sampleData.length - 1}
+                                placeholder={t("sampleLocale.loopEnd")}
+                            ></SampleControl>
 
-                            <div className={"info_field"}>
-                                <span>{t("sampleLocale.originalKey")}</span>
-                                <input
-                                    className={"pretty_input monospaced"}
-                                    type={"number"}
-                                    min={0}
-                                    max={12700} /* to even out the width */
-                                    placeholder={t("sampleLocale.originalKey")}
-                                    value={okText}
-                                    onBlur={(e) =>
-                                        setOriginalKey(
-                                            parseInt(e.target.value) || 0
-                                        )
-                                    }
-                                    onChange={(e) => setOkText(e.target.value)}
-                                />
-                            </div>
+                            <SampleControl
+                                setValue={setOriginalKey}
+                                value={originalKey}
+                                name={t("sampleLocale.originalKey")}
+                                className={"pretty_input monospaced"}
+                                type={"number"}
+                                min={0}
+                                max={12700} /* to even out the width */
+                                placeholder={t("sampleLocale.originalKey")}
+                            ></SampleControl>
 
-                            <div className={"info_field"}>
-                                <span>{t("sampleLocale.centCorrection")}</span>
-                                <input
-                                    className={"pretty_input monospaced"}
-                                    type={"number"}
-                                    min={-99}
-                                    max={12700} /* to even out the width */
-                                    placeholder={t(
-                                        "sampleLocale.centCorrection"
-                                    )}
-                                    value={ccText}
-                                    onBlur={(e) =>
-                                        setCentCorrection(
-                                            parseInt(e.target.value) || 0
-                                        )
-                                    }
-                                    onChange={(e) => setCcText(e.target.value)}
-                                />
-                            </div>
+                            <SampleControl
+                                setValue={setCentCorrection}
+                                value={centCorrection}
+                                name={t("sampleLocale.centCorrection")}
+                                className={"pretty_input monospaced"}
+                                type={"number"}
+                                min={-99}
+                                max={12700} /* to even out the width */
+                                placeholder={t("sampleLocale.centCorrection")}
+                            ></SampleControl>
 
                             <div className={"info_field"}>
                                 <span>{t("sampleLocale.type")}</span>
@@ -381,70 +410,79 @@ export function SampleEditor({
                             </div>
                         </div>
                     </div>
-                    <div className={"info_column tools"}>
+                    <div className={"info_column"}>
                         <h2>{t("sampleLocale.tools.title")}</h2>
-                        <div
-                            className={
-                                "pretty_button responsive_button hover_brightness"
-                            }
-                            onClick={exportWav}
-                        >
-                            {t("sampleLocale.tools.wavExport")}
-                        </div>
-                        {playerState === "stopped" && (
-                            <>
-                                <div
-                                    className={
-                                        "pretty_button responsive_button hover_brightness"
-                                    }
-                                    onClick={playSample}
-                                >
-                                    {t("sampleLocale.tools.play")}
-                                </div>
-
-                                <div
-                                    className={
-                                        "pretty_button responsive_button hover_brightness"
-                                    }
-                                    onClick={playLoop}
-                                >
-                                    {t("sampleLocale.tools.playLooped")}
-                                </div>
-                            </>
-                        )}
-                        {playerState !== "stopped" && (
+                        <div className={"info_column tools"}>
                             <div
                                 className={
                                     "pretty_button responsive_button hover_brightness"
                                 }
-                                onClick={stopPlayer}
+                                onClick={exportWav}
                             >
-                                {t("sampleLocale.tools.stop")}
+                                {t("sampleLocale.tools.wavExport")}
                             </div>
-                        )}
+                            {playerState === "stopped" && (
+                                <>
+                                    <div
+                                        className={
+                                            "pretty_button responsive_button hover_brightness"
+                                        }
+                                        onClick={playSample}
+                                    >
+                                        {t("sampleLocale.tools.play")}
+                                    </div>
+
+                                    <div
+                                        className={
+                                            "pretty_button responsive_button hover_brightness"
+                                        }
+                                        onClick={playLoop}
+                                    >
+                                        {t("sampleLocale.tools.playLooped")}
+                                    </div>
+                                </>
+                            )}
+                            {playerState !== "stopped" && (
+                                <div
+                                    className={
+                                        "pretty_button responsive_button hover_brightness"
+                                    }
+                                    onClick={stopPlayer}
+                                >
+                                    {t("sampleLocale.tools.stop")}
+                                </div>
+                            )}
+                            <div
+                                onClick={replaceData}
+                                className={
+                                    "pretty_button responsive_button hover_brightness"
+                                }
+                            >
+                                {loading
+                                    ? t("sampleLocale.tools.loading")
+                                    : importError ||
+                                      t("sampleLocale.tools.replaceAudio")}
+                            </div>
+
+                            <ControllerRange
+                                max={maxZoom - 1}
+                                min={1}
+                                onChange={(n) => {
+                                    const mapped = (n - 1) / (maxZoom - 1);
+                                    const exped = Math.pow(mapped, 5);
+                                    setZoom(exped * (maxZoom - 1) + 1);
+                                    setInputZoom(n);
+                                }}
+                                value={inputZoom}
+                                text={`${t("sampleLocale.waveZoom")}: ${Math.floor(zoom * 100)}%`}
+                            ></ControllerRange>
+                        </div>
                     </div>
                 </div>
-                <div className={"linked_instruments"}>
-                    {sample.linkedInstruments.length === 0 && (
-                        <div>{t("sampleLocale.notLinkedToAnything")}:</div>
-                    )}
-                    {sample.linkedInstruments.length > 0 && (
-                        <>
-                            <div>
-                                <b>{t("sampleLocale.linkedTo")}</b>
-                            </div>
-                            {sample.linkedInstruments.map((inst, i) => (
-                                <div
-                                    className={"monospaced"}
-                                    onClick={() => setView(inst)}
-                                    key={i}
-                                >
-                                    {inst.instrumentName}
-                                </div>
-                            ))}
-                        </>
-                    )}
-                </div>
+                <LinkedInstruments
+                    sample={sample}
+                    setView={setView}
+                ></LinkedInstruments>
             </div>
         </div>
     );

@@ -6,6 +6,7 @@ export const SampleLocale = {
     originalKey: "Original Key",
     centCorrection: "Cent Correction",
     type: "Type",
+    waveZoom: "Wave Zoom",
     types: {
         mono: "Mono",
         left: "Left",
@@ -22,7 +23,11 @@ export const SampleLocale = {
         play: "Play",
         playLooped: "Play Looped",
         stop: "Stop",
-        wavExport: "WAV Export"
+        wavExport: "WAV Export",
+        replaceAudio: "Replace Audio",
+        loading: "Loading...",
+        invalidAudioFile: "Invalid Audio File",
+        notEnoughChannels: "Not Enough Channels"
     },
 
     notLinkedToAnything: "Not Linked to Anything Yet.",

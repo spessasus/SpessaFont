@@ -16,6 +16,8 @@ declare module "spessasynth_core" {
 
         getAudioData(): Float32Array;
 
+        setAudioData(data: Float32Array);
+
         linkTo(i: BasicInstrument);
 
         unlinkFrom(i: BasicInstrument);

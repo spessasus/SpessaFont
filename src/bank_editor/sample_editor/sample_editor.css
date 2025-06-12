@@ -6,15 +6,6 @@
     min-width: 0;
 }
 
-.wave_view {
-    background: var(--top-color-start);
-    min-height: 0;
-    min-width: 0;
-    max-width: 100%;
-    flex-grow: 1;
-    cursor: pointer;
-}
-
 .info_split {
     display: flex;
     gap: 0.5rem;
@@ -25,17 +16,12 @@
     flex-direction: column;
     gap: 0.5rem;
     flex: 1;
-}
-
-.info_column h2 {
-    flex-grow: 1;
+    justify-content: space-between;
 }
 
 .sample_name {
     font-size: 1.5rem;
-    flex-grow: 1;
 }
-
 
 .info_row {
     gap: 0.5rem;
@@ -44,42 +30,14 @@
     flex-wrap: wrap;
 }
 
-.info_field {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
+.tools {
     align-items: center;
-    flex: 1;
-}
-
-.info_field span {
-    text-align: start;
-    white-space: nowrap;
-}
-
-.info_field input {
-    text-align: end;
+    justify-content: center;
+    flex-grow: 1;
 }
 
 .tools * {
     text-align: center;
-}
-
-.linked_instruments {
-    overflow-x: auto;
-    display: flex;
-    border-top: solid 1px var(--track-border-color);
-}
-
-.linked_instruments div {
-    cursor: pointer;
-    padding: 0.3rem 1rem;
-    text-align: center;
     white-space: nowrap;
-    border-right: solid 1px var(--track-border-color);
-}
-
-.linked_instruments div:hover {
-    background: var(--top-buttons-color);
-
+    width: 90%;
 }

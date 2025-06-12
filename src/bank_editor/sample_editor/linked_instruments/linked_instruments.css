@@ -1,0 +1,18 @@
+.linked_instruments {
+    overflow-x: auto;
+    display: flex;
+    border-top: solid 1px var(--track-border-color);
+}
+
+.linked_instruments div {
+    cursor: pointer;
+    padding: 0.3rem 1rem;
+    text-align: center;
+    white-space: nowrap;
+    border-right: solid 1px var(--track-border-color);
+}
+
+.linked_instruments div:hover {
+    background: var(--top-buttons-color);
+
+}
