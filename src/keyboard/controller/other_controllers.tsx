@@ -62,7 +62,7 @@ export function OtherControllers({
                 <div
                     onClick={midiPanic}
                     className={
-                        "pretty_button responsive_button hover_brightness"
+                        "pretty_button responsive_button hover_brightness monospaced"
                     }
                 >
                     {t("keyboardLocale.midiPanic")}
@@ -70,7 +70,7 @@ export function OtherControllers({
                 <div
                     onClick={systemReset}
                     className={
-                        "pretty_button responsive_button hover_brightness"
+                        "pretty_button responsive_button hover_brightness monospaced"
                     }
                 >
                     {t("keyboardLocale.resetSynthesizer")}

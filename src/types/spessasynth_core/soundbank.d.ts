@@ -19,14 +19,25 @@ declare module "spessasynth_core" {
         samplePitch: number;
         samplePitchCorrection: number;
         readonly linkedSample: BasicSample | undefined;
-        readonly sampleType: sampleTypes;
+        readonly sampleType: SampleTypeValue;
         sampleLoopStartIndex: number;
         sampleLoopEndIndex: number;
         readonly isCompressed: boolean;
         readonly compressedData: Uint8Array | null;
         readonly sampleData: Float32Array | null;
+        readonly useCount: number;
 
         readonly linkedInstruments: BasicInstrument[];
+
+        constructor(
+            sampleName: string,
+            sampleRate: number,
+            samplePitch: number,
+            samplePitchCorrection: number,
+            sampleType: SampleTypeValue,
+            loopStart: number,
+            loopEnd: number
+        );
 
         getAudioData(): Float32Array;
 

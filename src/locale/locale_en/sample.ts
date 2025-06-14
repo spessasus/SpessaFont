@@ -33,5 +33,7 @@ export const SampleLocale = {
     },
 
     notLinkedToInstrument: "Not Linked to Instrument Yet.",
-    linkedTo: "Linked to"
+    linkedTo: "Linked to",
+    compressedSample: "Compressed Sample",
+    deleteSample: "Delete Sample"
 };

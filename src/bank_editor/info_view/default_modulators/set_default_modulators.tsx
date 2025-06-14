@@ -3,8 +3,8 @@ import { type BasicSoundBank, Modulator } from "spessasynth_core";
 
 export class SetDefaultModulators implements HistoryAction {
     setDmods: (d: Modulator[]) => void;
-    oldVal: Modulator[];
-    newVal: Modulator[];
+    private readonly oldVal: Modulator[];
+    private readonly newVal: Modulator[];
 
     constructor(
         setDmods: (d: Modulator[]) => void,

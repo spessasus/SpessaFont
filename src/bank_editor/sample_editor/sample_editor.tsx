@@ -8,11 +8,9 @@ import {
 } from "spessasynth_core";
 import type { AudioEngine } from "../../core_backend/audio_engine.ts";
 import "./sample_editor.css";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { WaveView } from "./wave_view/wave_view.tsx";
-import SoundBankManager, {
-    type BankEditView
-} from "../../core_backend/sound_bank_manager.ts";
+import SoundBankManager from "../../core_backend/sound_bank_manager.ts";
 import { useTranslation } from "react-i18next";
 import { audioBufferToWav } from "spessasynth_lib";
 import { KEYBOARD_TARGET_CHANNEL } from "../../keyboard/target_channel.ts";
@@ -20,11 +18,14 @@ import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx
 import { LinkedInstruments } from "./linked_instruments/linked_instruments.tsx";
 import { ControllerRange } from "../../fancy_inputs/controller_range/controller_range.tsx";
 import { TypeSelector } from "./type_selector/type_selector.tsx";
+import type { SetViewType } from "../bank_editor.tsx";
+import { SetSampleTypeAction } from "./set_sample_type_action.ts";
+import { EditSampleAction } from "./edit_sample_action.ts";
 
 const MIN_SAMPLE_RATE = 8000;
 const MAX_SAMPLE_RATE = 96000;
 const DEFAULT_SAMPLE_GAIN = 0.4;
-const ZOOM_PER_SAMPLE = 5000 / 6_000_000;
+const ZOOM_PER_SAMPLE = 50000 / 6_000_000;
 
 export type SamplePlayerState = "stopped" | "playing" | "playing_loop";
 
@@ -32,14 +33,22 @@ export function SampleEditor({
     engine,
     sample,
     setView,
-    manager
+    manager,
+    setSamples,
+    samples
 }: {
     manager: SoundBankManager;
     sample: BasicSample;
     engine: AudioEngine;
-    setView: (v: BankEditView) => void;
+    setView: SetViewType;
+    setSamples: (s: BasicSample[]) => void;
+    samples: BasicSample[];
 }) {
     const { t } = useTranslation();
+    const sampleIndex = useMemo(
+        () => samples.indexOf(sample),
+        [samples, sample]
+    );
     const [sampleData, setSampleDataInternal] = useState(sample.getAudioData());
     const setSampleData = (data: Float32Array, rate: number) => {
         setSampleRate(rate);
@@ -75,41 +84,153 @@ export function SampleEditor({
         sample
     ]);
 
+    const [sampleType, setSampleTypeInternal] = useState(
+        sample.sampleType as SampleTypeValue
+    );
+    const [linkedSample, setLinkedSampleInternal] = useState(
+        sample.linkedSample
+    );
+    const setLinkedSample = (type: SampleTypeValue, s?: BasicSample) => {
+        // no need to use two actions a setSampleType automatically adjusts the second sample
+        const action = [
+            new SetSampleTypeAction(
+                sampleIndex,
+                setSamples,
+                sample.linkedSample,
+                sample.sampleType,
+                s,
+                type
+            )
+        ];
+        manager.modifyBank(action);
+        setSampleTypeInternal(sample.sampleType);
+        setLinkedSampleInternal(s);
+    };
+    const linkedIndex = useMemo(
+        () => (linkedSample ? samples.indexOf(linkedSample) : -1),
+        [samples, linkedSample]
+    );
+
+    const changeSampleProp = useCallback(
+        function <K extends keyof BasicSample>(
+            prop: K,
+            oldValue: BasicSample[K],
+            newValue: BasicSample[K]
+        ) {
+            const oldVal: Partial<BasicSample> = {};
+            oldVal[prop] = oldValue;
+            const newVal: Partial<BasicSample> = {};
+            newVal[prop] = newValue;
+            const actions = [
+                new EditSampleAction(sampleIndex, setSamples, oldVal, newVal)
+            ];
+            if (linkedSample) {
+                const oldLinkedVal: Partial<BasicSample> = {};
+                oldLinkedVal[prop] = linkedSample[prop];
+                actions.push(
+                    new EditSampleAction(
+                        linkedIndex,
+                        setSamples,
+                        oldVal,
+                        newVal
+                    )
+                );
+            }
+            manager.modifyBank(actions);
+        },
+        [linkedIndex, linkedSample, manager, sampleIndex, setSamples]
+    );
+
     const [loopStart, setLoopStartInternal] = useState(
         sample.sampleLoopStartIndex
     );
     const setLoopStart = (s: number) => {
-        s = Math.floor(Math.min(s, loopEnd, sampleData.length - 1));
-        sample.sampleLoopStartIndex = s;
+        s = Math.min(s, loopEnd, sampleData.length - 1);
+        if (s === loopStart) {
+            return s;
+        }
+        changeSampleProp("sampleLoopStartIndex", loopStart, s);
         setLoopStartInternal(s);
         return s;
     };
 
     const [loopEnd, setLoopEndInternal] = useState(sample.sampleLoopEndIndex);
     const setLoopEnd = (e: number) => {
-        e = Math.floor(Math.max(e, loopStart, 0));
-        sample.sampleLoopEndIndex = e;
+        e = Math.max(e, loopStart, 0);
+        if (e === loopEnd) {
+            return e;
+        }
+        changeSampleProp("sampleLoopEndIndex", loopEnd, e);
         setLoopEndInternal(e);
         return e;
     };
     const [name, setNameInternal] = useState(sample.sampleName);
     const setName = (n: string) => {
-        sample.sampleName = n;
+        if (n === name) {
+            return;
+        }
+        n = n.substring(0, 19); // keep spare space for "R" or "L"
+        if (n[n.length - 1] === "R" || n[n.length - 1] === "L") {
+            n = n.substring(0, n.length - 1);
+        }
+        let newName = n;
+
+        // automatically add "R" or "L" for linked stereo samples, making sure to do so for the other linked sample
+        if (linkedSample) {
+            if (sample.sampleType === sampleTypes.rightSample) {
+                newName += "R";
+            } else if (sample.sampleType === sampleTypes.leftSample) {
+                newName += "L";
+            }
+        }
+
+        const actions = [
+            new EditSampleAction(
+                sampleIndex,
+                setSamples,
+                { sampleName: name },
+                { sampleName: newName }
+            )
+        ];
+        if (linkedSample) {
+            let secondNewName = n;
+            if (sample.sampleType === sampleTypes.rightSample) {
+                secondNewName += "L";
+            } else if (sample.sampleType === sampleTypes.leftSample) {
+                secondNewName += "R";
+            }
+            actions.push(
+                new EditSampleAction(
+                    linkedIndex,
+                    setSamples,
+                    { sampleName: linkedSample.sampleName },
+                    { sampleName: secondNewName }
+                )
+            );
+        }
+        manager.modifyBank(actions);
         setNameInternal(n);
     };
 
     const [sampleRate, setSampleRateInternal] = useState(sample.sampleRate);
     const setSampleRate = (r: number) => {
         const newRate = Math.min(MAX_SAMPLE_RATE, Math.max(r, MIN_SAMPLE_RATE));
-        sample.sampleRate = newRate;
+        if (newRate === r) {
+            return newRate;
+        }
+        changeSampleProp("sampleRate", sampleRate, r);
         setSampleRateInternal(newRate);
         return newRate;
     };
 
-    const originalKey = sample.samplePitch;
+    const [originalKey, setOriginalKeyInternal] = useState(sample.samplePitch);
     const setOriginalKey = (k: number) => {
         const key = Math.min(127, Math.max(0, Math.floor(k)));
-        sample.samplePitch = key;
+        if (key === originalKey) {
+            return key;
+        }
+        changeSampleProp("samplePitch", originalKey, key);
+        setOriginalKeyInternal(key);
         return key;
     };
 
@@ -118,31 +239,12 @@ export function SampleEditor({
     );
     const setCentCorrection = (t: number) => {
         const tune = Math.min(99, Math.max(-99, Math.floor(t)));
-        sample.samplePitchCorrection = tune;
+        if (tune === centCorrection) {
+            return tune;
+        }
+        changeSampleProp("samplePitchCorrection", centCorrection, tune);
         setCentCorrectionInternal(tune);
         return tune;
-    };
-
-    const [sampleType, setSampleTypeInternal] = useState(
-        sample.sampleType as SampleTypeValue
-    );
-    const setSampleType = (t: SampleTypeValue) => {
-        sample.setSampleType(t);
-        setSampleTypeInternal(t);
-    };
-
-    const [linkedSample, setLinkedSampleInternal] = useState(
-        sample.linkedSample
-    );
-    const setLinkedSample = (s?: BasicSample, type?: SampleTypeValue) => {
-        if (s && type) {
-            sample.setLinkedSample(s, type);
-            setSampleType(type);
-        } else {
-            sample.unlinkSample();
-            setSampleType(sampleTypes.monoSample);
-        }
-        setLinkedSampleInternal(s);
     };
 
     const buffer = useMemo(() => {
@@ -287,8 +389,8 @@ export function SampleEditor({
         input.click();
     };
     const [zoom, setZoom] = useState(1);
-    const [inputZoom, setInputZoom] = useState(1);
-    const maxZoom = ZOOM_PER_SAMPLE * sampleData.length + 1;
+    const [inputZoom, setInputZoom] = useState(100);
+    const maxZoom = Math.max(5, ZOOM_PER_SAMPLE * sampleData.length + 1);
 
     return (
         <div className={"sample_editor"}>
@@ -445,13 +547,14 @@ export function SampleEditor({
                             </div>
 
                             <ControllerRange
-                                max={maxZoom - 1}
-                                min={1}
+                                max={(maxZoom - 1) * 100}
+                                min={100}
                                 onChange={(n) => {
+                                    n /= 100;
                                     const mapped = (n - 1) / (maxZoom - 1);
                                     const exped = Math.pow(mapped, 5);
                                     setZoom(exped * (maxZoom - 1) + 1);
-                                    setInputZoom(n);
+                                    setInputZoom(n * 100);
                                 }}
                                 value={inputZoom}
                                 text={`${t("sampleLocale.waveZoom")}: ${Math.floor(zoom * 100)}%`}
@@ -460,6 +563,9 @@ export function SampleEditor({
                     </div>
                 </div>
                 <LinkedInstruments
+                    manager={manager}
+                    samples={samples}
+                    setSamples={setSamples}
                     sample={sample}
                     setView={setView}
                 ></LinkedInstruments>

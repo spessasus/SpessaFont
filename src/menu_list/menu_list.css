@@ -18,40 +18,6 @@
     transition: none;
 }
 
-.item_group_header {
-    display: flex;
-    align-items: center;
-    background: var(--top-buttons-color);
-    justify-content: space-between;
-    border-radius: var(--primary-border-radius);
-    border: solid 0.2rem var(--track-border-color);
-    cursor: pointer;
-    margin-bottom: 0.5rem;
-}
-
-.item_group_header h2 {
-    font-weight: normal;
-    margin-left: 0.3rem;
-    padding: 0.3rem;
-}
-
-.item_group_header div {
-    font-size: 1rem;
-    border-left: var(--track-border-color) solid 1px;
-    height: 100%;
-    display: flex;
-    padding: 0.3rem;
-    align-items: center;
-}
-
-.item_group_header:active div {
-    border-color: var(--border-color);
-}
-
-.item_group_header:active, .item_group_header.opened {
-    border-color: var(--border-color);
-}
-
 .item_group {
     display: flex;
     flex-direction: column;

@@ -14,7 +14,7 @@ export function TypeSelector({
 }: {
     sampleType: SampleTypeValue;
     linkedSample: BasicSample | undefined;
-    setLinkedSample: (s?: BasicSample, type?: SampleTypeValue) => void;
+    setLinkedSample: (type: SampleTypeValue, s?: BasicSample) => void;
     samples: BasicSample[];
 }) {
     const { t } = useTranslation();
@@ -54,12 +54,12 @@ export function TypeSelector({
             case sampleTypes.rightSample:
             case sampleTypes.leftSample:
             case sampleTypes.linkedSample:
-                setLinkedSample(linked, t);
+                setLinkedSample(t, linked);
                 break;
 
             default:
                 // set to mono unlinked
-                setLinkedSample();
+                setLinkedSample(t);
         }
     };
     return (
@@ -108,8 +108,8 @@ export function TypeSelector({
                     value={linkedSample === undefined ? -1 : linkedIndex}
                     onChange={(e) =>
                         setLinkedSample(
-                            samples[parseInt(e.target.value)],
-                            sampleType
+                            sampleType,
+                            samples[parseInt(e.target.value)]
                         )
                     }
                 >

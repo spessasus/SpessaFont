@@ -64,23 +64,23 @@
 }
 
 .spessafont_main.light_mode, .spessafont_main.light_mode * {
-    --top-buttons-color-start: #ddd;
-    --top-buttons-color-end: #eee;
+    --top-buttons-color-start: #eee;
+    --top-buttons-color-end: #fff;
 
-    --top-color-start: #bbb;
-    --top-color-end: #ccc;
+    --top-color-start: #ddd;
+    --top-color-end: #eee;
 
     --font-color: #111;
 
-    --primary-color: #cd8cff;
-    --border-color: #cc82ff;
+    --primary-color: #5f93ff;
+    --border-color: #0023c9;
 
     --track-color: #fff;
     --track-border-color: #444;
 
     --preset-item-color: red;
     --instrument-item-color: deepskyblue;
-    --sample-item-color: yellow;
+    --sample-item-color: #e58900;
 }
 
 select option {

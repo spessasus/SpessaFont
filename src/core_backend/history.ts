@@ -10,15 +10,17 @@ export interface HistoryAction {
     undo(b: BasicSoundBank): void;
 }
 
-export class HistoryManager {
-    history: HistoryAction[] = [];
-    undoHistory: HistoryAction[] = [];
+export type HistoryActionGroup = HistoryAction[];
 
-    do(m: SoundBankManager, action: HistoryAction) {
-        if (!m.bank) {
+export class HistoryManager {
+    history: HistoryActionGroup[] = [];
+    undoHistory: HistoryActionGroup[] = [];
+
+    do(m: SoundBankManager, action: HistoryActionGroup) {
+        if (action.length === 0) {
             return;
         }
-        action.do(m.bank);
+        action.forEach((a) => a.do(m.bank));
         this.history.push(action);
         this.undoHistory.length = 0;
         // update synth engine
@@ -26,14 +28,14 @@ export class HistoryManager {
     }
 
     redo(m: SoundBankManager) {
-        if (!m.bank || this.undoHistory.length < 1) {
+        if (this.undoHistory.length < 1) {
             return;
         }
         const action = this.undoHistory.pop();
         if (!action) {
             return;
         }
-        action.do(m.bank);
+        action.forEach((a) => a.do(m.bank));
         logInfo(`Redid. Remaining undo history: ${this.undoHistory.length}`);
         this.history.push(action);
         // update synth engine
@@ -41,7 +43,7 @@ export class HistoryManager {
     }
 
     undo(m: SoundBankManager) {
-        if (!m.bank || this.history.length < 1) {
+        if (this.history.length < 1) {
             return;
         }
         const action = this.history.pop();
@@ -50,7 +52,7 @@ export class HistoryManager {
             return;
         }
 
-        action.undo(m.bank);
+        action.toReversed().forEach((a) => a.undo(m.bank));
         logInfo(`Undid. Remaining history: ${this.history.length}`);
         this.undoHistory.push(action);
         // update synth engine

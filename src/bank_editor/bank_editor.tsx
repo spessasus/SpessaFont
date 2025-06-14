@@ -21,6 +21,8 @@ export type BankEditorProps = {
     ccOptions: JSX.Element;
 };
 
+export type SetViewType = (v: BankEditView) => unknown;
+
 export const MemoizedBankEditor = React.memo(
     ({
         manager,
@@ -53,6 +55,9 @@ export function BankEditor({
     ccOptions
 }: BankEditorProps) {
     const [view, setView] = useState<BankEditView>(manager.currentView);
+    const [samples, setSamples] = useState(manager.bank.samples);
+    const [instruments, setInstruments] = useState(manager.bank.instruments);
+    const [presets, setPresets] = useState(manager.bank.presets);
 
     const updateView = useCallback(
         (v: BankEditView) => {
@@ -92,6 +97,8 @@ export function BankEditor({
                 setView={updateView}
                 engine={audioEngine}
                 sample={view}
+                setSamples={setSamples}
+                samples={samples}
             ></SampleEditor>
         );
     }
@@ -101,7 +108,14 @@ export function BankEditor({
             <MenuList
                 view={view}
                 sv={updateView}
-                bank={manager.bank}
+                manager={manager}
+                engine={audioEngine}
+                setPresets={setPresets}
+                presets={presets}
+                samples={samples}
+                setSamples={setSamples}
+                instruments={instruments}
+                setInstruments={setInstruments}
             ></MenuList>
             <div className={"main_content_window"}>
                 <MainContent></MainContent>

@@ -159,9 +159,14 @@ function App() {
 
     function closeTab(index: number) {
         setTabs((prev) =>
-            prev.filter((t, i) => {
+            prev.filter((tab, i) => {
                 if (i === index) {
-                    t.close();
+                    if (tab.dirty) {
+                        if (!window.confirm(t("unsavedChanges"))) {
+                            return true;
+                        }
+                    }
+                    tab.close();
                     return false;
                 }
                 return true;

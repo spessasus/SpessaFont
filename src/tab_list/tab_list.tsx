@@ -20,7 +20,7 @@ export function TabList({
 }: TabListProps) {
     const { t } = useTranslation();
 
-    // this evil little code causes a re-render here, and only here. Doing change callback in-app re-renders the bank editor too
+    // This evil little code causes a re-render here, and only here. Doing change callback in-app re-renders the bank editor too
     const [v, setV] = useState(0);
     if (currentManager) {
         currentManager.changeCallback = () => setV(v + 1);

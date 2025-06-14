@@ -1,0 +1,42 @@
+.item_group_header {
+    display: flex;
+    align-items: center;
+    background: var(--top-buttons-color);
+    justify-content: space-between;
+    border-radius: var(--primary-border-radius);
+    border: solid 0.2rem var(--track-border-color);
+    cursor: pointer;
+    margin-bottom: 0.5rem;
+}
+
+.item_group_header h2 {
+    font-weight: normal;
+    margin-left: 0.3rem;
+    padding: 0.3rem;
+}
+
+.item_group_header .dropdown_button {
+    font-size: 1rem;
+    border-left: var(--track-border-color) solid 1px;
+    height: 100%;
+    display: flex;
+    padding: 0.3rem;
+    align-items: center;
+}
+
+.item_group_header .add_button {
+    font-size: 1.5rem;
+    border-right: var(--track-border-color) solid 1px;
+    height: 100%;
+    display: flex;
+    padding: 0.3rem;
+    align-items: center;
+}
+
+.item_group_header:active .dropdown_button, .item_group_header:active .add_button {
+    border-color: var(--border-color);
+}
+
+.item_group_header:active, .item_group_header.opened {
+    border-color: var(--border-color);
+}

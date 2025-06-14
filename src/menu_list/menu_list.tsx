@@ -2,27 +2,46 @@ import {
     BasicInstrument,
     BasicPreset,
     BasicSample,
-    BasicSoundBank
+    sampleTypes
 } from "spessasynth_core";
-import * as React from "react";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./menu_list.css";
-import type { BankEditView } from "../core_backend/sound_bank_manager.ts";
+import SoundBankManager, {
+    type BankEditView
+} from "../core_backend/sound_bank_manager.ts";
 import { PresetDisplay } from "./preset_display/preset_display.tsx";
 import { InstrumentDisplay } from "./instrument_display/instrument_display.tsx";
 import { SampleDisplay } from "./sample_display/sample_display.tsx";
+import { DropdownHeader } from "./dropdown_header/dropdown_header.tsx";
+import { CreateSampleAction } from "./create_sample_action.ts";
+import type { AudioEngine } from "../core_backend/audio_engine.ts";
+import type { SetViewType } from "../bank_editor/bank_editor.tsx";
 
 export type MappedPresetType = { searchString: string; preset: BasicPreset };
 
 export function MenuList({
-    bank,
     view,
-    sv
+    sv,
+    manager,
+    engine,
+    setSamples,
+    samples,
+    instruments,
+    setInstruments,
+    presets,
+    setPresets
 }: {
-    bank: BasicSoundBank;
+    manager: SoundBankManager;
     view: BankEditView;
-    sv: (v: BankEditView) => unknown;
+    sv: SetViewType;
+    engine: AudioEngine;
+    samples: BasicSample[];
+    setSamples: (s: BasicSample[]) => unknown;
+    instruments: BasicInstrument[];
+    setInstruments: (i: BasicInstrument[]) => unknown;
+    presets: BasicPreset[];
+    setPresets: (p: BasicPreset[]) => unknown;
 }) {
     const [searchQuery, setSearchQuery] = useState("");
     const [showPresets, setShowPresets] = useState(view instanceof BasicPreset);
@@ -31,15 +50,15 @@ export function MenuList({
     );
     const [showSamples, setShowSamples] = useState(view instanceof BasicSample);
     const { t } = useTranslation();
+
     const setView = useCallback(
         (v: BankEditView) => {
             sv(v);
         },
         [sv]
     );
-    const presets = bank.presets;
-    const instruments = bank.instruments;
-    const samples = bank.samples;
+    // make it compile
+    console.log(setInstruments, setPresets);
     const presetNameMap: MappedPresetType[] = useMemo(() => {
         return presets.map((p) => {
             return {
@@ -53,55 +72,124 @@ export function MenuList({
     const searchQueryLower = searchQuery.toLowerCase();
     const filteredSamples = useMemo(
         () =>
-            samples.filter((s) =>
-                s.sampleName.toLowerCase().includes(searchQueryLower)
-            ),
+            searchQueryLower === ""
+                ? samples
+                : samples.filter((s) =>
+                      s.sampleName.toLowerCase().includes(searchQueryLower)
+                  ),
         [searchQueryLower, samples]
     );
     const filteredInstruments = useMemo(
         () =>
-            instruments.filter(
-                (i) =>
-                    i.instrumentZones.find((z) =>
-                        filteredSamples.includes(z.sample)
-                    ) ||
-                    i.instrumentName.toLowerCase().includes(searchQueryLower)
-            ),
+            searchQueryLower === ""
+                ? instruments
+                : instruments.filter(
+                      (i) =>
+                          i.instrumentZones.find((z) =>
+                              filteredSamples.includes(z.sample)
+                          ) ||
+                          i.instrumentName
+                              .toLowerCase()
+                              .includes(searchQueryLower)
+                  ),
         [searchQueryLower, instruments, filteredSamples]
     );
 
     const filteredPresets = useMemo(
         () =>
-            presetNameMap.filter(
-                (p) =>
-                    p.preset.presetZones.find((z) =>
-                        filteredInstruments.includes(z.instrument)
-                    ) || p.searchString.includes(searchQueryLower)
-            ),
+            searchQueryLower === ""
+                ? presetNameMap
+                : presetNameMap.filter(
+                      (p) =>
+                          p.preset.presetZones.find((z) =>
+                              filteredInstruments.includes(z.instrument)
+                          ) || p.searchString.includes(searchQueryLower)
+                  ),
         [filteredInstruments, presetNameMap, searchQueryLower]
     );
 
-    const SampleDisplayMemo = useMemo(() => React.memo(SampleDisplay), []);
+    const addSample = () => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "audio/*";
+        input.onchange = async () => {
+            const file = input?.files?.[0];
+            if (!file) {
+                return;
+            }
+            const buffer = await file.arrayBuffer();
+            const audioBuffer = await engine.context.decodeAudioData(buffer);
+            const out = audioBuffer.getChannelData(0);
+            let sampleName = file.name;
+            const lastDotIndex = sampleName.lastIndexOf(".");
+            if (lastDotIndex !== -1) {
+                sampleName = sampleName.substring(0, lastDotIndex);
+            }
 
-    const handleClick = useCallback(
-        (sample: BasicSample) => setView(sample),
-        [setView]
-    );
+            if (audioBuffer.numberOfChannels > 1) {
+                sampleName += "L";
+            }
+            const sample = new BasicSample(
+                sampleName,
+                audioBuffer.sampleRate,
+                60,
+                0,
+                sampleTypes.monoSample,
+                0,
+                out.length - 1
+            );
+            sample.setAudioData(out);
+            const actions = [
+                new CreateSampleAction(
+                    sample,
+                    setSamples,
+                    samples.length - 1,
+                    setView
+                )
+            ];
+            // add the stereo sample if more channels
+            if (audioBuffer.numberOfChannels > 1) {
+                const otherOut = audioBuffer.getChannelData(1);
+                const sample2 = new BasicSample(
+                    file.name.split(".")[0] + "R",
+                    audioBuffer.sampleRate,
+                    60,
+                    0,
+                    sampleTypes.monoSample,
+                    0,
+                    out.length - 1
+                );
+                sample2.setAudioData(otherOut);
+                sample2.setLinkedSample(sample, sampleTypes.rightSample);
+                actions.push(
+                    new CreateSampleAction(
+                        sample2,
+                        setSamples,
+                        samples.length,
+                        setView
+                    )
+                );
+            }
+            manager.modifyBank(actions);
+            setShowSamples(true);
+        };
+        input.click();
+    };
 
     const samplesGroup = useMemo(
         () => (
             <div className={"item_group"}>
                 {filteredSamples.map((s, i) => (
-                    <SampleDisplayMemo
+                    <SampleDisplay
                         selected={view === s}
-                        sample={s}
-                        onClick={handleClick}
+                        sampleName={s.sampleName}
+                        onClick={() => setView(s)}
                         key={i}
-                    ></SampleDisplayMemo>
+                    ></SampleDisplay>
                 ))}
             </div>
         ),
-        [SampleDisplayMemo, filteredSamples, handleClick, view]
+        [filteredSamples, setView, view]
     );
 
     const instrumentsGroup = useMemo(
@@ -153,31 +241,28 @@ export function MenuList({
                     <h2>{t("presetList.overview")}</h2>
                 </div>
 
-                <div
+                <DropdownHeader
+                    onAdd={addSample}
                     onClick={() => setShowSamples(!showSamples)}
-                    className={`item_group_header`}
-                >
-                    <h2>{t("presetList.samples")}</h2>
-                    <div>{samplesOpen ? "\u25B2" : "\u25BC"}</div>
-                </div>
+                    text={t("presetList.samples")}
+                    open={showSamples}
+                />
                 {samplesOpen && samplesGroup}
 
-                <div
+                <DropdownHeader
+                    onAdd={() => console.log("add instrument")}
                     onClick={() => setShowInstruments(!showInstruments)}
-                    className={`item_group_header`}
-                >
-                    <h2>{t("presetList.instruments")}</h2>
-                    <div>{instrumentsOpen ? "\u25B2" : "\u25BC"}</div>
-                </div>
+                    open={instrumentsOpen}
+                    text={t("presetList.instruments")}
+                />
                 {instrumentsOpen && instrumentsGroup}
 
-                <div
+                <DropdownHeader
+                    onAdd={() => console.log("add preset")}
                     onClick={() => setShowPresets(!showPresets)}
-                    className={`item_group_header`}
-                >
-                    <h2>{t("presetList.presets")}</h2>
-                    <div>{presetsOpen ? "\u25B2" : "\u25BC"}</div>
-                </div>
+                    open={presetsOpen}
+                    text={t("presetList.presets")}
+                />
                 {presetsOpen && presetsGroup}
             </div>
             <div className={"search_bar"}>

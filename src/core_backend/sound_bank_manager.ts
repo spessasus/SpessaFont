@@ -8,7 +8,7 @@ import {
     SpessaSynthProcessor,
     type SpessaSynthSequencer
 } from "spessasynth_core";
-import { type HistoryAction, HistoryManager } from "./history.ts";
+import { type HistoryActionGroup, HistoryManager } from "./history.ts";
 
 export type BankEditView = "info" | BasicSample | BasicPreset | BasicInstrument;
 
@@ -112,7 +112,7 @@ export default class SoundBankManager {
         this.sequencer.currentTime -= 0.1;
     }
 
-    modifyBank(action: HistoryAction) {
+    modifyBank(action: HistoryActionGroup) {
         this.history.do(this, action);
         this.dirty = true;
         this.changeCallback();

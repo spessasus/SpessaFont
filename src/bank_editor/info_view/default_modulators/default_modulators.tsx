@@ -27,13 +27,13 @@ export function DefaultModulatorList({
         if (manager.bank === undefined) {
             return;
         }
-        manager.modifyBank(
+        manager.modifyBank([
             new SetDefaultModulators(
                 setDmods,
                 [...mods],
                 [...manager.bank.defaultModulators]
             )
-        );
+        ]);
     };
 
     return (

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { SamplePlayerState } from "../sample_editor.tsx";
 import "./wave_view.css";
 
@@ -19,7 +19,7 @@ type WaveViewProps = {
     disabled: boolean;
 };
 
-export function WaveView({
+export const WaveView = React.memo(function ({
     data,
     loopStart,
     loopEnd,
@@ -65,6 +65,8 @@ export function WaveView({
         ).getPropertyValue(v);
     };
 
+    const dataLength = useMemo(() => data.length - 1, [data.length]);
+
     useEffect(() => {
         const canvas = waveformRef.current;
         const ctx = canvas?.getContext("2d");
@@ -74,6 +76,7 @@ export function WaveView({
         const height = size.height;
         const width = size.width * zoom;
         const halfHeight = height / 2;
+        const xEnd = xOffset + canvas.width;
         ctx.clearRect(0, 0, canvas.width, height);
 
         // draw scale lines
@@ -87,17 +90,31 @@ export function WaveView({
             ctx.stroke();
         }
 
+        // draw vertical lines if zoomed in far enough
+        const pixelsPerSample = width / dataLength;
+        if (pixelsPerSample > 6) {
+            ctx.lineWidth = 0.5;
+            const index = Math.floor((xOffset / width) * dataLength);
+            const initialX = index / width;
+            for (let x = initialX; x < canvas.width; x += pixelsPerSample) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+        }
+
         // draw waveform
         ctx.strokeStyle = getStyle("--primary-color");
-        const samplesPerPixel = Math.floor(data.length / width) || 1;
+        const samplesPerPixel = Math.floor(dataLength / width) || 1;
         ctx.lineWidth = Math.max(1, 5 / samplesPerPixel);
-        const amplifier = halfHeight - ctx.lineWidth * 2;
+        const amplifier = halfHeight;
         ctx.beginPath();
-        const xEnd = xOffset + canvas.width;
+
         if (samplesPerPixel >= 7) {
             for (let x = xOffset; x < xEnd; x++) {
                 const start = x * samplesPerPixel;
-                const end = Math.min(start + samplesPerPixel, data.length);
+                const end = Math.min(start + samplesPerPixel, dataLength);
 
                 let min = 1.0;
                 let max = -1.0;
@@ -119,12 +136,13 @@ export function WaveView({
                 ctx.lineTo(x - xOffset, height - yMax);
             }
         } else {
-            const indexStep = data.length / width;
-            let index = (xOffset / width) * data.length;
+            const indexStep = dataLength / width;
+            let index = (xOffset / width) * dataLength;
             for (let x = xOffset; x < xEnd; x++) {
-                const lower = data[~~index];
+                const floor = ~~index;
+                const lower = data[floor];
                 const upper = data[Math.ceil(index)];
-                const frac = index - ~~index;
+                const frac = index - floor;
                 const interpolated = lower + (upper - lower) * frac;
                 const y = interpolated * amplifier + halfHeight;
                 ctx.lineTo(x - xOffset, height - y);
@@ -132,9 +150,9 @@ export function WaveView({
             }
         }
         ctx.stroke();
-    }, [data, size, xOffset, zoom]);
+    }, [data, dataLength, size, xOffset, zoom]);
     const playerStateRef = useRef(playerState);
-    const sampleLength = data.length / sampleRate;
+    const sampleLength = dataLength / sampleRate;
 
     const fontColor = getStyle("--font-color");
 
@@ -158,20 +176,20 @@ export function WaveView({
             }
             ctx.clearRect(0, 0, canvas.width, height);
             // draw loop points
-            const loopStartX = (loopStart / data.length) * width;
-            const loopEndX = (loopEnd / data.length) * width;
+            const loopStartX = (loopStart / dataLength) * width;
+            const loopEndX = (loopEnd / dataLength) * width;
 
             ctx.lineWidth = 2;
-
+            // offset by -1 to make the line in the middle
             ctx.strokeStyle = "green";
             ctx.beginPath();
-            ctx.moveTo(loopStartX - xOffset, 0);
+            ctx.moveTo(loopStartX - xOffset - 1, 0);
             ctx.lineTo(loopStartX - xOffset, height);
             ctx.stroke();
 
             ctx.strokeStyle = "red";
             ctx.beginPath();
-            ctx.moveTo(loopEndX - xOffset, 0);
+            ctx.moveTo(loopEndX - xOffset - 1, 0);
             ctx.lineTo(loopEndX - xOffset, height);
             ctx.stroke();
 
@@ -228,7 +246,7 @@ export function WaveView({
         };
     }, [
         context.currentTime,
-        data.length,
+        dataLength,
         fontColor,
         loopEnd,
         loopStart,
@@ -241,29 +259,33 @@ export function WaveView({
         zoom
     ]);
 
-    const setLoopStartClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const setLoopStartClick = (e: React.MouseEvent<HTMLElement>) => {
         if (!waveformRef.current || disabled) {
             return;
         }
+        const width = size.width * zoom;
         const canvasRect = waveformRef.current.getBoundingClientRect();
-        const xPos = e.clientX - canvasRect.left;
-        const loopStartIndex = data.length * (xPos / canvasRect.width);
-        setLoopStart(loopStartIndex);
+        const xPos = e.clientX - canvasRect.left + xOffset;
+        const loopStartIndex = data.length * (xPos / width);
+        setLoopStart(Math.round(loopStartIndex));
     };
 
-    const setLoopEndClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const setLoopEndClick = (e: React.MouseEvent<HTMLElement>) => {
         e.preventDefault();
         if (!waveformRef.current || disabled) {
             return;
         }
+        const width = size.width * zoom;
         const canvasRect = waveformRef.current.getBoundingClientRect();
-        const xPos = e.clientX - canvasRect.left;
-        const loopEndIndex = data.length * (xPos / canvasRect.width);
-        setLoopEnd(loopEndIndex);
+        const xPos = e.clientX - canvasRect.left + xOffset;
+        const loopEndIndex = data.length * (xPos / width);
+        setLoopEnd(Math.round(loopEndIndex));
     };
     return (
         <div
             className={`wave_view ${zoom > 1 ? "zoomed" : ""} ${disabled ? "disabled" : ""}`}
+            onClick={setLoopStartClick}
+            onContextMenu={setLoopEndClick}
         >
             <div className={"wave_view_child"}>
                 <canvas
@@ -272,8 +294,6 @@ export function WaveView({
                     ref={waveformRef}
                 ></canvas>
                 <canvas
-                    onClick={setLoopStartClick}
-                    onContextMenu={setLoopEndClick}
                     ref={pointsAndInfoRef}
                     width={size.width}
                     height={size.height}
@@ -295,4 +315,4 @@ export function WaveView({
             </div>
         </div>
     );
-}
+});
