@@ -1,20 +1,40 @@
 declare module "spessasynth_core" {
+    export const sampleTypes: {
+        monoSample: 0;
+        rightSample: 2;
+        leftSample: 4;
+        linkedSample: 8;
+        romMonoSample: 32769;
+        romRightSample: 32770;
+        romLeftSample: 32772;
+        romLinkedSample: 32776;
+    };
+
+    type SampleType = keyof typeof sampleTypes;
+    export type SampleTypeValue = (typeof sampleTypes)[SampleType];
+
     export class BasicSample {
         sampleName: string;
         sampleRate: number;
         samplePitch: number;
         samplePitchCorrection: number;
-        sampleLink: number;
-        sampleType: number;
+        readonly linkedSample: BasicSample | undefined;
+        readonly sampleType: sampleTypes;
         sampleLoopStartIndex: number;
         sampleLoopEndIndex: number;
-        isCompressed: boolean;
-        compressedData: Uint8Array | null;
-        sampleData: Float32Array | null;
+        readonly isCompressed: boolean;
+        readonly compressedData: Uint8Array | null;
+        readonly sampleData: Float32Array | null;
 
-        linkedInstruments: BasicInstrument[];
+        readonly linkedInstruments: BasicInstrument[];
 
         getAudioData(): Float32Array;
+
+        setSampleType(type: sampleTypes | number);
+
+        unlinkSample();
+
+        setLinkedSample(sample: BasicSample, type: sampleTypes);
 
         setAudioData(data: Float32Array);
 
@@ -29,8 +49,6 @@ declare module "spessasynth_core" {
         readonly useCount;
         globalZone: BasicGlobalZone;
         linkedPresets: BasicPreset[];
-
-        deleteAllZones();
 
         deleteZone(index: number): boolean;
 
@@ -145,6 +163,12 @@ declare module "spessasynth_core" {
         writeDLS(): Uint8Array;
 
         destroySoundBank(): void;
+
+        deleteSample(sample: BasicSample);
+
+        deletePreset(preset: BasicPreset);
+
+        deleteInstrument(instrument: BasicInstrument);
     }
 
     export const loadSoundFont: (buffer: ArrayBuffer) => BasicSoundBank;

@@ -15,7 +15,7 @@ export function LinkedInstruments({
     return (
         <div className={"linked_instruments"}>
             {sample.linkedInstruments.length === 0 && (
-                <div>{t("sampleLocale.notLinkedToAnything")}:</div>
+                <div>{t("sampleLocale.notLinkedToInstrument")}:</div>
             )}
             {sample.linkedInstruments.length > 0 && (
                 <>

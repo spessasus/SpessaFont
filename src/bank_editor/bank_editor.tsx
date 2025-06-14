@@ -4,7 +4,8 @@ import SoundBankManager, {
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import type { ClipBoardManager } from "../core_backend/clipboard_manager.ts";
 import { SoundBankInfo } from "./info_view/sound_bank_info.tsx";
-import { type JSX, useState } from "react";
+import * as React from "react";
+import { type JSX, useCallback, useState } from "react";
 import { MenuList } from "../menu_list/menu_list.tsx";
 import "./bank_editor.css";
 import { BasicInstrument, BasicPreset } from "spessasynth_core";
@@ -12,13 +13,37 @@ import { PresetEditor } from "./preset_editor/preset_editor.tsx";
 import { InstrumentEditor } from "./instrument_editor/instrument_editor.tsx";
 import { SampleEditor } from "./sample_editor/sample_editor.tsx";
 
-type BankEditorProps = {
+export type BankEditorProps = {
     manager: SoundBankManager;
     audioEngine: AudioEngine;
     clipboardManager: ClipBoardManager;
     destinationOptions: JSX.Element;
     ccOptions: JSX.Element;
 };
+
+export const MemoizedBankEditor = React.memo(
+    ({
+        manager,
+        audioEngine,
+        clipboardManager,
+        destinationOptions,
+        ccOptions,
+        show
+    }: BankEditorProps & { show: boolean }) => {
+        if (!show) {
+            return <></>;
+        }
+        return (
+            <BankEditor
+                audioEngine={audioEngine}
+                ccOptions={ccOptions}
+                clipboardManager={clipboardManager}
+                destinationOptions={destinationOptions}
+                manager={manager}
+            />
+        );
+    }
+);
 
 export function BankEditor({
     manager,
@@ -29,10 +54,13 @@ export function BankEditor({
 }: BankEditorProps) {
     const [view, setView] = useState<BankEditView>(manager.currentView);
 
-    const updateView = (v: BankEditView) => {
-        manager.currentView = v;
-        setView(v);
-    };
+    const updateView = useCallback(
+        (v: BankEditView) => {
+            manager.currentView = v;
+            setView(v);
+        },
+        [manager]
+    );
 
     function MainContent() {
         if (view === "info") {

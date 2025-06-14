@@ -5,6 +5,7 @@ import {
     type SavedSettingsType
 } from "../save_load/settings_typedef.ts";
 import { interpolationTypes } from "spessasynth_core";
+import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
 
 export type GroupSettingsProps = {
     settings: SavedSettingsType;
@@ -22,28 +23,31 @@ export function AudioEngineSettings({
         });
     }
 
-    function setVolume(v: string) {
-        const vReal = parseInt(v.replace("%", "")) ?? 100;
+    function setVolume(v: number) {
+        const vol = Math.max(0, Math.min(6, v / 100));
         updateSettings({
             ...settings,
-            volume: Math.max(0, Math.min(6, vReal / 100))
+            volume: vol
         });
+        return vol;
     }
 
-    function setReverb(v: string) {
-        const vReal = parseInt(v.replace("%", "")) ?? 100;
+    function setReverb(v: number) {
+        const vReal = Math.max(0, Math.min(3, v / 100));
         updateSettings({
             ...settings,
-            reverbLevel: Math.max(0, Math.min(3, vReal / 100))
+            reverbLevel: vReal
         });
+        return vReal;
     }
 
-    function setChorus(v: string) {
-        const vReal = parseInt(v.replace("%", "")) ?? 100;
+    function setChorus(v: number) {
+        const vReal = Math.max(0, Math.min(3, v / 100));
         updateSettings({
             ...settings,
-            chorusLevel: Math.max(0, Math.min(3, vReal / 100))
+            chorusLevel: vReal
         });
+        return vReal;
     }
 
     const { t } = useTranslation();
@@ -52,12 +56,13 @@ export function AudioEngineSettings({
         <div className={"settings_group"}>
             <h2>{t(`${engineT}title`)}</h2>
             <Setting locale={`${engineT}volume`}>
-                <input
+                <WaitingInput
+                    setValue={setVolume}
                     type={"text"}
                     maxLength={4}
                     className={"pretty_input monospaced"}
-                    onChange={(e) => setVolume(e.target.value)}
-                    value={`${Math.floor(getSetting("volume", settings) * 100)}%`}
+                    suffix={"%"}
+                    value={Math.floor(getSetting("volume", settings) * 100)}
                 />
             </Setting>
 
@@ -84,22 +89,28 @@ export function AudioEngineSettings({
             </Setting>
 
             <Setting locale={`${engineT}reverbLevel`}>
-                <input
+                <WaitingInput
+                    setValue={setReverb}
                     type={"text"}
                     maxLength={4}
                     className={"pretty_input monospaced"}
-                    onChange={(e) => setReverb(e.target.value)}
-                    value={`${Math.floor(getSetting("reverbLevel", settings) * 100)}%`}
+                    value={Math.floor(
+                        getSetting("reverbLevel", settings) * 100
+                    )}
+                    suffix={`%`}
                 />
             </Setting>
 
             <Setting locale={`${engineT}chorusLevel`}>
-                <input
+                <WaitingInput
+                    setValue={setChorus}
+                    value={Math.floor(
+                        getSetting("chorusLevel", settings) * 100
+                    )}
                     type={"text"}
                     maxLength={4}
                     className={"pretty_input monospaced"}
-                    onChange={(e) => setChorus(e.target.value)}
-                    value={`${Math.floor(getSetting("chorusLevel", settings) * 100)}%`}
+                    suffix={`%`}
                 />
             </Setting>
         </div>

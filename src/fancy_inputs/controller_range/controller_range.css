@@ -1,6 +1,5 @@
 .controller_range_wrapper {
     display: flex;
-    flex-grow: 1;
     align-items: center;
     flex-direction: column;
     justify-content: center;
@@ -21,6 +20,7 @@
     background: var(--track-color);
     border: solid var(--slider-border-thickness) var(--track-border-color);
     border-radius: var(--track-height);
+    width: 100%;
 }
 
 .controller_range_visual_wrapper:has(.controller_range:active) {

@@ -1,19 +1,17 @@
-import type { BasicSample } from "spessasynth_core";
+import { type BasicSample } from "spessasynth_core";
 import "./sample_display.css";
-import { useEffect, useRef } from "react";
-import type { BankEditView } from "../../core_backend/sound_bank_manager.ts";
+import { useCallback, useEffect, useRef } from "react";
 
 export function SampleDisplay({
     sample,
     onClick,
-    view
+    selected
 }: {
     sample: BasicSample;
-    onClick: () => unknown;
-    view: BankEditView;
+    onClick: (s: BasicSample) => unknown;
+    selected: boolean;
 }) {
     const elementRef = useRef<HTMLDivElement>(null);
-    const selected = view === sample;
     useEffect(() => {
         if (selected) {
             elementRef?.current?.scrollIntoView({
@@ -22,11 +20,16 @@ export function SampleDisplay({
             });
         }
     }, [selected]);
+
+    const onClicked = useCallback(() => {
+        onClick(sample);
+    }, [onClick, sample]);
+
     return (
         <div
             ref={elementRef}
             className={`sample_display  ${selected ? "selected" : ""}`}
-            onClick={onClick}
+            onClick={onClicked}
         >
             <svg
                 xmlns="http://www.w3.org/2000/svg"

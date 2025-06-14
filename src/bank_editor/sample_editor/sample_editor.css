@@ -16,7 +16,6 @@
     flex-direction: column;
     gap: 0.5rem;
     flex: 1;
-    justify-content: space-between;
 }
 
 .sample_name {
@@ -36,8 +35,25 @@
     flex-grow: 1;
 }
 
-.tools * {
+.tools > * {
     text-align: center;
     white-space: nowrap;
     width: 90%;
+}
+
+.info_field {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: center;
+    flex: 1;
+}
+
+.info_field span {
+    text-align: start;
+    white-space: nowrap;
+}
+
+.info_field input {
+    text-align: end;
 }

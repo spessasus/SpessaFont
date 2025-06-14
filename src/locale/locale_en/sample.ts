@@ -6,6 +6,8 @@ export const SampleLocale = {
     originalKey: "Original Key",
     centCorrection: "Cent Correction",
     type: "Type",
+    link: "Link",
+    unlinked: "Unlinked",
     waveZoom: "Wave Zoom",
     types: {
         mono: "Mono",
@@ -27,9 +29,9 @@ export const SampleLocale = {
         replaceAudio: "Replace Audio",
         loading: "Loading...",
         invalidAudioFile: "Invalid Audio File",
-        notEnoughChannels: "Not Enough Channels"
+        tooManyChannels: "Too Many Channels"
     },
 
-    notLinkedToAnything: "Not Linked to Anything Yet.",
+    notLinkedToInstrument: "Not Linked to Instrument Yet.",
     linkedTo: "Linked to"
 };

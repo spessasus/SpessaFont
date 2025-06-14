@@ -36,17 +36,31 @@ export default class SoundBankManager {
         } else {
             this.bank = bank;
         }
-        this.sortPresets();
+        this.sortElements();
         this.sendBankToSynth();
     }
 
-    sortPresets() {
+    sortElements() {
         this.bank.presets.sort((a, b) => {
             if (a.bank !== b.bank) {
                 return a.bank - b.bank;
             }
             return a.program - b.program;
         });
+        this.bank.samples.sort((a, b) =>
+            a.sampleName > b.sampleName
+                ? 1
+                : b.sampleName > a.sampleName
+                  ? -1
+                  : 0
+        );
+        this.bank.instruments.sort((a, b) =>
+            a.instrumentName > b.instrumentName
+                ? 1
+                : b.instrumentName > a.instrumentName
+                  ? -1
+                  : 0
+        );
     }
 
     getBankName(unnamed: string) {

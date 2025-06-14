@@ -18,12 +18,12 @@ import { AudioEngine } from "./core_backend/audio_engine.ts";
 import { ClipBoardManager } from "./core_backend/clipboard_manager.ts";
 import { Settings } from "./settings/settings.tsx";
 import { TabList } from "./tab_list/tab_list.tsx";
-import { BankEditor } from "./bank_editor/bank_editor.tsx";
 import { type BasicSoundBank, loadSoundFont } from "spessasynth_core";
 import { LocaleList } from "./locale/locale_list.ts";
 import { KeyboardController } from "./keyboard/keyboard_controller.tsx";
 import { DestinationsOptions } from "./utils/translated_options/destination_options.tsx";
 import { ModulableControllerOptions } from "./utils/translated_options/modulable_controller_options.tsx";
+import { MemoizedBankEditor } from "./bank_editor/bank_editor.tsx";
 
 // apply locale
 const initialSettings = loadSettings();
@@ -55,14 +55,18 @@ applyAudioSettings(initialSettings, audioEngine);
 const clipboardManager = new ClipBoardManager();
 
 function App() {
-    const [tabs, setTabs] = useState<SoundBankManager[]>([]);
-    const [activeTab, setActiveTab] = useState<number>(0); // index in tabs[]
     const { t } = useTranslation();
-    const currentManager: SoundBankManager | undefined = tabs[activeTab];
+    const [tabs, setTabs] = useState<SoundBankManager[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [showKeyboard, setShowKeyboard] = useState(false);
     const [settings, setSettings] = useState(false);
     const [theme, setTheme] = useState(getSetting("theme", initialSettings));
+    const [activeTab, setActiveTab] = useState<number>(0); // index in tabs[]
+
+    const currentManager: SoundBankManager | undefined = useMemo(
+        () => tabs[activeTab],
+        [activeTab, tabs]
+    );
 
     // cached translated options
     // note: i can't use JSX here as it calls MCO 9 times for some reason?
@@ -75,11 +79,13 @@ function App() {
         [t]
     );
 
-    // only re-renders tab list when needed
-    for (const m of tabs) {
-        // clear the callback
-        m.changeCallback = () => {};
-    }
+    useEffect(() => {
+        // only re-renders tab list when needed
+        for (const m of tabs) {
+            // clear the callback
+            m.changeCallback = () => {};
+        }
+    }, [tabs]);
 
     useEffect(() => {
         if (tabs.length > 0 && tabs[activeTab]) {
@@ -165,10 +171,12 @@ function App() {
     }
 
     const showTabList = !settings;
-    const showEditor = !settings && !isLoading && tabs.length > 0;
+    const showEditor = useMemo(
+        () => !settings && !isLoading && tabs.length > 0,
+        [isLoading, settings, tabs.length]
+    );
     const showWelcome = tabs.length < 1 && !settings && !isLoading;
     const showSettings = settings && !isLoading;
-
     return (
         <div
             className={`spessafont_main ${theme === "light" ? "light_mode" : ""}`}
@@ -202,15 +210,14 @@ function App() {
                 </div>
             )}
 
-            {showEditor && (
-                <BankEditor
-                    destinationOptions={destinationOptions}
-                    ccOptions={ccOptions}
-                    manager={currentManager}
-                    audioEngine={audioEngine}
-                    clipboardManager={clipboardManager}
-                />
-            )}
+            <MemoizedBankEditor
+                destinationOptions={destinationOptions}
+                ccOptions={ccOptions}
+                manager={currentManager}
+                audioEngine={audioEngine}
+                clipboardManager={clipboardManager}
+                show={showEditor}
+            />
 
             {showWelcome && (
                 <div className="welcome">

@@ -164,6 +164,10 @@ input[type=number] {
     margin-top: 10rem;
 }
 
+.disabled {
+    filter: grayscale(10);
+}
+
 
 ::-webkit-scrollbar {
     width: 0.3rem;

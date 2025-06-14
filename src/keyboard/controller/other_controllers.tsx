@@ -47,8 +47,35 @@ export function OtherControllers({
         }
     }));
 
+    const midiPanic = () => {
+        engine.processor.stopAllChannels();
+    };
+
+    const systemReset = () => {
+        midiPanic();
+        engine.processor.resetAllControllers();
+    };
+
     return (
         <div className={"controller_row"}>
+            <div className={"controller_column"}>
+                <div
+                    onClick={midiPanic}
+                    className={
+                        "pretty_button responsive_button hover_brightness"
+                    }
+                >
+                    {t("keyboardLocale.midiPanic")}
+                </div>
+                <div
+                    onClick={systemReset}
+                    className={
+                        "pretty_button responsive_button hover_brightness"
+                    }
+                >
+                    {t("keyboardLocale.resetSynthesizer")}
+                </div>
+            </div>
             <div className={"controller_column"}>
                 <ControllerRange
                     text={t("modulatorLocale.sources.pitchWheel")}

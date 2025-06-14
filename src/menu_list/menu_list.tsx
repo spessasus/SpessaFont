@@ -4,6 +4,7 @@ import {
     BasicSample,
     BasicSoundBank
 } from "spessasynth_core";
+import * as React from "react";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./menu_list.css";
@@ -36,11 +37,9 @@ export function MenuList({
         },
         [sv]
     );
-
     const presets = bank.presets;
     const instruments = bank.instruments;
     const samples = bank.samples;
-
     const presetNameMap: MappedPresetType[] = useMemo(() => {
         return presets.map((p) => {
             return {
@@ -82,20 +81,27 @@ export function MenuList({
         [filteredInstruments, presetNameMap, searchQueryLower]
     );
 
+    const SampleDisplayMemo = useMemo(() => React.memo(SampleDisplay), []);
+
+    const handleClick = useCallback(
+        (sample: BasicSample) => setView(sample),
+        [setView]
+    );
+
     const samplesGroup = useMemo(
         () => (
             <div className={"item_group"}>
                 {filteredSamples.map((s, i) => (
-                    <SampleDisplay
-                        view={view}
+                    <SampleDisplayMemo
+                        selected={view === s}
                         sample={s}
-                        onClick={() => setView(s)}
+                        onClick={handleClick}
                         key={i}
-                    ></SampleDisplay>
+                    ></SampleDisplayMemo>
                 ))}
             </div>
         ),
-        [filteredSamples, setView, view]
+        [SampleDisplayMemo, filteredSamples, handleClick, view]
     );
 
     const instrumentsGroup = useMemo(

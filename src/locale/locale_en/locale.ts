@@ -6,6 +6,7 @@ import { GeneratorLocale } from "./generator.ts";
 import { SettingsLocale } from "./settings.ts";
 import { MidiControllersLocale } from "./midi_controllers.ts";
 import { SampleLocale } from "./sample.ts";
+import { KeyboardLocale } from "./keyboard.ts";
 
 /**
  *
@@ -41,6 +42,7 @@ export const localeEnglish = {
     none: "None",
     githubPage: "Project page",
     keyboard: "Keyboard",
+
     menuBarLocale: MenuBarLocale,
     modulatorLocale: ModulatorLocale,
     generatorLocale: GeneratorLocale,
@@ -48,5 +50,6 @@ export const localeEnglish = {
     presetList: PresetListLocale,
     settingsLocale: SettingsLocale,
     midiControllersLocale: MidiControllersLocale,
-    sampleLocale: SampleLocale
+    sampleLocale: SampleLocale,
+    keyboardLocale: KeyboardLocale
 };

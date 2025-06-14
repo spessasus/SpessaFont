@@ -5,18 +5,7 @@ import "./wave_view.css";
 
 const SCALE_LINES_COUNT = 8;
 
-export function WaveView({
-    data,
-    loopStart,
-    loopEnd,
-    setLoopStart,
-    setLoopEnd,
-    sampleRate,
-    playbackStartTime,
-    playerState,
-    context,
-    zoom
-}: {
+type WaveViewProps = {
     data: Float32Array;
     loopStart: number;
     loopEnd: number;
@@ -27,7 +16,22 @@ export function WaveView({
     playerState: SamplePlayerState;
     context: AudioContext;
     zoom: number;
-}) {
+    disabled: boolean;
+};
+
+export function WaveView({
+    data,
+    loopStart,
+    loopEnd,
+    setLoopStart,
+    setLoopEnd,
+    sampleRate,
+    playbackStartTime,
+    playerState,
+    context,
+    zoom,
+    disabled
+}: WaveViewProps) {
     const waveformRef = useRef<HTMLCanvasElement>(null);
     const pointsAndInfoRef = useRef<HTMLCanvasElement>(null);
     const scrollerRef = useRef<HTMLDivElement>(null);
@@ -238,7 +242,7 @@ export function WaveView({
     ]);
 
     const setLoopStartClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-        if (!waveformRef.current) {
+        if (!waveformRef.current || disabled) {
             return;
         }
         const canvasRect = waveformRef.current.getBoundingClientRect();
@@ -249,7 +253,7 @@ export function WaveView({
 
     const setLoopEndClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
         e.preventDefault();
-        if (!waveformRef.current) {
+        if (!waveformRef.current || disabled) {
             return;
         }
         const canvasRect = waveformRef.current.getBoundingClientRect();
@@ -258,7 +262,9 @@ export function WaveView({
         setLoopEnd(loopEndIndex);
     };
     return (
-        <div className={`wave_view ${zoom > 1 ? "zoomed" : ""}`}>
+        <div
+            className={`wave_view ${zoom > 1 ? "zoomed" : ""} ${disabled ? "disabled" : ""}`}
+        >
             <div className={"wave_view_child"}>
                 <canvas
                     width={size.width}
