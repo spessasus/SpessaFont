@@ -11,18 +11,15 @@ export class SetSampleTypeAction implements HistoryAction {
     private readonly currentType: SampleTypeValue;
     private readonly newLink: BasicSample | undefined;
     private readonly newType: SampleTypeValue;
-    private readonly setSamples: (s: BasicSample[]) => void;
 
     constructor(
         sampleIndex: number,
-        setSamples: (s: BasicSample[]) => void,
         currentLink: BasicSample | undefined,
         currentType: SampleTypeValue,
         newLink: BasicSample | undefined,
         newType: SampleTypeValue
     ) {
         this.sampleIndex = sampleIndex;
-        this.setSamples = setSamples;
         this.currentLink = currentLink;
         this.newLink = newLink;
         this.currentType = currentType;
@@ -49,6 +46,5 @@ export class SetSampleTypeAction implements HistoryAction {
         } else {
             s.setLinkedSample(newLink, newType);
         }
-        this.setSamples([...b.samples]);
     }
 }

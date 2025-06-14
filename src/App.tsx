@@ -80,14 +80,6 @@ function App() {
     );
 
     useEffect(() => {
-        // only re-renders tab list when needed
-        for (const m of tabs) {
-            // clear the callback
-            m.changeCallback = () => {};
-        }
-    }, [tabs]);
-
-    useEffect(() => {
         if (tabs.length > 0 && tabs[activeTab]) {
             tabs[activeTab].sendBankToSynth();
         } else {
@@ -158,20 +150,17 @@ function App() {
     }
 
     function closeTab(index: number) {
-        setTabs((prev) =>
-            prev.filter((tab, i) => {
-                if (i === index) {
-                    if (tab.dirty) {
-                        if (!window.confirm(t("unsavedChanges"))) {
-                            return true;
-                        }
-                    }
-                    tab.close();
-                    return false;
+        setTabs((prevTabs) => {
+            const tab = prevTabs[index];
+            if (tab.dirty) {
+                const confirmed = window.confirm(t("unsavedChanges"));
+                if (!confirmed) {
+                    return prevTabs;
                 }
-                return true;
-            })
-        );
+            }
+            tab.close();
+            return prevTabs.filter((_, i) => i !== index);
+        });
         setActiveTab(0);
     }
 
@@ -197,7 +186,6 @@ function App() {
             />
             {showTabList && (
                 <TabList
-                    currentManager={currentManager}
                     activeTab={activeTab}
                     closeTab={closeTab}
                     setActiveTab={setActiveTab}

@@ -4,7 +4,14 @@ import {
     BasicSample,
     sampleTypes
 } from "spessasynth_core";
-import { useCallback, useMemo, useState } from "react";
+import * as React from "react";
+import {
+    type Ref,
+    useCallback,
+    useImperativeHandle,
+    useMemo,
+    useState
+} from "react";
 import { useTranslation } from "react-i18next";
 import "./menu_list.css";
 import SoundBankManager, {
@@ -20,18 +27,11 @@ import type { SetViewType } from "../bank_editor/bank_editor.tsx";
 
 export type MappedPresetType = { searchString: string; preset: BasicPreset };
 
-export function MenuList({
-    view,
-    sv,
-    manager,
-    engine,
-    setSamples,
-    samples,
-    instruments,
-    setInstruments,
-    presets,
-    setPresets
-}: {
+export type MenuListRef = {
+    updateMenuList: () => void;
+};
+
+type MenuListProps = {
     manager: SoundBankManager;
     view: BankEditView;
     sv: SetViewType;
@@ -42,15 +42,37 @@ export function MenuList({
     setInstruments: (i: BasicInstrument[]) => unknown;
     presets: BasicPreset[];
     setPresets: (p: BasicPreset[]) => unknown;
-}) {
+    ref: Ref<MenuListRef>;
+};
+
+export const MenuList = React.memo(function ({
+    view,
+    sv,
+    manager,
+    engine,
+    setSamples,
+    samples,
+    instruments,
+    setInstruments,
+    presets,
+    setPresets,
+    ref
+}: MenuListProps) {
     const [searchQuery, setSearchQuery] = useState("");
     const [showPresets, setShowPresets] = useState(view instanceof BasicPreset);
     const [showInstruments, setShowInstruments] = useState(
         view instanceof BasicInstrument
     );
     const [showSamples, setShowSamples] = useState(view instanceof BasicSample);
+    const [forcedRefresh, setForcedRefresh] = useState(0);
+    useImperativeHandle(ref, () => {
+        return {
+            updateMenuList: () => {
+                setForcedRefresh(forcedRefresh + 1);
+            }
+        };
+    });
     const { t } = useTranslation();
-
     const setView = useCallback(
         (v: BankEditView) => {
             sv(v);
@@ -58,7 +80,8 @@ export function MenuList({
         [sv]
     );
     // make it compile
-    console.log(setInstruments, setPresets);
+    void setInstruments;
+    void setPresets;
     const presetNameMap: MappedPresetType[] = useMemo(() => {
         return presets.map((p) => {
             return {
@@ -69,7 +92,10 @@ export function MenuList({
             };
         });
     }, [presets]);
-    const searchQueryLower = searchQuery.toLowerCase();
+    const searchQueryLower = useMemo(
+        () => searchQuery.toLowerCase(),
+        [searchQuery]
+    );
     const filteredSamples = useMemo(
         () =>
             searchQueryLower === ""
@@ -179,15 +205,15 @@ export function MenuList({
             <div className={"item_group"}>
                 {filteredSamples.map((s, i) => (
                     <SampleDisplay
-                        selected={view === s}
-                        sampleName={s.sampleName}
+                        view={view}
+                        sample={s}
                         onClick={() => setView(s)}
-                        key={i}
+                        key={i + forcedRefresh}
                     ></SampleDisplay>
                 ))}
             </div>
         ),
-        [filteredSamples, setView, view]
+        [filteredSamples, setView, view, forcedRefresh]
     );
 
     const instrumentsGroup = useMemo(
@@ -199,12 +225,12 @@ export function MenuList({
                         instrument={inst}
                         onClick={() => setView(inst)}
                         selectSample={(s) => setView(s)}
-                        key={i}
+                        key={i + forcedRefresh}
                     ></InstrumentDisplay>
                 ))}
             </div>
         ),
-        [filteredInstruments, view, setView]
+        [filteredInstruments, view, setView, forcedRefresh]
     );
 
     const presetsGroup = useMemo(
@@ -217,12 +243,12 @@ export function MenuList({
                         p={p}
                         selectInstrument={(i) => setView(i)}
                         selectSample={(s) => setView(s)}
-                        key={i}
+                        key={i + forcedRefresh}
                     ></PresetDisplay>
                 ))}
             </div>
         ),
-        [filteredPresets, setView, view]
+        [filteredPresets, setView, view, forcedRefresh]
     );
 
     const samplesOpen = showSamples;
@@ -276,4 +302,4 @@ export function MenuList({
             </div>
         </div>
     );
-}
+});

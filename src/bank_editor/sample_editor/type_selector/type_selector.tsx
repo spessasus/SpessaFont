@@ -10,12 +10,14 @@ export function TypeSelector({
     sampleType,
     linkedSample,
     setLinkedSample,
-    samples
+    samples,
+    sample
 }: {
     sampleType: SampleTypeValue;
     linkedSample: BasicSample | undefined;
     setLinkedSample: (type: SampleTypeValue, s?: BasicSample) => void;
     samples: BasicSample[];
+    sample: BasicSample;
 }) {
     const { t } = useTranslation();
     const linkedIndex = useMemo(() => {
@@ -28,10 +30,16 @@ export function TypeSelector({
     const availableSamples = useMemo(
         () =>
             samples.reduce((indexedSamples, s, i) => {
-                indexedSamples.push({ s, i });
+                if (
+                    (s.linkedSample === undefined ||
+                        s.linkedSample === sample) &&
+                    s !== sample
+                ) {
+                    indexedSamples.push({ s, i });
+                }
                 return indexedSamples;
             }, Array<{ s: BasicSample; i: number }>()),
-        [samples]
+        [sample, samples]
     );
 
     const sampleElements = useMemo(
@@ -47,6 +55,10 @@ export function TypeSelector({
         ),
         [availableSamples]
     );
+
+    const nothingToLink =
+        availableSamples.length < 1 ||
+        (availableSamples.length < 2 && linkedSample);
 
     const setType = (t: SampleTypeValue) => {
         const linked: BasicSample = linkedSample || samples[0];
@@ -76,13 +88,25 @@ export function TypeSelector({
                     <option value={sampleTypes.monoSample}>
                         {t("sampleLocale.types.mono")}
                     </option>
-                    <option value={sampleTypes.leftSample}>
+                    <option
+                        disabled={
+                            nothingToLink &&
+                            sampleType !== sampleTypes.rightSample
+                        }
+                        value={sampleTypes.leftSample}
+                    >
                         {t("sampleLocale.types.left")}
                     </option>
-                    <option value={sampleTypes.rightSample}>
+                    <option
+                        disabled={
+                            nothingToLink &&
+                            sampleType !== sampleTypes.leftSample
+                        }
+                        value={sampleTypes.rightSample}
+                    >
                         {t("sampleLocale.types.right")}
                     </option>
-                    <option value={sampleTypes.linkedSample}>
+                    <option disabled={true} value={sampleTypes.linkedSample}>
                         {t("sampleLocale.types.linked")}
                     </option>
 

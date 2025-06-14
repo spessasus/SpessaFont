@@ -43,9 +43,9 @@ export function InstrumentDisplay({
                 {open &&
                     instrument.instrumentZones.map((z, i) => (
                         <SampleDisplay
-                            selected={view === z.sample}
+                            view={view}
                             key={i}
-                            sampleName={z.sample.sampleName}
+                            sample={z.sample}
                             onClick={() => selectSample(z.sample)}
                         ></SampleDisplay>
                     ))}

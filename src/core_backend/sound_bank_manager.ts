@@ -104,7 +104,7 @@ export default class SoundBankManager {
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
         a.download = `${this.getBankName("Unnamed")}.${format}`;
-        console.log(a);
+        console.info(a);
         a.click();
         this.dirty = false;
         this.changeCallback();

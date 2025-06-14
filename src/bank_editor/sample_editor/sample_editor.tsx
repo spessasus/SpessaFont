@@ -8,7 +8,15 @@ import {
 } from "spessasynth_core";
 import type { AudioEngine } from "../../core_backend/audio_engine.ts";
 import "./sample_editor.css";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import * as React from "react";
+import {
+    type RefObject,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState
+} from "react";
 import { WaveView } from "./wave_view/wave_view.tsx";
 import SoundBankManager from "../../core_backend/sound_bank_manager.ts";
 import { useTranslation } from "react-i18next";
@@ -21,6 +29,7 @@ import { TypeSelector } from "./type_selector/type_selector.tsx";
 import type { SetViewType } from "../bank_editor.tsx";
 import { SetSampleTypeAction } from "./set_sample_type_action.ts";
 import { EditSampleAction } from "./edit_sample_action.ts";
+import type { MenuListRef } from "../../menu_list/menu_list.tsx";
 
 const MIN_SAMPLE_RATE = 8000;
 const MAX_SAMPLE_RATE = 96000;
@@ -29,21 +38,25 @@ const ZOOM_PER_SAMPLE = 50000 / 6_000_000;
 
 export type SamplePlayerState = "stopped" | "playing" | "playing_loop";
 
-export function SampleEditor({
-    engine,
-    sample,
-    setView,
-    manager,
-    setSamples,
-    samples
-}: {
+type SampleEditorProps = {
     manager: SoundBankManager;
     sample: BasicSample;
     engine: AudioEngine;
     setView: SetViewType;
     setSamples: (s: BasicSample[]) => void;
     samples: BasicSample[];
-}) {
+    menuRef: RefObject<MenuListRef | null>;
+};
+
+export const SampleEditor = React.memo(function ({
+    engine,
+    sample,
+    setView,
+    manager,
+    setSamples,
+    samples,
+    menuRef
+}: SampleEditorProps) {
     const { t } = useTranslation();
     const sampleIndex = useMemo(
         () => samples.indexOf(sample),
@@ -57,6 +70,8 @@ export function SampleEditor({
         sample.setAudioData(data);
         setSampleDataInternal(data);
     };
+    const [zoom, setZoom] = useState(1);
+    const [inputZoom, setInputZoom] = useState(100);
 
     // make the sample playable
     useEffect(() => {
@@ -95,7 +110,6 @@ export function SampleEditor({
         const action = [
             new SetSampleTypeAction(
                 sampleIndex,
-                setSamples,
                 sample.linkedSample,
                 sample.sampleType,
                 s,
@@ -121,24 +135,15 @@ export function SampleEditor({
             oldVal[prop] = oldValue;
             const newVal: Partial<BasicSample> = {};
             newVal[prop] = newValue;
-            const actions = [
-                new EditSampleAction(sampleIndex, setSamples, oldVal, newVal)
-            ];
+            const actions = [new EditSampleAction(sampleIndex, oldVal, newVal)];
             if (linkedSample) {
                 const oldLinkedVal: Partial<BasicSample> = {};
                 oldLinkedVal[prop] = linkedSample[prop];
-                actions.push(
-                    new EditSampleAction(
-                        linkedIndex,
-                        setSamples,
-                        oldVal,
-                        newVal
-                    )
-                );
+                actions.push(new EditSampleAction(linkedIndex, oldVal, newVal));
             }
             manager.modifyBank(actions);
         },
-        [linkedIndex, linkedSample, manager, sampleIndex, setSamples]
+        [linkedIndex, linkedSample, manager, sampleIndex]
     );
 
     const [loopStart, setLoopStartInternal] = useState(
@@ -187,7 +192,6 @@ export function SampleEditor({
         const actions = [
             new EditSampleAction(
                 sampleIndex,
-                setSamples,
                 { sampleName: name },
                 { sampleName: newName }
             )
@@ -202,14 +206,15 @@ export function SampleEditor({
             actions.push(
                 new EditSampleAction(
                     linkedIndex,
-                    setSamples,
                     { sampleName: linkedSample.sampleName },
                     { sampleName: secondNewName }
                 )
             );
         }
+
         manager.modifyBank(actions);
         setNameInternal(n);
+        menuRef?.current?.updateMenuList();
     };
 
     const [sampleRate, setSampleRateInternal] = useState(sample.sampleRate);
@@ -311,7 +316,7 @@ export function SampleEditor({
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
         a.download = `${name}.wav`;
-        console.log(a);
+        console.info(a);
         a.click();
     };
 
@@ -388,8 +393,7 @@ export function SampleEditor({
         };
         input.click();
     };
-    const [zoom, setZoom] = useState(1);
-    const [inputZoom, setInputZoom] = useState(100);
+
     const maxZoom = Math.max(5, ZOOM_PER_SAMPLE * sampleData.length + 1);
 
     return (
@@ -489,6 +493,7 @@ export function SampleEditor({
                                 sampleType={sampleType}
                                 setLinkedSample={setLinkedSample}
                                 linkedSample={linkedSample}
+                                sample={sample}
                                 samples={manager.bank.samples}
                             ></TypeSelector>
                         </div>
@@ -557,7 +562,9 @@ export function SampleEditor({
                                     setInputZoom(n * 100);
                                 }}
                                 value={inputZoom}
-                                text={`${t("sampleLocale.waveZoom")}: ${Math.floor(zoom * 100)}%`}
+                                text={`${t("sampleLocale.waveZoom")}: ${Math.floor(
+                                    zoom * 100
+                                )}%`}
                             ></ControllerRange>
                         </div>
                     </div>
@@ -572,4 +579,4 @@ export function SampleEditor({
             </div>
         </div>
     );
-}
+});

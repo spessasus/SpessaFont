@@ -5,8 +5,8 @@ import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import type { ClipBoardManager } from "../core_backend/clipboard_manager.ts";
 import { SoundBankInfo } from "./info_view/sound_bank_info.tsx";
 import * as React from "react";
-import { type JSX, useCallback, useState } from "react";
-import { MenuList } from "../menu_list/menu_list.tsx";
+import { type JSX, useCallback, useRef, useState } from "react";
+import { MenuList, type MenuListRef } from "../menu_list/menu_list.tsx";
 import "./bank_editor.css";
 import { BasicInstrument, BasicPreset } from "spessasynth_core";
 import { PresetEditor } from "./preset_editor/preset_editor.tsx";
@@ -58,6 +58,7 @@ export function BankEditor({
     const [samples, setSamples] = useState(manager.bank.samples);
     const [instruments, setInstruments] = useState(manager.bank.instruments);
     const [presets, setPresets] = useState(manager.bank.presets);
+    const menuRef = useRef<MenuListRef>(null);
 
     const updateView = useCallback(
         (v: BankEditView) => {
@@ -67,7 +68,7 @@ export function BankEditor({
         [manager]
     );
 
-    function MainContent() {
+    const MainContent = React.memo(function () {
         if (view === "info") {
             return (
                 <SoundBankInfo
@@ -93,6 +94,7 @@ export function BankEditor({
         }
         return (
             <SampleEditor
+                menuRef={menuRef}
                 manager={manager}
                 setView={updateView}
                 engine={audioEngine}
@@ -101,11 +103,12 @@ export function BankEditor({
                 samples={samples}
             ></SampleEditor>
         );
-    }
+    });
 
     return (
         <div className={"main_content"}>
             <MenuList
+                ref={menuRef}
                 view={view}
                 sv={updateView}
                 manager={manager}
