@@ -29,7 +29,7 @@ export function AudioEngineSettings({
             ...settings,
             volume: vol
         });
-        return vol;
+        return vol * 100;
     }
 
     function setReverb(v: number) {
@@ -38,7 +38,7 @@ export function AudioEngineSettings({
             ...settings,
             reverbLevel: vReal
         });
-        return vReal;
+        return vReal * 100;
     }
 
     function setChorus(v: number) {
@@ -47,7 +47,7 @@ export function AudioEngineSettings({
             ...settings,
             chorusLevel: vReal
         });
-        return vReal;
+        return vReal * 100;
     }
 
     const { t } = useTranslation();
