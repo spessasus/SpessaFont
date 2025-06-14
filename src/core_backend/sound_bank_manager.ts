@@ -33,6 +33,9 @@ export default class SoundBankManager {
         if (!bank) {
             this.bank = loadSoundFont(BasicSoundBank.getDummySoundfontFile());
             this.bank.soundFontInfo["INAM"] = "";
+            this.bank.soundFontInfo["ICRD"] = new Date()
+                .toISOString()
+                .split("T")[0];
         } else {
             this.bank = bank;
         }

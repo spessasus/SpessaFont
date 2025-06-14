@@ -125,12 +125,10 @@ export function MenuList({
             if (lastDotIndex !== -1) {
                 sampleName = sampleName.substring(0, lastDotIndex);
             }
+            sampleName = sampleName.substring(0, 19);
 
-            if (audioBuffer.numberOfChannels > 1) {
-                sampleName += "L";
-            }
             const sample = new BasicSample(
-                sampleName,
+                sampleName + (audioBuffer.numberOfChannels > 1 ? "L" : ""),
                 audioBuffer.sampleRate,
                 60,
                 0,
@@ -151,7 +149,7 @@ export function MenuList({
             if (audioBuffer.numberOfChannels > 1) {
                 const otherOut = audioBuffer.getChannelData(1);
                 const sample2 = new BasicSample(
-                    file.name.split(".")[0] + "R",
+                    sampleName + "R",
                     audioBuffer.sampleRate,
                     60,
                     0,

@@ -144,25 +144,25 @@ export function SampleEditor({
     const [loopStart, setLoopStartInternal] = useState(
         sample.sampleLoopStartIndex
     );
-    const setLoopStart = (s: number) => {
-        s = Math.min(s, loopEnd, sampleData.length - 1);
-        if (s === loopStart) {
-            return s;
+    const setLoopStart = (newStart: number) => {
+        newStart = Math.min(newStart, loopEnd, sampleData.length - 1);
+        if (newStart === loopStart) {
+            return newStart;
         }
-        changeSampleProp("sampleLoopStartIndex", loopStart, s);
-        setLoopStartInternal(s);
-        return s;
+        changeSampleProp("sampleLoopStartIndex", loopStart, newStart);
+        setLoopStartInternal(newStart);
+        return newStart;
     };
 
     const [loopEnd, setLoopEndInternal] = useState(sample.sampleLoopEndIndex);
-    const setLoopEnd = (e: number) => {
-        e = Math.max(e, loopStart, 0);
-        if (e === loopEnd) {
-            return e;
+    const setLoopEnd = (newEnd: number) => {
+        newEnd = Math.max(newEnd, loopStart, 0);
+        if (newEnd === loopEnd) {
+            return newEnd;
         }
-        changeSampleProp("sampleLoopEndIndex", loopEnd, e);
-        setLoopEndInternal(e);
-        return e;
+        changeSampleProp("sampleLoopEndIndex", loopEnd, newEnd);
+        setLoopEndInternal(newEnd);
+        return newEnd;
     };
     const [name, setNameInternal] = useState(sample.sampleName);
     const setName = (n: string) => {
@@ -213,38 +213,38 @@ export function SampleEditor({
     };
 
     const [sampleRate, setSampleRateInternal] = useState(sample.sampleRate);
-    const setSampleRate = (r: number) => {
-        const newRate = Math.min(MAX_SAMPLE_RATE, Math.max(r, MIN_SAMPLE_RATE));
-        if (newRate === r) {
+    const setSampleRate = (newRate: number) => {
+        newRate = Math.min(MAX_SAMPLE_RATE, Math.max(newRate, MIN_SAMPLE_RATE));
+        if (newRate === sampleRate) {
             return newRate;
         }
-        changeSampleProp("sampleRate", sampleRate, r);
+        changeSampleProp("sampleRate", sampleRate, newRate);
         setSampleRateInternal(newRate);
         return newRate;
     };
 
     const [originalKey, setOriginalKeyInternal] = useState(sample.samplePitch);
-    const setOriginalKey = (k: number) => {
-        const key = Math.min(127, Math.max(0, Math.floor(k)));
-        if (key === originalKey) {
-            return key;
+    const setOriginalKey = (newKey: number) => {
+        newKey = Math.min(127, Math.max(0, Math.floor(newKey)));
+        if (newKey === originalKey) {
+            return newKey;
         }
-        changeSampleProp("samplePitch", originalKey, key);
-        setOriginalKeyInternal(key);
-        return key;
+        changeSampleProp("samplePitch", originalKey, newKey);
+        setOriginalKeyInternal(newKey);
+        return newKey;
     };
 
     const [centCorrection, setCentCorrectionInternal] = useState(
         sample.samplePitchCorrection
     );
-    const setCentCorrection = (t: number) => {
-        const tune = Math.min(99, Math.max(-99, Math.floor(t)));
-        if (tune === centCorrection) {
-            return tune;
+    const setCentCorrection = (newTune: number) => {
+        newTune = Math.min(99, Math.max(-99, Math.floor(newTune)));
+        if (newTune === centCorrection) {
+            return newTune;
         }
-        changeSampleProp("samplePitchCorrection", centCorrection, tune);
-        setCentCorrectionInternal(tune);
-        return tune;
+        changeSampleProp("samplePitchCorrection", centCorrection, newTune);
+        setCentCorrectionInternal(newTune);
+        return newTune;
     };
 
     const buffer = useMemo(() => {
