@@ -417,7 +417,7 @@ export const SampleEditor = React.memo(function ({
                         <input
                             className={"pretty_input sample_name monospaced"}
                             defaultValue={name}
-                            maxLength={20}
+                            maxLength={40}
                             placeholder={t("sampleLocale.sampleName")}
                             onBlur={(e) => setName(e.target.value)}
                         />

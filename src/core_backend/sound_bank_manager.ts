@@ -83,7 +83,16 @@ export default class SoundBankManager {
     }
 
     close() {
+        if (
+            this.processor.soundfontManager.soundfontList[0].soundfont ===
+            this.bank
+        ) {
+            this.processor.soundfontManager.reloadManager(
+                loadSoundFont(BasicSoundBank.getDummySoundfontFile())
+            );
+        }
         this.clearCache();
+        this.bank.destroySoundBank();
     }
 
     save(format: "sf2" | "dls") {
@@ -100,7 +109,17 @@ export default class SoundBankManager {
                 binary = this.bank.writeDLS();
                 break;
         }
-        const blob = new Blob([binary.buffer as ArrayBuffer]);
+        const buffer = binary.buffer;
+        const chunks: ArrayBuffer[] = [];
+        let toWrite = 0;
+        while (toWrite < binary.length) {
+            // 50MB chunks (browsers don't like 4GB array buffers)
+            const size = Math.min(52428800, binary.length - toWrite);
+            chunks.push(buffer.slice(toWrite, toWrite + size) as ArrayBuffer);
+            toWrite += size;
+        }
+
+        const blob = new Blob(chunks);
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
         a.download = `${this.getBankName("Unnamed")}.${format}`;

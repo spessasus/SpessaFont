@@ -200,95 +200,84 @@ export const MenuList = React.memo(function ({
         input.click();
     };
 
-    const samplesGroup = useMemo(
-        () => (
-            <div className={"item_group"}>
-                {filteredSamples.map((s, i) => (
-                    <SampleDisplay
-                        view={view}
-                        sample={s}
-                        onClick={() => setView(s)}
-                        key={i + forcedRefresh}
-                    ></SampleDisplay>
-                ))}
-            </div>
-        ),
-        [filteredSamples, setView, view, forcedRefresh]
-    );
-
-    const instrumentsGroup = useMemo(
-        () => (
-            <div className={"item_group"}>
-                {filteredInstruments.map((inst, i) => (
-                    <InstrumentDisplay
-                        view={view}
-                        instrument={inst}
-                        onClick={() => setView(inst)}
-                        selectSample={(s) => setView(s)}
-                        key={i + forcedRefresh}
-                    ></InstrumentDisplay>
-                ))}
-            </div>
-        ),
-        [filteredInstruments, view, setView, forcedRefresh]
-    );
-
-    const presetsGroup = useMemo(
-        () => (
-            <div className={"item_group"}>
-                {filteredPresets.map((p, i) => (
-                    <PresetDisplay
-                        view={view}
-                        onClick={() => setView(p.preset)}
-                        p={p}
-                        selectInstrument={(i) => setView(i)}
-                        selectSample={(s) => setView(s)}
-                        key={i + forcedRefresh}
-                    ></PresetDisplay>
-                ))}
-            </div>
-        ),
-        [filteredPresets, setView, view, forcedRefresh]
-    );
-
     const samplesOpen = showSamples;
     const instrumentsOpen = showInstruments;
     const presetsOpen = showPresets;
 
     return (
         <div className={"menu_list_main"}>
-            <div className={"menu_list_scrollable"}>
-                <div
-                    onClick={() => setView("info")}
-                    className={`item_group_header ${view === "info" ? "opened" : ""}`}
-                >
-                    <h2>{t("presetList.overview")}</h2>
-                </div>
-
-                <DropdownHeader
-                    onAdd={addSample}
-                    onClick={() => setShowSamples(!showSamples)}
-                    text={t("presetList.samples")}
-                    open={showSamples}
-                />
-                {samplesOpen && samplesGroup}
-
-                <DropdownHeader
-                    onAdd={() => console.log("add instrument")}
-                    onClick={() => setShowInstruments(!showInstruments)}
-                    open={instrumentsOpen}
-                    text={t("presetList.instruments")}
-                />
-                {instrumentsOpen && instrumentsGroup}
-
-                <DropdownHeader
-                    onAdd={() => console.log("add preset")}
-                    onClick={() => setShowPresets(!showPresets)}
-                    open={presetsOpen}
-                    text={t("presetList.presets")}
-                />
-                {presetsOpen && presetsGroup}
+            <div
+                onClick={() => setView("info")}
+                className={`item_group_header ${view === "info" ? "opened" : ""}`}
+            >
+                <h2>{t("presetList.overview")}</h2>
             </div>
+
+            <DropdownHeader
+                onAdd={addSample}
+                onClick={() => setShowSamples(!showSamples)}
+                text={t("presetList.samples")}
+                open={showSamples}
+            />
+            {samplesOpen && (
+                <div className={"menu_list_scrollable"}>
+                    <div className={"item_group"}>
+                        {filteredSamples.map((s, i) => (
+                            <SampleDisplay
+                                view={view}
+                                sample={s}
+                                onClick={() => setView(s)}
+                                key={i + forcedRefresh}
+                            ></SampleDisplay>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            <DropdownHeader
+                onAdd={() => console.log("add instrument")}
+                onClick={() => setShowInstruments(!showInstruments)}
+                open={instrumentsOpen}
+                text={t("presetList.instruments")}
+            />
+            {instrumentsOpen && (
+                <div className={"menu_list_scrollable"}>
+                    <div className={"item_group"}>
+                        {filteredInstruments.map((inst, i) => (
+                            <InstrumentDisplay
+                                view={view}
+                                instrument={inst}
+                                onClick={() => setView(inst)}
+                                selectSample={(s) => setView(s)}
+                                key={i + forcedRefresh}
+                            ></InstrumentDisplay>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            <DropdownHeader
+                onAdd={() => console.log("add preset")}
+                onClick={() => setShowPresets(!showPresets)}
+                open={presetsOpen}
+                text={t("presetList.presets")}
+            />
+            {presetsOpen && (
+                <div className={"menu_list_scrollable"}>
+                    <div className={"item_group"}>
+                        {filteredPresets.map((p, i) => (
+                            <PresetDisplay
+                                view={view}
+                                onClick={() => setView(p.preset)}
+                                p={p}
+                                selectInstrument={(i) => setView(i)}
+                                selectSample={(s) => setView(s)}
+                                key={i + forcedRefresh}
+                            ></PresetDisplay>
+                        ))}
+                    </div>
+                </div>
+            )}
             <div className={"search_bar"}>
                 <input
                     className={"pretty_input"}

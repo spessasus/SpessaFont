@@ -1,8 +1,6 @@
 .sample_display {
-    white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
-    text-align: end;
     flex-grow: 1;
     padding: 0.3rem;
     display: flex;
@@ -13,8 +11,14 @@
     color: var(--sample-item-color);
 }
 
-.sample_display span {
+.sample_display * {
     font-size: 0.9rem;
+    text-align: end;
+}
+
+.sample_display svg {
+    width: 1rem;
+    height: 100%;
 }
 
 .sample_display:hover, .sample_display.selected {
