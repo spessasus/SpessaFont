@@ -150,6 +150,9 @@ function App() {
     }
 
     function closeTab(index: number) {
+        if (!tabs[index]) {
+            return;
+        }
         setTabs((prevTabs) => {
             const tab = prevTabs[index];
             if (tab.dirty) {
