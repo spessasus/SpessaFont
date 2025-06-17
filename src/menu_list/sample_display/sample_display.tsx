@@ -1,6 +1,6 @@
 import "./sample_display.css";
 import * as React from "react";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import type { BankEditView } from "../../core_backend/sound_bank_manager.ts";
 import { BasicSample } from "spessasynth_core";
 
@@ -15,14 +15,6 @@ export const SampleDisplay = React.memo(function ({
 }) {
     const elementRef = useRef<HTMLDivElement>(null);
     const selected = view === sample;
-    useEffect(() => {
-        if (selected) {
-            elementRef?.current?.scrollIntoView({
-                behavior: "smooth",
-                block: "center"
-            });
-        }
-    }, [selected]);
 
     return (
         <div

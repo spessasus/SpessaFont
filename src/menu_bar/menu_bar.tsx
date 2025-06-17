@@ -95,6 +95,13 @@ export function MenuBar({
             >
                 {t("githubPage")}
             </a>
+            <a
+                className={"menu_bar_button"}
+                href={"https://spessasus.github.io/SpessaSynth"}
+                target={"_blank"}
+            >
+                {"SpessaSynth"}
+            </a>
             {isChrome && <MenuBarDropdown main={"firefox"}></MenuBarDropdown>}
             <div style={{ flex: 1 }}></div>
             <div className={"menu_bar_button"} onClick={toggleKeyboard}>

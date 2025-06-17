@@ -6,8 +6,7 @@
 
 .menu_list_scrollable {
     user-select: none;
-    display: flex;
-    flex-direction: column;
+    display: block;
     flex: 1;
     overflow-y: auto;
     scrollbar-gutter: stable both-edges;
@@ -21,6 +20,14 @@
 .item_group {
     display: flex;
     flex-direction: column;
+    position: relative;
+}
+
+.virtual_item {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
 }
 
 .search_bar {
