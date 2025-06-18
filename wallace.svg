@@ -1,0 +1,21 @@
+<svg fill="none" viewBox="0 0 600 400" width="500" height="300" xmlns="http://www.w3.org/2000/svg">
+    <foreignObject width="100%" height="100%">
+        <div xmlns="http://www.w3.org/1999/xhtml">
+            <style>
+                .body {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                }
+                .wallace {
+                border-radius: 0.5rem;
+                width: 100%;
+                }
+            </style>
+            <div class='body'>
+                <img class='wallace' alt='wallace'
+                     src="https://github.com/user-attachments/assets/e263f327-1b40-476f-81c6-322077a20cf0"/>
+            </div>
+        </div>
+    </foreignObject>
+</svg>
