@@ -89,6 +89,7 @@ export function BankEditor({
                 <InstrumentEditor
                     engine={audioEngine}
                     instrument={view}
+                    manager={manager}
                 ></InstrumentEditor>
             );
         }
