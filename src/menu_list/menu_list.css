@@ -4,6 +4,10 @@
     max-width: 35ch;
 }
 
+.menu_list_main * {
+    user-select: none;
+}
+
 .menu_list_scrollable {
     user-select: none;
     display: block;

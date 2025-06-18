@@ -5,7 +5,7 @@ import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import type { ClipBoardManager } from "../core_backend/clipboard_manager.ts";
 import { SoundBankInfo } from "./info_view/sound_bank_info.tsx";
 import * as React from "react";
-import { type JSX, useCallback, useRef, useState } from "react";
+import { type JSX, useCallback, useEffect, useRef, useState } from "react";
 import { MenuList, type MenuListRef } from "../menu_list/menu_list.tsx";
 import "./bank_editor.css";
 import { BasicInstrument, BasicPreset } from "spessasynth_core";
@@ -59,6 +59,12 @@ export function BankEditor({
     const [instruments, setInstruments] = useState(manager.bank.instruments);
     const [presets, setPresets] = useState(manager.bank.presets);
     const menuRef = useRef<MenuListRef>(null);
+
+    useEffect(() => {
+        setSamples(manager.bank.samples);
+        setInstruments(manager.bank.instruments);
+        setPresets(manager.bank.presets);
+    }, [manager]);
 
     const updateView = useCallback(
         (v: BankEditView) => {

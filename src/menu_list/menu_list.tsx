@@ -269,7 +269,7 @@ export const MenuList = React.memo(function ({
     const setInstrument = (i: BasicInstrument) => setView(i);
 
     return (
-        <div className={"menu_list_main"}>
+        <div className={"menu_list_main"} key={forcedRefresh}>
             <div
                 onClick={() => setView("info")}
                 className={`item_group_header ${view === "info" ? "opened" : ""}`}
