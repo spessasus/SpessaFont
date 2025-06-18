@@ -5,14 +5,7 @@ import {
     sampleTypes
 } from "spessasynth_core";
 import * as React from "react";
-import {
-    type Ref,
-    useCallback,
-    useImperativeHandle,
-    useMemo,
-    useRef,
-    useState
-} from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./menu_list.css";
 import SoundBankManager, {
@@ -29,10 +22,6 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 
 export type MappedPresetType = { searchString: string; preset: BasicPreset };
 
-export type MenuListRef = {
-    updateMenuList: () => void;
-};
-
 type MenuListProps = {
     manager: SoundBankManager;
     view: BankEditView;
@@ -44,7 +33,6 @@ type MenuListProps = {
     setInstruments: (i: BasicInstrument[]) => unknown;
     presets: BasicPreset[];
     setPresets: (p: BasicPreset[]) => unknown;
-    ref: Ref<MenuListRef>;
 };
 
 export const MenuList = React.memo(function ({
@@ -57,8 +45,7 @@ export const MenuList = React.memo(function ({
     instruments,
     setInstruments,
     presets,
-    setPresets,
-    ref
+    setPresets
 }: MenuListProps) {
     const [open, setOpen] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
@@ -67,14 +54,6 @@ export const MenuList = React.memo(function ({
         view instanceof BasicInstrument
     );
     const [showSamples, setShowSamples] = useState(view instanceof BasicSample);
-    const [forcedRefresh, setForcedRefresh] = useState(0);
-    useImperativeHandle(ref, () => {
-        return {
-            updateMenuList: () => {
-                setForcedRefresh(forcedRefresh + 1);
-            }
-        };
-    });
     const { t } = useTranslation();
     const setView = useCallback(
         (v: BankEditView) => {
@@ -278,7 +257,7 @@ export const MenuList = React.memo(function ({
     const setInstrument = (i: BasicInstrument) => setView(i);
 
     return (
-        <div className={"menu_list_main"} key={forcedRefresh}>
+        <div className={"menu_list_main"}>
             <div
                 onClick={() => setView("info")}
                 className={`item_group_header ${view === "info" ? "opened" : ""}`}

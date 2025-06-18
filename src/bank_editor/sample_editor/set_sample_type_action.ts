@@ -1,50 +1,41 @@
 import type { HistoryAction } from "../../core_backend/history.ts";
-import type {
-    BasicSample,
-    BasicSoundBank,
-    SampleTypeValue
-} from "spessasynth_core";
+import type { BasicSample, SampleTypeValue } from "spessasynth_core";
 
 export class SetSampleTypeAction implements HistoryAction {
-    private readonly sampleIndex: number;
+    private readonly sample: BasicSample;
     private readonly currentLink: BasicSample | undefined;
     private readonly currentType: SampleTypeValue;
     private readonly newLink: BasicSample | undefined;
     private readonly newType: SampleTypeValue;
 
     constructor(
-        sampleIndex: number,
+        sample: BasicSample,
         currentLink: BasicSample | undefined,
         currentType: SampleTypeValue,
         newLink: BasicSample | undefined,
         newType: SampleTypeValue
     ) {
-        this.sampleIndex = sampleIndex;
+        this.sample = sample;
         this.currentLink = currentLink;
         this.newLink = newLink;
         this.currentType = currentType;
         this.newType = newType;
     }
 
-    do(b: BasicSoundBank) {
-        this.apply(b, this.newLink, this.newType);
+    do() {
+        this.apply(this.newLink, this.newType);
     }
 
-    undo(b: BasicSoundBank) {
-        this.apply(b, this.currentLink, this.currentType);
+    undo() {
+        this.apply(this.currentLink, this.currentType);
     }
 
-    private apply(
-        b: BasicSoundBank,
-        newLink: BasicSample | undefined,
-        newType: SampleTypeValue
-    ) {
-        const s = b.samples[this.sampleIndex];
+    private apply(newLink: BasicSample | undefined, newType: SampleTypeValue) {
         if (!newLink) {
             // mono
-            s.unlinkSample();
+            this.sample.unlinkSample();
         } else {
-            s.setLinkedSample(newLink, newType);
+            this.sample.setLinkedSample(newLink, newType);
         }
     }
 }

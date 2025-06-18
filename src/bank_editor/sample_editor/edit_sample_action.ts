@@ -1,32 +1,36 @@
 import type { HistoryAction } from "../../core_backend/history.ts";
-import type { BasicSample, BasicSoundBank } from "spessasynth_core";
+import type { BasicSample } from "spessasynth_core";
 
-export class EditSampleAction implements HistoryAction {
-    private readonly sampleIndex: number;
-    private readonly before: Partial<BasicSample>;
-    private readonly after: Partial<BasicSample>;
+export class EditSampleAction<K extends keyof BasicSample>
+    implements HistoryAction
+{
+    private readonly sample: BasicSample;
+    private readonly propertyName: K;
+    private readonly before: BasicSample[K];
+    private readonly after: BasicSample[K];
+    private readonly callback: () => unknown;
 
     constructor(
-        sampleIndex: number,
-        before: Partial<BasicSample>,
-        after: Partial<BasicSample>
+        sample: BasicSample,
+        propertyName: K,
+        before: BasicSample[K],
+        after: BasicSample[K],
+        callback: () => unknown
     ) {
-        this.sampleIndex = sampleIndex;
+        this.sample = sample;
         this.before = before;
         this.after = after;
+        this.propertyName = propertyName;
+        this.callback = callback;
     }
 
-    do(b: BasicSoundBank) {
-        this.apply(b, this.after);
+    do() {
+        this.sample[this.propertyName] = this.after;
+        this.callback();
     }
 
-    undo(b: BasicSoundBank) {
-        this.apply(b, this.before);
-    }
-
-    private apply(b: BasicSoundBank, patch: Partial<BasicSample>) {
-        const s = b.samples[this.sampleIndex];
-        Object.assign(s, patch);
-        //this.setSamples([...b.samples]);
+    undo() {
+        this.sample[this.propertyName] = this.before;
+        this.callback();
     }
 }

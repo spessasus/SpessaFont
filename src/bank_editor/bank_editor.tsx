@@ -3,12 +3,12 @@ import SoundBankManager, {
 } from "../core_backend/sound_bank_manager.ts";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import type { ClipBoardManager } from "../core_backend/clipboard_manager.ts";
-import { SoundBankInfo } from "./info_view/sound_bank_info.tsx";
 import * as React from "react";
-import { type JSX, useCallback, useEffect, useRef, useState } from "react";
-import { MenuList, type MenuListRef } from "../menu_list/menu_list.tsx";
+import { type JSX, useCallback, useEffect, useState } from "react";
+import { MenuList } from "../menu_list/menu_list.tsx";
 import "./bank_editor.css";
-import { BasicInstrument, BasicPreset } from "spessasynth_core";
+import { SoundBankInfo } from "./info_view/sound_bank_info.tsx";
+import { BasicInstrument, BasicPreset, BasicSample } from "spessasynth_core";
 import { PresetEditor } from "./preset_editor/preset_editor.tsx";
 import { InstrumentEditor } from "./instrument_editor/instrument_editor.tsx";
 import { SampleEditor } from "./sample_editor/sample_editor.tsx";
@@ -58,7 +58,6 @@ export function BankEditor({
     const [samples, setSamples] = useState(manager.bank.samples);
     const [instruments, setInstruments] = useState(manager.bank.instruments);
     const [presets, setPresets] = useState(manager.bank.presets);
-    const menuRef = useRef<MenuListRef>(null);
 
     useEffect(() => {
         setSamples(manager.bank.samples);
@@ -74,48 +73,9 @@ export function BankEditor({
         [manager]
     );
 
-    const MainContent = React.memo(function () {
-        if (view === "info") {
-            return (
-                <SoundBankInfo
-                    destinationOptions={destinationOptions}
-                    ccOptions={ccOptions}
-                    manager={manager}
-                    clipboard={clipboardManager}
-                ></SoundBankInfo>
-            );
-        }
-        if (view instanceof BasicPreset) {
-            return (
-                <PresetEditor engine={audioEngine} preset={view}></PresetEditor>
-            );
-        }
-        if (view instanceof BasicInstrument) {
-            return (
-                <InstrumentEditor
-                    engine={audioEngine}
-                    instrument={view}
-                    manager={manager}
-                ></InstrumentEditor>
-            );
-        }
-        return (
-            <SampleEditor
-                menuRef={menuRef}
-                manager={manager}
-                setView={updateView}
-                engine={audioEngine}
-                sample={view}
-                setSamples={setSamples}
-                samples={samples}
-            ></SampleEditor>
-        );
-    });
-
     return (
         <div className={"main_content"}>
             <MenuList
-                ref={menuRef}
                 view={view}
                 sv={updateView}
                 manager={manager}
@@ -128,7 +88,37 @@ export function BankEditor({
                 setInstruments={setInstruments}
             ></MenuList>
             <div className={"main_content_window"}>
-                <MainContent></MainContent>
+                {view === "info" && (
+                    <SoundBankInfo
+                        destinationOptions={destinationOptions}
+                        ccOptions={ccOptions}
+                        manager={manager}
+                        clipboard={clipboardManager}
+                    ></SoundBankInfo>
+                )}
+                {view instanceof BasicPreset && (
+                    <PresetEditor
+                        engine={audioEngine}
+                        preset={view}
+                    ></PresetEditor>
+                )}
+                {view instanceof BasicInstrument && (
+                    <InstrumentEditor
+                        engine={audioEngine}
+                        instrument={view}
+                        manager={manager}
+                    ></InstrumentEditor>
+                )}
+                {view instanceof BasicSample && (
+                    <SampleEditor
+                        manager={manager}
+                        setView={updateView}
+                        engine={audioEngine}
+                        sample={view}
+                        setSamples={setSamples}
+                        samples={samples}
+                    ></SampleEditor>
+                )}
             </div>
         </div>
     );

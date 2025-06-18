@@ -10,14 +10,12 @@ import type SoundBankManager from "../../../core_backend/sound_bank_manager.ts";
 export function LinkedInstruments({
     sample,
     setView,
-    samples,
     setSamples,
     manager
 }: {
     manager: SoundBankManager;
     sample: BasicSample;
     setView: SetViewType;
-    samples: BasicSample[];
     setSamples: (s: BasicSample[]) => void;
 }) {
     const { t } = useTranslation();
@@ -28,13 +26,13 @@ export function LinkedInstruments({
     }, [sample.linkedInstruments]);
 
     const deleteSample = () => {
-        const mainIndex = samples.indexOf(sample);
+        const mainIndex = manager.bank.samples.indexOf(sample);
         const actions = [
             new DeleteSampleAction(mainIndex, setSamples, setView)
         ];
         // delete the other one too if linked and unused
         if (sample?.linkedSample?.useCount === 0) {
-            let index = samples.indexOf(sample.linkedSample);
+            let index = manager.bank.samples.indexOf(sample.linkedSample);
             if (index > mainIndex) {
                 index--;
             }

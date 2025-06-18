@@ -9,32 +9,21 @@ import {
 import type { AudioEngine } from "../../core_backend/audio_engine.ts";
 import "./sample_editor.css";
 import * as React from "react";
-import {
-    type RefObject,
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState
-} from "react";
+import { useCallback, useEffect, useState } from "react";
 import { WaveView } from "./wave_view/wave_view.tsx";
 import SoundBankManager from "../../core_backend/sound_bank_manager.ts";
 import { useTranslation } from "react-i18next";
-import { audioBufferToWav } from "spessasynth_lib";
 import { KEYBOARD_TARGET_CHANNEL } from "../../keyboard/target_channel.ts";
 import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
 import { LinkedInstruments } from "./linked_instruments/linked_instruments.tsx";
-import { ControllerRange } from "../../fancy_inputs/controller_range/controller_range.tsx";
 import { TypeSelector } from "./type_selector/type_selector.tsx";
 import type { SetViewType } from "../bank_editor.tsx";
 import { SetSampleTypeAction } from "./set_sample_type_action.ts";
 import { EditSampleAction } from "./edit_sample_action.ts";
-import type { MenuListRef } from "../../menu_list/menu_list.tsx";
+import { SampleTools } from "./sample_tools.tsx";
 
 const MIN_SAMPLE_RATE = 8000;
 const MAX_SAMPLE_RATE = 96000;
-const DEFAULT_SAMPLE_GAIN = 0.4;
-const ZOOM_PER_SAMPLE = 50000 / 6_000_000;
 
 export type SamplePlayerState = "stopped" | "playing" | "playing_loop";
 
@@ -45,7 +34,6 @@ type SampleEditorProps = {
     setView: SetViewType;
     setSamples: (s: BasicSample[]) => void;
     samples: BasicSample[];
-    menuRef: RefObject<MenuListRef | null>;
 };
 
 export const SampleEditor = React.memo(function ({
@@ -54,24 +42,21 @@ export const SampleEditor = React.memo(function ({
     setView,
     manager,
     setSamples,
-    samples,
-    menuRef
+    samples
 }: SampleEditorProps) {
     const { t } = useTranslation();
-    const sampleIndex = useMemo(
-        () => samples.indexOf(sample),
-        [samples, sample]
-    );
-    const [sampleData, setSampleDataInternal] = useState(sample.getAudioData());
+    const sampleData = sample.getAudioData();
     const setSampleData = (data: Float32Array, rate: number) => {
         setSampleRate(rate);
         setLoopStart(0);
         setLoopEnd(data.length - 1);
         sample.setAudioData(data);
-        setSampleDataInternal(data);
     };
-    const [zoom, setZoom] = useState(1);
-    const [inputZoom, setInputZoom] = useState(100);
+
+    const updateSamples = useCallback(
+        () => setSamples([...samples]),
+        [samples, setSamples]
+    );
 
     // make the sample playable
     useEffect(() => {
@@ -99,17 +84,13 @@ export const SampleEditor = React.memo(function ({
         sample
     ]);
 
-    const [sampleType, setSampleTypeInternal] = useState(
-        sample.sampleType as SampleTypeValue
-    );
-    const [linkedSample, setLinkedSampleInternal] = useState(
-        sample.linkedSample
-    );
+    const sampleType = sample.sampleType as SampleTypeValue;
+    const linkedSample = sample.linkedSample;
     const setLinkedSample = (type: SampleTypeValue, s?: BasicSample) => {
         // no need to use two actions a setSampleType automatically adjusts the second sample
         const action = [
             new SetSampleTypeAction(
-                sampleIndex,
+                sample,
                 sample.linkedSample,
                 sample.sampleType,
                 s,
@@ -117,13 +98,7 @@ export const SampleEditor = React.memo(function ({
             )
         ];
         manager.modifyBank(action);
-        setSampleTypeInternal(sample.sampleType);
-        setLinkedSampleInternal(s);
     };
-    const linkedIndex = useMemo(
-        () => (linkedSample ? samples.indexOf(linkedSample) : -1),
-        [samples, linkedSample]
-    );
 
     const changeSampleProp = useCallback(
         function <K extends keyof BasicSample>(
@@ -131,48 +106,54 @@ export const SampleEditor = React.memo(function ({
             oldValue: BasicSample[K],
             newValue: BasicSample[K]
         ) {
-            const oldVal: Partial<BasicSample> = {};
-            oldVal[prop] = oldValue;
-            const newVal: Partial<BasicSample> = {};
-            newVal[prop] = newValue;
-            const actions = [new EditSampleAction(sampleIndex, oldVal, newVal)];
+            const actions = [
+                new EditSampleAction(
+                    sample,
+                    prop,
+                    oldValue,
+                    newValue,
+                    updateSamples
+                )
+            ];
             if (linkedSample) {
-                const oldLinkedVal: Partial<BasicSample> = {};
-                oldLinkedVal[prop] = linkedSample[prop];
-                actions.push(new EditSampleAction(linkedIndex, oldVal, newVal));
+                actions.push(
+                    new EditSampleAction(
+                        linkedSample,
+                        prop,
+                        linkedSample[prop],
+                        newValue,
+                        updateSamples
+                    )
+                );
             }
             manager.modifyBank(actions);
         },
-        [linkedIndex, linkedSample, manager, sampleIndex]
+        [linkedSample, manager, sample, updateSamples]
     );
 
-    const [loopStart, setLoopStartInternal] = useState(
-        sample.sampleLoopStartIndex
-    );
+    const loopStart = sample.sampleLoopStartIndex;
     const setLoopStart = (newStart: number) => {
         newStart = Math.min(newStart, loopEnd, sampleData.length - 1);
         if (newStart === loopStart) {
             return newStart;
         }
         changeSampleProp("sampleLoopStartIndex", loopStart, newStart);
-        setLoopStartInternal(newStart);
         return newStart;
     };
 
-    const [loopEnd, setLoopEndInternal] = useState(sample.sampleLoopEndIndex);
+    const loopEnd = sample.sampleLoopEndIndex;
     const setLoopEnd = (newEnd: number) => {
         newEnd = Math.max(newEnd, loopStart, 0);
         if (newEnd === loopEnd) {
             return newEnd;
         }
         changeSampleProp("sampleLoopEndIndex", loopEnd, newEnd);
-        setLoopEndInternal(newEnd);
         return newEnd;
     };
-    const [name, setNameInternal] = useState(sample.sampleName);
+    const sampleName = sample.sampleName;
     const setName = (n: string) => {
-        if (n === name) {
-            return;
+        if (n === sampleName) {
+            return n;
         }
         n = n.substring(0, 19); // keep spare space for "R" or "L"
         if (n[n.length - 1] === "R" || n[n.length - 1] === "L") {
@@ -191,9 +172,11 @@ export const SampleEditor = React.memo(function ({
 
         const actions = [
             new EditSampleAction(
-                sampleIndex,
-                { sampleName: name },
-                { sampleName: newName }
+                sample,
+                "sampleName",
+                sampleName,
+                newName,
+                updateSamples
             )
         ];
         if (linkedSample) {
@@ -205,196 +188,54 @@ export const SampleEditor = React.memo(function ({
             }
             actions.push(
                 new EditSampleAction(
-                    linkedIndex,
-                    { sampleName: linkedSample.sampleName },
-                    { sampleName: secondNewName }
+                    linkedSample,
+                    "sampleName",
+                    linkedSample.sampleName,
+                    secondNewName,
+                    updateSamples
                 )
             );
         }
 
         manager.modifyBank(actions);
-        setNameInternal(n);
-        menuRef?.current?.updateMenuList();
+        return newName;
     };
 
-    const [sampleRate, setSampleRateInternal] = useState(sample.sampleRate);
+    const sampleRate = sample.sampleRate;
     const setSampleRate = (newRate: number) => {
         newRate = Math.min(MAX_SAMPLE_RATE, Math.max(newRate, MIN_SAMPLE_RATE));
         if (newRate === sampleRate) {
             return newRate;
         }
         changeSampleProp("sampleRate", sampleRate, newRate);
-        setSampleRateInternal(newRate);
         return newRate;
     };
 
-    const [originalKey, setOriginalKeyInternal] = useState(sample.samplePitch);
+    const originalKey = sample.samplePitch;
     const setOriginalKey = (newKey: number) => {
         newKey = Math.min(127, Math.max(0, Math.floor(newKey)));
         if (newKey === originalKey) {
             return newKey;
         }
         changeSampleProp("samplePitch", originalKey, newKey);
-        setOriginalKeyInternal(newKey);
         return newKey;
     };
 
-    const [centCorrection, setCentCorrectionInternal] = useState(
-        sample.samplePitchCorrection
-    );
+    const centCorrection = sample.samplePitchCorrection;
     const setCentCorrection = (newTune: number) => {
         newTune = Math.min(99, Math.max(-99, Math.floor(newTune)));
         if (newTune === centCorrection) {
             return newTune;
         }
         changeSampleProp("samplePitchCorrection", centCorrection, newTune);
-        setCentCorrectionInternal(newTune);
         return newTune;
     };
 
-    const buffer = useMemo(() => {
-        const buf = engine.context.createBuffer(
-            1,
-            sampleData.length,
-            sampleRate
-        );
-        buf.getChannelData(0).set(sampleData);
-        return buf;
-    }, [engine.context, sampleRate, sampleData]);
-
     const [playerState, setPlayerState] =
         useState<SamplePlayerState>("stopped");
-    const playerRef = useRef<AudioBufferSourceNode | null>(null);
     const [playbackStart, setPlaybackStart] = useState(0);
-
-    const stopSampleInternal = () => {
-        if (playerRef.current) {
-            try {
-                playerRef.current.stop();
-            } catch (e) {
-                console.warn("audio already stopped or invalid", e);
-            }
-            playerRef.current.disconnect();
-        }
-    };
-
-    // stop and clean up on unmounting
-    useEffect(() => {
-        return stopSampleInternal;
-    }, []);
-
-    const playSample = (loop: boolean) => {
-        stopSampleInternal();
-        const player = engine.context.createBufferSource();
-        player.detune.value = centCorrection;
-        player.buffer = buffer;
-        player.onended = stopPlayer;
-        playerRef.current = player;
-        if (loop) {
-            player.loopStart = loopStart / sampleRate;
-            player.loopEnd = loopEnd / sampleRate;
-            player.loop = true;
-        }
-
-        const gain = new GainNode(engine.context, {
-            gain: DEFAULT_SAMPLE_GAIN
-        });
-        player.connect(gain).connect(engine.targetNode);
-        setPlaybackStart(engine.context.currentTime - 0.1);
-        player.start();
-        setPlayerState(loop ? "playing_loop" : "playing");
-    };
-
-    const stopPlayer = () => {
-        stopSampleInternal();
-        setPlaybackStart(-1);
-        setPlayerState("stopped");
-    };
-
-    const exportWav = () => {
-        const blob = audioBufferToWav(buffer, false);
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = `${name}.wav`;
-        console.info(a);
-        a.click();
-    };
-
-    const [importError, setImportError] = useState("");
     const [loading, setLoading] = useState(false);
-    const replaceData = () => {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = "audio/*";
-        input.onchange = async () => {
-            const file = input?.files?.[0];
-            if (!file) {
-                return;
-            }
-            stopSampleInternal();
-            setImportError("");
-            setLoading(true);
-            let audioBuffer: AudioBuffer;
-            try {
-                audioBuffer = await engine.context.decodeAudioData(
-                    await file.arrayBuffer()
-                );
-            } catch {
-                setImportError(t("sampleLocale.tools.invalidAudioFile"));
-                return;
-            } finally {
-                setLoading(false);
-            }
-
-            if (audioBuffer.numberOfChannels === 2) {
-                // check for linked sample
-                if (
-                    (sampleType === sampleTypes.leftSample ||
-                        sampleType === sampleTypes.rightSample) &&
-                    linkedSample
-                ) {
-                    const left = audioBuffer.getChannelData(0);
-                    const right = audioBuffer.getChannelData(1);
-                    const linked = linkedSample;
-
-                    if (sampleType === sampleTypes.leftSample) {
-                        linked.setAudioData(right);
-                        linked.sampleRate = audioBuffer.sampleRate;
-                        linked.sampleLoopStartIndex = 0;
-                        linked.sampleLoopEndIndex = right.length - 1;
-
-                        setSampleData(left, audioBuffer.sampleRate);
-                    } else {
-                        linked.setAudioData(left);
-                        linked.sampleRate = audioBuffer.sampleRate;
-                        linked.sampleLoopStartIndex = 0;
-                        linked.sampleLoopEndIndex = left.length - 1;
-
-                        setSampleData(right, audioBuffer.sampleRate);
-                    }
-                } else {
-                    const finalData = new Float32Array(audioBuffer.length);
-                    // mix down to mono
-                    const buffers: Float32Array[] = [];
-                    for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
-                        buffers.push(audioBuffer.getChannelData(i));
-                    }
-                    for (let i = 0; i < audioBuffer.length; i++) {
-                        const sum = buffers.reduce((s, buf) => s + buf[i], 0);
-                        finalData[i] = sum / audioBuffer.numberOfChannels;
-                    }
-                    setSampleData(finalData, audioBuffer.sampleRate);
-                }
-            } else if (audioBuffer.numberOfChannels === 1) {
-                audioBuffer.copyFromChannel(audioBuffer.getChannelData(0), 0);
-            } else {
-                setImportError(t("sampleLocale.tools.tooManyChannels"));
-            }
-        };
-        input.click();
-    };
-
-    const maxZoom = Math.max(5, ZOOM_PER_SAMPLE * sampleData.length + 1);
+    const [zoom, setZoom] = useState(1);
 
     return (
         <div className={"sample_editor"}>
@@ -414,12 +255,12 @@ export const SampleEditor = React.memo(function ({
             <div className={"info_column"}>
                 <div className={"info_split"}>
                     <div className={"info_column"}>
-                        <input
-                            className={"pretty_input sample_name monospaced"}
-                            defaultValue={name}
+                        <WaitingInput
+                            setValue={setName}
+                            value={sampleName}
                             maxLength={40}
+                            className={"pretty_input sample_name monospaced"}
                             placeholder={t("sampleLocale.sampleName")}
-                            onBlur={(e) => setName(e.target.value)}
                         />
                         <div className={"info_column"}>
                             <div className={"info_field"}>
@@ -498,80 +339,21 @@ export const SampleEditor = React.memo(function ({
                             ></TypeSelector>
                         </div>
                     </div>
-                    <div className={`info_column ${loading ? "disabled" : ""}`}>
-                        <h2>{t("sampleLocale.tools.title")}</h2>
-                        <div className={"info_column tools"}>
-                            <div
-                                className={`pretty_button ${!loading ? "responsive_button hover_brightness" : ""}`}
-                                onClick={exportWav}
-                            >
-                                {t("sampleLocale.tools.wavExport")}
-                            </div>
-                            {playerState === "stopped" && (
-                                <>
-                                    <div
-                                        className={`pretty_button ${!loading ? "responsive_button hover_brightness" : ""}`}
-                                        onClick={() => playSample(false)}
-                                    >
-                                        {t("sampleLocale.tools.play")}
-                                    </div>
-
-                                    <div
-                                        className={`pretty_button ${!loading ? "responsive_button hover_brightness" : ""}`}
-                                        onClick={() => playSample(true)}
-                                    >
-                                        {t("sampleLocale.tools.playLooped")}
-                                    </div>
-                                </>
-                            )}
-                            {playerState !== "stopped" && (
-                                // duplicated to match the count of play buttons
-                                <>
-                                    <div
-                                        className={`pretty_button ${!loading ? "responsive_button hover_brightness" : ""}`}
-                                        onClick={stopPlayer}
-                                    >
-                                        {t("sampleLocale.tools.stop")}
-                                    </div>
-                                    <div
-                                        className={`pretty_button ${!loading ? "responsive_button hover_brightness" : ""}`}
-                                        onClick={stopPlayer}
-                                    >
-                                        {t("sampleLocale.tools.stop")}
-                                    </div>
-                                </>
-                            )}
-                            <div
-                                onClick={replaceData}
-                                className={`pretty_button ${!loading ? "responsive_button hover_brightness" : ""}`}
-                            >
-                                {loading
-                                    ? t("sampleLocale.tools.loading")
-                                    : importError ||
-                                      t("sampleLocale.tools.replaceAudio")}
-                            </div>
-
-                            <ControllerRange
-                                max={(maxZoom - 1) * 100}
-                                min={100}
-                                onChange={(n) => {
-                                    n /= 100;
-                                    const mapped = (n - 1) / (maxZoom - 1);
-                                    const exped = Math.pow(mapped, 5);
-                                    setZoom(exped * (maxZoom - 1) + 1);
-                                    setInputZoom(n * 100);
-                                }}
-                                value={inputZoom}
-                                text={`${t("sampleLocale.waveZoom")}: ${
-                                    Math.floor(zoom * 100_00) / 100
-                                }%`}
-                            ></ControllerRange>
-                        </div>
-                    </div>
+                    <SampleTools
+                        loading={loading}
+                        setLoading={setLoading}
+                        zoom={zoom}
+                        setZoom={setZoom}
+                        playerState={playerState}
+                        setPlayerState={setPlayerState}
+                        setPlaybackStart={setPlaybackStart}
+                        sample={sample}
+                        engine={engine}
+                        setSampleData={setSampleData}
+                    />
                 </div>
                 <LinkedInstruments
                     manager={manager}
-                    samples={samples}
                     setSamples={setSamples}
                     sample={sample}
                     setView={setView}

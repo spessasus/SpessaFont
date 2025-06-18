@@ -1,23 +1,34 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 
-type WaitingInputProps = React.InputHTMLAttributes<HTMLInputElement> & {
-    value: number;
-    setValue: (v: number) => number;
+type WaitingInputProps<T extends string | number> = Omit<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    "value" | "onChange"
+> & {
+    value: T;
+    setValue: (v: T) => T;
     suffix?: string;
 };
 
-// a numeric input that waits for the user to finish typing before it sends a value
-export function WaitingInput({
+export function WaitingInput<T extends string | number>({
     value,
     setValue,
     suffix = "",
     ...attributes
-}: WaitingInputProps) {
+}: WaitingInputProps<T>) {
     const [text, setText] = useState(value.toString());
-    const setVal = (v: number) => {
-        setText(setValue(v).toString());
+
+    const setVal = (v: string) => {
+        let parsedValue: T;
+        if (typeof value === "number") {
+            parsedValue = (parseFloat(v) as T) || (0 as T);
+        } else {
+            parsedValue = v as T;
+        }
+        const newValue = setValue(parsedValue);
+        setText(newValue.toString());
     };
+
     useEffect(() => {
         setText(value.toString());
     }, [value]);
@@ -26,10 +37,14 @@ export function WaitingInput({
         <input
             {...attributes}
             value={text + suffix}
-            onBlur={(e) =>
-                setVal(parseInt(e.target.value.replaceAll(suffix, "")) || 0)
-            }
-            onChange={(e) => setText(e.target.value.replaceAll(suffix, ""))}
+            onBlur={(e) => {
+                const stripped = e.target.value.replaceAll(suffix, "");
+                setVal(stripped);
+            }}
+            onChange={(e) => {
+                const stripped = e.target.value.replaceAll(suffix, "");
+                setText(stripped);
+            }}
         />
     );
 }
