@@ -1,7 +1,7 @@
 <!--suppress HtmlDeprecatedAttribute, CheckImageSize -->
 # SpessaFont
 
-<p align='center'><img width='500' alt='hammer obliterating a piano' src="src/logo.png"/></p>
+<p align='center'><img width='300' alt='hammer obliterating a piano' src="src/logo.png"/></p>
 Online SoundFont/DLS Editor, written in TypeScript and React.
 
 
