@@ -4,13 +4,6 @@
 <p align='center'><img width='500' alt='hammer obliterating a piano' src="src/logo.png"/></p>
 Online SoundFont/DLS Editor, written in TypeScript and React.
 
-_Editing sound banks has never been easier!_
-
-
-<img alt="Click to see the source" src="wallace.svg"/>
-
-<i>beautiful animation by my friend, AlfaFranekPolak</i>
-
 
 
 This ~~will be~~ an online SoundFont/DLS editor based on [spessasynth_core](https://github.com/spessasus/spessasynth_core) and heavily inspired by [polyphone](https://github.com/davy7125/polyphone).
@@ -37,3 +30,12 @@ Stay tuned!
 3. Clone
 4. `npm install`
 5. `npm run build`
+
+
+
+_Editing sound banks has never been easier!_
+
+
+<p align='center'><img width='500' alt='wallace' src="https://github.com/user-attachments/assets/e263f327-1b40-476f-81c6-322077a20cf0"/></p>
+
+<i>beautiful animation by my friend, AlfaFranekPolak</i>
