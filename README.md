@@ -50,7 +50,7 @@ Stay tuned!
 
 > [!NOTE]
 > The sources sometimes may be not buildable for production (e.g., unused variables throwing TS errors)
-> So it's recommended to use the dev mode.
+>, So it's recommended to use the dev mode.
 
 1. Make sure you have Node.js installed
 2. Clone this repository
