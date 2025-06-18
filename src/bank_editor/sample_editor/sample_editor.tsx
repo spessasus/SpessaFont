@@ -562,9 +562,9 @@ export const SampleEditor = React.memo(function ({
                                     setInputZoom(n * 100);
                                 }}
                                 value={inputZoom}
-                                text={`${t("sampleLocale.waveZoom")}: ${Math.floor(
-                                    zoom * 100
-                                )}%`}
+                                text={`${t("sampleLocale.waveZoom")}: ${
+                                    Math.floor(zoom * 100_00) / 100
+                                }%`}
                             ></ControllerRange>
                         </div>
                     </div>
