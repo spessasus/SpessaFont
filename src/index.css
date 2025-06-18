@@ -64,7 +64,7 @@
 }
 
 .spessafont_main.light_mode, .spessafont_main.light_mode * {
-    --top-buttons-color-start: #eee;
+    --top-buttons-color-start: #ccc;
     --top-buttons-color-end: #fff;
 
     --top-color-start: #ddd;

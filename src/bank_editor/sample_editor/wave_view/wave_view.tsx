@@ -187,17 +187,17 @@ export const WaveView = React.memo(function ({
             const loopStartX = (loopStart / dataLength) * width;
             const loopEndX = (loopEnd / dataLength) * width;
 
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 3;
             // offset by -1 to make the line in the middle
             ctx.strokeStyle = "green";
             ctx.beginPath();
-            ctx.moveTo(loopStartX - xOffset - 1, 0);
+            ctx.moveTo(loopStartX - xOffset, 0);
             ctx.lineTo(loopStartX - xOffset, height);
             ctx.stroke();
 
             ctx.strokeStyle = "red";
             ctx.beginPath();
-            ctx.moveTo(loopEndX - xOffset - 1, 0);
+            ctx.moveTo(loopEndX - xOffset, 0);
             ctx.lineTo(loopEndX - xOffset, height);
             ctx.stroke();
 

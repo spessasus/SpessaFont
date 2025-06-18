@@ -28,5 +28,14 @@ export function InstrumentEditor({
             engine.processor.programChange(KEYBOARD_TARGET_CHANNEL, 0);
         };
     }, [engine.processor, instrument, manager.bank]);
-    return <div>Test! Editing instrument: {instrument.instrumentName}</div>;
+    return (
+        <div className={"instrument_editor"}>
+            {instrument.instrumentName}
+            <div>
+                {instrument.instrumentZones.map((z) => (
+                    <div>{z.sample.sampleName}</div>
+                ))}
+            </div>
+        </div>
+    );
 }

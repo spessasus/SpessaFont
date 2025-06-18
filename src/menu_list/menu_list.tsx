@@ -60,6 +60,7 @@ export const MenuList = React.memo(function ({
     setPresets,
     ref
 }: MenuListProps) {
+    const [open, setOpen] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [showPresets, setShowPresets] = useState(view instanceof BasicPreset);
     const [showInstruments, setShowInstruments] = useState(
@@ -265,6 +266,14 @@ export const MenuList = React.memo(function ({
         overscan: OVERSCAN
     });
 
+    if (!open) {
+        return (
+            <div className={"menu_list_closed"} onClick={() => setOpen(true)}>
+                {"\u25B6"}
+            </div>
+        );
+    }
+
     const setSample = (s: BasicSample) => setView(s);
     const setInstrument = (i: BasicInstrument) => setView(i);
 
@@ -275,6 +284,16 @@ export const MenuList = React.memo(function ({
                 className={`item_group_header ${view === "info" ? "opened" : ""}`}
             >
                 <h2>{t("presetList.overview")}</h2>
+                <div
+                    className={"dropdown_button"}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        setOpen(false);
+                    }}
+                >
+                    {"\u25C0"}
+                </div>
             </div>
 
             <DropdownHeader

@@ -6,6 +6,7 @@
 
 .menu_list_main * {
     user-select: none;
+    transition: none;
 }
 
 .menu_list_scrollable {
@@ -15,10 +16,6 @@
     overflow-y: auto;
     scrollbar-gutter: stable both-edges;
     scrollbar-width: auto;
-}
-
-.menu_list_scrollable * {
-    transition: none;
 }
 
 .item_group {
@@ -42,4 +39,23 @@
 
 .search_bar input {
     flex-grow: 1;
+}
+
+.menu_list_closed {
+    transition: none;
+    display: flex;
+    align-items: center;
+    align-self: start;
+    padding: 0.5rem;
+    font-size: 1.5rem;
+    background: var(--top-buttons-color);
+    justify-content: space-between;
+    border-radius: 0 var(--primary-border-radius) var(--primary-border-radius) 0;
+    border: solid 0.2rem var(--track-border-color);
+    cursor: pointer;
+    z-index: var(--top-index);
+}
+
+.menu_list_closed:active {
+    border-color: var(--border-color);
 }
