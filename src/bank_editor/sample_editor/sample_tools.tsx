@@ -81,12 +81,19 @@ export function SampleTools({
         };
     }, [sample, setZoom]);
 
+    // update loop
     useEffect(() => {
         if (playerState === "playing_loop" && playerRef.current) {
             playerRef.current.loopStart = loopStart / sampleRate;
             playerRef.current.loopEnd = loopEnd / sampleRate;
         }
     }, [loopEnd, loopStart, playerState, sampleRate]);
+
+    useEffect(() => {
+        if (playerState !== "stopped" && playerRef.current) {
+            playerRef.current.detune.value = centCorrection;
+        }
+    }, [centCorrection, playerState]);
 
     const playSample = (loop: boolean) => {
         stopSampleInternal();

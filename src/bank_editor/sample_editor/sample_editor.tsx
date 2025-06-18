@@ -251,6 +251,7 @@ export const SampleEditor = React.memo(function ({
                 context={engine.context}
                 playerState={playerState}
                 playbackStartTime={playbackStart}
+                centCorrection={centCorrection}
             ></WaveView>
             <div className={"info_column"}>
                 <div className={"info_split"}>

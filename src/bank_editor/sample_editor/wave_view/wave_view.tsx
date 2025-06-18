@@ -19,6 +19,7 @@ type WaveViewProps = {
     context: AudioContext;
     zoom: number;
     disabled: boolean;
+    centCorrection: number;
 };
 
 export const WaveView = React.memo(function ({
@@ -32,11 +33,17 @@ export const WaveView = React.memo(function ({
     playerState,
     context,
     zoom,
-    disabled
+    disabled,
+    centCorrection
 }: WaveViewProps) {
     const waveformRef = useRef<HTMLCanvasElement>(null);
     const pointsAndInfoRef = useRef<HTMLCanvasElement>(null);
     const scrollerRef = useRef<HTMLDivElement>(null);
+
+    const playbackRate = useMemo(
+        () => Math.pow(2, centCorrection / 1200),
+        [centCorrection]
+    );
 
     const [size, setSize] = useState({ width: 300, height: 100 });
     const [xOffset, setXOffset] = useState(0);
@@ -203,7 +210,8 @@ export const WaveView = React.memo(function ({
 
             // draw playback cursor
             if (isPlaying) {
-                const elapsed = context.currentTime - playbackStartTime;
+                const elapsed =
+                    (context.currentTime - playbackStartTime) * playbackRate;
                 let percent: number;
                 if (
                     elapsed > loopEndTime &&
@@ -258,6 +266,7 @@ export const WaveView = React.memo(function ({
         fontColor,
         loopEnd,
         loopStart,
+        playbackRate,
         playbackStartTime,
         playerState,
         sampleLength,
