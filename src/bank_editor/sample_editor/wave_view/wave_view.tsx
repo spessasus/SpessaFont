@@ -4,6 +4,8 @@ import type { SamplePlayerState } from "../sample_editor.tsx";
 import "./wave_view.css";
 
 const SCALE_LINES_COUNT = 8;
+const MIN_WAVE_THICKNESS = 1;
+const LINE_WIDTH_CONSTANT = 0.9;
 
 type WaveViewProps = {
     data: Float32Array;
@@ -80,7 +82,7 @@ export const WaveView = React.memo(function ({
         ctx.clearRect(0, 0, canvas.width, height);
 
         // draw scale lines
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 1.5;
         ctx.strokeStyle = getStyle("--top-buttons-color-start");
         const step = height / SCALE_LINES_COUNT;
         for (let i = 1; i < SCALE_LINES_COUNT; i++) {
@@ -93,7 +95,7 @@ export const WaveView = React.memo(function ({
         // draw vertical lines if zoomed in far enough
         const pixelsPerSample = width / dataLength;
         if (pixelsPerSample > 6) {
-            ctx.lineWidth = 0.5;
+            ctx.lineWidth = 1;
             const index = Math.floor((xOffset / width) * dataLength);
             const initialX = index / width;
             for (let x = initialX; x < canvas.width; x += pixelsPerSample) {
@@ -106,15 +108,21 @@ export const WaveView = React.memo(function ({
 
         // draw waveform
         ctx.strokeStyle = getStyle("--primary-color");
-        const samplesPerPixel = Math.floor(dataLength / width) || 1;
-        ctx.lineWidth = Math.max(1, 5 / samplesPerPixel);
+        const samplesPerPixel = dataLength / width;
+        ctx.lineWidth = Math.max(
+            MIN_WAVE_THICKNESS,
+            LINE_WIDTH_CONSTANT / samplesPerPixel
+        );
         const amplifier = halfHeight;
         ctx.beginPath();
 
         if (samplesPerPixel >= 7) {
             for (let x = xOffset; x < xEnd; x++) {
-                const start = x * samplesPerPixel;
-                const end = Math.min(start + samplesPerPixel, dataLength);
+                const start = Math.floor(x * samplesPerPixel);
+                const end = Math.min(
+                    Math.floor(start + samplesPerPixel),
+                    dataLength
+                );
 
                 let min = 1.0;
                 let max = -1.0;
@@ -310,7 +318,7 @@ export const WaveView = React.memo(function ({
             >
                 <div
                     className={"fake_scroll"}
-                    style={{ width: `${zoom * 100}%` }}
+                    style={{ width: `${size.width * zoom}px` }}
                 ></div>
             </div>
         </div>

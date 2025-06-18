@@ -28,6 +28,7 @@ This is also my first TypeScript and React project.
   - **Automatic stereo samples handling:** *Including import and name editing!*
   - **Replace samples in-place:** *Broken sample referenced everywhere? No problem!*
   - **Easy loop point setting:** *Just click!*
+  - **Insane zoom values:** *Why not?*
 
 
 ## Building from source
