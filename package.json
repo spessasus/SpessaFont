@@ -12,7 +12,6 @@
     "release": "debug_scripts/npm_core.sh"
   },
   "dependencies": {
-    "@dr.pogodin/react-helmet": "^3.0.2",
     "@tanstack/react-virtual": "^3.13.10",
     "i18next": "^25.2.1",
     "react": "^19.1.0",
