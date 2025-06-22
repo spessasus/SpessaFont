@@ -9,7 +9,7 @@ import {
 import type { AudioEngine } from "../../core_backend/audio_engine.ts";
 import "./sample_editor.css";
 import * as React from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { WaveView } from "./wave_view/wave_view.tsx";
 import SoundBankManager from "../../core_backend/sound_bank_manager.ts";
 import { useTranslation } from "react-i18next";
@@ -36,6 +36,12 @@ type SampleEditorProps = {
     samples: BasicSample[];
 };
 
+function midiNoteToPitchClass(noteNumber: number): string {
+    return ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"][
+        noteNumber % 12
+    ];
+}
+
 export const SampleEditor = React.memo(function ({
     engine,
     sample,
@@ -46,6 +52,14 @@ export const SampleEditor = React.memo(function ({
 }: SampleEditorProps) {
     const { t } = useTranslation();
     const sampleData = sample.getAudioData();
+    const sampleIndex = useMemo(
+        () => samples.indexOf(sample),
+        [samples, sample]
+    );
+    if (sampleIndex < 0) {
+        throw new Error("Sample does not exist in the sound bank.");
+    }
+
     const setSampleData = (data: Float32Array, rate: number) => {
         setSampleRate(rate);
         setLoopStart(0);
@@ -86,11 +100,15 @@ export const SampleEditor = React.memo(function ({
 
     const sampleType = sample.sampleType as SampleTypeValue;
     const linkedSample = sample.linkedSample;
+    const linkedIndex = useMemo(
+        () => (linkedSample ? samples.indexOf(linkedSample) : -1),
+        [samples, linkedSample]
+    );
     const setLinkedSample = (type: SampleTypeValue, s?: BasicSample) => {
         // no need to use two actions a setSampleType automatically adjusts the second sample
         const action = [
             new SetSampleTypeAction(
-                sample,
+                sampleIndex,
                 sample.linkedSample,
                 sample.sampleType,
                 s,
@@ -108,7 +126,7 @@ export const SampleEditor = React.memo(function ({
         ) {
             const actions = [
                 new EditSampleAction(
-                    sample,
+                    sampleIndex,
                     prop,
                     oldValue,
                     newValue,
@@ -118,7 +136,7 @@ export const SampleEditor = React.memo(function ({
             if (linkedSample) {
                 actions.push(
                     new EditSampleAction(
-                        linkedSample,
+                        linkedIndex,
                         prop,
                         linkedSample[prop],
                         newValue,
@@ -128,7 +146,7 @@ export const SampleEditor = React.memo(function ({
             }
             manager.modifyBank(actions);
         },
-        [linkedSample, manager, sample, updateSamples]
+        [linkedIndex, linkedSample, manager, sampleIndex, updateSamples]
     );
 
     const loopStart = sample.sampleLoopStartIndex;
@@ -172,7 +190,7 @@ export const SampleEditor = React.memo(function ({
 
         const actions = [
             new EditSampleAction(
-                sample,
+                sampleIndex,
                 "sampleName",
                 sampleName,
                 newName,
@@ -188,7 +206,7 @@ export const SampleEditor = React.memo(function ({
             }
             actions.push(
                 new EditSampleAction(
-                    linkedSample,
+                    linkedIndex,
                     "sampleName",
                     linkedSample.sampleName,
                     secondNewName,
@@ -309,9 +327,9 @@ export const SampleEditor = React.memo(function ({
                                     setValue={setOriginalKey}
                                     value={originalKey}
                                     className={"pretty_input monospaced"}
-                                    type={"number"}
-                                    min={0}
-                                    max={127}
+                                    maxLength={7}
+                                    suffix={` (${midiNoteToPitchClass(originalKey)})`}
+                                    style={{ width: "5rem" }}
                                     placeholder={t("sampleLocale.originalKey")}
                                 ></WaitingInput>
                             </div>

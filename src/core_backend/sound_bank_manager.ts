@@ -1,16 +1,14 @@
 import {
-    type BasicInstrument,
-    type BasicPreset,
-    type BasicSample,
     BasicSoundBank,
     loadSoundFont,
+    type SoundBankElement,
     type SoundFontInfoType,
     SpessaSynthProcessor,
     type SpessaSynthSequencer
 } from "spessasynth_core";
 import { type HistoryActionGroup, HistoryManager } from "./history.ts";
 
-export type BankEditView = "info" | BasicSample | BasicPreset | BasicInstrument;
+export type BankEditView = "info" | SoundBankElement;
 
 export default class SoundBankManager {
     processor: SpessaSynthProcessor;

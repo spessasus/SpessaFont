@@ -122,6 +122,8 @@ declare module "spessasynth_core" {
         createZone(): BasicPresetZone;
     }
 
+    export type SoundBankElement = BasicSample | BasicInstrument | BasicPreset;
+
     export type SoundFontInfoType =
         | "INAM"
         | "ICRD"
