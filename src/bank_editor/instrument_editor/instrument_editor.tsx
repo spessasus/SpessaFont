@@ -32,8 +32,10 @@ export function InstrumentEditor({
         <div className={"instrument_editor"}>
             {instrument.instrumentName}
             <div>
-                {instrument.instrumentZones.map((z) => (
-                    <div>{z.sample.sampleName}</div>
+                {instrument.instrumentZones.map((z, i) => (
+                    <div key={z.sample.sampleName + i.toString(16)}>
+                        {z.sample.sampleName}
+                    </div>
                 ))}
             </div>
         </div>

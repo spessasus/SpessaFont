@@ -50,12 +50,30 @@ export function SampleTools({
     const [inputZoom, setInputZoom] = useState(100);
 
     const buffer = useMemo(() => {
+        // resample if sample range is ridiculous
+        // test case: Calm 4 with a whopping 384 kHz
+
+        let audioData = sampleData;
+        let bufferRate = sampleRate;
+        if (sampleRate < 8000 || sampleRate > 96000) {
+            // resample to 48kHz
+            const ratio = 48000 / sampleRate;
+            const resampled = new Float32Array(
+                Math.floor(audioData.length * ratio)
+            );
+            for (let i = 0; i < resampled.length; i++) {
+                resampled[i] = audioData[Math.floor(i * (1 / ratio))];
+            }
+            audioData = resampled;
+            bufferRate = 48000;
+        }
+
         const buf = engine.context.createBuffer(
             1,
             sampleData.length,
-            sampleRate
+            bufferRate
         );
-        buf.getChannelData(0).set(sampleData);
+        buf.getChannelData(0).set(audioData);
         return buf;
     }, [engine.context, sampleRate, sampleData]);
 

@@ -5,7 +5,7 @@ import "./default_modulators/default_modulators.css";
 import { type JSX, useState } from "react";
 import { DefaultModulatorList } from "./default_modulators/default_modulators.tsx";
 import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
-import type { ClipBoardManager } from "../../core_backend/clipboard_manager.ts";
+import type { ClipboardManager } from "../../core_backend/clipboard_manager.ts";
 import { useTranslation } from "react-i18next";
 
 export function SoundBankInfo({
@@ -15,7 +15,7 @@ export function SoundBankInfo({
     destinationOptions
 }: {
     manager: SoundBankManager;
-    clipboard: ClipBoardManager;
+    clipboard: ClipboardManager;
     ccOptions: JSX.Element;
     destinationOptions: JSX.Element;
 }) {

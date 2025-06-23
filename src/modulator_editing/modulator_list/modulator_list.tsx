@@ -8,12 +8,12 @@ import { ModulatorView } from "../modulator/modulator.tsx";
 import "./modulator_list.css";
 import { useTranslation } from "react-i18next";
 import { type JSX, useState } from "react";
-import type { ClipBoardManager } from "../../core_backend/clipboard_manager.ts";
+import type { ClipboardManager } from "../../core_backend/clipboard_manager.ts";
 
 type ModulatorListProps = {
     modulatorList: Modulator[];
     setModulatorList: (l: Modulator[]) => void;
-    clipboardManager: ClipBoardManager;
+    clipboardManager: ClipboardManager;
     ccOptions: JSX.Element;
     destinationOptions: JSX.Element;
 };
@@ -61,7 +61,7 @@ export function ModulatorList({
 
     const copyToCliboard = () => {
         const toCopy = modulatorList.filter((_m, i) => selectedMods[i]);
-        clipboardManager.setModulators(toCopy);
+        clipboardManager.copyModulators(toCopy);
         setClipboard(toCopy);
     };
 

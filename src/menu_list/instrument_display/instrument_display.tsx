@@ -1,34 +1,35 @@
 import "./instrument_display.css";
-import type { BasicInstrument, BasicSample } from "spessasynth_core";
-import { useEffect, useRef, useState } from "react";
+import type { BasicInstrument } from "spessasynth_core";
+import * as React from "react";
+import { useRef } from "react";
 import { SampleDisplay } from "../sample_display/sample_display.tsx";
 import type { BankEditView } from "../../core_backend/sound_bank_manager.ts";
+import type { SetViewType } from "../../bank_editor/bank_editor.tsx";
 
 export function InstrumentDisplay({
     instrument,
-    selectSample,
+    setView,
     onClick,
-    view
+    view,
+    open,
+    setOpen,
+    selected
 }: {
     instrument: BasicInstrument;
-    selectSample: (s: BasicSample) => unknown;
-    onClick: () => unknown;
+    selected: boolean;
+    setView: SetViewType;
+    onClick: React.MouseEventHandler<HTMLDivElement>;
     view: BankEditView;
+    open: boolean;
+    setOpen: (o: boolean) => unknown;
 }) {
-    const [open, setOpen] = useState(false);
     const elementRef = useRef<HTMLDivElement>(null);
-    const selected = view === instrument;
-    useEffect(() => {
-        if (selected) {
-            elementRef?.current?.scrollIntoView({
-                behavior: "smooth",
-                block: "center"
-            });
-        }
-    }, [selected]);
     return (
         <div className={"instrument_item_wrapper"} ref={elementRef}>
-            <div className={`instrument_item ${selected ? "selected" : ""}`}>
+            <div
+                className={`instrument_item ${selected ? "selected" : ""}`}
+                title={instrument.instrumentName}
+            >
                 <span className={"triangle"} onClick={() => setOpen(!open)}>
                     {open ? "\u25BC" : "\u25B6"}
                 </span>
@@ -43,10 +44,10 @@ export function InstrumentDisplay({
                 {open &&
                     instrument.instrumentZones.map((z, i) => (
                         <SampleDisplay
-                            view={view}
+                            selected={view === z.sample}
                             key={i}
                             sample={z.sample}
-                            onClick={() => selectSample(z.sample)}
+                            onClick={() => setView(z.sample)}
                         ></SampleDisplay>
                     ))}
             </div>

@@ -57,6 +57,10 @@ export function MenuBar({
         manager.save("dls");
     }
 
+    function sf3() {
+        manager.save("sf3");
+    }
+
     function undo() {
         manager.undo();
     }
@@ -79,7 +83,7 @@ export function MenuBar({
                 ></MenuBarItem>
                 <MenuBarItem click={sf2} text={fLoc + "saveSF2"}></MenuBarItem>
                 <MenuBarItem click={dls} text={fLoc + "saveDLS"}></MenuBarItem>
-                <MenuBarItem text={fLoc + "saveSF3"}></MenuBarItem>
+                <MenuBarItem click={sf3} text={fLoc + "saveSF3"}></MenuBarItem>
             </MenuBarDropdown>
             <MenuBarDropdown main={eLoc + "edit"}>
                 <MenuBarItem click={undo} text={eLoc + "undo"}></MenuBarItem>

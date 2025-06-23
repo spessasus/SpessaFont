@@ -2,7 +2,7 @@ import SoundBankManager, {
     type BankEditView
 } from "../core_backend/sound_bank_manager.ts";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
-import type { ClipBoardManager } from "../core_backend/clipboard_manager.ts";
+import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
 import * as React from "react";
 import { type JSX, useCallback, useEffect, useState } from "react";
 import { MenuList } from "../menu_list/menu_list.tsx";
@@ -16,7 +16,7 @@ import { SampleEditor } from "./sample_editor/sample_editor.tsx";
 export type BankEditorProps = {
     manager: SoundBankManager;
     audioEngine: AudioEngine;
-    clipboardManager: ClipBoardManager;
+    clipboardManager: ClipboardManager;
     destinationOptions: JSX.Element;
     ccOptions: JSX.Element;
 };
@@ -63,6 +63,7 @@ export function BankEditor({
         setSamples(manager.bank.samples);
         setInstruments(manager.bank.instruments);
         setPresets(manager.bank.presets);
+        setView(manager.currentView);
     }, [manager]);
 
     const updateView = useCallback(
@@ -86,6 +87,7 @@ export function BankEditor({
                 setSamples={setSamples}
                 instruments={instruments}
                 setInstruments={setInstruments}
+                clipboard={clipboardManager}
             ></MenuList>
             <div className={"main_content_window"}>
                 {view === "info" && (

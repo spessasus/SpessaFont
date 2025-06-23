@@ -7,6 +7,7 @@ import {
     type SpessaSynthSequencer
 } from "spessasynth_core";
 import { type HistoryActionGroup, HistoryManager } from "./history.ts";
+import { encodeVorbis } from "../externals/libvorbis/encode_vorbis";
 
 export type BankEditView = "info" | SoundBankElement;
 
@@ -93,12 +94,13 @@ export default class SoundBankManager {
         this.bank.destroySoundBank();
     }
 
-    save(format: "sf2" | "dls") {
+    save(format: "sf2" | "dls" | "sf3") {
         if (this.bank === undefined) {
             return;
         }
         let binary: Uint8Array;
         switch (format) {
+            default:
             case "sf2":
                 binary = this.bank.write();
                 break;
@@ -106,6 +108,16 @@ export default class SoundBankManager {
             case "dls":
                 binary = this.bank.writeDLS();
                 break;
+
+            case "sf3":
+                binary = this.bank.write({
+                    compress: true,
+                    compressionQuality: 1,
+                    compressionFunction: encodeVorbis
+                });
+        }
+        if (this.bank.soundFontInfo["ifil"] === "3.0") {
+            format = "sf3";
         }
         const buffer = binary.buffer;
         const chunks: ArrayBuffer[] = [];

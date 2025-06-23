@@ -43,6 +43,12 @@ export const localeEnglish = {
     githubPage: "Project page",
     keyboard: "Keyboard",
 
+    addNew: "Add New",
+    copy: "Copy",
+    paste: "Paste",
+    collapse: "Collapse",
+    expand: "Expand",
+
     menuBarLocale: MenuBarLocale,
     modulatorLocale: ModulatorLocale,
     generatorLocale: GeneratorLocale,

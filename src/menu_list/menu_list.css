@@ -1,7 +1,9 @@
 .menu_list_main {
     display: flex;
     flex-direction: column;
-    max-width: 35ch;
+    width: fit-content;
+    min-width: 35ch;
+    transition: none;
 }
 
 .menu_list_main * {

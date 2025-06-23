@@ -97,6 +97,10 @@ input[type=number] {
     -moz-appearance: textfield;
 }
 
+.hidden {
+    display: none !important;
+}
+
 .monospaced {
     /* This keeps the jetbrains and regular monospace height the same */
     font-size: 1rem;

@@ -23,7 +23,7 @@ import { EditSampleAction } from "./edit_sample_action.ts";
 import { SampleTools } from "./sample_tools.tsx";
 
 const MIN_SAMPLE_RATE = 8000;
-const MAX_SAMPLE_RATE = 96000;
+const MAX_SAMPLE_RATE = 192000;
 
 export type SamplePlayerState = "stopped" | "playing" | "playing_loop";
 
@@ -56,9 +56,6 @@ export const SampleEditor = React.memo(function ({
         () => samples.indexOf(sample),
         [samples, sample]
     );
-    if (sampleIndex < 0) {
-        throw new Error("Sample does not exist in the sound bank.");
-    }
 
     const setSampleData = (data: Float32Array, rate: number) => {
         setSampleRate(rate);

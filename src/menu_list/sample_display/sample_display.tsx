@@ -1,26 +1,25 @@
 import "./sample_display.css";
 import * as React from "react";
 import { useRef } from "react";
-import type { BankEditView } from "../../core_backend/sound_bank_manager.ts";
 import { BasicSample } from "spessasynth_core";
 
 export const SampleDisplay = React.memo(function ({
     sample,
     onClick,
-    view
+    selected
 }: {
     sample: BasicSample;
-    onClick: () => unknown;
-    view: BankEditView;
+    onClick: React.MouseEventHandler<HTMLDivElement>;
+    selected: boolean;
 }) {
     const elementRef = useRef<HTMLDivElement>(null);
-    const selected = view === sample;
 
     return (
         <div
             ref={elementRef}
             className={`sample_display  ${selected ? "selected" : ""}`}
             onClick={onClick}
+            title={sample.sampleName}
         >
             <svg
                 xmlns="http://www.w3.org/2000/svg"

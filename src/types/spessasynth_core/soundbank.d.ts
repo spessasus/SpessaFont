@@ -177,6 +177,12 @@ declare module "spessasynth_core" {
 
         destroySoundBank(): void;
 
+        cloneSample(s: BasicSample): BasicSample;
+
+        cloneInstrument(i: BasicInstrument): BasicInstrument;
+
+        clonePreset(p: BasicPreset): BasicPreset;
+
         deleteSample(sample: BasicSample);
 
         deletePreset(preset: BasicPreset);

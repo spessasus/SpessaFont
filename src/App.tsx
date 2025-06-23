@@ -15,7 +15,7 @@ import SoundBankManager from "./core_backend/sound_bank_manager.ts";
 import { GetUserInput } from "./get_user_input/get_user_input.tsx";
 import { useEffect, useMemo, useState } from "react";
 import { AudioEngine } from "./core_backend/audio_engine.ts";
-import { ClipBoardManager } from "./core_backend/clipboard_manager.ts";
+import { ClipboardManager } from "./core_backend/clipboard_manager.ts";
 import { Settings } from "./settings/settings.tsx";
 import { TabList } from "./tab_list/tab_list.tsx";
 import { type BasicSoundBank, loadSoundFont } from "spessasynth_core";
@@ -52,7 +52,7 @@ const audioEngine = new AudioEngine(context);
 applyAudioSettings(initialSettings, audioEngine);
 
 // shared clipboard
-const clipboardManager = new ClipBoardManager();
+const clipboardManager = new ClipboardManager();
 
 function App() {
     const { t } = useTranslation();
