@@ -1,6 +1,4 @@
 * {
-
-
     text-align: center;
     margin: 0;
     box-sizing: border-box;
@@ -17,6 +15,7 @@
 }
 
 .spessafont_main *, .spessafont_main {
+    scrollbar-gutter: stable;
     /*global variables*/
     --top-buttons-color-start: #222;
     --top-buttons-color-end: #333;
@@ -176,6 +175,7 @@ input[type=number] {
 ::-webkit-scrollbar {
     width: 0.3rem;
     height: 0.5rem;
+    background: transparent;
 }
 
 ::-webkit-scrollbar-track {
