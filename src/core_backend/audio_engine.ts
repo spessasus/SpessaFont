@@ -11,8 +11,8 @@ import { logInfo } from "../utils/core_utils.ts";
 
 // audio worklet processor operates at that
 const BLOCK_SIZE = 128;
-const CHUNK_COUNT = 4; // 4 * 128 = 512
-const MAX_CHUNKS_QUEUED = 10;
+const CHUNK_COUNT = 16; // 16 * 128 = 2,048 // Windows does not like small buffer sizes
+const MAX_CHUNKS_QUEUED = Math.floor(CHUNK_COUNT * 1.5);
 
 type AudioChunk = [Float32Array, Float32Array];
 type AudioChunks = AudioChunk[];
