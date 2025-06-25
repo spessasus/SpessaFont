@@ -25,6 +25,9 @@ export function WaitingInput<T extends string | number>({
         } else {
             parsedValue = v as T;
         }
+        if (parsedValue.toString() === value.toString()) {
+            return;
+        }
         const newValue = setValue(parsedValue);
         setText(newValue.toString());
     };

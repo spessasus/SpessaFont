@@ -20,8 +20,8 @@ export const GeneratorLocale = {
     volEnvDecay: "Vol Env Decay",
     volEnvSustain: "Vol Env Sustain",
     volEnvRelease: "Vol Env Release",
-    keyToVolEnvHold: "Key To Vol Env Hold",
-    keyToVolEnvDecay: "Key To Vol Env Decay",
+    keyToVolEnvHold: "Key -> Vol Env Hold",
+    keyToVolEnvDecay: "Key -> Vol Env Decay",
 
     modEnvDelay: "Mod Env Delay",
     modEnvAttack: "Mod Env Attack",
@@ -29,18 +29,20 @@ export const GeneratorLocale = {
     modEnvDecay: "Mod Env Decay",
     modEnvSustain: "Mod Env Sustain",
     modEnvRelease: "Mod Env Release",
-    keyToModEnvHold: "Key To Mod Env Hold",
-    keyToModEnvDecay: "Key To Mod Env Decay",
+    modEnvToFilter: "Mod Env -> Filter",
+    modEnvToPitch: "Mod Env -> Pitch",
+    keyToModEnvHold: "Key -> Mod Env Hold",
+    keyToModEnvDecay: "Key -> Mod Env Decay",
 
     modLfoDelay: "Mod LFO Delay",
     modLfoFrequency: "Mod LFO Frequency",
-    modLfoToPitch: "Mod LFO To Pitch",
-    modLfoToFilter: "Mod LFO to Filter",
-    modLfoToVolume: "Mod LFO to Volume",
+    modLfoToPitch: "Mod LFO -> Pitch",
+    modLfoToFilter: "Mod LFO -> Filter",
+    modLfoToVolume: "Mod LFO -> Volume",
 
     vibLfoDelay: "Vib LFO Delay",
     vibLfoFrequency: "Vib LFO Frequency",
-    vibLfoToPitch: "Vib LFO To Pitch",
+    vibLfoToPitch: "Vib LFO -> Pitch",
 
     exclusiveClass: "Exclusive Class", // not modulated
     chorusLevel: "Chorus Level",

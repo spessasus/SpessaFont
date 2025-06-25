@@ -7,6 +7,7 @@ import { SettingsLocale } from "./settings.ts";
 import { MidiControllersLocale } from "./midi_controllers.ts";
 import { SampleLocale } from "./sample.ts";
 import { KeyboardLocale } from "./keyboard.ts";
+import { SoundBankLocale } from "./sound_bank.ts";
 
 /**
  *
@@ -57,5 +58,6 @@ export const localeEnglish = {
     settingsLocale: SettingsLocale,
     midiControllersLocale: MidiControllersLocale,
     sampleLocale: SampleLocale,
-    keyboardLocale: KeyboardLocale
+    keyboardLocale: KeyboardLocale,
+    soundBankLocale: SoundBankLocale
 };

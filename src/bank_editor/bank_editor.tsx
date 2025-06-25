@@ -109,6 +109,9 @@ export function BankEditor({
                         engine={audioEngine}
                         instrument={view}
                         manager={manager}
+                        setView={setView}
+                        setInstruments={setInstruments}
+                        instruments={instruments}
                     ></InstrumentEditor>
                 )}
                 {view instanceof BasicSample && (

@@ -70,7 +70,7 @@ declare module "spessasynth_core" {
         unlinkFrom(p: BasicPreset);
     }
 
-    export interface BasicZone {
+    export class BasicZone {
         velRange: SoundFontRange;
         keyRange: SoundFontRange;
         generators: Generator[];
@@ -86,21 +86,24 @@ declare module "spessasynth_core" {
 
         setGenerator(type: generatorTypes, value: number);
 
-        getGeneratorValue(type: generatorTypes, notFoundValue: number): number;
+        getGeneratorValue(
+            type: generatorTypes,
+            notFoundValue: number | null
+        ): number | null;
     }
 
-    export interface BasicGlobalZone extends BasicZone {
+    export class BasicGlobalZone extends BasicZone {
         copyFrom(zone: BasicZone);
     }
 
-    export interface BasicInstrumentZone extends BasicZone {
+    export class BasicInstrumentZone extends BasicZone {
         sample: BasicSample;
         readonly useCount: number;
 
         setSample(s: BasicSample);
     }
 
-    export interface BasicPresetZone extends BasicZone {
+    export class BasicPresetZone extends BasicZone {
         instrument: BasicInstrument;
 
         setInstrument(i: BasicInstrument);
