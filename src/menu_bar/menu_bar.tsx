@@ -17,7 +17,8 @@ export function MenuBar({
     closeTab,
     manager,
     showMidiPlayer,
-    toggleKeyboard
+    toggleKeyboard,
+    setIsLoading
 }: {
     audioEngine: AudioEngine;
     toggleSettings: () => void;
@@ -26,6 +27,7 @@ export function MenuBar({
     manager: SoundBankManager;
     showMidiPlayer: boolean;
     toggleKeyboard: () => void;
+    setIsLoading: (l: boolean) => unknown;
 }) {
     const fLoc = "menuBarLocale.file.";
     const eLoc = "menuBarLocale.edit.";
@@ -50,15 +52,27 @@ export function MenuBar({
     }
 
     function sf2() {
-        manager.save("sf2");
+        setIsLoading(true);
+        setTimeout(() => {
+            manager.save("sf2");
+            setIsLoading(false);
+        }, 200);
     }
 
     function dls() {
-        manager.save("dls");
+        setIsLoading(true);
+        setTimeout(() => {
+            manager.save("dls");
+            setIsLoading(false);
+        }, 200);
     }
 
     function sf3() {
-        manager.save("sf3");
+        setIsLoading(true);
+        setTimeout(() => {
+            manager.save("sf3");
+            setIsLoading(false);
+        }, 200);
     }
 
     function undo() {

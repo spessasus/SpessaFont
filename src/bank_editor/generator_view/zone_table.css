@@ -1,5 +1,6 @@
 .zone_table_wrapper {
     overflow: auto;
+    flex: 1;
 }
 
 .zone_table {

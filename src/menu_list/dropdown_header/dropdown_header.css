@@ -60,6 +60,10 @@
     width: max-content;
 }
 
+.item_group_header .copy {
+    cursor: copy;
+}
+
 .item_group_header:active .left_buttons > *, .item_group_header:active .right_buttons > * {
     border-color: var(--border-color);
 }

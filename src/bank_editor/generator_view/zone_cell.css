@@ -14,10 +14,14 @@
 .header_cell input {
     background: transparent;
     border: none;
-    outline: none;
+    outline: var(--font-color);
     font-size: 1rem;
     font-weight: bold;
     text-overflow: ellipsis;
+}
+
+.generator_cell_header {
+    cursor: not-allowed;
 }
 
 .generator_cell_header > div {
@@ -29,17 +33,19 @@
 
 .generator_cell_header i {
     opacity: 0.5;
+    cursor: help;
 }
 
 .generator_cell input {
     background: transparent;
     font-size: 1rem;
     border: none;
-    outline: none;
     width: 100%;
     height: 100%;
     text-align: end;
     min-width: 12ch;
+    outline-color: var(--font-color);
+    cursor: cell;
 }
 
 .generator_row_highlight .generator_cell_header {

@@ -131,12 +131,18 @@ export default class SoundBankManager {
 
         const blob = new Blob(chunks);
         const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
+        const url = URL.createObjectURL(blob);
+        a.href = url;
         a.download = `${this.getBankName("Unnamed")}.${format}`;
-        console.info(a);
         a.click();
         this.dirty = false;
         this.changeCallback();
+
+        // clean up the object URL after a short delay
+        setTimeout(() => {
+            URL.revokeObjectURL(url);
+            console.info("Object URL revoked to free memory.");
+        }, 10000);
     }
 
     sendBankToSynth() {

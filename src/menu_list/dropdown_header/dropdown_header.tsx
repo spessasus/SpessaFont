@@ -36,7 +36,7 @@ export function DropdownHeader({
                 </div>
                 {copy && (
                     <div
-                        className={"svg_wrapper"}
+                        className={"svg_wrapper copy"}
                         title={t("copy")}
                         onClick={(e) => {
                             e.preventDefault();

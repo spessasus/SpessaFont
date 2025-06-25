@@ -75,7 +75,7 @@ function App() {
         [t]
     );
     const destinationOptions = useMemo(
-        () => DestinationsOptions({ t: t }),
+        () => <>{DestinationsOptions({ t: t })}</>,
         [t]
     );
 
@@ -179,6 +179,7 @@ function App() {
             className={`spessafont_main ${theme === "light" ? "light_mode" : ""}`}
         >
             <MenuBar
+                setIsLoading={setIsLoading}
                 showMidiPlayer={tabs.length > 0}
                 toggleSettings={toggleSettings}
                 audioEngine={audioEngine}
@@ -201,7 +202,7 @@ function App() {
             )}
 
             {isLoading && (
-                <div className="welcome">
+                <div className="welcome loading">
                     <h1>{t("synthInit.genericLoading")}</h1>
                 </div>
             )}
