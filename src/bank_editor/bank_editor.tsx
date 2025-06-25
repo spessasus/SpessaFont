@@ -102,6 +102,9 @@ export function BankEditor({
                     <PresetEditor
                         engine={audioEngine}
                         preset={view}
+                        setView={setView}
+                        presets={presets}
+                        setPresets={setPresets}
                     ></PresetEditor>
                 )}
                 {view instanceof BasicInstrument && (

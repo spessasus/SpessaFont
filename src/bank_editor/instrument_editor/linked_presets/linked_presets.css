@@ -1,0 +1,19 @@
+.linked_presets {
+    overflow-x: auto;
+    display: flex;
+    border-top: solid 1px var(--track-border-color);
+    width: 100%;
+    margin-top: auto;
+}
+
+.linked_presets div {
+    cursor: pointer;
+    padding: 0.3rem 1rem;
+    text-align: center;
+    white-space: nowrap;
+    border-right: solid 1px var(--track-border-color);
+}
+
+.linked_presets div:hover {
+    background: var(--top-buttons-color);
+}

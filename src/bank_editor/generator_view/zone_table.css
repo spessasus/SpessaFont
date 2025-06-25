@@ -1,0 +1,50 @@
+.zone_table_wrapper {
+    overflow: auto;
+}
+
+.zone_table {
+    border-spacing: 0;
+    border-radius: var(--primary-border-radius);
+    border: solid 1px var(--track-border-color);
+    /*rounded corners hidden overflow*/
+    overflow: hidden;
+}
+
+.zone_table th {
+    font-weight: normal;
+    user-select: none;
+    background: var(--top-buttons-color-start);
+}
+
+.zone_table td {
+    width: min-content;
+}
+
+.zone_table th:first-child,
+.zone_table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+}
+
+.zone_table tr:first-child .header_cell {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.zone_table thead tr:first-child th:first-child {
+    z-index: 2;
+}
+
+
+.zone_table th:not(:last-child),
+.zone_table td:not(:last-child) {
+    border-right: solid 1px var(--track-border-color);
+}
+
+.zone_table tr:not(:last-child) th,
+.zone_table tr:not(:last-child) td,
+.zone_table > thead > tr > th {
+    border-bottom: solid 1px var(--track-border-color);
+}

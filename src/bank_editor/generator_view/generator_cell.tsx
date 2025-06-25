@@ -4,7 +4,7 @@ import {
     generatorTypes
 } from "spessasynth_core";
 import type { NumberGeneratorProps } from "./generator_row.tsx";
-import { WaitingInput } from "../../../fancy_inputs/waiting_input/waiting_input.tsx";
+import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
 
 export function NumberGeneratorCell({
     zone,

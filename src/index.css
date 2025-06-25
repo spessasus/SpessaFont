@@ -122,6 +122,7 @@ input[type=number] {
 }
 
 .pretty_button {
+    user-select: none;
     background: var(--top-color-start);
     border-radius: var(--primary-border-radius);
     color: var(--font-color);

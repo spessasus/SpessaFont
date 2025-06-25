@@ -10,8 +10,17 @@ import { KEYBOARD_TARGET_CHANNEL } from "../../keyboard/target_channel.ts";
 import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
 import type { SetViewType } from "../bank_editor.tsx";
 import { useTranslation } from "react-i18next";
-import { NumberGeneratorRow } from "./generator_view/generator_row.tsx";
+import { NumberGeneratorRow } from "../generator_view/generator_row.tsx";
 import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
+import {
+    ac2hz,
+    cb2db,
+    db2cb,
+    hz2ac,
+    s2tc,
+    tc2s
+} from "../conversion_helpers.ts";
+import { LinkedPresets } from "./linked_presets/linked_presets.tsx";
 
 type InstrumentEditorProps = {
     manager: SoundBankManager;
@@ -22,14 +31,6 @@ type InstrumentEditorProps = {
     instruments: BasicInstrument[];
 };
 
-// helper conversion functions
-const tc2s = (c: number) => Math.pow(2, c / 1200);
-const s2tc = (s: number) => (1200 * Math.log(s)) / Math.log(2);
-const cb2db = (c: number) => c / 10;
-const db2cb = (d: number) => d * 10;
-const ac2hz = (c: number) => 440 * Math.pow(2, (c - 6900) / 1200);
-const hz2ac = (h: number) => 6900 + (1200 * Math.log(h / 440)) / Math.log(2);
-
 export function InstrumentEditor({
     engine,
     instrument,
@@ -39,23 +40,31 @@ export function InstrumentEditor({
     setView
 }: InstrumentEditorProps) {
     const { t } = useTranslation();
-    // do some hacky stuff to get the instrument to play
+    // do some hacky stuff to get the soundBankElement to play
     useEffect(() => {
+        // sort zones
+        instrument.instrumentZones.sort(
+            (z1, z2) => z1.keyRange.min - z2.keyRange.min
+        );
+
         engine.processor.clearCache();
         const preset = new BasicPreset(manager.bank);
+        // screaming name so it's easier to spot errors
+        preset.presetName = "INSTRUMENT PLAYBACK PRESET";
         preset.createZone().setInstrument(instrument);
         engine.processor.midiAudioChannels[KEYBOARD_TARGET_CHANNEL].setPreset(
             preset
         );
         return () => {
+            preset.deletePreset();
             engine.processor.clearCache();
             engine.processor.programChange(KEYBOARD_TARGET_CHANNEL, 0);
         };
     }, [engine.processor, instrument, manager.bank]);
     return (
         <div className={"instrument_editor"}>
-            <div className={"zones_view_wrapper"}>
-                <table className={"zones_view"}>
+            <div className={"zone_table_wrapper"}>
+                <table className={"zone_table"}>
                     <thead>
                         <tr className={"header_row"}>
                             <th className={"header_cell"}>
@@ -63,7 +72,6 @@ export function InstrumentEditor({
                                     type={"text"}
                                     value={instrument.instrumentName}
                                     setValue={(v) => {
-                                        console.log(v);
                                         instrument.instrumentName = v;
                                         setInstruments([...instruments]);
                                         return v;
@@ -87,11 +95,11 @@ export function InstrumentEditor({
                     </thead>
                     <tbody>
                         <NumberGeneratorRow
-                            instrument={instrument}
+                            soundBankElement={instrument}
                             generator={generatorTypes.keyRange}
                         />
                         <NumberGeneratorRow
-                            instrument={instrument}
+                            soundBankElement={instrument}
                             generator={generatorTypes.velRange}
                         />
 
@@ -99,265 +107,290 @@ export function InstrumentEditor({
                             // lovely emu attenuation correction
                             fromGenerator={(v) => v * 0.04}
                             toGenerator={(v) => v / 0.04}
-                            instrument={instrument}
+                            soundBankElement={instrument}
                             generator={generatorTypes.initialAttenuation}
-                            suffix="dB"
+                            unit="dB"
                             precision={2}
                         />
 
                         <NumberGeneratorRow
                             generator={generatorTypes.pan}
-                            instrument={instrument}
-                            suffix="[-500;500]"
+                            soundBankElement={instrument}
+                            unit="pan"
                         />
                         <NumberGeneratorRow
                             generator={generatorTypes.sampleModes}
-                            instrument={instrument}
+                            soundBankElement={instrument}
                         />
                         <NumberGeneratorRow
                             generator={generatorTypes.overridingRootKey}
-                            instrument={instrument}
+                            soundBankElement={instrument}
                         />
                         <NumberGeneratorRow
+                            highlight={true}
                             generator={generatorTypes.coarseTune}
-                            instrument={instrument}
+                            soundBankElement={instrument}
                         />
                         <NumberGeneratorRow
+                            highlight={true}
                             generator={generatorTypes.fineTune}
-                            instrument={instrument}
+                            soundBankElement={instrument}
                         />
                         <NumberGeneratorRow
+                            highlight={true}
                             generator={generatorTypes.scaleTuning}
-                            instrument={instrument}
-                            suffix="ct"
+                            soundBankElement={instrument}
+                            unit="cent"
                         />
                         <NumberGeneratorRow
                             fromGenerator={ac2hz}
                             toGenerator={hz2ac}
                             generator={generatorTypes.initialFilterFc}
-                            instrument={instrument}
-                            suffix="Hz"
+                            soundBankElement={instrument}
+                            unit="Hz"
                         />
                         <NumberGeneratorRow
                             fromGenerator={cb2db}
                             toGenerator={db2cb}
                             precision={1}
                             generator={generatorTypes.initialFilterQ}
-                            instrument={instrument}
-                            suffix="dB"
+                            soundBankElement={instrument}
+                            unit="dB"
                         />
                         <NumberGeneratorRow
+                            highlight={true}
                             fromGenerator={tc2s}
                             toGenerator={s2tc}
                             precision={3}
                             generator={generatorTypes.delayVolEnv}
-                            instrument={instrument}
-                            suffix="s"
+                            soundBankElement={instrument}
+                            unit="sec"
                         />
                         <NumberGeneratorRow
+                            highlight={true}
                             fromGenerator={tc2s}
                             toGenerator={s2tc}
                             precision={3}
                             generator={generatorTypes.attackVolEnv}
-                            instrument={instrument}
-                            suffix="s"
+                            soundBankElement={instrument}
+                            unit="sec"
                         />
                         <NumberGeneratorRow
+                            highlight={true}
                             fromGenerator={tc2s}
                             toGenerator={s2tc}
                             precision={3}
                             generator={generatorTypes.holdVolEnv}
-                            instrument={instrument}
-                            suffix="s"
+                            soundBankElement={instrument}
+                            unit="sec"
                         />
                         <NumberGeneratorRow
+                            highlight={true}
                             fromGenerator={tc2s}
                             toGenerator={s2tc}
                             precision={3}
                             generator={generatorTypes.decayVolEnv}
-                            instrument={instrument}
-                            suffix="s"
+                            soundBankElement={instrument}
+                            unit="sec"
                         />
                         <NumberGeneratorRow
+                            highlight={true}
                             generator={generatorTypes.sustainVolEnv}
                             fromGenerator={cb2db}
                             toGenerator={db2cb}
-                            instrument={instrument}
-                            suffix="dB"
+                            soundBankElement={instrument}
+                            unit="dB"
                             precision={1}
                         />
                         <NumberGeneratorRow
+                            highlight={true}
                             fromGenerator={tc2s}
                             toGenerator={s2tc}
                             precision={3}
                             generator={generatorTypes.releaseVolEnv}
-                            instrument={instrument}
-                            suffix="s"
+                            soundBankElement={instrument}
+                            unit="sec"
                         />
                         <NumberGeneratorRow
+                            highlight={true}
                             generator={generatorTypes.keyNumToVolEnvHold}
-                            instrument={instrument}
-                            suffix="ct"
+                            soundBankElement={instrument}
+                            unit="cent"
                         />
                         <NumberGeneratorRow
+                            highlight={true}
                             generator={generatorTypes.keyNumToVolEnvDecay}
-                            instrument={instrument}
-                            suffix="ct"
+                            soundBankElement={instrument}
+                            unit="cent"
                         />
                         <NumberGeneratorRow
                             fromGenerator={tc2s}
                             toGenerator={s2tc}
                             precision={3}
                             generator={generatorTypes.delayModEnv}
-                            instrument={instrument}
-                            suffix="s"
+                            soundBankElement={instrument}
+                            unit="sec"
                         />
                         <NumberGeneratorRow
                             fromGenerator={tc2s}
                             toGenerator={s2tc}
                             precision={3}
                             generator={generatorTypes.attackModEnv}
-                            instrument={instrument}
-                            suffix="s"
+                            soundBankElement={instrument}
+                            unit="sec"
                         />
                         <NumberGeneratorRow
                             fromGenerator={tc2s}
                             toGenerator={s2tc}
                             precision={3}
                             generator={generatorTypes.holdModEnv}
-                            instrument={instrument}
-                            suffix="s"
+                            soundBankElement={instrument}
+                            unit="sec"
                         />
                         <NumberGeneratorRow
                             fromGenerator={tc2s}
                             toGenerator={s2tc}
                             precision={3}
                             generator={generatorTypes.decayModEnv}
-                            instrument={instrument}
-                            suffix="s"
+                            soundBankElement={instrument}
+                            unit="sec"
                         />
                         <NumberGeneratorRow
                             fromGenerator={(v) => v / 10}
                             toGenerator={(v) => v * 10}
                             precision={1}
                             generator={generatorTypes.sustainModEnv}
-                            instrument={instrument}
-                            suffix="dB"
+                            soundBankElement={instrument}
+                            unit="dB"
                         />
                         <NumberGeneratorRow
                             fromGenerator={tc2s}
                             toGenerator={s2tc}
                             precision={3}
                             generator={generatorTypes.releaseModEnv}
-                            instrument={instrument}
-                            suffix="s"
+                            soundBankElement={instrument}
+                            unit="sec"
                         />
                         <NumberGeneratorRow
                             generator={generatorTypes.modEnvToFilterFc}
-                            instrument={instrument}
-                            suffix="ct"
+                            soundBankElement={instrument}
+                            unit="cent"
                         />
                         <NumberGeneratorRow
                             generator={generatorTypes.modEnvToPitch}
-                            instrument={instrument}
-                            suffix="ct"
+                            soundBankElement={instrument}
+                            unit="cent"
                         />
                         <NumberGeneratorRow
                             generator={generatorTypes.keyNumToModEnvHold}
-                            instrument={instrument}
-                            suffix="ct"
+                            soundBankElement={instrument}
+                            unit="cent"
                         />
                         <NumberGeneratorRow
                             generator={generatorTypes.keyNumToModEnvDecay}
-                            instrument={instrument}
-                            suffix="ct"
+                            soundBankElement={instrument}
+                            unit="cent"
                         />
                         <NumberGeneratorRow
+                            highlight={true}
                             fromGenerator={tc2s}
                             toGenerator={s2tc}
                             precision={3}
                             generator={generatorTypes.delayModLFO}
-                            instrument={instrument}
-                            suffix="s"
+                            soundBankElement={instrument}
+                            unit="sec"
                         />
                         <NumberGeneratorRow
+                            highlight={true}
                             fromGenerator={ac2hz}
                             toGenerator={hz2ac}
                             precision={3}
                             generator={generatorTypes.freqModLFO}
-                            instrument={instrument}
-                            suffix="Hz"
+                            soundBankElement={instrument}
+                            unit="Hz"
                         />
                         <NumberGeneratorRow
+                            highlight={true}
                             generator={generatorTypes.modLfoToPitch}
-                            instrument={instrument}
-                            suffix="ct"
+                            soundBankElement={instrument}
+                            unit="cent"
                         />
                         <NumberGeneratorRow
+                            highlight={true}
                             generator={generatorTypes.modLfoToFilterFc}
-                            instrument={instrument}
-                            suffix="ct"
+                            soundBankElement={instrument}
+                            unit="cent"
                         />
                         <NumberGeneratorRow
+                            highlight={true}
                             fromGenerator={cb2db}
                             toGenerator={db2cb}
                             precision={1}
                             generator={generatorTypes.modLfoToVolume}
-                            instrument={instrument}
-                            suffix="dB"
+                            soundBankElement={instrument}
+                            unit="dB"
                         />
                         <NumberGeneratorRow
                             fromGenerator={tc2s}
                             toGenerator={s2tc}
                             precision={3}
                             generator={generatorTypes.delayVibLFO}
-                            instrument={instrument}
-                            suffix="s"
+                            soundBankElement={instrument}
+                            unit="sec"
                         />
                         <NumberGeneratorRow
                             fromGenerator={ac2hz}
                             toGenerator={hz2ac}
                             precision={3}
                             generator={generatorTypes.freqVibLFO}
-                            instrument={instrument}
-                            suffix="Hz"
+                            soundBankElement={instrument}
+                            unit="Hz"
                         />
                         <NumberGeneratorRow
                             generator={generatorTypes.vibLfoToPitch}
-                            instrument={instrument}
-                            suffix="ct"
+                            soundBankElement={instrument}
+                            unit="cent"
                         />
                         <NumberGeneratorRow
+                            highlight={true}
                             generator={generatorTypes.exclusiveClass}
-                            instrument={instrument}
+                            soundBankElement={instrument}
                         />
                         <NumberGeneratorRow
+                            highlight={true}
                             fromGenerator={(v) => v / 10}
                             toGenerator={(v) => v * 10}
                             precision={1}
                             generator={generatorTypes.chorusEffectsSend}
-                            instrument={instrument}
-                            suffix="%"
+                            soundBankElement={instrument}
+                            unit="percent"
                         />
                         <NumberGeneratorRow
+                            highlight={true}
                             fromGenerator={(v) => v / 10}
                             toGenerator={(v) => v * 10}
                             precision={1}
                             generator={generatorTypes.reverbEffectsSend}
-                            instrument={instrument}
-                            suffix="%"
+                            soundBankElement={instrument}
+                            unit="percent"
                         />
                         <NumberGeneratorRow
                             generator={generatorTypes.keyNum}
-                            instrument={instrument}
+                            soundBankElement={instrument}
                         />
                         <NumberGeneratorRow
                             generator={generatorTypes.velocity}
-                            instrument={instrument}
+                            soundBankElement={instrument}
                         />
                     </tbody>
                 </table>
             </div>
+            <LinkedPresets
+                instrument={instrument}
+                manager={manager}
+                setInstruments={setInstruments}
+                setView={setView}
+            />
         </div>
     );
 }

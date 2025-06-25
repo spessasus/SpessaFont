@@ -5,6 +5,7 @@
     flex-grow: 1;
     cursor: pointer;
     position: relative;
+    align-self: stretch;
 }
 
 .wave_view * {

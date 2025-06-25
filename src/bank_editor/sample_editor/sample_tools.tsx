@@ -225,74 +225,72 @@ export function SampleTools({
 
     const maxZoom = Math.max(5, ZOOM_PER_SAMPLE * sampleData.length + 1);
     return (
-        <div className={`info_column ${loading ? "disabled" : ""}`}>
+        <div className={`info_column ${loading ? "disabled" : ""} tools`}>
             <h2>{t("sampleLocale.tools.title")}</h2>
-            <div className={"info_column tools"}>
-                <div
-                    className={`pretty_button ${!loading ? "responsive_button hover_brightness" : ""}`}
-                    onClick={exportWav}
-                >
-                    {t("sampleLocale.tools.wavExport")}
-                </div>
-                {playerState === "stopped" && (
-                    <>
-                        <div
-                            className={`pretty_button ${!loading ? "responsive_button hover_brightness" : ""}`}
-                            onClick={() => playSample(false)}
-                        >
-                            {t("sampleLocale.tools.play")}
-                        </div>
-
-                        <div
-                            className={`pretty_button ${!loading ? "responsive_button hover_brightness" : ""}`}
-                            onClick={() => playSample(true)}
-                        >
-                            {t("sampleLocale.tools.playLooped")}
-                        </div>
-                    </>
-                )}
-                {playerState !== "stopped" && (
-                    // duplicated to match the count of play buttons
-                    <>
-                        <div
-                            className={`pretty_button ${!loading ? "responsive_button hover_brightness" : ""}`}
-                            onClick={stopPlayer}
-                        >
-                            {t("sampleLocale.tools.stop")}
-                        </div>
-                        <div
-                            className={`pretty_button ${!loading ? "responsive_button hover_brightness" : ""}`}
-                            onClick={stopPlayer}
-                        >
-                            {t("sampleLocale.tools.stop")}
-                        </div>
-                    </>
-                )}
-                <div
-                    onClick={replaceData}
-                    className={`pretty_button ${!loading ? "responsive_button hover_brightness" : ""}`}
-                >
-                    {loading
-                        ? t("sampleLocale.tools.loading")
-                        : importError || t("sampleLocale.tools.replaceAudio")}
-                </div>
-
-                <ControllerRange
-                    max={(maxZoom - 1) * 100}
-                    min={100}
-                    onChange={(n) => {
-                        n /= 100;
-                        const mapped = (n - 1) / (maxZoom - 1);
-                        const exponent = Math.pow(mapped, 5);
-                        setZoom(exponent * (maxZoom - 1) + 1);
-                        setInputZoom(n * 100);
-                    }}
-                    value={inputZoom}
-                    text={`${t("sampleLocale.waveZoom")}: ${
-                        Math.floor(zoom * 100_00) / 100
-                    }%`}
-                ></ControllerRange>
+            <div
+                className={`pretty_button monospaced ${!loading ? "responsive_button hover_brightness" : ""}`}
+                onClick={exportWav}
+            >
+                {t("sampleLocale.tools.wavExport")}
             </div>
+            {playerState === "stopped" && (
+                <>
+                    <div
+                        className={`pretty_button monospaced ${!loading ? "responsive_button hover_brightness" : ""}`}
+                        onClick={() => playSample(false)}
+                    >
+                        {t("sampleLocale.tools.play")}
+                    </div>
+
+                    <div
+                        className={`pretty_button monospaced ${!loading ? "responsive_button hover_brightness" : ""}`}
+                        onClick={() => playSample(true)}
+                    >
+                        {t("sampleLocale.tools.playLooped")}
+                    </div>
+                </>
+            )}
+            {playerState !== "stopped" && (
+                // duplicated to match the count of play buttons
+                <>
+                    <div
+                        className={`pretty_button monospaced ${!loading ? "responsive_button hover_brightness" : ""}`}
+                        onClick={stopPlayer}
+                    >
+                        {t("sampleLocale.tools.stop")}
+                    </div>
+                    <div
+                        className={`pretty_button monospaced ${!loading ? "responsive_button hover_brightness" : ""}`}
+                        onClick={stopPlayer}
+                    >
+                        {t("sampleLocale.tools.stop")}
+                    </div>
+                </>
+            )}
+            <div
+                onClick={replaceData}
+                className={`pretty_button monospaced ${!loading ? "responsive_button hover_brightness" : ""}`}
+            >
+                {loading
+                    ? t("sampleLocale.tools.loading")
+                    : importError || t("sampleLocale.tools.replaceAudio")}
+            </div>
+
+            <ControllerRange
+                max={(maxZoom - 1) * 100}
+                min={100}
+                onChange={(n) => {
+                    n /= 100;
+                    const mapped = (n - 1) / (maxZoom - 1);
+                    const exponent = Math.pow(mapped, 5);
+                    setZoom(exponent * (maxZoom - 1) + 1);
+                    setInputZoom(n * 100);
+                }}
+                value={inputZoom}
+                text={`${t("sampleLocale.waveZoom")}: ${
+                    Math.floor(zoom * 100_00) / 100
+                }%`}
+            ></ControllerRange>
         </div>
     );
 }

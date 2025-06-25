@@ -75,7 +75,7 @@ export const SampleEditor = React.memo(function ({
         const preset = new BasicPreset(manager.bank);
         preset.presetName = "Sample Dummy Preset";
         const instrument = new BasicInstrument();
-        instrument.instrumentName = "Sample Dummy instrument";
+        instrument.instrumentName = "Sample Dummy soundBankElement";
         preset.createZone().setInstrument(instrument);
         const instZone = instrument.createZone();
         instZone.setGenerator(generatorTypes.sampleModes, 1);

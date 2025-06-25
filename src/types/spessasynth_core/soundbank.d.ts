@@ -123,6 +123,8 @@ declare module "spessasynth_core" {
         constructor(b: BasicSoundBank);
 
         createZone(): BasicPresetZone;
+
+        deletePreset();
     }
 
     export type SoundBankElement = BasicSample | BasicInstrument | BasicPreset;

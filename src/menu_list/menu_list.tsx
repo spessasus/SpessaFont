@@ -84,6 +84,20 @@ export const MenuList = React.memo(function ({
             const matchedInstrumentSet = new Set<BasicInstrument>();
             const matchedPresetSet = new Set<MappedPresetType>();
 
+            // match presets directly
+            presetNameMap.forEach((p) => {
+                if (p.searchString.includes(searchQueryLower)) {
+                    matchedPresetSet.add(p);
+                }
+            });
+
+            // match instruments directly
+            instruments.forEach((i) => {
+                if (i.instrumentName.toLowerCase().includes(searchQueryLower)) {
+                    matchedInstrumentSet.add(i);
+                }
+            });
+
             // match samples directly
             samples.forEach((s) => {
                 if (s.sampleName.toLowerCase().includes(searchQueryLower)) {
@@ -91,39 +105,14 @@ export const MenuList = React.memo(function ({
                 }
             });
 
-            // match instruments directly or via matched samples
-            instruments.forEach((i) => {
-                const sampleMatch = i.instrumentZones.some((z) =>
-                    matchedSampleSet.has(z.sample)
-                );
-                const nameMatch = i.instrumentName
-                    .toLowerCase()
-                    .includes(searchQueryLower);
+            // backfill the presets' instruments
+            matchedPresetSet.forEach((p) =>
+                p.preset.presetZones.forEach((z) =>
+                    matchedInstrumentSet.add(z.instrument)
+                )
+            );
 
-                if (sampleMatch || nameMatch) {
-                    matchedInstrumentSet.add(i);
-                    i.instrumentZones.forEach((z) =>
-                        matchedSampleSet.add(z.sample)
-                    );
-                }
-            });
-
-            // match presets directly or via matched instruments
-            presetNameMap.forEach((p) => {
-                const instMatch = p.preset.presetZones.some((z) =>
-                    matchedInstrumentSet.has(z.instrument)
-                );
-                const nameMatch = p.searchString.includes(searchQueryLower);
-
-                if (instMatch || nameMatch) {
-                    matchedPresetSet.add(p);
-                    p.preset.presetZones.forEach((z) =>
-                        matchedInstrumentSet.add(z.instrument)
-                    );
-                }
-            });
-
-            // backfill their instruments' samples
+            // backfill the instruments' samples
             matchedInstrumentSet.forEach((i) =>
                 i.instrumentZones.forEach((z) => matchedSampleSet.add(z.sample))
             );
