@@ -1,14 +1,196 @@
-import { type BasicPreset, generatorTypes } from "spessasynth_core";
+import { type BasicPreset, type BasicPresetZone, generatorTypes } from "spessasynth_core";
 import "./preset_editor.css";
 import type { AudioEngine } from "../../core_backend/audio_engine.ts";
 import { KEYBOARD_TARGET_CHANNEL } from "../../keyboard/target_channel.ts";
 import type { SetViewType } from "../bank_editor.tsx";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NumberGeneratorRow } from "../generator_table/generator_row.tsx";
 import { cb2db, db2cb } from "../conversion_helpers.ts";
 import { BottomPresetBar } from "./bottom_bar/bottom_bar.tsx";
 import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
+import { RangeGeneratorRow } from "../generator_table/range_generator/range_row.tsx";
+import type { GeneratorRowType } from "../instrument_editor/instrument_editor.tsx";
+
+const presetRows: GeneratorRowType[] = [
+    {
+        generator: generatorTypes.initialAttenuation,
+        fromGenerator: (v) => v * 0.04,
+        toGenerator: (v) => v / 0.04,
+        unit: "dB",
+        precision: 2
+    },
+    {
+        generator: generatorTypes.pan,
+        unit: "pan"
+    },
+    {
+        generator: generatorTypes.coarseTune,
+        highlight: true
+    },
+    {
+        generator: generatorTypes.fineTune,
+        highlight: true
+    },
+    {
+        generator: generatorTypes.scaleTuning,
+        highlight: true,
+        unit: "cent"
+    },
+    {
+        generator: generatorTypes.initialFilterFc,
+        unit: "acent"
+    },
+    {
+        generator: generatorTypes.initialFilterQ,
+        fromGenerator: cb2db,
+        toGenerator: db2cb,
+        precision: 1,
+        unit: "dB"
+    },
+    {
+        generator: generatorTypes.delayVolEnv,
+        highlight: true,
+        unit: "tcent"
+    },
+    {
+        generator: generatorTypes.attackVolEnv,
+        highlight: true,
+        unit: "tcent"
+    },
+    {
+        generator: generatorTypes.holdVolEnv,
+        highlight: true,
+        unit: "tcent"
+    },
+    {
+        generator: generatorTypes.decayVolEnv,
+        highlight: true,
+        unit: "tcent"
+    },
+    {
+        generator: generatorTypes.sustainVolEnv,
+        highlight: true,
+        fromGenerator: cb2db,
+        toGenerator: db2cb,
+        precision: 1,
+        unit: "dB"
+    },
+    {
+        generator: generatorTypes.releaseVolEnv,
+        highlight: true,
+        unit: "tcent"
+    },
+    {
+        generator: generatorTypes.keyNumToVolEnvHold,
+        highlight: true,
+        unit: "cent"
+    },
+    {
+        generator: generatorTypes.keyNumToVolEnvDecay,
+        highlight: true,
+        unit: "cent"
+    },
+    {
+        generator: generatorTypes.delayModEnv,
+        unit: "tcent"
+    },
+    {
+        generator: generatorTypes.attackModEnv,
+        unit: "tcent"
+    },
+    {
+        generator: generatorTypes.holdModEnv,
+        unit: "tcent"
+    },
+    {
+        generator: generatorTypes.decayModEnv,
+        unit: "tcent"
+    },
+    {
+        generator: generatorTypes.sustainModEnv,
+        fromGenerator: (v) => v / 10,
+        toGenerator: (v) => v * 10,
+        precision: 1,
+        unit: "dB"
+    },
+    {
+        generator: generatorTypes.releaseModEnv,
+        unit: "tcent"
+    },
+    {
+        generator: generatorTypes.modEnvToFilterFc,
+        unit: "cent"
+    },
+    {
+        generator: generatorTypes.modEnvToPitch,
+        unit: "cent"
+    },
+    {
+        generator: generatorTypes.keyNumToModEnvHold,
+        unit: "cent"
+    },
+    {
+        generator: generatorTypes.keyNumToModEnvDecay,
+        unit: "cent"
+    },
+    {
+        generator: generatorTypes.delayModLFO,
+        highlight: true,
+        unit: "tcent"
+    },
+    {
+        generator: generatorTypes.freqModLFO,
+        highlight: true,
+        unit: "acent"
+    },
+    {
+        generator: generatorTypes.modLfoToPitch,
+        highlight: true,
+        unit: "cent"
+    },
+    {
+        generator: generatorTypes.modLfoToFilterFc,
+        highlight: true,
+        unit: "cent"
+    },
+    {
+        generator: generatorTypes.modLfoToVolume,
+        highlight: true,
+        fromGenerator: cb2db,
+        toGenerator: db2cb,
+        precision: 1,
+        unit: "dB"
+    },
+    {
+        generator: generatorTypes.delayVibLFO,
+        unit: "tcent"
+    },
+    {
+        generator: generatorTypes.freqVibLFO,
+        unit: "acent"
+    },
+    {
+        generator: generatorTypes.vibLfoToPitch,
+        unit: "cent"
+    },
+    {
+        generator: generatorTypes.chorusEffectsSend,
+        highlight: true,
+        fromGenerator: (v) => v / 10,
+        toGenerator: (v) => v * 10,
+        precision: 1,
+        unit: "percent"
+    },
+    {
+        generator: generatorTypes.reverbEffectsSend,
+        highlight: true,
+        fromGenerator: (v) => v / 10,
+        toGenerator: (v) => v * 10,
+        precision: 1,
+        unit: "percent"
+    }
+];
 
 export function PresetEditor({
     preset,
@@ -26,7 +208,11 @@ export function PresetEditor({
     manager: SoundBankManager;
 }) {
     const { t } = useTranslation();
+    const [zones, setZones] = useState(preset.presetZones);
     useEffect(() => {
+        // update zones
+        setZones(preset.presetZones);
+
         engine.processor.midiAudioChannels[KEYBOARD_TARGET_CHANNEL].setPreset(
             preset
         );
@@ -57,211 +243,33 @@ export function PresetEditor({
                     </thead>
 
                     <tbody>
-                        <NumberGeneratorRow
-                            soundBankElement={preset}
+                        <RangeGeneratorRow
+                            zones={zones}
+                            setZones={setZones}
+                            global={preset.globalZone}
                             generator={generatorTypes.keyRange}
                         />
-                        <NumberGeneratorRow
-                            soundBankElement={preset}
+                        <RangeGeneratorRow
+                            zones={zones}
+                            setZones={setZones}
+                            global={preset.globalZone}
                             generator={generatorTypes.velRange}
                         />
-
-                        <NumberGeneratorRow
-                            // lovely emu attenuation correction
-                            fromGenerator={(v) => v * 0.04}
-                            toGenerator={(v) => v / 0.04}
-                            soundBankElement={preset}
-                            generator={generatorTypes.initialAttenuation}
-                            unit="dB"
-                            precision={2}
-                        />
-
-                        <NumberGeneratorRow
-                            generator={generatorTypes.pan}
-                            soundBankElement={preset}
-                            unit="pan"
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.coarseTune}
-                            soundBankElement={preset}
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.fineTune}
-                            soundBankElement={preset}
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.scaleTuning}
-                            soundBankElement={preset}
-                            unit="centPerKey"
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.initialFilterFc}
-                            soundBankElement={preset}
-                            unit="acent"
-                        />
-                        <NumberGeneratorRow
-                            fromGenerator={cb2db}
-                            toGenerator={db2cb}
-                            precision={1}
-                            generator={generatorTypes.initialFilterQ}
-                            soundBankElement={preset}
-                            unit="dB"
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.delayVolEnv}
-                            soundBankElement={preset}
-                            unit="tcent"
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.attackVolEnv}
-                            soundBankElement={preset}
-                            unit="tcent"
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.holdVolEnv}
-                            soundBankElement={preset}
-                            unit="tcent"
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.decayVolEnv}
-                            soundBankElement={preset}
-                            unit="tcent"
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.sustainVolEnv}
-                            fromGenerator={cb2db}
-                            toGenerator={db2cb}
-                            soundBankElement={preset}
-                            unit="dB"
-                            precision={1}
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.releaseVolEnv}
-                            soundBankElement={preset}
-                            unit="tcent"
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.keyNumToVolEnvHold}
-                            soundBankElement={preset}
-                            unit="cent"
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.keyNumToVolEnvDecay}
-                            soundBankElement={preset}
-                            unit="cent"
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.delayModEnv}
-                            soundBankElement={preset}
-                            unit="tcent"
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.attackModEnv}
-                            soundBankElement={preset}
-                            unit="tcent"
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.holdModEnv}
-                            soundBankElement={preset}
-                            unit="tcent"
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.decayModEnv}
-                            soundBankElement={preset}
-                            unit="tcent"
-                        />
-                        <NumberGeneratorRow
-                            fromGenerator={(v) => v / 10}
-                            toGenerator={(v) => v * 10}
-                            precision={1}
-                            generator={generatorTypes.sustainModEnv}
-                            soundBankElement={preset}
-                            unit="dB"
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.releaseModEnv}
-                            soundBankElement={preset}
-                            unit="tcent"
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.modEnvToFilterFc}
-                            soundBankElement={preset}
-                            unit="cent"
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.modEnvToPitch}
-                            soundBankElement={preset}
-                            unit="cent"
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.keyNumToModEnvHold}
-                            soundBankElement={preset}
-                            unit="cent"
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.keyNumToModEnvDecay}
-                            soundBankElement={preset}
-                            unit="cent"
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.delayModLFO}
-                            soundBankElement={preset}
-                            unit="tcent"
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.freqModLFO}
-                            soundBankElement={preset}
-                            unit="acent"
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.modLfoToPitch}
-                            soundBankElement={preset}
-                            unit="cent"
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.modLfoToFilterFc}
-                            soundBankElement={preset}
-                            unit="cent"
-                        />
-                        <NumberGeneratorRow
-                            fromGenerator={cb2db}
-                            toGenerator={db2cb}
-                            precision={1}
-                            generator={generatorTypes.modLfoToVolume}
-                            soundBankElement={preset}
-                            unit="dB"
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.delayVibLFO}
-                            soundBankElement={preset}
-                            unit="tcent"
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.freqVibLFO}
-                            soundBankElement={preset}
-                            unit="acent"
-                        />
-                        <NumberGeneratorRow
-                            generator={generatorTypes.vibLfoToPitch}
-                            soundBankElement={preset}
-                            unit="cent"
-                        />
-                        <NumberGeneratorRow
-                            fromGenerator={(v) => v / 10}
-                            toGenerator={(v) => v * 10}
-                            precision={1}
-                            generator={generatorTypes.chorusEffectsSend}
-                            soundBankElement={preset}
-                            unit="percent"
-                        />
-                        <NumberGeneratorRow
-                            fromGenerator={(v) => v / 10}
-                            toGenerator={(v) => v * 10}
-                            precision={1}
-                            generator={generatorTypes.reverbEffectsSend}
-                            soundBankElement={preset}
-                            unit="percent"
-                        />
+                        {presetRows.map((row) => (
+                            <NumberGeneratorRow<BasicPresetZone>
+                                generator={row.generator}
+                                key={row.generator}
+                                manager={manager}
+                                setZones={setZones}
+                                zones={zones}
+                                global={preset.globalZone}
+                                fromGenerator={row.fromGenerator}
+                                toGenerator={row.toGenerator}
+                                precision={row.precision}
+                                unit={row.unit}
+                                highlight={row.highlight}
+                            />
+                        ))}
                     </tbody>
                 </table>
             </div>

@@ -21,6 +21,7 @@ import type { SetViewType } from "../bank_editor.tsx";
 import { SetSampleTypeAction } from "./set_sample_type_action.ts";
 import { EditSampleAction } from "./edit_sample_action.ts";
 import { SampleTools } from "./sample_tools.tsx";
+import { midiNoteToPitchClass } from "../../utils/note_name.ts";
 
 const MIN_SAMPLE_RATE = 8000;
 const MAX_SAMPLE_RATE = 192000;
@@ -35,12 +36,6 @@ type SampleEditorProps = {
     setSamples: (s: BasicSample[]) => void;
     samples: BasicSample[];
 };
-
-function midiNoteToPitchClass(noteNumber: number): string {
-    return ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"][
-        noteNumber % 12
-    ];
-}
 
 export const SampleEditor = React.memo(function ({
     engine,
