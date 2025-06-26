@@ -278,6 +278,7 @@ export function PresetEditor({
             <BottomPresetBar
                 manager={manager}
                 setPresets={setPresets}
+                presets={presets}
                 preset={preset}
                 setView={setView}
             />

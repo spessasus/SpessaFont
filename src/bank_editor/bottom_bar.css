@@ -16,5 +16,11 @@
 
 .bottom_bar div:hover {
     background: var(--top-buttons-color);
+}
 
+.bottom_bar input {
+    background: transparent;
+    border: none;
+    border-bottom: solid 1px var(--top-buttons-color-end);
+    font-size: 1rem;
 }
