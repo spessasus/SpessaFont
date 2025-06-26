@@ -1,4 +1,4 @@
-declare module '*/middle-layer' {
-  const Module:any;
-  export default Module;
+declare module "*/middle-layer" {
+    const Module: object;
+    export default Module;
 }

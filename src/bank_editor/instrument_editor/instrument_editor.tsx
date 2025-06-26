@@ -48,7 +48,7 @@ export function InstrumentEditor({
         );
 
         engine.processor.clearCache();
-        const preset = new BasicPreset(manager.bank);
+        const preset = new BasicPreset(manager);
         // screaming name so it's easier to spot errors
         preset.presetName = "INSTRUMENT PLAYBACK PRESET";
         // note: do not use setInstrument as we don't want the instrument to be aware of the preset
@@ -62,7 +62,7 @@ export function InstrumentEditor({
             engine.processor.clearCache();
             engine.processor.programChange(KEYBOARD_TARGET_CHANNEL, 0);
         };
-    }, [engine.processor, instrument, manager.bank]);
+    }, [engine.processor, instrument, manager]);
     return (
         <div className={"instrument_editor"}>
             <div className={"zone_table_wrapper"}>

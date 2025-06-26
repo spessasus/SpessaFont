@@ -1,6 +1,7 @@
 import type { HistoryAction } from "../../../core_backend/history.ts";
-import type { BasicInstrument, BasicSoundBank } from "spessasynth_core";
+import type { BasicInstrument } from "spessasynth_core";
 import type { SetViewType } from "../../bank_editor.tsx";
+import type SoundBankManager from "../../../core_backend/sound_bank_manager.ts";
 
 export class DeleteInstrumentAction implements HistoryAction {
     private removed?: BasicInstrument;
@@ -18,7 +19,7 @@ export class DeleteInstrumentAction implements HistoryAction {
         this.setView = setView;
     }
 
-    do(b: BasicSoundBank) {
+    do(b: SoundBankManager) {
         this.removed = b.instruments[this.index];
         b.deleteInstrument(this.removed);
         this.setInstruments([...b.instruments]);
@@ -30,7 +31,7 @@ export class DeleteInstrumentAction implements HistoryAction {
         }
     }
 
-    undo(b: BasicSoundBank) {
+    undo(b: SoundBankManager) {
         if (!this.removed) {
             return;
         }

@@ -176,14 +176,14 @@ export function SampleTools({
             }
 
             if (audioBuffer.numberOfChannels === 2) {
+                const left = audioBuffer.getChannelData(0);
+                const right = audioBuffer.getChannelData(1);
                 // check for linked sample
                 if (
                     (sampleType === sampleTypes.leftSample ||
                         sampleType === sampleTypes.rightSample) &&
                     linkedSample
                 ) {
-                    const left = audioBuffer.getChannelData(0);
-                    const right = audioBuffer.getChannelData(1);
                     const linked = linkedSample;
 
                     if (sampleType === sampleTypes.leftSample) {
@@ -204,13 +204,8 @@ export function SampleTools({
                 } else {
                     const finalData = new Float32Array(audioBuffer.length);
                     // mix down to mono
-                    const buffers: Float32Array[] = [];
-                    for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
-                        buffers.push(audioBuffer.getChannelData(i));
-                    }
                     for (let i = 0; i < audioBuffer.length; i++) {
-                        const sum = buffers.reduce((s, buf) => s + buf[i], 0);
-                        finalData[i] = sum / audioBuffer.numberOfChannels;
+                        finalData[i] = (left[i] + right[i]) / 2;
                     }
                     setSampleData(finalData, audioBuffer.sampleRate);
                 }

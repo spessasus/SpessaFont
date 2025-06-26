@@ -1,5 +1,6 @@
 import type { HistoryAction } from "../../../core_backend/history.ts";
-import { type BasicSoundBank, Modulator } from "spessasynth_core";
+import { Modulator } from "spessasynth_core";
+import type SoundBankManager from "../../../core_backend/sound_bank_manager.ts";
 
 export class SetDefaultModulators implements HistoryAction {
     setDmods: (d: Modulator[]) => void;
@@ -16,12 +17,12 @@ export class SetDefaultModulators implements HistoryAction {
         this.newVal = newVal;
     }
 
-    do(b: BasicSoundBank) {
+    do(b: SoundBankManager) {
         b.defaultModulators = this.newVal;
         this.setDmods(this.newVal);
     }
 
-    undo(b: BasicSoundBank) {
+    undo(b: SoundBankManager) {
         b.defaultModulators = this.oldVal;
         this.setDmods(this.oldVal);
     }

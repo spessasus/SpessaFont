@@ -1,9 +1,6 @@
 import type { HistoryAction } from "../../core_backend/history.ts";
-import type {
-    BasicSample,
-    BasicSoundBank,
-    SampleTypeValue
-} from "spessasynth_core";
+import type { BasicSample, SampleTypeValue } from "spessasynth_core";
+import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
 
 export class SetSampleTypeAction implements HistoryAction {
     private readonly sampleIndex: number;
@@ -26,11 +23,11 @@ export class SetSampleTypeAction implements HistoryAction {
         this.newType = newType;
     }
 
-    do(b: BasicSoundBank) {
+    do(b: SoundBankManager) {
         this.apply(b.samples[this.sampleIndex], this.newLink, this.newType);
     }
 
-    undo(b: BasicSoundBank) {
+    undo(b: SoundBankManager) {
         this.apply(
             b.samples[this.sampleIndex],
             this.currentLink,

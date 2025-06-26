@@ -116,11 +116,11 @@ declare module "spessasynth_core" {
         library: number;
         genre: number;
         morphology: number;
-        parentSoundBank: BasicSoundBank;
+        parentSoundBank: SoundBankManager;
         presetZones: BasicPresetZone[];
         globalZone: BasicGlobalZone;
 
-        constructor(b: BasicSoundBank);
+        constructor(b: SoundBankManager);
 
         createZone(): BasicPresetZone;
 
@@ -200,7 +200,13 @@ declare module "spessasynth_core" {
         deletePreset(preset: BasicPreset);
 
         deleteInstrument(instrument: BasicInstrument);
+
+        addPresets(...presets: BasicPreset[]);
+
+        addSamples(...samples: BasicSample[]);
+
+        addInstruments(...instruments: BasicInstrument[]);
     }
 
-    export const loadSoundFont: (buffer: ArrayBuffer) => BasicSoundBank;
+    export const loadSoundFont: (buffer: ArrayBuffer) => SoundBankManager;
 }

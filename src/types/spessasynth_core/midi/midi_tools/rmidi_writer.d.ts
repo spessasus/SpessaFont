@@ -12,6 +12,8 @@ declare module "spessasynth_core" {
      * @property {string|undefined} copyright - the copyright of the file
      * @property {string|unescape} midiEncoding - the encoding of the inner MIDI file
      */
+    import type SoundBankManager from "../../../../core_backend/sound_bank_manager.ts";
+    
     /**
      * Writes an RMIDI file
      * @this {BasicMIDI}
@@ -26,7 +28,7 @@ declare module "spessasynth_core" {
     export function writeRMIDI(
         this: BasicMIDI,
         soundfontBinary: Uint8Array,
-        soundfont: BasicSoundBank,
+        soundfont: SoundBankManager,
         bankOffset?: number,
         encoding?: string,
         metadata?: RMIDMetadata,

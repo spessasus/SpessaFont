@@ -2,9 +2,9 @@ import {
     type BasicInstrument,
     type BasicPreset,
     type BasicSample,
-    type BasicSoundBank,
     Modulator
 } from "spessasynth_core";
+import type SoundBankManager from "./sound_bank_manager.ts";
 
 export class ClipboardManager {
     private modulatorClipboard: Modulator[] = [];
@@ -40,16 +40,16 @@ export class ClipboardManager {
         this.sampleClipboard = s;
     }
 
-    pasteSamples(b: BasicSoundBank) {
-        this.sampleClipboard.forEach((s) => b.cloneSample(s));
+    pasteSamples(m: SoundBankManager) {
+        this.sampleClipboard.forEach((s) => m.cloneSample(s));
     }
 
-    pasteInstruments(b: BasicSoundBank) {
-        this.instrumentClipboard.forEach((i) => b.cloneInstrument(i));
+    pasteInstruments(m: SoundBankManager) {
+        this.instrumentClipboard.forEach((i) => m.cloneInstrument(i));
     }
 
-    pastePresets(b: BasicSoundBank) {
-        this.presetClipboard.forEach((p) => b.clonePreset(p));
+    pastePresets(m: SoundBankManager) {
+        this.presetClipboard.forEach((p) => m.clonePreset(p));
     }
 
     copyModulators(mods: Modulator[]) {

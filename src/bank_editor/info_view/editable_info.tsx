@@ -1,4 +1,4 @@
-import type { BasicSoundBank, SoundFontInfoType } from "spessasynth_core";
+import type { SoundFontInfoType } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
@@ -22,12 +22,12 @@ class SetBankInfo implements HistoryAction {
         this.fourCC = fourCC;
     }
 
-    do(b: BasicSoundBank) {
+    do(b: SoundBankManager) {
         b.soundFontInfo[this.fourCC] = this.newVal;
         this.callback(this.newVal);
     }
 
-    undo(b: BasicSoundBank) {
+    undo(b: SoundBankManager) {
         b.soundFontInfo[this.fourCC] = this.oldVal;
         this.callback(this.oldVal);
     }
@@ -53,7 +53,7 @@ export function EditableBankInfo({
         document.title = `SpessaFont - ${manager.getBankName(t("bankInfo.unnamed"))}`;
     }, [manager, t, name]);
 
-    const bank = manager.bank;
+    const bank = manager;
 
     useEffect(() => {
         if (bank !== undefined) {

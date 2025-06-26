@@ -71,7 +71,7 @@ export const SampleEditor = React.memo(function ({
 
     // make the sample playable
     useEffect(() => {
-        const preset = new BasicPreset(manager.bank);
+        const preset = new BasicPreset(manager);
         preset.presetName = "Sample Dummy Preset";
         const instrument = new BasicInstrument();
         instrument.instrumentName = "Sample Dummy Instrument";
@@ -87,16 +87,11 @@ export const SampleEditor = React.memo(function ({
         engine.processor.clearCache();
         return () => {
             engine.processor.clearCache();
-            if (manager?.bank?.presets?.length > 0) {
+            if (manager?.presets?.length > 0) {
                 engine.processor.programChange(KEYBOARD_TARGET_CHANNEL, 0);
             }
         };
-    }, [
-        engine.processor,
-        engine.processor.midiAudioChannels,
-        manager.bank,
-        sample
-    ]);
+    }, [engine.processor, engine.processor.midiAudioChannels, manager, sample]);
 
     const sampleType = sample.sampleType as SampleTypeValue;
     const linkedSample = sample.linkedSample;
@@ -173,7 +168,7 @@ export const SampleEditor = React.memo(function ({
         if (n === sampleName) {
             return n;
         }
-        n = n.substring(0, 19); // keep spare space for "R" or "L"
+        n = n.substring(0, 39); // keep spare space for "R" or "L"
         if (n[n.length - 1] === "R" || n[n.length - 1] === "L") {
             n = n.substring(0, n.length - 1);
         }
@@ -354,7 +349,7 @@ export const SampleEditor = React.memo(function ({
                                 setLinkedSample={setLinkedSample}
                                 linkedSample={linkedSample}
                                 sample={sample}
-                                samples={manager.bank.samples}
+                                samples={manager.samples}
                             ></TypeSelector>
                         </div>
                     </div>

@@ -14,14 +14,13 @@ export type BankEditView = "info" | SoundBankElement;
 
 const dummy = await BasicSoundBank.getDummySoundfontFile();
 
-export default class SoundBankManager {
+export default class SoundBankManager extends BasicSoundBank {
     processor: SpessaSynthProcessor;
     sequencer: SpessaSynthSequencer;
     history = new HistoryManager();
 
     currentView: BankEditView = "info";
 
-    bank: BasicSoundBank;
     // unsaved changes
     dirty = false;
 
@@ -30,36 +29,38 @@ export default class SoundBankManager {
         sequencer: SpessaSynthSequencer,
         bank?: BasicSoundBank
     ) {
+        super();
         this.processor = processor;
         this.sequencer = sequencer;
-        if (!bank) {
-            this.bank = loadSoundFont(dummy.slice());
-            this.bank.soundFontInfo["INAM"] = "";
-            this.bank.soundFontInfo["ICRD"] = new Date()
-                .toISOString()
-                .split("T")[0];
+        const actualBank = bank ?? loadSoundFont(dummy.slice());
+        if (bank === undefined) {
+            this.soundFontInfo["INAM"] = "";
+            this.soundFontInfo["ICRD"] = new Date().toISOString().split("T")[0];
         } else {
-            this.bank = bank;
+            this.soundFontInfo = bank.soundFontInfo;
         }
+        this.addPresets(...actualBank.presets);
+        this.addInstruments(...actualBank.instruments);
+        this.addSamples(...actualBank.samples);
         this.sortElements();
         this.sendBankToSynth();
     }
 
     sortElements() {
-        this.bank.presets.sort((a, b) => {
+        this.presets.sort((a, b) => {
             if (a.bank !== b.bank) {
                 return a.bank - b.bank;
             }
             return a.program - b.program;
         });
-        this.bank.samples.sort((a, b) =>
+        this.samples.sort((a, b) =>
             a.sampleName > b.sampleName
                 ? 1
                 : b.sampleName > a.sampleName
                   ? -1
                   : 0
         );
-        this.bank.instruments.sort((a, b) =>
+        this.instruments.sort((a, b) =>
             a.instrumentName > b.instrumentName
                 ? 1
                 : b.instrumentName > a.instrumentName
@@ -73,7 +74,7 @@ export default class SoundBankManager {
     }
 
     getInfo(fourCC: SoundFontInfoType) {
-        return this.bank.soundFontInfo?.[fourCC]?.toString() || "";
+        return this.soundFontInfo?.[fourCC]?.toString() || "";
     }
 
     getTabName(unnamed: string) {
@@ -86,47 +87,43 @@ export default class SoundBankManager {
 
     close() {
         if (
-            this.processor.soundfontManager.soundfontList[0].soundfont ===
-            this.bank
+            this.processor.soundfontManager.soundfontList[0].soundfont === this
         ) {
             this.processor.soundfontManager.reloadManager(
                 loadSoundFont(dummy.slice())
             );
         }
         this.clearCache();
-        this.bank.destroySoundBank();
+        this.destroySoundBank();
     }
 
     async save(
         format: "sf2" | "dls" | "sf3",
         progressFunction: ProgressFunction
     ) {
-        if (this.bank === undefined) {
-            return;
-        }
         let binary: Uint8Array;
         switch (format) {
             default:
             case "sf2":
-                binary = await this.bank.write({
+                binary = await this.write({
                     progressFunction
                 });
                 break;
 
             case "dls":
-                binary = await this.bank.writeDLS({
+                binary = await this.writeDLS({
                     progressFunction
                 });
                 break;
 
             case "sf3":
-                binary = await this.bank.write({
+                binary = await this.write({
                     compress: true,
                     compressionFunction: encodeVorbis,
                     progressFunction
                 });
         }
-        if (this.bank.soundFontInfo["ifil"] === "3.0") {
+        if (this.soundFontInfo["ifil"] === "3.0") {
             format = "sf3";
         }
         const buffer = binary.buffer;
@@ -156,7 +153,7 @@ export default class SoundBankManager {
     }
 
     sendBankToSynth() {
-        this.processor.soundfontManager.reloadManager(this.bank);
+        this.processor.soundfontManager.reloadManager(this);
         this.sequencer.currentTime -= 0.1;
     }
 

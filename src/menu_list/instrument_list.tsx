@@ -90,11 +90,11 @@ export function InstrumentList({
                 copy={selectedInstruments.size > 0}
                 onCopy={() => {
                     clipboard.copyInstruments(Array.from(selectedInstruments));
-                    setInstruments([...manager.bank.instruments]);
+                    setInstruments([...manager.instruments]);
                 }}
                 onPaste={() => {
-                    clipboard.pasteInstruments(manager.bank);
-                    setInstruments([...manager.bank.instruments]);
+                    clipboard.pasteInstruments(manager);
+                    setInstruments([...manager.instruments]);
                 }}
                 paste={clipboard.hasInstruments()}
                 onAdd={() => console.log("add instrument")}

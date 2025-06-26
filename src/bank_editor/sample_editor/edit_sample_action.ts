@@ -1,5 +1,6 @@
 import type { HistoryAction } from "../../core_backend/history.ts";
-import type { BasicSample, BasicSoundBank } from "spessasynth_core";
+import type { BasicSample } from "spessasynth_core";
+import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
 
 export class EditSampleAction<K extends keyof BasicSample>
     implements HistoryAction
@@ -24,13 +25,13 @@ export class EditSampleAction<K extends keyof BasicSample>
         this.callback = callback;
     }
 
-    do(b: BasicSoundBank) {
+    do(b: SoundBankManager) {
         const sample = b.samples[this.sampleIndex];
         sample[this.propertyName] = this.after;
         this.callback();
     }
 
-    undo(b: BasicSoundBank) {
+    undo(b: SoundBankManager) {
         const sample = b.samples[this.sampleIndex];
         sample[this.propertyName] = this.before;
         this.callback();

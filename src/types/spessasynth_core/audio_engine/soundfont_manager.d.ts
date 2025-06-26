@@ -1,4 +1,4 @@
-import type { BasicSoundBank } from "spessasynth_core";
+import type { SoundBankManager } from "spessasynth_core";
 
 declare module "spessasynth_core" {
     export class SoundFontManager {
@@ -36,9 +36,9 @@ declare module "spessasynth_core" {
 
         /**
          * Clears all soundfonts and adds a new one with an ID "main"
-         * @param soundFont {BasicSoundBank}
+         * @param soundFont {SoundBankManager}
          */
-        reloadManager(soundFont: BasicSoundBank): void;
+        reloadManager(soundFont: SoundBankManager): void;
 
         /**
          * Deletes a given soundfont.
@@ -48,12 +48,12 @@ declare module "spessasynth_core" {
 
         /**
          * Adds a new soundfont with a given ID
-         * @param font {BasicSoundBank}
+         * @param font {SoundBankManager}
          * @param id {string}
          * @param bankOffset {number}
          */
         addNewSoundFont(
-            font: BasicSoundBank,
+            font: SoundBankManager,
             id: string,
             bankOffset: number
         ): void;
@@ -97,7 +97,7 @@ declare module "spessasynth_core" {
         /**
          * - the soundfont itself
          */
-        soundfont: BasicSoundBank;
+        soundfont: SoundBankManager;
         /**
          * - the soundfont's bank offset
          */

@@ -18,7 +18,7 @@ import { AudioEngine } from "./core_backend/audio_engine.ts";
 import { ClipboardManager } from "./core_backend/clipboard_manager.ts";
 import { Settings } from "./settings/settings.tsx";
 import { TabList } from "./tab_list/tab_list.tsx";
-import { type BasicSoundBank, loadSoundFont } from "spessasynth_core";
+import { loadSoundFont } from "spessasynth_core";
 import { LocaleList } from "./locale/locale_list.ts";
 import { KeyboardController } from "./keyboard/keyboard_controller.tsx";
 import { DestinationsOptions } from "./utils/translated_options/destination_options.tsx";
@@ -132,7 +132,7 @@ function App() {
     const openNewBankTab = useCallback(async (bankFile?: File) => {
         setIsLoading(true);
 
-        let bank: BasicSoundBank | undefined = undefined;
+        let bank: SoundBankManager | undefined = undefined;
         if (bankFile) {
             const buf = await bankFile.arrayBuffer();
             bank = loadSoundFont(buf);

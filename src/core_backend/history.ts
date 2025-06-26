@@ -1,13 +1,12 @@
-import type { BasicSoundBank } from "spessasynth_core";
 import { logInfo } from "../utils/core_utils.ts";
 import type SoundBankManager from "./sound_bank_manager.ts";
 
 export interface HistoryAction {
     // do the action
-    do(b: BasicSoundBank): void;
+    do(b: SoundBankManager): void;
 
     // undo the action
-    undo(b: BasicSoundBank): void;
+    undo(b: SoundBankManager): void;
 }
 
 export type HistoryActionGroup = HistoryAction[];
@@ -20,7 +19,7 @@ export class HistoryManager {
         if (action.length === 0) {
             return;
         }
-        action.forEach((a) => a.do(m.bank));
+        action.forEach((a) => a.do(m));
         this.history.push(action);
         this.undoHistory.length = 0;
         // update synth engine
@@ -35,7 +34,7 @@ export class HistoryManager {
         if (!action) {
             return;
         }
-        action.forEach((a) => a.do(m.bank));
+        action.forEach((a) => a.do(m));
         logInfo(`Redid. Remaining undo history: ${this.undoHistory.length}`);
         this.history.push(action);
         // update synth engine
@@ -52,7 +51,7 @@ export class HistoryManager {
             return;
         }
 
-        action.toReversed().forEach((a) => a.undo(m.bank));
+        action.toReversed().forEach((a) => a.undo(m));
         logInfo(`Undid. Remaining history: ${this.history.length}`);
         this.undoHistory.push(action);
         // update synth engine

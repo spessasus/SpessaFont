@@ -1,6 +1,7 @@
 import type { HistoryAction } from "../../../core_backend/history.ts";
-import type { BasicSample, BasicSoundBank } from "spessasynth_core";
+import type { BasicSample } from "spessasynth_core";
 import type { SetViewType } from "../../bank_editor.tsx";
+import type SoundBankManager from "../../../core_backend/sound_bank_manager.ts";
 
 export class DeleteSampleAction implements HistoryAction {
     private removedSample?: BasicSample;
@@ -18,7 +19,7 @@ export class DeleteSampleAction implements HistoryAction {
         this.setView = setView;
     }
 
-    do(b: BasicSoundBank) {
+    do(b: SoundBankManager) {
         this.removedSample = b.samples.splice(this.index, 1)[0];
         this.setSamples([...b.samples]);
         // check if there are samples to switch to
@@ -29,7 +30,7 @@ export class DeleteSampleAction implements HistoryAction {
         }
     }
 
-    undo(b: BasicSoundBank) {
+    undo(b: SoundBankManager) {
         if (!this.removedSample) {
             return;
         }

@@ -9,7 +9,7 @@ export function BankInfoStats({
     toggleDefaultModulators: () => void;
 }) {
     const { t } = useTranslation();
-    const bank = manager.bank;
+    const bank = manager;
 
     // count generators and modulators
     let instrumentGens = 0;

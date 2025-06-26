@@ -17,21 +17,21 @@ export function DefaultModulatorList({
     ccOptions: JSX.Element;
     destinationOptions: JSX.Element;
 }) {
-    const [dmods, setDmods] = useState(manager.bank?.defaultModulators);
+    const [dmods, setDmods] = useState(manager?.defaultModulators);
 
     const { t } = useTranslation();
     if (dmods === undefined) {
         return <></>;
     }
     const setDefaultModulators = (mods: Modulator[]) => {
-        if (manager.bank === undefined) {
+        if (manager === undefined) {
             return;
         }
         manager.modifyBank([
             new SetDefaultModulators(
                 setDmods,
                 [...mods],
-                [...manager.bank.defaultModulators]
+                [...manager.defaultModulators]
             )
         ]);
     };

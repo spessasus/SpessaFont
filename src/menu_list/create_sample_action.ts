@@ -1,6 +1,7 @@
 import type { HistoryAction } from "../core_backend/history.ts";
-import type { BasicSample, BasicSoundBank } from "spessasynth_core";
+import type { BasicSample } from "spessasynth_core";
 import type { SetViewType } from "../bank_editor/bank_editor.tsx";
+import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 
 export class CreateSampleAction implements HistoryAction {
     private readonly sample: BasicSample;
@@ -20,7 +21,7 @@ export class CreateSampleAction implements HistoryAction {
         this.setView = setView;
     }
 
-    do(b: BasicSoundBank) {
+    do(b: SoundBankManager) {
         if (this.index === -1 || this.index > b.samples.length) {
             this.index = b.samples.length;
         }
@@ -29,7 +30,7 @@ export class CreateSampleAction implements HistoryAction {
         this.setView(this.sample);
     }
 
-    undo(b: BasicSoundBank) {
+    undo(b: SoundBankManager) {
         b.samples.splice(this.index, 1);
         this.setSamples([...b.samples]);
         this.setView("info");

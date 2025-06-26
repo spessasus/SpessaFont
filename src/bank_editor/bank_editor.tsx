@@ -55,14 +55,14 @@ export function BankEditor({
     ccOptions
 }: BankEditorProps) {
     const [view, setView] = useState<BankEditView>(manager.currentView);
-    const [samples, setSamples] = useState(manager.bank.samples);
-    const [instruments, setInstruments] = useState(manager.bank.instruments);
-    const [presets, setPresets] = useState(manager.bank.presets);
+    const [samples, setSamples] = useState(manager.samples);
+    const [instruments, setInstruments] = useState(manager.instruments);
+    const [presets, setPresets] = useState(manager.presets);
 
     useEffect(() => {
-        setSamples(manager.bank.samples);
-        setInstruments(manager.bank.instruments);
-        setPresets(manager.bank.presets);
+        setSamples(manager.samples);
+        setInstruments(manager.instruments);
+        setPresets(manager.presets);
         setView(manager.currentView);
     }, [manager]);
 

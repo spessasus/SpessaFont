@@ -1,6 +1,7 @@
 import type { HistoryAction } from "../../../core_backend/history.ts";
-import type { BasicPreset, BasicSoundBank } from "spessasynth_core";
+import type { BasicPreset } from "spessasynth_core";
 import type { SetViewType } from "../../bank_editor.tsx";
+import type SoundBankManager from "../../../core_backend/sound_bank_manager.ts";
 
 export class DeletePresetAction implements HistoryAction {
     private removed?: BasicPreset;
@@ -18,7 +19,7 @@ export class DeletePresetAction implements HistoryAction {
         this.setView = setView;
     }
 
-    do(b: BasicSoundBank) {
+    do(b: SoundBankManager) {
         this.removed = b.presets[this.index];
         b.deletePreset(this.removed);
         this.setPresets([...b.presets]);
@@ -30,7 +31,7 @@ export class DeletePresetAction implements HistoryAction {
         }
     }
 
-    undo(b: BasicSoundBank) {
+    undo(b: SoundBankManager) {
         if (!this.removed) {
             return;
         }

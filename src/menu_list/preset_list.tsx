@@ -100,11 +100,11 @@ export function PresetList({
                     clipboard.copyPresets(
                         Array.from(selectedPresets).map((p) => p.preset)
                     );
-                    setPresets([...manager.bank.presets]);
+                    setPresets([...manager.presets]);
                 }}
                 onPaste={() => {
-                    clipboard.pastePresets(manager.bank);
-                    setPresets([...manager.bank.presets]);
+                    clipboard.pastePresets(manager);
+                    setPresets([...manager.presets]);
                 }}
                 onAdd={() => console.log("add preset")}
                 onClick={() => setShowPresets(!showPresets)}

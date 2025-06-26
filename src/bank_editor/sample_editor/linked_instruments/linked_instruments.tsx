@@ -26,13 +26,13 @@ export function LinkedInstruments({
     }, [sample.linkedInstruments]);
 
     const deleteSample = () => {
-        const mainIndex = manager.bank.samples.indexOf(sample);
+        const mainIndex = manager.samples.indexOf(sample);
         const actions = [
             new DeleteSampleAction(mainIndex, setSamples, setView)
         ];
         // delete the other one too if linked and unused
         if (sample?.linkedSample?.useCount === 0) {
-            let index = manager.bank.samples.indexOf(sample.linkedSample);
+            let index = manager.samples.indexOf(sample.linkedSample);
             if (index > mainIndex) {
                 index--;
             }
