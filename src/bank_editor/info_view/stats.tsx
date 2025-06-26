@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
+import "./stats.css";
 
 export function BankInfoStats({
     manager,

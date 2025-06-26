@@ -47,6 +47,8 @@
     /*thanks for this bezier mozilla devtools*/
     --bouncy-transition: cubic-bezier(.68, -0.55, .27, 1.55);
 
+    --flex-gap: 0.5rem;
+
     /*global styles*/
     font-family: system-ui, "Noto Sans", "Open Sans", sans-serif;
     color: var(--font-color);
@@ -60,6 +62,7 @@
     height: 100%;
     background: var(--top-color);
     scrollbar-width: thin;
+    gap: var(--flex-gap);
 }
 
 .spessafont_main.light_mode, .spessafont_main.light_mode * {
@@ -174,6 +177,10 @@ input[type=number] {
 
 .disabled {
     filter: grayscale(10);
+}
+
+.warning {
+    color: red !important;
 }
 
 

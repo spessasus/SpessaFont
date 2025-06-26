@@ -1,0 +1,69 @@
+.sound_bank_info .stats {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    overflow-y: auto;
+    flex-grow: 0;
+    width: min-content;
+    user-select: none;
+    gap: var(--flex-gap);
+}
+
+.sound_bank_info .stats .wrapper {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+
+.sound_bank_info .stats h1 {
+    background: var(--primary-color);
+    width: 100%;
+    padding: 0.3rem;
+    font-size: 2rem;
+    border: solid 0.2rem var(--primary-color);
+    border-radius: var(--primary-border-radius);
+}
+
+
+.sound_bank_info .stats span {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1.5rem;
+    gap: var(--flex-gap);
+    padding-bottom: var(--flex-gap);
+    border-bottom: solid 0.2rem var(--border-color);
+}
+
+.sound_bank_info .stats .stat_group {
+    border: solid 0.2rem var(--border-color);
+    border-radius: var(--primary-border-radius);
+    padding: 0.5rem;
+    margin-top: 1.5rem;
+}
+
+.sound_bank_info .stats .default_modulators_button {
+    background: var(--primary-color);
+    width: 100%;
+    padding: 0.4rem;
+    border-radius: var(--primary-border-radius);
+    border: none;
+    cursor: pointer;
+}
+
+.default_modulators_button * {
+    cursor: pointer;
+}
+
+
+.sound_bank_info .stats .stat_group span {
+    border: none;
+    margin-top: auto;
+}
+
+.sound_bank_info .stats pre, .sound_bank_info .stats label {
+    font-size: 1rem;
+}
+
+.sound_bank_info .stats pre {
+    font-weight: bold;
+}

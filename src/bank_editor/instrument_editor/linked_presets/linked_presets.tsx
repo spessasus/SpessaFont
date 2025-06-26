@@ -41,7 +41,7 @@ export function LinkedPresets({
                             {t("instrumentLocale.notLinkedToPreset")}
                         </strong>
                     </div>
-                    <div onClick={deleteInstrument}>
+                    <div className={"warning"} onClick={deleteInstrument}>
                         {t("instrumentLocale.deleteInstrument")}
                     </div>
                 </>

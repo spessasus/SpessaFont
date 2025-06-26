@@ -33,11 +33,11 @@ export default class SoundBankManager extends BasicSoundBank {
         this.processor = processor;
         this.sequencer = sequencer;
         const actualBank = bank ?? loadSoundFont(dummy.slice());
+        this.soundFontInfo = actualBank.soundFontInfo;
         if (bank === undefined) {
+            this.soundFontInfo["ifil"] = "2.4";
             this.soundFontInfo["INAM"] = "";
             this.soundFontInfo["ICRD"] = new Date().toISOString().split("T")[0];
-        } else {
-            this.soundFontInfo = bank.soundFontInfo;
         }
         this.addPresets(...actualBank.presets);
         this.addInstruments(...actualBank.instruments);

@@ -10,7 +10,7 @@ import { KEYBOARD_TARGET_CHANNEL } from "../../keyboard/target_channel.ts";
 import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
 import type { SetViewType } from "../bank_editor.tsx";
 import { useTranslation } from "react-i18next";
-import { NumberGeneratorRow } from "../generator_view/generator_row.tsx";
+import { NumberGeneratorRow } from "../generator_table/generator_row.tsx";
 import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
 import {
     ac2hz,

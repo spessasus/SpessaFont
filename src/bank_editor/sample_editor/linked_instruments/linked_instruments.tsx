@@ -57,7 +57,7 @@ export function LinkedInstruments({
                             {t("sampleLocale.notLinkedToInstrument")}
                         </strong>
                     </div>
-                    <div onClick={deleteSample}>
+                    <div onClick={deleteSample} className={"warning"}>
                         {t("sampleLocale.deleteSample")}
                     </div>
                 </>

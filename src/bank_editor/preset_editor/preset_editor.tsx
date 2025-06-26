@@ -6,7 +6,7 @@ import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx
 import type { SetViewType } from "../bank_editor.tsx";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { NumberGeneratorRow } from "../generator_view/generator_row.tsx";
+import { NumberGeneratorRow } from "../generator_table/generator_row.tsx";
 import { cb2db, db2cb } from "../conversion_helpers.ts";
 import { BottomPresetBar } from "./bottom_bar/bottom_bar.tsx";
 import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";

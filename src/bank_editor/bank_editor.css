@@ -5,9 +5,11 @@
     min-height: 0;
     min-width: 0;
     flex-grow: 1;
-    gap: 0.5rem;
-    padding: 0.5rem;
+    gap: var(--flex-gap);
     overflow-x: auto;
+    padding-left: var(--flex-gap);
+    padding-bottom: var(--flex-gap);
+    padding-right: var(--flex-gap);
 }
 
 .main_content_window {

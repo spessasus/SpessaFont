@@ -30,7 +30,7 @@ export function BottomPresetBar({
     return (
         <div className={"bottom_bar"}>
             <div onClick={deletePreset}>
-                <b style={{ color: "red" }}>{t("presetLocale.deletePreset")}</b>
+                <b className={"warning"}>{t("presetLocale.deletePreset")}</b>
             </div>
             <div>
                 <span>{t("presetLocale.programNumber")}</span>

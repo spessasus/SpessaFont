@@ -30,7 +30,7 @@
 .left_group {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--flex-gap);;
     padding: 0.3rem;
 }
 

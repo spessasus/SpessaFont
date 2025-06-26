@@ -38,7 +38,7 @@ export function MidiSettings({ engine }: { engine: AudioEngine }) {
         return (
             <div className="settings_group">
                 <h2>{t("settingsLocale.midi.title")}</h2>
-                <p style={{ color: "red" }}>{midiError}</p>
+                <p className={"warning"}>{midiError}</p>
             </div>
         );
     }
