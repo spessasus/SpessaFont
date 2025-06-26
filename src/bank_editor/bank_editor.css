@@ -3,14 +3,17 @@
     background: var(--top-color);
     display: flex;
     min-height: 0;
+    min-width: 0;
     flex-grow: 1;
     gap: 0.5rem;
     padding: 0.5rem;
+    overflow-x: auto;
 }
 
 .main_content_window {
     min-height: 0;
-    min-width: 0;
+    /*seems nice?*/
+    min-width: 64vh;
     display: block;
     flex: 1;
 }
