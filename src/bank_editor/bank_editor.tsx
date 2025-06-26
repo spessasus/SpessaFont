@@ -100,6 +100,7 @@ export function BankEditor({
                 )}
                 {view instanceof BasicPreset && (
                     <PresetEditor
+                        manager={manager}
                         engine={audioEngine}
                         preset={view}
                         setView={setView}

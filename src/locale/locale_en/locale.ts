@@ -9,6 +9,7 @@ import { SampleLocale } from "./sample.ts";
 import { KeyboardLocale } from "./keyboard.ts";
 import { SoundBankLocale } from "./sound_bank.ts";
 import { InstrumentLocale } from "./instrument.ts";
+import { PresetLocale } from "./preset.ts";
 
 /**
  *
@@ -58,8 +59,10 @@ export const localeEnglish = {
     presetList: PresetListLocale,
     settingsLocale: SettingsLocale,
     midiControllersLocale: MidiControllersLocale,
+    keyboardLocale: KeyboardLocale,
+
     sampleLocale: SampleLocale,
     instrumentLocale: InstrumentLocale,
-    keyboardLocale: KeyboardLocale,
+    presetLocale: PresetLocale,
     soundBankLocale: SoundBankLocale
 };

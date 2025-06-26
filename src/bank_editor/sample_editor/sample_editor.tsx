@@ -71,12 +71,12 @@ export const SampleEditor = React.memo(function ({
 
     // make the sample playable
     useEffect(() => {
-        engine.processor.clearCache();
         const preset = new BasicPreset(manager.bank);
         preset.presetName = "Sample Dummy Preset";
         const instrument = new BasicInstrument();
-        instrument.instrumentName = "Sample Dummy soundBankElement";
-        preset.createZone().setInstrument(instrument);
+        instrument.instrumentName = "Sample Dummy Instrument";
+        // do not use setInstrument() here as we don't want to mark it as linked
+        preset.createZone().instrument = instrument;
         const instZone = instrument.createZone();
         instZone.setGenerator(generatorTypes.sampleModes, 1);
         // do not use setSample() here as we don't want to mark it as linked
@@ -84,9 +84,12 @@ export const SampleEditor = React.memo(function ({
         engine.processor.midiAudioChannels[KEYBOARD_TARGET_CHANNEL].setPreset(
             preset
         );
+        engine.processor.clearCache();
         return () => {
             engine.processor.clearCache();
-            engine.processor.programChange(KEYBOARD_TARGET_CHANNEL, 0);
+            if (manager?.bank?.presets?.length > 0) {
+                engine.processor.programChange(KEYBOARD_TARGET_CHANNEL, 0);
+            }
         };
     }, [
         engine.processor,

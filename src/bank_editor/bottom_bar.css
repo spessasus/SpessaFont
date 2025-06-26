@@ -1,4 +1,4 @@
-.linked_presets {
+.bottom_bar {
     overflow-x: auto;
     display: flex;
     border-top: solid 1px var(--track-border-color);
@@ -6,7 +6,7 @@
     margin-top: auto;
 }
 
-.linked_presets div {
+.bottom_bar div {
     cursor: pointer;
     padding: 0.3rem 1rem;
     text-align: center;
@@ -14,6 +14,7 @@
     border-right: solid 1px var(--track-border-color);
 }
 
-.linked_presets div:hover {
+.bottom_bar div:hover {
     background: var(--top-buttons-color);
+
 }

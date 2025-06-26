@@ -97,7 +97,7 @@ export function InstrumentList({
                     setInstruments([...manager.bank.instruments]);
                 }}
                 paste={clipboard.hasInstruments()}
-                onAdd={() => console.log("add soundBankElement")}
+                onAdd={() => console.log("add instrument")}
                 onClick={() => setShowInstruments(!showInstruments)}
                 open={showInstruments}
                 text={t("presetList.instruments")}

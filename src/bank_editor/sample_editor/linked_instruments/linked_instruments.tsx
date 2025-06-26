@@ -1,5 +1,5 @@
 import { BasicInstrument, type BasicSample } from "spessasynth_core";
-import "./linked_instruments.css";
+import "../../bottom_bar.css";
 import type { SetViewType } from "../../bank_editor.tsx";
 import { useTranslation } from "react-i18next";
 import { useMemo } from "react";
@@ -42,7 +42,7 @@ export function LinkedInstruments({
     };
 
     return (
-        <div className={"linked_instruments"}>
+        <div className={"bottom_bar"}>
             {sample.isCompressed && (
                 <div>
                     <strong style={{ color: "red" }}>

@@ -51,7 +51,9 @@ export function InstrumentEditor({
         const preset = new BasicPreset(manager.bank);
         // screaming name so it's easier to spot errors
         preset.presetName = "INSTRUMENT PLAYBACK PRESET";
-        preset.createZone().setInstrument(instrument);
+        // note: do not use setInstrument as we don't want the instrument to be aware of the preset
+        // (it won't allow us to delete it)
+        preset.createZone().instrument = instrument;
         engine.processor.midiAudioChannels[KEYBOARD_TARGET_CHANNEL].setPreset(
             preset
         );

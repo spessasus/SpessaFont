@@ -1,5 +1,5 @@
 import { type BasicInstrument, BasicPreset } from "spessasynth_core";
-import "./linked_presets.css";
+import "../../bottom_bar.css";
 import type { SetViewType } from "../../bank_editor.tsx";
 import { useTranslation } from "react-i18next";
 import { useMemo } from "react";
@@ -33,7 +33,7 @@ export function LinkedPresets({
     };
 
     return (
-        <div className={"linked_presets"}>
+        <div className={"bottom_bar"}>
             {instrument.linkedPresets.length === 0 && (
                 <>
                     <div>

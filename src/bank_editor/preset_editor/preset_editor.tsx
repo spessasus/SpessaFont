@@ -8,19 +8,23 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { NumberGeneratorRow } from "../generator_view/generator_row.tsx";
 import { cb2db, db2cb } from "../conversion_helpers.ts";
+import { BottomPresetBar } from "./bottom_bar/bottom_bar.tsx";
+import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
 
 export function PresetEditor({
     preset,
     engine,
     presets,
     setPresets,
-    setView
+    setView,
+    manager
 }: {
     preset: BasicPreset;
     engine: AudioEngine;
     presets: BasicPreset[];
     setPresets: (p: BasicPreset[]) => unknown;
     setView: SetViewType;
+    manager: SoundBankManager;
 }) {
     const { t } = useTranslation();
     useEffect(() => {
@@ -271,6 +275,12 @@ export function PresetEditor({
                     </tbody>
                 </table>
             </div>
+            <BottomPresetBar
+                manager={manager}
+                setPresets={setPresets}
+                preset={preset}
+                setView={setView}
+            />
         </div>
     );
 }
