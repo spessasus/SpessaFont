@@ -28,9 +28,15 @@
     "noUncheckedSideEffectImports": true,
     "typeRoots": [
       "./src/types"
-    ]
+    ],
+    "paths": {
+      "sl-web-ogg": [
+        "./externals/sl-web-ogg/dist/index.min.js"
+      ]
+    }
   },
   "include": [
-    "src"
+    "src",
+    "externals"
   ]
 }

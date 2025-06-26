@@ -1,15 +1,18 @@
 import {
     BasicSoundBank,
     loadSoundFont,
+    type ProgressFunction,
     type SoundBankElement,
     type SoundFontInfoType,
     SpessaSynthProcessor,
     type SpessaSynthSequencer
 } from "spessasynth_core";
 import { type HistoryActionGroup, HistoryManager } from "./history.ts";
-import { encodeVorbis } from "../externals/libvorbis/encode_vorbis";
+import { encodeVorbis } from "./encode_vorbis.ts";
 
 export type BankEditView = "info" | SoundBankElement;
+
+const dummy = await BasicSoundBank.getDummySoundfontFile();
 
 export default class SoundBankManager {
     processor: SpessaSynthProcessor;
@@ -30,7 +33,7 @@ export default class SoundBankManager {
         this.processor = processor;
         this.sequencer = sequencer;
         if (!bank) {
-            this.bank = loadSoundFont(BasicSoundBank.getDummySoundfontFile());
+            this.bank = loadSoundFont(dummy.slice());
             this.bank.soundFontInfo["INAM"] = "";
             this.bank.soundFontInfo["ICRD"] = new Date()
                 .toISOString()
@@ -87,14 +90,17 @@ export default class SoundBankManager {
             this.bank
         ) {
             this.processor.soundfontManager.reloadManager(
-                loadSoundFont(BasicSoundBank.getDummySoundfontFile())
+                loadSoundFont(dummy.slice())
             );
         }
         this.clearCache();
         this.bank.destroySoundBank();
     }
 
-    save(format: "sf2" | "dls" | "sf3") {
+    async save(
+        format: "sf2" | "dls" | "sf3",
+        progressFunction: ProgressFunction
+    ) {
         if (this.bank === undefined) {
             return;
         }
@@ -102,18 +108,22 @@ export default class SoundBankManager {
         switch (format) {
             default:
             case "sf2":
-                binary = this.bank.write();
+                binary = await this.bank.write({
+                    progressFunction
+                });
                 break;
 
             case "dls":
-                binary = this.bank.writeDLS();
+                binary = await this.bank.writeDLS({
+                    progressFunction
+                });
                 break;
 
             case "sf3":
-                binary = this.bank.write({
+                binary = await this.bank.write({
                     compress: true,
-                    compressionQuality: 1,
-                    compressionFunction: encodeVorbis
+                    compressionFunction: encodeVorbis,
+                    progressFunction
                 });
         }
         if (this.bank.soundFontInfo["ifil"] === "3.0") {
@@ -141,7 +151,7 @@ export default class SoundBankManager {
         // clean up the object URL after a short delay
         setTimeout(() => {
             URL.revokeObjectURL(url);
-            console.info("Object URL revoked to free memory.");
+            console.info("Object URL revoked to free memory");
         }, 10000);
     }
 

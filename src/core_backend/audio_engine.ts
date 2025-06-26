@@ -16,6 +16,8 @@ const MAX_CHUNKS_QUEUED = 16; // 16 * 128 = 2,048 // Windows does not like small
 type AudioChunk = [Float32Array, Float32Array];
 type AudioChunks = AudioChunk[];
 
+const dummy = BasicSoundBank.getDummySoundfontFile();
+
 export class AudioEngine {
     context: AudioContext;
 
@@ -38,9 +40,12 @@ export class AudioEngine {
             effectsEnabled: true,
             initialTime: context.currentTime
         });
-        this.processor.soundfontManager.reloadManager(
-            loadSoundFont(BasicSoundBank.getDummySoundfontFile())
+        dummy.then((d) =>
+            this.processor.soundfontManager.reloadManager(
+                loadSoundFont(d.slice())
+            )
         );
+
         this.sequencer = new SpessaSynthSequencer(this.processor);
         this.sequencer.preservePlaybackState = true;
         // analyser
@@ -130,9 +135,9 @@ export class AudioEngine {
 
     toggleMIDI() {
         if (this.sequencer.paused) {
-            this.sequencer.play();
+            this.resumeMIDI();
         } else {
-            this.sequencer.pause();
+            this.pauseMIDI();
         }
     }
 

@@ -142,20 +142,28 @@ declare module "spessasynth_core" {
         | "iver"
         | "ISFT";
 
+    export type SampleEncodingFunction = (
+        audioData: Float32Array,
+        sampleRate: number
+    ) => Promise<Uint8Array>;
+
+    export type ProgressFunction = (
+        sampleName: string,
+        writtenCount: number,
+        totalSampleCount: number
+    ) => Promise<unknown>;
+
     export type SoundFont2WriteOptions = {
-        /**
-         * - if the soundfont should be compressed with the Ogg Vorbis codec
-         */
-        compress: boolean;
-        /**
-         * - the vorbis compression quality, from -0.1 to 1
-         */
-        compressionQuality: number;
-        /**
-         * - the encode vorbis function.
-         * Can be undefined if not compressed.
-         */
-        compressionFunction: EncodeVorbisFunction | undefined;
+        compress?: boolean;
+        compressionFunction?: SampleEncodingFunction;
+        progressFunction?: ProgressFunction;
+        writeDefaultModulators?: boolean;
+        writeExtendedLimits?: boolean;
+        decompress?: boolean;
+    };
+
+    export type DLSWriteOptions = {
+        progressFunction?: ProgressFunction;
     };
 
     export class BasicSoundBank {
@@ -172,13 +180,12 @@ declare module "spessasynth_core" {
 
         /**
          * Creates a simple soundfont with one saw wave preset.
-         * @returns {ArrayBuffer}
          */
-        static getDummySoundfontFile(): ArrayBuffer;
+        static async getDummySoundfontFile(): Promise<ArrayBuffer>;
 
-        write(options?: SoundFont2WriteOptions): Uint8Array;
+        async write(options?: SoundFont2WriteOptions): Promise<Uint8Array>;
 
-        writeDLS(): Uint8Array;
+        async writeDLS(options?: DLSWriteOptions): Promise<Uint8Array>;
 
         destroySoundBank(): void;
 

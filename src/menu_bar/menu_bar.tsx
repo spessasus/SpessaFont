@@ -6,6 +6,7 @@ import "./menu_bar.css";
 import { useTranslation } from "react-i18next";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import { Gear } from "./gear.tsx";
+import { type RefObject, useCallback } from "react";
 
 // @ts-expect-error chromium check is here
 const isChrome: boolean = window["chrome"] !== undefined;
@@ -18,7 +19,8 @@ export function MenuBar({
     manager,
     showMidiPlayer,
     toggleKeyboard,
-    setIsLoading
+    setIsLoading,
+    savingRef
 }: {
     audioEngine: AudioEngine;
     toggleSettings: () => void;
@@ -28,6 +30,7 @@ export function MenuBar({
     showMidiPlayer: boolean;
     toggleKeyboard: () => void;
     setIsLoading: (l: boolean) => unknown;
+    savingRef: RefObject<HTMLSpanElement | null>;
 }) {
     const fLoc = "menuBarLocale.file.";
     const eLoc = "menuBarLocale.edit.";
@@ -47,6 +50,15 @@ export function MenuBar({
         };
     }
 
+    const progressFunc = useCallback(
+        async (_s: string, n: number, c: number) => {
+            if (savingRef.current) {
+                savingRef.current.textContent = `${((n / c) * 100).toFixed()}%`;
+            }
+        },
+        [savingRef]
+    );
+
     function newFile() {
         openTab();
     }
@@ -54,24 +66,21 @@ export function MenuBar({
     function sf2() {
         setIsLoading(true);
         setTimeout(() => {
-            manager.save("sf2");
-            setIsLoading(false);
+            manager.save("sf2", progressFunc).then(() => setIsLoading(false));
         }, 200);
     }
 
     function dls() {
         setIsLoading(true);
         setTimeout(() => {
-            manager.save("dls");
-            setIsLoading(false);
+            manager.save("dls", progressFunc).then(() => setIsLoading(false));
         }, 200);
     }
 
     function sf3() {
         setIsLoading(true);
         setTimeout(() => {
-            manager.save("sf3");
-            setIsLoading(false);
+            manager.save("sf3", progressFunc).then(() => setIsLoading(false));
         }, 200);
     }
 

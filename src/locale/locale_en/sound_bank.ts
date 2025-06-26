@@ -1,4 +1,6 @@
 export const SoundBankLocale = {
+    savingFile: "Saving file...",
+    writingSamples: "Writing Samples...",
     globalZone: "Global Zone",
     units: {
         // keep the suffixes short

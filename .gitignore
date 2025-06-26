@@ -86,4 +86,5 @@ $RECYCLE.BIN/
 *.msp
 
 # Windows shortcuts
-*.lnk
+*.lnk!/src/externals/sl-web-ogg/dist/
+!/externals/sl-web-ogg/dist/

@@ -13,7 +13,7 @@ import i18next from "i18next";
 import { initReactI18next, useTranslation } from "react-i18next";
 import SoundBankManager from "./core_backend/sound_bank_manager.ts";
 import { GetUserInput } from "./get_user_input/get_user_input.tsx";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AudioEngine } from "./core_backend/audio_engine.ts";
 import { ClipboardManager } from "./core_backend/clipboard_manager.ts";
 import { Settings } from "./settings/settings.tsx";
@@ -58,6 +58,7 @@ function App() {
     const { t } = useTranslation();
     const [tabs, setTabs] = useState<SoundBankManager[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [showKeyboard, setShowKeyboard] = useState(false);
     const [settings, setSettings] = useState(false);
     const [theme, setTheme] = useState(getSetting("theme", initialSettings));
@@ -128,7 +129,7 @@ function App() {
         };
     }, [tabs]);
 
-    async function openNewBankTab(bankFile?: File) {
+    const openNewBankTab = useCallback(async (bankFile?: File) => {
         setIsLoading(true);
 
         let bank: BasicSoundBank | undefined = undefined;
@@ -147,39 +148,44 @@ function App() {
         newManager.sendBankToSynth();
         setTabs((prev) => [newManager, ...prev]);
         setActiveTab(0); // newly added tab
-    }
+    }, []);
 
-    function closeTab(index: number) {
-        if (!tabs[index]) {
-            return;
-        }
-        setTabs((prevTabs) => {
-            const tab = prevTabs[index];
-            if (tab.dirty) {
-                const confirmed = window.confirm(t("unsavedChanges"));
-                if (!confirmed) {
-                    return prevTabs;
-                }
+    const closeTab = useCallback(
+        (index: number) => {
+            if (!tabs[index]) {
+                return;
             }
-            tab.close();
-            return prevTabs.filter((_, i) => i !== index);
-        });
-        setActiveTab(0);
-    }
+            setTabs((prevTabs) => {
+                const tab = prevTabs[index];
+                if (tab.dirty) {
+                    const confirmed = window.confirm(t("unsavedChanges"));
+                    if (!confirmed) {
+                        return prevTabs;
+                    }
+                }
+                tab.close();
+                return prevTabs.filter((_, i) => i !== index);
+            });
+            setActiveTab(0);
+        },
+        [t, tabs]
+    );
 
     const showTabList = !settings;
     const showEditor = useMemo(
-        () => !settings && !isLoading && tabs.length > 0,
-        [isLoading, settings, tabs.length]
+        () => !settings && !isLoading && !isSaving && tabs.length > 0,
+        [isLoading, isSaving, settings, tabs.length]
     );
-    const showWelcome = tabs.length < 1 && !settings && !isLoading;
-    const showSettings = settings && !isLoading;
+    const showWelcome = tabs.length < 1 && !settings && !isSaving && !isLoading;
+    const showSettings = settings && !isLoading && !isSaving;
+    const savingRef = useRef<HTMLSpanElement>(null);
     return (
         <div
             className={`spessafont_main ${theme === "light" ? "light_mode" : ""}`}
         >
             <MenuBar
-                setIsLoading={setIsLoading}
+                setIsLoading={setIsSaving}
+                savingRef={savingRef}
                 showMidiPlayer={tabs.length > 0}
                 toggleSettings={toggleSettings}
                 audioEngine={audioEngine}
@@ -204,6 +210,16 @@ function App() {
             {isLoading && (
                 <div className="welcome loading">
                     <h1>{t("synthInit.genericLoading")}</h1>
+                </div>
+            )}
+
+            {isSaving && (
+                <div className={"welcome loading"}>
+                    <h1>{t("soundBankLocale.savingFile")}</h1>
+                    <h2>
+                        <span>{t("soundBankLocale.writingSamples")}</span>
+                        <span ref={savingRef}></span>
+                    </h2>
                 </div>
             )}
 
