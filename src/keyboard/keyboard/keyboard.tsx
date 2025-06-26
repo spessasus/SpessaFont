@@ -1,4 +1,4 @@
-import { type Ref, useEffect, useImperativeHandle, useRef } from "react";
+import { type RefObject, useEffect, useImperativeHandle, useRef } from "react";
 import "./keyboard.css";
 import type { AudioEngine } from "../../core_backend/audio_engine.ts";
 import { KEYBOARD_TARGET_CHANNEL } from "../target_channel.ts";
@@ -20,10 +20,14 @@ let mouseHeld = false;
 // most of this code is ported over from spessasynth web app
 export function Keyboard({
     engine,
-    ref
+    ref,
+    keyDisplay,
+    velocityDisplay
 }: {
     engine: AudioEngine;
-    ref: Ref<KeyboardPressRef>;
+    ref: RefObject<KeyboardPressRef | null>;
+    keyDisplay: RefObject<HTMLSpanElement | null>;
+    velocityDisplay: RefObject<HTMLSpanElement | null>;
 }) {
     const keysRef = useRef<HTMLDivElement[]>([]);
     const keyboardRef = useRef<HTMLDivElement | null>(null);
@@ -53,20 +57,7 @@ export function Keyboard({
             engine.processor.noteOff(KEYBOARD_TARGET_CHANNEL, note);
         };
 
-        const userNoteOn = (note: number, touch: Touch | MouseEvent) => {
-            const keyElement = keysRef.current[0]; // All keys same top
-            if (!keyElement) {
-                return;
-            }
-
-            const rect = keyElement.getBoundingClientRect();
-
-            const relativeMouseY = touch.clientY - rect.top;
-            const keyHeight = isBlackNoteNumber(note)
-                ? rect.height * 0.7
-                : rect.height;
-            const velocity = Math.floor((relativeMouseY / keyHeight) * 127);
-
+        const userNoteOn = (note: number, velocity: number) => {
             engine.processor.noteOn(KEYBOARD_TARGET_CHANNEL, note, velocity);
         };
 
@@ -90,12 +81,46 @@ export function Keyboard({
                     return;
                 }
 
+                const keyElement = keysRef.current[0]; // All keys same top
+                if (!keyElement) {
+                    return;
+                }
+
+                const rect = keyElement.getBoundingClientRect();
+
+                const relativeMouseY = touch.clientY - rect.top;
+                const keyHeight = isBlackNoteNumber(midiNote)
+                    ? rect.height * 0.7
+                    : rect.height;
+                const velocity = Math.min(
+                    127,
+                    Math.floor((relativeMouseY / keyHeight) * 128)
+                );
+                if (keyDisplay.current) {
+                    keyDisplay.current.textContent = midiNote
+                        .toString()
+                        .padStart(3, " ");
+                }
+                if (velocityDisplay.current) {
+                    velocityDisplay.current.textContent = velocity
+                        .toString()
+                        .padStart(3, " ");
+                }
+
+                if (!mouseHeld) {
+                    return;
+                }
+
                 newTouchedKeys.add(midiNote);
 
                 if (!pressedKeys.has(midiNote)) {
-                    userNoteOn(midiNote, touch);
+                    userNoteOn(midiNote, velocity);
                 }
             });
+
+            if (!mouseHeld) {
+                return;
+            }
 
             // only release keys that are no longer being touched
             [...pressedKeys].forEach((note) => {
@@ -116,9 +141,7 @@ export function Keyboard({
         };
 
         const onMouseMove = (e: MouseEvent) => {
-            if (mouseHeld) {
-                moveHandler(e);
-            }
+            moveHandler(e);
         };
 
         const onMouseLeave = () => {
@@ -142,7 +165,7 @@ export function Keyboard({
             kb.removeEventListener("mousemove", onMouseMove);
             kb.removeEventListener("mouseleave", onMouseLeave);
         };
-    }, [engine.processor]);
+    }, [engine.processor, keyDisplay, velocityDisplay]);
 
     const keys: number[] = Array.from({ length: 128 }, (_, i) => i);
 

@@ -55,7 +55,6 @@
     border-radius: 0 var(--primary-border-radius) var(--primary-border-radius) 0;
     border: solid 0.2rem var(--track-border-color);
     cursor: pointer;
-    z-index: var(--top-index);
 }
 
 .menu_list_closed:active {

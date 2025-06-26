@@ -13,6 +13,7 @@ import {
     type OtherCCRef,
     OtherControllers
 } from "./controller/other_controllers.tsx";
+import { useTranslation } from "react-i18next";
 
 const INITIAL_CC_LIST: number[] = [
     midiControllers.modulationWheel,
@@ -34,6 +35,7 @@ export function KeyboardController({
     engine: AudioEngine;
     ccOptions: JSX.Element;
 }) {
+    const { t } = useTranslation();
     const [controllers, setControllers] = useState(INITIAL_CC_LIST);
     const knobRefs = useRef<RefObject<ControllerKnobRef | null>[]>([]);
     INITIAL_CC_LIST.map(() => {
@@ -43,6 +45,8 @@ export function KeyboardController({
 
     const pitchRef = useRef<OtherCCRef>(null);
     const keyboardRef = useRef<KeyboardPressRef>(null);
+    const keyDisplayRef = useRef<HTMLSpanElement>(null);
+    const velocityDisplayRef = useRef<HTMLSpanElement>(null);
 
     useEffect(() => {
         engine.processor.onEventCall = (e, d) => {
@@ -86,7 +90,12 @@ export function KeyboardController({
 
     return (
         <div className={"keyboard_controller"}>
-            <Keyboard ref={keyboardRef} engine={engine}></Keyboard>
+            <Keyboard
+                ref={keyboardRef}
+                engine={engine}
+                keyDisplay={keyDisplayRef}
+                velocityDisplay={velocityDisplayRef}
+            ></Keyboard>
             <div className={"controller_row_scroll"}>
                 <div className={"controller_row controller_row_main"}>
                     <OtherControllers
@@ -112,6 +121,30 @@ export function KeyboardController({
                                 ></Controller>
                             );
                         })}
+                    </div>
+
+                    <div className={"controller_column"}>
+                        <div>
+                            <span>{t("keyboardLocale.midiKey")}</span>
+                            <span
+                                className={"monospaced"}
+                                style={{ marginLeft: "1ch" }}
+                                ref={keyDisplayRef}
+                            >
+                                127
+                            </span>
+                        </div>
+
+                        <div>
+                            <span>{t("keyboardLocale.velocity")}</span>
+                            <span
+                                className={"monospaced"}
+                                style={{ marginLeft: "1ch" }}
+                                ref={velocityDisplayRef}
+                            >
+                                127
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
