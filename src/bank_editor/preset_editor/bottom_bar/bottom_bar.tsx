@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { DeletePresetAction } from "./delete_preset_action.ts";
 import type { SetViewType } from "../../bank_editor.tsx";
 import { WaitingInput } from "../../../fancy_inputs/waiting_input/waiting_input.tsx";
+import { EditPresetAction } from "./edit_preset_action.ts";
 
 export function BottomPresetBar({
     manager,
@@ -37,8 +38,14 @@ export function BottomPresetBar({
                     type={"text"}
                     value={preset.presetName}
                     setValue={(v) => {
-                        preset.presetName = v;
-                        setPresets([...presets]);
+                        const action = new EditPresetAction(
+                            presets.indexOf(preset),
+                            "presetName",
+                            preset.presetName,
+                            v,
+                            () => setPresets([...presets])
+                        );
+                        manager.modifyBank([action]);
                         return v;
                     }}
                     maxLength={40}
@@ -50,11 +57,17 @@ export function BottomPresetBar({
                 <WaitingInput
                     type={"number"}
                     min={0}
-                    max={128}
+                    max={127}
                     value={preset.program}
                     setValue={(v) => {
-                        preset.program = v;
-                        setPresets([...presets]);
+                        const action = new EditPresetAction(
+                            presets.indexOf(preset),
+                            "program",
+                            preset.program,
+                            v,
+                            () => setPresets([...presets])
+                        );
+                        manager.modifyBank([action]);
                         return v;
                     }}
                 />
@@ -67,8 +80,14 @@ export function BottomPresetBar({
                     max={128}
                     value={preset.bank}
                     setValue={(v) => {
-                        preset.bank = v;
-                        setPresets([...presets]);
+                        const action = new EditPresetAction(
+                            presets.indexOf(preset),
+                            "bank",
+                            preset.bank,
+                            v,
+                            () => setPresets([...presets])
+                        );
+                        manager.modifyBank([action]);
                         return v;
                     }}
                 />

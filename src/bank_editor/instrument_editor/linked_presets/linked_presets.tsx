@@ -7,6 +7,7 @@ import { useMemo } from "react";
 import { DeleteInstrumentAction } from "./delete_instrument_action.ts";
 import type SoundBankManager from "../../../core_backend/sound_bank_manager.ts";
 import { WaitingInput } from "../../../fancy_inputs/waiting_input/waiting_input.tsx";
+import { EditInstrumentAction } from "./edit_instrument_action.ts";
 
 export function LinkedPresets({
     instrument,
@@ -41,8 +42,14 @@ export function LinkedPresets({
                 type={"text"}
                 value={instrument.instrumentName}
                 setValue={(v) => {
-                    instrument.instrumentName = v;
-                    setInstruments([...instruments]);
+                    const action = new EditInstrumentAction(
+                        instruments.indexOf(instrument),
+                        "instrumentName",
+                        instrument.instrumentName,
+                        v,
+                        () => setInstruments([...instruments])
+                    );
+                    manager.modifyBank([action]);
                     return v;
                 }}
                 maxLength={40}
