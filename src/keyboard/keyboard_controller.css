@@ -2,27 +2,44 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin: 0.3rem;
-    border: var(--track-border-color) 1px solid;
     border-radius: var(--primary-border-radius);
+    overflow: clip;
 }
 
 .keyboard_controller * {
     user-select: none;
 }
 
+.controller_row_scroll {
+    overflow-x: auto;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+}
+
+.controller_row_main {
+    margin: auto;
+}
+
 .controller_row {
     display: flex;
     justify-content: center;
-    overflow-x: auto;
-    flex-wrap: wrap;
+    width: fit-content;
+}
+
+.controller_row .controller_range_wrapper {
+    min-width: max-content;
 }
 
 .controller_column {
     display: flex;
     flex-direction: column;
     margin: 0.5rem;
-    align-items: center;
+    align-items: stretch;
     justify-content: center;
     gap: var(--flex-gap);;
+}
+
+.controller_column * {
+    text-align: center;
 }

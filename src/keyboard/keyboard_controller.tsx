@@ -87,30 +87,32 @@ export function KeyboardController({
     return (
         <div className={"keyboard_controller"}>
             <Keyboard ref={keyboardRef} engine={engine}></Keyboard>
-            <div className={"controller_row"}>
-                <OtherControllers
-                    engine={engine}
-                    ref={pitchRef}
-                ></OtherControllers>
+            <div className={"controller_row_scroll"}>
+                <div className={"controller_row controller_row_main"}>
+                    <OtherControllers
+                        engine={engine}
+                        ref={pitchRef}
+                    ></OtherControllers>
 
-                <div className={"controller_row"}>
-                    {controllers.map((cc, i) => {
-                        const setCC = (cc: number) => {
-                            const newControllers = [...controllers];
-                            newControllers[i] = cc;
-                            setControllers(newControllers);
-                        };
-                        return (
-                            <Controller
-                                ccOptions={ccOptions}
-                                cc={cc}
-                                engine={engine}
-                                setCC={setCC}
-                                key={i}
-                                ref={knobRefs.current[i]}
-                            ></Controller>
-                        );
-                    })}
+                    <div className={"controller_row"}>
+                        {controllers.map((cc, i) => {
+                            const setCC = (cc: number) => {
+                                const newControllers = [...controllers];
+                                newControllers[i] = cc;
+                                setControllers(newControllers);
+                            };
+                            return (
+                                <Controller
+                                    ccOptions={ccOptions}
+                                    cc={cc}
+                                    engine={engine}
+                                    setCC={setCC}
+                                    key={i}
+                                    ref={knobRefs.current[i]}
+                                ></Controller>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
         </div>

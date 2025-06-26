@@ -33,6 +33,19 @@ export function BottomPresetBar({
                 <b className={"warning"}>{t("presetLocale.deletePreset")}</b>
             </div>
             <div>
+                <WaitingInput
+                    type={"text"}
+                    value={preset.presetName}
+                    setValue={(v) => {
+                        preset.presetName = v;
+                        setPresets([...presets]);
+                        return v;
+                    }}
+                    maxLength={40}
+                />
+            </div>
+
+            <div>
                 <span>{t("presetLocale.programNumber")}</span>
                 <WaitingInput
                     type={"number"}

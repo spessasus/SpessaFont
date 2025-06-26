@@ -6,7 +6,8 @@
     margin-top: auto;
 }
 
-.bottom_bar div {
+.bottom_bar > div {
+    user-select: none;
     cursor: pointer;
     padding: 0.3rem 1rem;
     text-align: center;
@@ -19,8 +20,8 @@
 }
 
 .bottom_bar input {
-    background: transparent;
     border: none;
-    border-bottom: solid 1px var(--top-buttons-color-end);
+    background: transparent;
+    border-bottom: solid 1px var(--track-border-color);
     font-size: 1rem;
 }

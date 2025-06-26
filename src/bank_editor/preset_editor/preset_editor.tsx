@@ -2,7 +2,6 @@ import { type BasicPreset, generatorTypes } from "spessasynth_core";
 import "./preset_editor.css";
 import type { AudioEngine } from "../../core_backend/audio_engine.ts";
 import { KEYBOARD_TARGET_CHANNEL } from "../../keyboard/target_channel.ts";
-import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
 import type { SetViewType } from "../bank_editor.tsx";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -40,16 +39,7 @@ export function PresetEditor({
                     <thead>
                         <tr className={"header_row"}>
                             <th className={"header_cell"}>
-                                <WaitingInput
-                                    type={"text"}
-                                    value={preset.presetName}
-                                    setValue={(v) => {
-                                        preset.presetName = v;
-                                        setPresets([...presets]);
-                                        return v;
-                                    }}
-                                    maxLength={40}
-                                />
+                                {preset.presetName}
                             </th>
                             <th className={"header_cell"}>
                                 {t("soundBankLocale.globalZone")}

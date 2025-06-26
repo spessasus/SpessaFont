@@ -11,7 +11,6 @@ import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
 import type { SetViewType } from "../bank_editor.tsx";
 import { useTranslation } from "react-i18next";
 import { NumberGeneratorRow } from "../generator_table/generator_row.tsx";
-import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
 import {
     ac2hz,
     cb2db,
@@ -70,16 +69,7 @@ export function InstrumentEditor({
                     <thead>
                         <tr className={"header_row"}>
                             <th className={"header_cell"}>
-                                <WaitingInput
-                                    type={"text"}
-                                    value={instrument.instrumentName}
-                                    setValue={(v) => {
-                                        instrument.instrumentName = v;
-                                        setInstruments([...instruments]);
-                                        return v;
-                                    }}
-                                    maxLength={40}
-                                />
+                                {instrument.instrumentName}
                             </th>
                             <th className={"header_cell"}>
                                 {t("soundBankLocale.globalZone")}
@@ -391,6 +381,7 @@ export function InstrumentEditor({
                 instrument={instrument}
                 manager={manager}
                 setInstruments={setInstruments}
+                instruments={instruments}
                 setView={setView}
             />
         </div>

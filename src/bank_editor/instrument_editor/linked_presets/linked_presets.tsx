@@ -6,17 +6,20 @@ import { useMemo } from "react";
 
 import { DeleteInstrumentAction } from "./delete_instrument_action.ts";
 import type SoundBankManager from "../../../core_backend/sound_bank_manager.ts";
+import { WaitingInput } from "../../../fancy_inputs/waiting_input/waiting_input.tsx";
 
 export function LinkedPresets({
     instrument,
     setView,
     setInstruments,
+    instruments,
     manager
 }: {
     manager: SoundBankManager;
     instrument: BasicInstrument;
     setView: SetViewType;
     setInstruments: (s: BasicInstrument[]) => void;
+    instruments: BasicInstrument[];
 }) {
     const { t } = useTranslation();
     const linked = useMemo(() => {
@@ -34,6 +37,16 @@ export function LinkedPresets({
 
     return (
         <div className={"bottom_bar"}>
+            <WaitingInput
+                type={"text"}
+                value={instrument.instrumentName}
+                setValue={(v) => {
+                    instrument.instrumentName = v;
+                    setInstruments([...instruments]);
+                    return v;
+                }}
+                maxLength={40}
+            />
             {instrument.linkedPresets.length === 0 && (
                 <>
                     <div>

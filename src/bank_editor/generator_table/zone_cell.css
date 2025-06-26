@@ -8,16 +8,7 @@
 
 .header_cell:first-child {
     max-width: unset;
-}
-
-/*preset/instrument name*/
-.header_cell input {
-    background: transparent;
-    border: none;
-    outline: var(--font-color);
-    font-size: 1rem;
-    font-weight: bold;
-    text-overflow: ellipsis;
+    min-width: 15rem;
 }
 
 .generator_cell_header {
