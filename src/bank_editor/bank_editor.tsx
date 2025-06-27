@@ -23,29 +23,7 @@ export type BankEditorProps = {
 
 export type SetViewType = (v: BankEditView) => unknown;
 
-export const MemoizedBankEditor = React.memo(
-    ({
-        manager,
-        audioEngine,
-        clipboardManager,
-        destinationOptions,
-        ccOptions,
-        show
-    }: BankEditorProps & { show: boolean }) => {
-        if (!show) {
-            return <></>;
-        }
-        return (
-            <BankEditor
-                audioEngine={audioEngine}
-                ccOptions={ccOptions}
-                clipboardManager={clipboardManager}
-                destinationOptions={destinationOptions}
-                manager={manager}
-            />
-        );
-    }
-);
+export const MemoizedBankEditor = React.memo(BankEditor);
 
 export function BankEditor({
     manager,

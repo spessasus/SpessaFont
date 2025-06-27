@@ -7,16 +7,20 @@ import "./preset_editor.css";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import { KEYBOARD_TARGET_CHANNEL } from "../keyboard/target_channel.ts";
 import type { SetViewType } from "../bank_editor/bank_editor.tsx";
-import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { NumberGeneratorRow } from "../generator_table/generator_row.tsx";
+import { useEffect, useMemo } from "react";
 import { cb2db, db2cb } from "../utils/conversion_helpers.ts";
 import { BottomPresetBar } from "./bottom_bar/bottom_bar.tsx";
 import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
-import { RangeGeneratorRow } from "../generator_table/range_generator/range_row.tsx";
 import type { GeneratorRowType } from "../instrument_editor/instrument_editor.tsx";
+import { GeneratorTable } from "../generator_table/generator_table.tsx";
 
 const presetRows: GeneratorRowType[] = [
+    {
+        generator: generatorTypes.keyRange
+    },
+    {
+        generator: generatorTypes.velRange
+    },
     {
         generator: generatorTypes.initialAttenuation,
         fromGenerator: (v) => v * 0.04,
@@ -211,12 +215,19 @@ export function PresetEditor({
     setView: SetViewType;
     manager: SoundBankManager;
 }) {
-    const { t } = useTranslation();
-    const [zones, setZones] = useState(preset.presetZones);
+    const zones = useMemo(
+        () =>
+            preset.presetZones.toSorted(
+                (z1, z2) => z1.keyRange.min - z2.keyRange.min
+            ),
+        [preset.presetZones]
+    );
+    const global = preset.globalZone;
+    const update = () => {
+        setPresets([...presets]);
+        engine.processor.clearCache();
+    };
     useEffect(() => {
-        // update zones
-        setZones(preset.presetZones);
-
         engine.processor.midiAudioChannels[KEYBOARD_TARGET_CHANNEL].setPreset(
             preset
         );
@@ -225,57 +236,15 @@ export function PresetEditor({
     return (
         <div className={"preset_editor"}>
             <div className={"zone_table_wrapper"}>
-                <table className={"zone_table"}>
-                    <thead>
-                        <tr className={"header_row"}>
-                            <th className={"header_cell"}>
-                                {preset.presetName}
-                            </th>
-                            <th className={"header_cell"}>
-                                {t("soundBankLocale.globalZone")}
-                            </th>
-                            {preset.presetZones.map((z, i) => (
-                                <th
-                                    className={"header_cell"}
-                                    key={i}
-                                    onClick={() => setView(z.instrument)}
-                                >
-                                    {z.instrument.instrumentName}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        <RangeGeneratorRow
-                            zones={zones}
-                            setZones={setZones}
-                            global={preset.globalZone}
-                            generator={generatorTypes.keyRange}
-                        />
-                        <RangeGeneratorRow
-                            zones={zones}
-                            setZones={setZones}
-                            global={preset.globalZone}
-                            generator={generatorTypes.velRange}
-                        />
-                        {presetRows.map((row) => (
-                            <NumberGeneratorRow<BasicPresetZone>
-                                generator={row.generator}
-                                key={row.generator}
-                                manager={manager}
-                                setZones={setZones}
-                                zones={zones}
-                                global={preset.globalZone}
-                                fromGenerator={row.fromGenerator}
-                                toGenerator={row.toGenerator}
-                                precision={row.precision}
-                                unit={row.unit}
-                                highlight={row.highlight}
-                            />
-                        ))}
-                    </tbody>
-                </table>
+                <GeneratorTable<BasicPresetZone>
+                    name={preset.presetName}
+                    zones={zones}
+                    global={global}
+                    callback={update}
+                    rows={presetRows}
+                    setView={setView}
+                    manager={manager}
+                />
             </div>
             <BottomPresetBar
                 manager={manager}

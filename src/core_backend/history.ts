@@ -15,19 +15,28 @@ export class HistoryManager {
     history: HistoryActionGroup[] = [];
     undoHistory: HistoryActionGroup[] = [];
 
+    get length() {
+        return this.history.length;
+    }
+
+    get undoLength() {
+        return this.undoHistory.length;
+    }
+
     do(m: SoundBankManager, action: HistoryActionGroup) {
         if (action.length === 0) {
             return;
         }
         action.forEach((a) => a.do(m));
         this.history.push(action);
+        // clear undo history
         this.undoHistory.length = 0;
         // update synth engine
         m.clearCache();
     }
 
     redo(m: SoundBankManager) {
-        if (this.undoHistory.length < 1) {
+        if (this.undoLength < 1) {
             return;
         }
         const action = this.undoHistory.pop();
@@ -35,14 +44,14 @@ export class HistoryManager {
             return;
         }
         action.forEach((a) => a.do(m));
-        logInfo(`Redid. Remaining undo history: ${this.undoHistory.length}`);
+        logInfo(`Redid. Remaining undo history: ${this.undoHistory}`);
         this.history.push(action);
         // update synth engine
         m.clearCache();
     }
 
     undo(m: SoundBankManager) {
-        if (this.history.length < 1) {
+        if (this.length < 1) {
             return;
         }
         const action = this.history.pop();
@@ -52,7 +61,7 @@ export class HistoryManager {
         }
 
         action.toReversed().forEach((a) => a.undo(m));
-        logInfo(`Undid. Remaining history: ${this.history.length}`);
+        logInfo(`Undid. Remaining history: ${this.length}`);
         this.undoHistory.push(action);
         // update synth engine
         m.clearCache();

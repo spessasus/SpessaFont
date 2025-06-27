@@ -150,6 +150,20 @@ function App() {
         setActiveTab(0); // newly added tab
     }, []);
 
+    const openFile = useCallback(() => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = ".sf2,.dls,.sf3,.sfogg";
+        input.click();
+        input.onchange = async () => {
+            const file: File | undefined = input.files?.[0];
+            if (!file) {
+                return;
+            }
+            await openNewBankTab(file);
+        };
+    }, [openNewBankTab]);
+
     const closeTab = useCallback(
         (index: number) => {
             if (!tabs[index]) {
@@ -172,10 +186,6 @@ function App() {
     );
 
     const showTabList = !settings;
-    const showEditor = useMemo(
-        () => !settings && !isLoading && !isSaving && tabs.length > 0,
-        [isLoading, isSaving, settings, tabs.length]
-    );
     const showWelcome = tabs.length < 1 && !settings && !isSaving && !isLoading;
     const showSettings = settings && !isLoading && !isSaving;
     const savingRef = useRef<HTMLSpanElement>(null);
@@ -223,20 +233,26 @@ function App() {
                 </div>
             )}
 
-            <MemoizedBankEditor
-                destinationOptions={destinationOptions}
-                ccOptions={ccOptions}
-                manager={currentManager}
-                audioEngine={audioEngine}
-                clipboardManager={clipboardManager}
-                show={showEditor}
-            />
+            {currentManager && (
+                <MemoizedBankEditor
+                    destinationOptions={destinationOptions}
+                    ccOptions={ccOptions}
+                    manager={currentManager}
+                    audioEngine={audioEngine}
+                    clipboardManager={clipboardManager}
+                />
+            )}
 
             {showWelcome && (
                 <div className="welcome">
                     <h1>{t("welcome.main")}</h1>
-                    <h2>{t("welcome.prompt")}</h2>
-                    <h3>{t("welcome.copyright")}</h3>
+                    <h2 onClick={openFile}>{t("welcome.openPrompt")}</h2>
+                    <h2 onClick={() => openNewBankTab()}>
+                        {t("welcome.newPrompt")}
+                    </h2>
+                    <h3 className={"welcome_copyright"}>
+                        {t("welcome.copyright")}
+                    </h3>
                 </div>
             )}
 

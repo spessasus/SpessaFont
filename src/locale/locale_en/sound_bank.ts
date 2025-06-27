@@ -2,6 +2,7 @@ export const SoundBankLocale = {
     savingFile: "Saving file...",
     writingSamples: "Writing Samples...",
     globalZone: "Global Zone",
+    thisIsAStereoSamplePair: "This is a stereo sample pair.",
     units: {
         // keep the suffixes short
         cent: {

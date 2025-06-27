@@ -1,4 +1,4 @@
-import type { HistoryAction } from "../core_backend/history.ts";
+import type { HistoryAction } from "../../core_backend/history.ts";
 import type { BasicZone, generatorTypes } from "spessasynth_core";
 
 export class SetGeneratorAction implements HistoryAction {
@@ -21,7 +21,6 @@ export class SetGeneratorAction implements HistoryAction {
         this.previousValue = previousValue;
         this.newValue = newValue;
         this.callback = callback;
-        console.log(this.callback);
     }
 
     do() {

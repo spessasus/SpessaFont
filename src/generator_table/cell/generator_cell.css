@@ -1,9 +1,15 @@
 .header_cell {
-    padding: 0.2rem;
+    padding: 0.2rem 0.5rem;
     cursor: pointer;
     max-width: 15ch;
-    word-wrap: break-word;
     height: 3.2rem;
+}
+
+.header_cell div {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
 }
 
 .header_cell:first-child {
@@ -27,6 +33,10 @@
     cursor: help;
 }
 
+.generator_cell {
+    width: max-content;
+}
+
 .generator_cell input {
     background: transparent;
     font-size: 1rem;
@@ -34,9 +44,13 @@
     width: 100%;
     height: 100%;
     text-align: end;
-    min-width: 12ch;
-    outline-color: var(--font-color);
     cursor: cell;
+    transition: none;
+}
+
+.generator_cell input:focus {
+    outline: ridge var(--border-color) 0.3rem;
+    border-radius: 2px;
 }
 
 .generator_row_highlight .generator_cell_header {

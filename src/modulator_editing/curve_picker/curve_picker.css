@@ -16,7 +16,7 @@
 
 .modulator_curve_showcase {
     position: absolute;
-    z-index: var(--top-index);
+    z-index: 100;
     display: flex;
     flex-wrap: wrap;
     min-width: 25rem;

@@ -6,12 +6,10 @@ import {
     generatorTypes
 } from "spessasynth_core";
 import "./instrument_editor.css";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { KEYBOARD_TARGET_CHANNEL } from "../keyboard/target_channel.ts";
 import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import type { SetViewType } from "../bank_editor/bank_editor.tsx";
-import { useTranslation } from "react-i18next";
-import { NumberGeneratorRow } from "../generator_table/generator_row.tsx";
 import {
     ac2hz,
     cb2db,
@@ -21,7 +19,7 @@ import {
     tc2s
 } from "../utils/conversion_helpers.ts";
 import { LinkedPresets } from "./linked_presets/linked_presets.tsx";
-import { RangeGeneratorRow } from "../generator_table/range_generator/range_row.tsx";
+import { GeneratorTable } from "../generator_table/generator_table.tsx";
 
 type InstrumentEditorProps = {
     manager: SoundBankManager;
@@ -40,6 +38,12 @@ export type GeneratorRowType = {
     precision?: number;
 };
 const instrumentRows: GeneratorRowType[] = [
+    {
+        generator: generatorTypes.keyRange
+    },
+    {
+        generator: generatorTypes.velRange
+    },
     {
         generator: generatorTypes.initialAttenuation,
         fromGenerator: (v) => v * 0.04,
@@ -287,20 +291,21 @@ export function InstrumentEditor({
     instruments,
     setView
 }: InstrumentEditorProps) {
-    const { t } = useTranslation();
-    const [zones, setZones] = useState<BasicInstrumentZone[]>(
-        instrument.instrumentZones
+    const zones = useMemo(
+        () =>
+            instrument.instrumentZones.toSorted(
+                (z1, z2) => z1.keyRange.min - z2.keyRange.min
+            ),
+        [instrument.instrumentZones]
     );
+
+    const update = () => {
+        setInstruments([...instruments]);
+        engine.processor.clearCache();
+    };
+
     const global = instrument.globalZone;
     useEffect(() => {
-        // sort zones
-        instrument.instrumentZones.sort(
-            (z1, z2) => z1.keyRange.min - z2.keyRange.min
-        );
-
-        // update zones
-        setZones(instrument.instrumentZones);
-
         // do some hacky stuff to get the zones to play
         engine.processor.clearCache();
         const preset = new BasicPreset(manager);
@@ -313,7 +318,9 @@ export function InstrumentEditor({
             preset
         );
         return () => {
-            preset.deletePreset();
+            // manually clear the preset to not trigger any warnings
+            // (the instrument is not linked to the preset in this hack)
+            preset.presetZones.length = 0;
             engine.processor.clearCache();
             engine.processor.programChange(KEYBOARD_TARGET_CHANNEL, 0);
         };
@@ -321,56 +328,15 @@ export function InstrumentEditor({
     return (
         <div className={"instrument_editor"}>
             <div className={"zone_table_wrapper"}>
-                <table className={"zone_table"}>
-                    <thead>
-                        <tr className={"header_row"}>
-                            <th className={"header_cell"}>
-                                {instrument.instrumentName}
-                            </th>
-                            <th className={"header_cell"}>
-                                {t("soundBankLocale.globalZone")}
-                            </th>
-                            {zones.map((z, i) => (
-                                <th
-                                    className={"header_cell"}
-                                    key={i}
-                                    onClick={() => setView(z.sample)}
-                                >
-                                    {z.sample.sampleName}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <RangeGeneratorRow
-                            zones={zones}
-                            setZones={setZones}
-                            global={global}
-                            generator={generatorTypes.keyRange}
-                        />
-                        <RangeGeneratorRow
-                            zones={zones}
-                            setZones={setZones}
-                            global={global}
-                            generator={generatorTypes.velRange}
-                        />
-                        {instrumentRows.map((row) => (
-                            <NumberGeneratorRow<BasicInstrumentZone>
-                                key={row.generator}
-                                generator={row.generator}
-                                manager={manager}
-                                setZones={setZones}
-                                zones={zones}
-                                global={global}
-                                fromGenerator={row.fromGenerator}
-                                toGenerator={row.toGenerator}
-                                unit={row.unit}
-                                precision={row.precision}
-                                highlight={row.highlight}
-                            />
-                        ))}
-                    </tbody>
-                </table>
+                <GeneratorTable<BasicInstrumentZone>
+                    manager={manager}
+                    callback={update}
+                    rows={instrumentRows}
+                    zones={zones}
+                    global={global}
+                    name={instrument.instrumentName}
+                    setView={setView}
+                />
             </div>
             <LinkedPresets
                 instrument={instrument}

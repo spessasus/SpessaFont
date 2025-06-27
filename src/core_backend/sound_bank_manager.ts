@@ -165,6 +165,9 @@ export default class SoundBankManager extends BasicSoundBank {
 
     undo() {
         this.history.undo(this);
+        if (this.history.length < 1) {
+            this.dirty = false;
+        }
         this.changeCallback();
     }
 

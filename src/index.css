@@ -22,7 +22,7 @@
     --top-buttons-color: linear-gradient(201deg, var(--top-buttons-color-start), var(--top-buttons-color-end));
 
     --font-color: #ccc;
-    --top-index: 32767;
+    --top-index: 100;
 
     --top-color-start: #101010;
     --top-color-end: #212121;
@@ -158,21 +158,31 @@ input[type=number] {
 }
 
 .welcome {
+    user-select: none;
     width: 100%;
     height: 100%;
     display: flex;
+    gap: 1rem;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     background: var(--top-color);
+    position: absolute;
+    z-index: var(--top-index);
+}
+
+.welcome h2 {
+    cursor: pointer;
+    border-bottom: solid 1px var(--font-color);
 }
 
 .welcome.loading {
     cursor: progress;
 }
 
-.welcome h3 {
-    margin-top: 10rem;
+.welcome_copyright {
+    position: absolute;
+    bottom: 1rem;
 }
 
 .disabled {

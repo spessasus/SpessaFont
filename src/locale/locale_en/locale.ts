@@ -20,7 +20,8 @@ export const localeEnglish = {
     titleMessage: "SpessaFont: Online SoundFont2/DLS Editor",
     welcome: {
         main: "Welcome to SpessaFont, an online SoundFont2/DLS Editor!",
-        prompt: "Click File -> New, or File -> Open to get started!",
+        openPrompt: "Open a file to get started",
+        newPrompt: "Or start with an empty file...",
         copyright:
             "Created by Spessasus using spessasynth_core and spessasynth_lib."
     },

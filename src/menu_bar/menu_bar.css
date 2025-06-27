@@ -74,7 +74,7 @@
     transition: all 0.2s ease;
     transform: scale(1, 0);
     transform-origin: top center;
-    z-index: var(--top-index);
+    z-index: 100;
 }
 
 .menu_bar:hover .menu_bar_contents {

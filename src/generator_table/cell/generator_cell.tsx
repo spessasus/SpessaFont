@@ -4,11 +4,12 @@ import {
     type BasicZone,
     generatorTypes
 } from "spessasynth_core";
-import type { NumberGeneratorProps } from "./generator_row.tsx";
-import { type CSSProperties, useEffect, useState } from "react";
-import { generatorLimits } from "../core_backend/generator_limits.ts";
+import type { NumberGeneratorProps } from "../generator_row.tsx";
+import { type CSSProperties, useCallback } from "react";
+import { generatorLimits } from "../../core_backend/generator_limits.ts";
 import { SetGeneratorAction } from "./set_generator_action.ts";
-import { midiNoteToPitchClass } from "../utils/note_name.ts";
+import { midiNoteToPitchClass } from "../../utils/note_name.ts";
+import { GeneratorCellInput } from "./generator_cell_input.tsx";
 
 function getDistinctColor(index: number, total = 10) {
     const hue = ((index - 1) * (360 / total)) % 360;
@@ -21,22 +22,26 @@ export function NumberGeneratorCell<
     T extends BasicPresetZone | BasicInstrumentZone
 >({
     zone,
-    zones,
+    callback,
     manager,
-    setZones,
     generator,
+    linkedZone,
     fromGenerator = (v) => v,
     toGenerator = (v) => v,
-    precision = 0
-}: NumberGeneratorProps<T> & {
+    precision = 0,
+    colSpan
+}: NumberGeneratorProps & {
     zone: BasicZone;
+    linkedZone?: T;
+    colSpan: number;
 }) {
     const value = zone.getGeneratorValue(generator, null);
-    const textValue = value ? fromGenerator(value).toFixed(precision) : "";
-    const [typedText, setTypedText] = useState(textValue);
-    useEffect(() => {
-        setTypedText(textValue);
-    }, [textValue]);
+    const v2txt = useCallback(
+        (v: number | null) =>
+            v !== null ? fromGenerator(v).toFixed(precision) : "",
+        [fromGenerator, precision]
+    );
+    const textValue = v2txt(value);
 
     const limits = generatorLimits[generator];
     const placeholder =
@@ -51,9 +56,9 @@ export function NumberGeneratorCell<
         style.fontWeight = "bold";
     }
 
-    const setValue = () => {
+    const setValue = (typedText: string) => {
         if (textValue === typedText) {
-            return;
+            return textValue;
         }
         let newValue: number | null = null;
         if (typedText !== "") {
@@ -61,38 +66,33 @@ export function NumberGeneratorCell<
             const rawNum = Math.floor(toGenerator(num));
             newValue = Math.max(limits.min, Math.min(limits.max, rawNum));
         }
-        const action = new SetGeneratorAction(
-            zone,
-            generator,
-            value,
-            newValue,
-            () => {
-                console.log("call");
-                setZones([...zones]);
-            }
-        );
-        manager.modifyBank([action]);
+        const actions = [
+            new SetGeneratorAction(zone, generator, value, newValue, callback)
+        ];
+        if (linkedZone) {
+            actions.push(
+                new SetGeneratorAction(
+                    linkedZone,
+                    generator,
+                    value,
+                    newValue,
+                    callback
+                )
+            );
+        }
+        manager.modifyBank(actions);
+        return v2txt(newValue);
     };
-
     return (
-        <td className={"generator_cell"}>
-            <input
+        <td className={"generator_cell"} colSpan={colSpan}>
+            <GeneratorCellInput
+                regex={/[^0-9-.]/g}
                 type={"text"}
                 maxLength={10}
                 style={style}
                 placeholder={placeholder}
-                value={typedText}
+                value={textValue}
                 onBlur={setValue}
-                onKeyDown={(e) => {
-                    if (e.key === "Backspace" || e.key === "Delete") {
-                        setTypedText("");
-                    }
-                }}
-                onChange={(e) => {
-                    let text = e.target.value;
-                    text = text.replace(/[^0-9.]/g, "");
-                    setTypedText(text);
-                }}
             />
         </td>
     );
