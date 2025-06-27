@@ -1,8 +1,14 @@
 .header_cell {
-    padding: 0.2rem 0.5rem;
+    padding: 0.5rem;
     cursor: pointer;
     max-width: 15ch;
-    height: 3.2rem;
+    min-width: 12ch;
+}
+
+.header_cell.stereo {
+    font-style: italic;
+    text-decoration: underline;
+    cursor: help;
 }
 
 .header_cell div {
@@ -10,6 +16,13 @@
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
+    gap: 1ch;
+    width: max-content;
+    margin: auto;
+}
+
+.header_cell span {
+    text-overflow: ellipsis;
 }
 
 .header_cell:first-child {

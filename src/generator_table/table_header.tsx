@@ -41,7 +41,12 @@ export function GeneratorTableHeader<
                 return (
                     <th
                         colSpan={span}
-                        className={"header_cell"}
+                        className={"header_cell " + (stereo ? "stereo" : "")}
+                        title={
+                            stereo
+                                ? t("soundBankLocale.thisIsAStereoSamplePair")
+                                : ""
+                        }
                         key={i}
                         onClick={() =>
                             setView(
@@ -51,19 +56,7 @@ export function GeneratorTableHeader<
                             )
                         }
                     >
-                        <div>
-                            <span>{name}</span>
-                            {stereo && (
-                                <span
-                                    style={{ cursor: "help" }}
-                                    title={t(
-                                        "soundBankLocale.thisIsAStereoSamplePair"
-                                    )}
-                                >
-                                    (L/R)
-                                </span>
-                            )}
-                        </div>
+                        {name}
                     </th>
                 );
             })}
