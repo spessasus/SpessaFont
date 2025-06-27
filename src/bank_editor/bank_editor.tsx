@@ -7,11 +7,11 @@ import * as React from "react";
 import { type JSX, useCallback, useEffect, useState } from "react";
 import { MenuList } from "../menu_list/menu_list.tsx";
 import "./bank_editor.css";
-import { SoundBankInfo } from "./info_view/sound_bank_info.tsx";
+import { SoundBankInfo } from "../info_view/sound_bank_info.tsx";
 import { BasicInstrument, BasicPreset, BasicSample } from "spessasynth_core";
-import { PresetEditor } from "./preset_editor/preset_editor.tsx";
-import { InstrumentEditor } from "./instrument_editor/instrument_editor.tsx";
-import { SampleEditor } from "./sample_editor/sample_editor.tsx";
+import { PresetEditor } from "../preset_editor/preset_editor.tsx";
+import { InstrumentEditor } from "../instrument_editor/instrument_editor.tsx";
+import { SampleEditor } from "../sample_editor/sample_editor.tsx";
 
 export type BankEditorProps = {
     manager: SoundBankManager;
