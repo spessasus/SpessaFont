@@ -94,7 +94,15 @@ export function InstrumentList({
                 }}
                 onPaste={() => {
                     clipboard.pasteInstruments(manager);
-                    setInstruments([...manager.instruments]);
+                    setInstruments([
+                        ...manager.instruments.toSorted((a, b) =>
+                            a.instrumentName > b.instrumentName
+                                ? 1
+                                : b.instrumentName > a.instrumentName
+                                  ? -1
+                                  : 0
+                        )
+                    ]);
                 }}
                 paste={clipboard.hasInstruments()}
                 onAdd={() => console.log("add instrument")}

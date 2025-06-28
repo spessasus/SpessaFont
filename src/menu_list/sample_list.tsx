@@ -161,7 +161,15 @@ export function SampleList({
                 paste={clipboard.hasSamples()}
                 onPaste={() => {
                     clipboard.pasteSamples(manager);
-                    setSamples([...manager.samples]);
+                    setSamples([
+                        ...manager.samples.toSorted((a, b) =>
+                            a.sampleName > b.sampleName
+                                ? 1
+                                : b.sampleName > a.sampleName
+                                  ? -1
+                                  : 0
+                        )
+                    ]);
                 }}
             />
             {showSamples && (

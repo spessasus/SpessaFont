@@ -104,7 +104,15 @@ export function PresetList({
                 }}
                 onPaste={() => {
                     clipboard.pastePresets(manager);
-                    setPresets([...manager.presets]);
+                    setPresets([
+                        ...manager.presets.toSorted((a, b) =>
+                            a.presetName > b.presetName
+                                ? 1
+                                : b.presetName > a.presetName
+                                  ? -1
+                                  : 0
+                        )
+                    ]);
                 }}
                 onAdd={() => console.log("add preset")}
                 onClick={() => setShowPresets(!showPresets)}
