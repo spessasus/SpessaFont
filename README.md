@@ -49,6 +49,14 @@ This is also my first TypeScript and React project.
   - **Default values are shown:** *So you don't need to look them up!*
   - **Normal units:** *Only in the instrument editor...*
 
+## Gallery
+<img src="https://github.com/user-attachments/assets/2efe807b-dc35-4108-a503-2d134a71bc2d" width="30%"></img> <img src="https://github.com/user-attachments/assets/4244a515-e4d1-4d73-b5b6-27bbbb9b3b1d" width="30%"></img> <img src="https://github.com/user-attachments/assets/59f31726-9935-4700-8c78-1c76f62c80d0" width="30%"></img> <img src="https://github.com/user-attachments/assets/a380ac0b-2e9e-431a-b00f-d5ff0dcb927a" width="30%"></img> <img src="https://github.com/user-attachments/assets/9ffeebf8-cc1e-41a5-9367-078b87abe5e1" width="30%"></img> <img src="https://github.com/user-attachments/assets/39fbe3cd-b05b-4cf5-b099-331acf2b314e" width="30%"></img> 
+
+
+
+
+
+
 
 ## Building from source
 ### Development (and testing it for yourself)
