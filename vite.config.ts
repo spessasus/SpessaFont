@@ -4,8 +4,8 @@ import path from "path";
 
 // https://vite.dev/config/
 export default defineConfig({
+    base: "/SpessaFont/",
     plugins: [react()],
-    base: "./",
     resolve: {
         alias: {
             "sl-web-ogg": path.resolve(
