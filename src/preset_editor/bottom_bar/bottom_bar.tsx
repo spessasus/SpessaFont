@@ -30,9 +30,6 @@ export function BottomPresetBar({
     };
     return (
         <div className={"bottom_bar"}>
-            <div onClick={deletePreset}>
-                <b className={"warning"}>{t("presetLocale.deletePreset")}</b>
-            </div>
             <div>
                 <WaitingInput
                     type={"text"}
@@ -91,6 +88,11 @@ export function BottomPresetBar({
                         return v;
                     }}
                 />
+            </div>
+            <div onClick={deletePreset}>
+                <strong className={"warning"}>
+                    {t("presetLocale.deletePreset")}
+                </strong>
             </div>
         </div>
     );

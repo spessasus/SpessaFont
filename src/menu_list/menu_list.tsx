@@ -1,6 +1,6 @@
 import { BasicInstrument, BasicPreset, BasicSample } from "spessasynth_core";
 import * as React from "react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./menu_list.css";
 import SoundBankManager, {
@@ -47,6 +47,10 @@ export const MenuList = React.memo(function ({
 }: MenuListProps) {
     const [open, setOpen] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
+
+    useEffect(() => {
+        setSearchQuery("");
+    }, [manager]);
 
     const { t } = useTranslation();
     const setView = useCallback(

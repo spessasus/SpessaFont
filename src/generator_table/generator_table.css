@@ -11,6 +11,10 @@
     overflow: hidden;
 }
 
+.zone_table * {
+    transition: none;
+}
+
 .zone_table th {
     font-weight: normal;
     user-select: none;

@@ -19,7 +19,16 @@ export function GeneratorTableHeader<
     const { t } = useTranslation();
     return (
         <tr className={"header_row"}>
-            <th className={"header_cell"}>{name}</th>
+            <th
+                className={
+                    "header_cell " +
+                    (zones[0] instanceof BasicInstrumentZone
+                        ? "instrument"
+                        : "preset")
+                }
+            >
+                {name}
+            </th>
             <th className={"header_cell"}>{t("soundBankLocale.globalZone")}</th>
             {zones.map((z, i) => {
                 const linked = linkedZoneMap[i];
@@ -56,7 +65,7 @@ export function GeneratorTableHeader<
                             )
                         }
                     >
-                        {name}
+                        <span>{name}</span>
                     </th>
                 );
             })}

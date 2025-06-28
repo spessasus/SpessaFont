@@ -3,6 +3,12 @@ export const SoundBankLocale = {
     writingSamples: "Writing Samples...",
     globalZone: "Global Zone",
     thisIsAStereoSamplePair: "This is a stereo sample pair.",
+    loopingModes: {
+        noLoop: "No Loop",
+        loop: "Loop",
+        loopUntilRelease: "Until Release",
+        startOnRelease: "On Release"
+    },
     units: {
         // keep the suffixes short
         cent: {

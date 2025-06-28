@@ -1,4 +1,5 @@
 import {
+    BasicGlobalZone,
     BasicInstrumentZone,
     type BasicPresetZone,
     type BasicZone,
@@ -10,6 +11,7 @@ import { generatorLimits } from "../../core_backend/generator_limits.ts";
 import { SetGeneratorAction } from "./set_generator_action.ts";
 import { midiNoteToPitchClass } from "../../utils/note_name.ts";
 import { GeneratorCellInput } from "./generator_cell_input.tsx";
+import { useTranslation } from "react-i18next";
 
 function getDistinctColor(index: number, total = 10) {
     const hue = ((index - 1) * (360 / total)) % 360;
@@ -35,20 +37,26 @@ export function NumberGeneratorCell<
     linkedZone?: T;
     colSpan: number;
 }) {
+    const { t } = useTranslation();
     const value = zone.getGeneratorValue(generator, null);
     const v2txt = useCallback(
         (v: number | null) =>
             v !== null ? fromGenerator(v).toFixed(precision) : "",
         [fromGenerator, precision]
     );
+
     const textValue = v2txt(value);
 
     const limits = generatorLimits[generator];
-    const placeholder =
-        generator === generatorTypes.overridingRootKey &&
-        zone instanceof BasicInstrumentZone
-            ? `${zone.sample.samplePitch} (${midiNoteToPitchClass(zone.sample.samplePitch)})`
-            : "";
+    let placeholder: string = "";
+    if (
+        zone instanceof BasicInstrumentZone &&
+        generator === generatorTypes.overridingRootKey
+    ) {
+        placeholder = `${zone.sample.samplePitch} (${midiNoteToPitchClass(zone.sample.samplePitch)})`;
+    } else if (zone instanceof BasicGlobalZone) {
+        placeholder = v2txt(limits.def);
+    }
 
     const style: CSSProperties = {};
     if (generator === generatorTypes.exclusiveClass && value && value > 0) {
@@ -56,33 +64,85 @@ export function NumberGeneratorCell<
         style.fontWeight = "bold";
     }
 
-    const setValue = (typedText: string) => {
-        if (textValue === typedText) {
-            return textValue;
-        }
-        let newValue: number | null = null;
-        if (typedText !== "") {
-            const num = parseFloat(typedText);
-            const rawNum = Math.floor(toGenerator(num));
-            newValue = Math.max(limits.min, Math.min(limits.max, rawNum));
-        }
-        const actions = [
-            new SetGeneratorAction(zone, generator, value, newValue, callback)
-        ];
-        if (linkedZone) {
-            actions.push(
+    const setValue = useCallback(
+        (typedText: string) => {
+            if (textValue === typedText) {
+                return textValue;
+            }
+            let newValue: number | null = null;
+            if (typedText !== "") {
+                const num = parseFloat(typedText);
+                const rawNum = Math.floor(toGenerator(num));
+                newValue = Math.max(limits.min, Math.min(limits.max, rawNum));
+            }
+            const actions = [
                 new SetGeneratorAction(
-                    linkedZone,
+                    zone,
                     generator,
                     value,
                     newValue,
                     callback
                 )
-            );
-        }
-        manager.modifyBank(actions);
-        return v2txt(newValue);
-    };
+            ];
+            if (linkedZone) {
+                actions.push(
+                    new SetGeneratorAction(
+                        linkedZone,
+                        generator,
+                        value,
+                        newValue,
+                        callback
+                    )
+                );
+            }
+            manager.modifyBank(actions);
+            return v2txt(newValue);
+        },
+        [
+            callback,
+            generator,
+            limits.max,
+            limits.min,
+            linkedZone,
+            manager,
+            textValue,
+            toGenerator,
+            v2txt,
+            value,
+            zone
+        ]
+    );
+
+    // loop playback special case
+    if (generator === generatorTypes.sampleModes) {
+        return (
+            <td className={"generator_cell"} colSpan={colSpan}>
+                <select
+                    value={value ?? "none"}
+                    onChange={(e) =>
+                        setValue(
+                            e.target.value === "null" ? "" : e.target.value
+                        )
+                    }
+                >
+                    <option value={"null"}>{"-"}</option>
+                    <option value={0}>
+                        {t("soundBankLocale.loopingModes.noLoop")}
+                    </option>
+                    <option value={1}>
+                        {t("soundBankLocale.loopingModes.loop")}
+                    </option>
+                    <option value={2}>
+                        {t("soundBankLocale.loopingModes.startOnRelease")}
+                    </option>
+                    <option value={3}>
+                        {t("soundBankLocale.loopingModes.loopUntilRelease")}
+                    </option>
+                </select>
+            </td>
+        );
+    }
+
     return (
         <td className={"generator_cell"} colSpan={colSpan}>
             <GeneratorCellInput

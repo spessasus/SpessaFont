@@ -23,14 +23,6 @@
     border-radius: 0 0 var(--key-border-radius) var(--key-border-radius);
     position: relative;
     transform-origin: center top;
-    --pressed-transform-skew: 0.0007;
-    --pressed-transform: matrix3d(
-            1, 0, 0,
-            0, 0, 1,
-            0, var(--pressed-transform-skew), 0,
-            0, 1, 0,
-            0, 0, 0,
-            1);
     cursor: default;
 
     /*specific key transforms*/
@@ -41,10 +33,15 @@
     --flat-between-transform: scale(1.9, 1);
     --flat-left-transform: scale(var(--flat-half-width), 1) translateX(calc(var(--flat-half-translate) * -1));
     --flat-right-transform: scale(var(--flat-half-width), 1) translateX(var(--flat-half-translate));
+    outline: solid 1px black;
 }
 
 .keyboard .key.pressed {
     background: var(--border-color);
+}
+
+.keyboard .key.disabled {
+    filter: invert(0.6);
 }
 
 
@@ -73,20 +70,4 @@
 
 .keyboard .flat_key.right_sharp {
     transform: var(--flat-right-transform);
-}
-
-.sharp_key.pressed {
-    transform: var(--sharp-transform) var(--pressed-transform) !important;
-}
-
-.flat_key.between_sharps.pressed {
-    transform: var(--flat-between-transform) var(--pressed-transform) !important;
-}
-
-.flat_key.left_sharp.pressed {
-    transform: var(--flat-left-transform) var(--pressed-transform) !important;
-}
-
-.flat_key.right_sharp.pressed {
-    transform: var(--flat-right-transform) var(--pressed-transform) !important;
 }

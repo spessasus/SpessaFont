@@ -38,22 +38,25 @@ export function LinkedPresets({
 
     return (
         <div className={"bottom_bar"}>
-            <WaitingInput
-                type={"text"}
-                value={instrument.instrumentName}
-                setValue={(v) => {
-                    const action = new EditInstrumentAction(
-                        instruments.indexOf(instrument),
-                        "instrumentName",
-                        instrument.instrumentName,
-                        v,
-                        () => setInstruments([...instruments])
-                    );
-                    manager.modifyBank([action]);
-                    return v;
-                }}
-                maxLength={40}
-            />
+            <div>
+                <WaitingInput
+                    type={"text"}
+                    value={instrument.instrumentName}
+                    setValue={(v) => {
+                        const action = new EditInstrumentAction(
+                            instruments.indexOf(instrument),
+                            "instrumentName",
+                            instrument.instrumentName,
+                            v,
+                            () => setInstruments([...instruments])
+                        );
+                        manager.modifyBank([action]);
+                        return v;
+                    }}
+                    maxLength={40}
+                />
+            </div>
+
             {instrument.linkedPresets.length === 0 && (
                 <>
                     <div>
@@ -61,8 +64,10 @@ export function LinkedPresets({
                             {t("instrumentLocale.notLinkedToPreset")}
                         </strong>
                     </div>
-                    <div className={"warning"} onClick={deleteInstrument}>
-                        {t("instrumentLocale.deleteInstrument")}
+                    <div onClick={deleteInstrument}>
+                        <strong className={"warning"}>
+                            {t("instrumentLocale.deleteInstrument")}
+                        </strong>
                     </div>
                 </>
             )}

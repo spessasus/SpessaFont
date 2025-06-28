@@ -45,7 +45,7 @@ export function LinkedInstruments({
         <div className={"bottom_bar"}>
             {sample.isCompressed && (
                 <div>
-                    <strong style={{ color: "red" }}>
+                    <strong className={"warning"}>
                         {t("sampleLocale.compressedSample")}
                     </strong>
                 </div>

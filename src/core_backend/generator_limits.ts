@@ -158,16 +158,15 @@ generatorLimits[generatorTypes.freqVibLFO] = {
 
 // mod env
 generatorLimits[generatorTypes.delayModEnv] = {
-    min: -32768,
+    min: -12000,
     max: 5000,
-    def: -32768,
+    def: -12000,
     nrpn: 2
-}; // -32,768 indicates instant phase,
-// this is done to prevent click at the start of filter modenv
+};
 generatorLimits[generatorTypes.attackModEnv] = {
-    min: -32768,
+    min: -12000,
     max: 8000,
-    def: -32768,
+    def: -12000,
     nrpn: 2
 };
 generatorLimits[generatorTypes.holdModEnv] = {
@@ -189,11 +188,11 @@ generatorLimits[generatorTypes.sustainModEnv] = {
     nrpn: 1
 };
 generatorLimits[generatorTypes.releaseModEnv] = {
-    min: -7200,
+    min: -12000,
     max: 8000,
     def: -12000,
     nrpn: 2
-}; // min is set to -7200 to prevent lowpass clicks
+};
 // key num to mod env
 generatorLimits[generatorTypes.keyNumToModEnvHold] = {
     min: -1200,
@@ -240,11 +239,11 @@ generatorLimits[generatorTypes.sustainVolEnv] = {
     nrpn: 1
 };
 generatorLimits[generatorTypes.releaseVolEnv] = {
-    min: -7200,
+    min: -12000,
     max: 8000,
     def: -12000,
     nrpn: 2
-}; // min is set to -7200 prevent clicks
+};
 // key num to vol env
 generatorLimits[generatorTypes.keyNumToVolEnvHold] = {
     min: -1200,
@@ -299,11 +298,11 @@ generatorLimits[generatorTypes.coarseTune] = {
     nrpn: 1
 };
 generatorLimits[generatorTypes.fineTune] = {
-    min: -12700,
-    max: 12700,
+    min: -99,
+    max: 99,
     def: 0,
     nrpn: 1
-}; // this generator is used as initial pitch, hence this range
+};
 generatorLimits[generatorTypes.scaleTuning] = {
     min: 0,
     max: 1200,

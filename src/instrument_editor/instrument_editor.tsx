@@ -320,7 +320,6 @@ export function InstrumentEditor({
         return () => {
             // manually clear the preset to not trigger any warnings
             // (the instrument is not linked to the preset in this hack)
-            preset.presetZones.length = 0;
             engine.processor.clearCache();
             engine.processor.programChange(KEYBOARD_TARGET_CHANNEL, 0);
         };
