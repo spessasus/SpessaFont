@@ -1,15 +1,21 @@
 <!--suppress HtmlDeprecatedAttribute, CheckImageSize -->
 <p align='center'><img width='300' alt='hammer obliterating a piano' src="src/logo.png"/></p>
-Online SoundFont/DLS Editor, written in TypeScript and React.
+Fully online SoundFont/DLS Editor, written in TypeScript and React.
+No download needed!
 
+## [Link](https://spessasus.github.io/SpessaFont)
 
 ## Description
 This is an online SoundFont/DLS editor based on [spessasynth_core](https://github.com/spessasus/spessasynth_core) and [spessasynth_lib](https://github.com/spessasus/spessasynth_lib),
-heavily inspired by [polyphone](https://github.com/davy7125/polyphone).
+inspired by
+Davy7125's [polyphone](https://github.com/davy7125/polyphone).
 This is also my first TypeScript and React project.
 
-> [!WARNING]
+
+> [!NOTE]
 > This is still in progress!
+> There are still features not yet implemented or tested.
+> Use at your own discretion.
 
 ## Features
 - **Fully online:** *No download needed!*
@@ -24,11 +30,24 @@ This is also my first TypeScript and React project.
 - **Real-time modulator and generator editing:** *Instant response to parameter changes!*
 - **Default Modulator Editing!:** *Via the DMOD chunk!*
 - **Limitless SoundFonts:** *Via the xdta chunk!*
+- **Undo and redo system:** *It was a pain to code...*
+- **Clipboard:** *Automatically inserts all needed elements!*
+- **Built-in MIDI Keyboard:**
+  - *Clickable!*
+  - *Shows the key number and velocity!*
+  - *Controller knobs and pedals are customizable!*
+  - *Supports external MIDI devices!*
+  - *Looks cool!*
+  - *Responds to the MIDI player!*
 - **Extensive sample editing:**
   - **Automatic stereo samples handling:** *Including import and name editing!*
   - **Replace samples in-place:** *Broken sample referenced everywhere? No problem!*
   - **Easy loop point setting:** *Just click!*
   - **Insane zoom values:** *Why not?*
+- **Instrument and preset editing:**
+  - **Grouped stereo samples:** *Avoid clutter when making stereo banks!*
+  - **Default values are shown:** *So you don't need to look them up!*
+  - **Normal units:** *Only in the instrument editor...*
 
 
 ## Building from source

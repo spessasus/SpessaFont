@@ -188,6 +188,7 @@ function App() {
     const showTabList = !settings;
     const showWelcome = tabs.length < 1 && !settings && !isSaving && !isLoading;
     const showSettings = settings && !isLoading && !isSaving;
+    const showEditor = !showWelcome && !showSettings && !isLoading;
     const savingRef = useRef<HTMLSpanElement>(null);
     return (
         <div
@@ -235,6 +236,7 @@ function App() {
 
             {currentManager && (
                 <MemoizedBankEditor
+                    shown={showEditor}
                     destinationOptions={destinationOptions}
                     ccOptions={ccOptions}
                     manager={currentManager}

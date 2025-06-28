@@ -19,6 +19,7 @@ export type BankEditorProps = {
     clipboardManager: ClipboardManager;
     destinationOptions: JSX.Element;
     ccOptions: JSX.Element;
+    shown: boolean;
 };
 
 export type SetViewType = (v: BankEditView) => unknown;
@@ -30,7 +31,8 @@ export function BankEditor({
     audioEngine,
     clipboardManager,
     destinationOptions,
-    ccOptions
+    ccOptions,
+    shown
 }: BankEditorProps) {
     const [view, setView] = useState<BankEditView>(manager.currentView);
     const [samples, setSamples] = useState(manager.samples);
@@ -53,7 +55,7 @@ export function BankEditor({
     );
 
     return (
-        <div className={"main_content"}>
+        <div className={"main_content" + (shown ? "" : " hidden")}>
             <MenuList
                 view={view}
                 sv={updateView}

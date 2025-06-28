@@ -107,6 +107,7 @@ export function MenuBar({
                 <MenuBarItem click={sf2} text={fLoc + "saveSF2"}></MenuBarItem>
                 <MenuBarItem click={dls} text={fLoc + "saveDLS"}></MenuBarItem>
                 <MenuBarItem click={sf3} text={fLoc + "saveSF3"}></MenuBarItem>
+                <MenuBarItem text={"v" + __APP_VERSION__}></MenuBarItem>
             </MenuBarDropdown>
             <MenuBarDropdown main={eLoc + "edit"}>
                 <MenuBarItem click={undo} text={eLoc + "undo"}></MenuBarItem>

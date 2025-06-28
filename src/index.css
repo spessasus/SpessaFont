@@ -167,8 +167,7 @@ input[type=number] {
     align-items: center;
     justify-content: center;
     background: var(--top-color);
-    position: absolute;
-    z-index: var(--top-index);
+    position: relative;
 }
 
 .welcome h2 {

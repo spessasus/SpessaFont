@@ -22,13 +22,14 @@
 }
 
 .header_cell span {
-    text-overflow: ellipsis;
+    word-break: break-word;
+    white-space: break-spaces;
 }
 
 .header_cell.stereo span {
-    border: solid 1px var(--track-border-color);
-    padding: 0.3rem;
-    border-radius: var(--primary-border-radius);
+    font-style: italic;
+    text-decoration: underline;
+    cursor: help;
 }
 
 .header_cell:first-child {
