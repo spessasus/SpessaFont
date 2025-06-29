@@ -4,24 +4,29 @@ import type { SetViewType } from "../../bank_editor/bank_editor.tsx";
 import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
 
 export class DeleteInstrumentAction implements HistoryAction {
-    private removed?: BasicInstrument;
-    private readonly index: number;
+    private readonly instrument: BasicInstrument;
+    private index?: number;
     private readonly setInstruments: (s: BasicInstrument[]) => void;
     private readonly setView: SetViewType;
 
     constructor(
-        index: number,
+        instrument: BasicInstrument,
         setInstruments: (s: BasicInstrument[]) => void,
         setView: SetViewType
     ) {
-        this.index = index;
+        this.instrument = instrument;
         this.setInstruments = setInstruments;
         this.setView = setView;
     }
 
     do(b: SoundBankManager) {
-        this.removed = b.instruments[this.index];
-        b.deleteInstrument(this.removed);
+        this.index = b.instruments.indexOf(this.instrument);
+        if (this.index < 0) {
+            throw new Error(
+                `${this.instrument.instrumentName} does not exist in ${b.soundFontInfo["INAM"]}`
+            );
+        }
+        b.deleteInstrument(this.instrument);
         this.setInstruments([...b.instruments]);
         // check if there are elements to switch to
         if (b.instruments.length > 0) {
@@ -32,11 +37,11 @@ export class DeleteInstrumentAction implements HistoryAction {
     }
 
     undo(b: SoundBankManager) {
-        if (!this.removed) {
+        if (this.index === undefined) {
             return;
         }
-        b.instruments.splice(this.index, 0, this.removed);
+        b.instruments.splice(this.index, 0, this.instrument);
         this.setInstruments([...b.instruments]);
-        this.setView(this.removed);
+        this.setView(this.instrument);
     }
 }

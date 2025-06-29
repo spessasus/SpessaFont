@@ -23,9 +23,8 @@ export function BottomPresetBar({
     const { t } = useTranslation();
 
     const deletePreset = () => {
-        const mainIndex = presets.indexOf(preset);
         manager.modifyBank([
-            new DeletePresetAction(mainIndex, setPresets, setView)
+            new DeletePresetAction(preset, setPresets, setView)
         ]);
     };
     return (

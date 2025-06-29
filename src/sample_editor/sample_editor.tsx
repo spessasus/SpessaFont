@@ -271,15 +271,15 @@ export const SampleEditor = React.memo(function ({
                 centCorrection={centCorrection}
             ></WaveView>
             <div className={"info_column"}>
+                <WaitingInput
+                    setValue={setName}
+                    value={sampleName}
+                    maxLength={40}
+                    className={"pretty_input sample_name monospaced"}
+                    placeholder={t("sampleLocale.sampleName")}
+                />
                 <div className={"info_split"}>
                     <div className={"info_column"}>
-                        <WaitingInput
-                            setValue={setName}
-                            value={sampleName}
-                            maxLength={40}
-                            className={"pretty_input sample_name monospaced"}
-                            placeholder={t("sampleLocale.sampleName")}
-                        />
                         <div className={"info_column"}>
                             <div className={"info_field"}>
                                 <span>{t("sampleLocale.sampleRate")}</span>

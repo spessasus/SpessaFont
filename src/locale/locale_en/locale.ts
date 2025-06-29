@@ -50,6 +50,7 @@ export const localeEnglish = {
     addNew: "Add New",
     copy: "Copy",
     paste: "Paste",
+    delete: "Delete",
     collapse: "Collapse",
     expand: "Expand",
 

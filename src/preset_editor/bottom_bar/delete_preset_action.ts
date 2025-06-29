@@ -4,24 +4,29 @@ import type { SetViewType } from "../../bank_editor/bank_editor.tsx";
 import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
 
 export class DeletePresetAction implements HistoryAction {
-    private removed?: BasicPreset;
-    private readonly index: number;
+    private readonly preset: BasicPreset;
+    private index?: number;
     private readonly setPresets: (s: BasicPreset[]) => void;
     private readonly setView: SetViewType;
 
     constructor(
-        index: number,
+        preset: BasicPreset,
         setPresets: (s: BasicPreset[]) => void,
         setView: SetViewType
     ) {
-        this.index = index;
+        this.preset = preset;
         this.setPresets = setPresets;
         this.setView = setView;
     }
 
     do(b: SoundBankManager) {
-        this.removed = b.presets[this.index];
-        b.deletePreset(this.removed);
+        this.index = b.presets.indexOf(this.preset);
+        if (this.index < 0) {
+            throw new Error(
+                `${this.preset.presetName} does not exist in ${b.soundFontInfo["INAM"]}`
+            );
+        }
+        b.deletePreset(this.preset);
         this.setPresets([...b.presets]);
         // check if there are elements to switch to
         if (b.presets.length > 0) {
@@ -32,11 +37,11 @@ export class DeletePresetAction implements HistoryAction {
     }
 
     undo(b: SoundBankManager) {
-        if (!this.removed) {
+        if (this.index === undefined) {
             return;
         }
-        b.presets.splice(this.index, 0, this.removed);
+        b.presets.splice(this.index, 0, this.preset);
         this.setPresets([...b.presets]);
-        this.setView(this.removed);
+        this.setView(this.preset);
     }
 }

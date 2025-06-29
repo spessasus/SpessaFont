@@ -23,7 +23,10 @@ import { LocaleList } from "./locale/locale_list.ts";
 import { KeyboardController } from "./keyboard/keyboard_controller.tsx";
 import { DestinationsOptions } from "./utils/translated_options/destination_options.tsx";
 import { ModulableControllerOptions } from "./utils/translated_options/modulable_controller_options.tsx";
-import { MemoizedBankEditor } from "./bank_editor/bank_editor.tsx";
+import {
+    type BankEditorRef,
+    MemoizedBankEditor
+} from "./bank_editor/bank_editor.tsx";
 
 // apply locale
 const initialSettings = loadSettings();
@@ -63,6 +66,7 @@ function App() {
     const [settings, setSettings] = useState(false);
     const [theme, setTheme] = useState(getSetting("theme", initialSettings));
     const [activeTab, setActiveTab] = useState<number>(0); // index in tabs[]
+    const bankEditorRef: BankEditorRef = useRef(null);
 
     const currentManager: SoundBankManager | undefined = useMemo(
         () => tabs[activeTab],
@@ -195,6 +199,7 @@ function App() {
             className={`spessafont_main ${theme === "light" ? "light_mode" : ""}`}
         >
             <MenuBar
+                bankEditorRef={bankEditorRef}
                 setIsLoading={setIsSaving}
                 savingRef={savingRef}
                 showMidiPlayer={tabs.length > 0}
@@ -236,6 +241,7 @@ function App() {
 
             {currentManager && (
                 <MemoizedBankEditor
+                    ref={bankEditorRef}
                     shown={showEditor}
                     destinationOptions={destinationOptions}
                     ccOptions={ccOptions}

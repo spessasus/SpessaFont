@@ -26,17 +26,12 @@ export function LinkedInstruments({
     }, [sample.linkedInstruments]);
 
     const deleteSample = () => {
-        const mainIndex = manager.samples.indexOf(sample);
-        const actions = [
-            new DeleteSampleAction(mainIndex, setSamples, setView)
-        ];
+        const actions = [new DeleteSampleAction(sample, setSamples, setView)];
         // delete the other one too if linked and unused
         if (sample?.linkedSample?.useCount === 0) {
-            let index = manager.samples.indexOf(sample.linkedSample);
-            if (index > mainIndex) {
-                index--;
-            }
-            actions.push(new DeleteSampleAction(index, setSamples, setView));
+            actions.push(
+                new DeleteSampleAction(sample.linkedSample, setSamples, setView)
+            );
         }
         manager.modifyBank(actions);
     };

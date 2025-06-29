@@ -97,7 +97,7 @@ export function ModulatorList({
                         className={"modulator_main modulator_list_button"}
                         onClick={pasteFromClipboard}
                     >
-                        {t("menuBarLocale.edit.paste")}
+                        {t("paste")}
                     </div>
                 )}
                 {hasSelectedMods && (
@@ -105,7 +105,7 @@ export function ModulatorList({
                         onClick={copyToCliboard}
                         className={"modulator_main modulator_list_button"}
                     >
-                        {t("menuBarLocale.edit.copy")}
+                        {t("copy")}
                     </div>
                 )}
                 {hasSelectedMods && (
@@ -113,7 +113,7 @@ export function ModulatorList({
                         onClick={deleteSelected}
                         className={"modulator_main modulator_list_button"}
                     >
-                        {t("menuBarLocale.edit.delete")}
+                        {t("delete")}
                     </div>
                 )}
             </div>

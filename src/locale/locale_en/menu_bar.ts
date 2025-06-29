@@ -12,10 +12,7 @@ export const MenuBarLocale = {
         edit: "Edit",
         undo: "Undo",
         redo: "Redo",
-        copy: "Copy",
-        paste: "Paste",
-        cut: "Cut",
-        delete: "Delete"
+        removeUnusedElements: "Remove Unused Elements"
     },
     midi: {
         player: "MIDI Player",

@@ -30,9 +30,8 @@ export function LinkedPresets({
     }, [instrument]);
 
     const deleteInstrument = () => {
-        const mainIndex = manager.instruments.indexOf(instrument);
         manager.modifyBank([
-            new DeleteInstrumentAction(mainIndex, setInstruments, setView)
+            new DeleteInstrumentAction(instrument, setInstruments, setView)
         ]);
     };
 

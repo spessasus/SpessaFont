@@ -21,7 +21,6 @@ export const SampleLocale = {
     },
 
     tools: {
-        title: "Tools",
         play: "Play",
         playLooped: "Play Looped",
         stop: "Stop",

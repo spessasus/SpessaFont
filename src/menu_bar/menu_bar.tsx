@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import { Gear } from "./gear.tsx";
 import { type RefObject, useCallback } from "react";
+import type { BankEditorRef } from "../bank_editor/bank_editor.tsx";
 
 // @ts-expect-error chromium check is here
 const isChrome: boolean = window["chrome"] !== undefined;
@@ -20,7 +21,8 @@ export function MenuBar({
     showMidiPlayer,
     toggleKeyboard,
     setIsLoading,
-    savingRef
+    savingRef,
+    bankEditorRef
 }: {
     audioEngine: AudioEngine;
     toggleSettings: () => void;
@@ -31,6 +33,7 @@ export function MenuBar({
     toggleKeyboard: () => void;
     setIsLoading: (l: boolean) => unknown;
     savingRef: RefObject<HTMLSpanElement | null>;
+    bankEditorRef: BankEditorRef;
 }) {
     const fLoc = "menuBarLocale.file.";
     const eLoc = "menuBarLocale.edit.";
@@ -112,6 +115,10 @@ export function MenuBar({
             <MenuBarDropdown main={eLoc + "edit"}>
                 <MenuBarItem click={undo} text={eLoc + "undo"}></MenuBarItem>
                 <MenuBarItem click={redo} text={eLoc + "redo"}></MenuBarItem>
+                <MenuBarItem
+                    click={() => bankEditorRef?.current?.removeUnusedElements()}
+                    text={eLoc + "removeUnusedElements"}
+                ></MenuBarItem>
             </MenuBarDropdown>
             {showMidiPlayer && (
                 <MIDIPlayer audioEngine={audioEngine}></MIDIPlayer>

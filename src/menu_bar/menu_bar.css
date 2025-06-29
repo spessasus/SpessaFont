@@ -37,6 +37,12 @@
     position: absolute;
     opacity: 0;
     visibility: hidden;
+    max-width: 20ch;
+}
+
+.menu_bar_contents .menu_bar_item {
+    white-space: break-spaces;
+    border-bottom: var(--border-color) 1px solid;
 }
 
 .menu_bar:hover .menu_bar_contents {

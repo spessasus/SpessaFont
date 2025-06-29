@@ -74,7 +74,7 @@ export function SampleList({
             if (lastDotIndex !== -1) {
                 sampleName = sampleName.substring(0, lastDotIndex);
             }
-            sampleName = sampleName.substring(0, 19);
+            sampleName = sampleName.substring(0, 39); // keep spare space for "R" or "L"
 
             const sample = new BasicSample(
                 sampleName + (audioBuffer.numberOfChannels > 1 ? "L" : ""),

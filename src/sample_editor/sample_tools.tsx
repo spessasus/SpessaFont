@@ -240,7 +240,6 @@ export function SampleTools({
     const maxZoom = Math.max(5, ZOOM_PER_SAMPLE * sampleData.length + 1);
     return (
         <div className={`info_column ${loading ? "disabled" : ""} tools`}>
-            <h2>{t("sampleLocale.tools.title")}</h2>
             <div
                 className={`pretty_button monospaced ${!loading ? "responsive_button hover_brightness" : ""}`}
                 onClick={exportWav}

@@ -206,6 +206,8 @@ declare module "spessasynth_core" {
         addSamples(...samples: BasicSample[]);
 
         addInstruments(...instruments: BasicInstrument[]);
+
+        removeUnusedElements();
     }
 
     export const loadSoundFont: (buffer: ArrayBuffer) => SoundBankManager;
