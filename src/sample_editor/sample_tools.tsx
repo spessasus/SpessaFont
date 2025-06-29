@@ -24,6 +24,7 @@ export function SampleTools({
     setLoading,
     zoom,
     setZoom,
+    sampleData,
     setSampleData
 }: {
     sample: BasicSample;
@@ -35,10 +36,10 @@ export function SampleTools({
     setLoading: (l: boolean) => unknown;
     zoom: number;
     setZoom: (z: number) => unknown;
+    sampleData: Float32Array;
     setSampleData: (d: Float32Array, rate: number) => unknown;
 }) {
     const { t } = useTranslation();
-    const sampleData = sample.getAudioData();
     const sampleName = sample.sampleName;
     const sampleRate = sample.sampleRate;
     const centCorrection = sample.samplePitchCorrection;
@@ -218,6 +219,18 @@ export function SampleTools({
         input.click();
     };
 
+    const normalizeAudio = () => {
+        const maxSample = sampleData.reduce((max, cur) =>
+            Math.max(max, Math.abs(cur))
+        );
+        const gain = 1 / maxSample;
+        const newData = new Float32Array(sampleData);
+        for (let i = 0; i < newData.length; i++) {
+            newData[i] *= gain;
+        }
+        setSampleData(newData, sampleRate);
+    };
+
     const maxZoom = Math.max(5, ZOOM_PER_SAMPLE * sampleData.length + 1);
     return (
         <div className={`info_column ${loading ? "disabled" : ""} tools`}>
@@ -262,6 +275,13 @@ export function SampleTools({
                     </div>
                 </>
             )}
+            <div
+                onClick={normalizeAudio}
+                className={`pretty_button monospaced ${!loading ? "responsive_button hover_brightness" : ""}`}
+            >
+                {t("sampleLocale.tools.normalize")}
+            </div>
+
             <div
                 onClick={replaceData}
                 className={`pretty_button monospaced ${!loading ? "responsive_button hover_brightness" : ""}`}

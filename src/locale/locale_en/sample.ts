@@ -27,6 +27,7 @@ export const SampleLocale = {
         stop: "Stop",
         wavExport: "WAV Export",
         replaceAudio: "Replace Audio",
+        normalize: "Normalize",
         loading: "Loading...",
         invalidAudioFile: "Invalid Audio File",
         tooManyChannels: "Too Many Channels"

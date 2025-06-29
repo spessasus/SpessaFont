@@ -46,17 +46,22 @@ export const SampleEditor = React.memo(function ({
     samples
 }: SampleEditorProps) {
     const { t } = useTranslation();
-    const sampleData = sample.getAudioData();
+    const [sampleData, setSampleDataLocal] = useState(sample.getAudioData());
     const sampleIndex = useMemo(
         () => samples.indexOf(sample),
         [samples, sample]
     );
+
+    useEffect(() => {
+        setSampleDataLocal(sample.getAudioData());
+    }, [sample]);
 
     const setSampleData = (data: Float32Array, rate: number) => {
         setSampleRate(rate);
         setLoopStart(0);
         setLoopEnd(data.length - 1);
         sample.setAudioData(data);
+        setSampleDataLocal(data);
     };
 
     const updateSamples = useCallback(
@@ -358,6 +363,7 @@ export const SampleEditor = React.memo(function ({
                         setPlaybackStart={setPlaybackStart}
                         sample={sample}
                         engine={engine}
+                        sampleData={sampleData}
                         setSampleData={setSampleData}
                     />
                 </div>
