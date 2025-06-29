@@ -6,12 +6,13 @@ import {
 import "./preset_editor.css";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import type { SetViewType } from "../bank_editor/bank_editor.tsx";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { cb2db, db2cb } from "../utils/conversion_helpers.ts";
 import { BottomPresetBar } from "./bottom_bar/bottom_bar.tsx";
 import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import type { GeneratorRowType } from "../instrument_editor/instrument_editor.tsx";
 import { GeneratorTable } from "../generator_table/generator_table.tsx";
+import { KEYBOARD_TARGET_CHANNEL } from "../keyboard/target_channel.ts";
 
 const presetRows: GeneratorRowType[] = [
     {
@@ -227,6 +228,13 @@ export function PresetEditor({
         setPresets([...presets]);
         engine.processor.clearCache();
     };
+
+    useEffect(() => {
+        engine.processor.midiAudioChannels[KEYBOARD_TARGET_CHANNEL].setPreset(
+            preset
+        );
+        engine.processor.clearCache();
+    }, [engine.processor, preset]);
 
     return (
         <div className={"preset_editor"}>
