@@ -56,6 +56,14 @@ export function BottomPresetBar({
                     max={127}
                     value={preset.program}
                     setValue={(v) => {
+                        // no duplicates
+                        if (
+                            presets.find(
+                                (p) => p.program === v && p.bank === preset.bank
+                            )
+                        ) {
+                            return preset.program;
+                        }
                         const action = new EditPresetAction(
                             presets.indexOf(preset),
                             "program",
@@ -76,6 +84,15 @@ export function BottomPresetBar({
                     max={128}
                     value={preset.bank}
                     setValue={(v) => {
+                        // no duplicates
+                        if (
+                            presets.find(
+                                (p) =>
+                                    p.program === preset.program && p.bank === v
+                            )
+                        ) {
+                            return preset.bank;
+                        }
                         const action = new EditPresetAction(
                             presets.indexOf(preset),
                             "bank",

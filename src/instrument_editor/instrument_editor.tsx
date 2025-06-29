@@ -307,7 +307,6 @@ export function InstrumentEditor({
     const global = instrument.globalZone;
     useEffect(() => {
         // do some hacky stuff to get the zones to play
-        engine.processor.clearCache();
         const preset = new BasicPreset(manager);
         // screaming name so it's easier to spot errors
         preset.presetName = "INSTRUMENT PLAYBACK PRESET";
@@ -317,6 +316,7 @@ export function InstrumentEditor({
         engine.processor.midiAudioChannels[KEYBOARD_TARGET_CHANNEL].setPreset(
             preset
         );
+        engine.processor.clearCache();
         return () => {
             // manually clear the preset to not trigger any warnings
             // (the instrument is not linked to the preset in this hack)

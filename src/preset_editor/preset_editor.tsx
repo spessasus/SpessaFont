@@ -231,6 +231,7 @@ export function PresetEditor({
         engine.processor.midiAudioChannels[KEYBOARD_TARGET_CHANNEL].setPreset(
             preset
         );
+        engine.processor.clearCache();
     }, [engine.processor, preset]);
 
     return (
