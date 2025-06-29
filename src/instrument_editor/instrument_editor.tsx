@@ -327,10 +327,11 @@ export function InstrumentEditor({
     return (
         <div className={"instrument_editor"}>
             <div className={"zone_table_wrapper"}>
-                <GeneratorTable<BasicInstrumentZone>
+                <GeneratorTable<BasicInstrumentZone, BasicInstrument>
                     manager={manager}
                     callback={update}
                     rows={instrumentRows}
+                    element={instrument}
                     zones={zones}
                     global={global}
                     name={instrument.instrumentName}

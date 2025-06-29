@@ -1,0 +1,55 @@
+.header_cell {
+    padding: 0.5rem;
+    cursor: pointer;
+    max-width: 15ch;
+    min-width: 12ch;
+    position: relative;
+}
+
+.header_cell.instrument {
+    color: var(--instrument-item-color);
+    font-weight: bold;
+}
+
+.header_cell.preset {
+    color: var(--preset-item-color);
+    font-weight: bold;
+}
+
+.header_cell.stereo {
+    font-style: italic;
+    text-decoration: underline;
+    cursor: help;
+}
+
+.header_cell span {
+    word-break: break-word;
+    white-space: break-spaces;
+    text-align: start;
+}
+
+.header_cell.stereo span {
+    font-style: italic;
+    text-decoration: underline;
+    cursor: help;
+}
+
+.header_cell:first-child {
+    max-width: unset;
+    min-width: 15rem;
+}
+
+.header_cell .header_flex {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header_cell .delete_zone {
+    cursor: pointer;
+    filter: brightness(0.8);
+}
+
+.header_cell .delete_zone:hover {
+    filter: none;
+}

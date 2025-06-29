@@ -5,9 +5,8 @@ import {
 } from "spessasynth_core";
 import "./preset_editor.css";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
-import { KEYBOARD_TARGET_CHANNEL } from "../keyboard/target_channel.ts";
 import type { SetViewType } from "../bank_editor/bank_editor.tsx";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { cb2db, db2cb } from "../utils/conversion_helpers.ts";
 import { BottomPresetBar } from "./bottom_bar/bottom_bar.tsx";
 import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
@@ -222,24 +221,20 @@ export function PresetEditor({
             ),
         [preset.presetZones]
     );
+
     const global = preset.globalZone;
     const update = () => {
         setPresets([...presets]);
         engine.processor.clearCache();
     };
-    useEffect(() => {
-        engine.processor.midiAudioChannels[KEYBOARD_TARGET_CHANNEL].setPreset(
-            preset
-        );
-        engine.processor.clearCache();
-    }, [engine.processor, preset]);
 
     return (
         <div className={"preset_editor"}>
             <div className={"zone_table_wrapper"}>
-                <GeneratorTable<BasicPresetZone>
+                <GeneratorTable<BasicPresetZone, BasicPreset>
                     name={preset.presetName}
                     zones={zones}
+                    element={preset}
                     global={global}
                     callback={update}
                     rows={presetRows}

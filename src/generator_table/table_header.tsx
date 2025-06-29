@@ -1,20 +1,35 @@
-import { BasicInstrumentZone, type BasicPresetZone } from "spessasynth_core";
+import {
+    BasicInstrument,
+    BasicInstrumentZone,
+    type BasicPreset,
+    type BasicPresetZone
+} from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import type { SetViewType } from "../bank_editor/bank_editor.tsx";
 import type { LinkedZoneMap } from "./generator_table.tsx";
+import "./header_cell.css";
+import { DeleteZoneAction } from "./delete_zone_action.ts";
+import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 
 export function GeneratorTableHeader<
-    T extends BasicPresetZone | BasicInstrumentZone
+    T extends BasicPresetZone | BasicInstrumentZone,
+    A extends BasicInstrument | BasicPreset
 >({
     zones,
+    element,
     setView,
     name,
-    linkedZoneMap
+    linkedZoneMap,
+    callback,
+    manager
 }: {
     name: string;
+    element: A;
     zones: T[];
     setView: SetViewType;
     linkedZoneMap: LinkedZoneMap<T>;
+    callback: () => unknown;
+    manager: SoundBankManager;
 }) {
     const { t } = useTranslation();
     return (
@@ -22,7 +37,7 @@ export function GeneratorTableHeader<
             <th
                 className={
                     "header_cell " +
-                    (zones[0] instanceof BasicInstrumentZone
+                    (element instanceof BasicInstrument
                         ? "instrument"
                         : "preset")
                 }
@@ -65,7 +80,24 @@ export function GeneratorTableHeader<
                             )
                         }
                     >
-                        <span>{name}</span>
+                        <div className={"header_flex"}>
+                            <span>{name}</span>
+                            <span
+                                className={"delete_zone"}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    const action = new DeleteZoneAction<A>(
+                                        element,
+                                        i,
+                                        callback
+                                    );
+                                    manager.modifyBank([action]);
+                                }}
+                            >
+                                ✖
+                            </span>
+                        </div>
                     </th>
                 );
             })}

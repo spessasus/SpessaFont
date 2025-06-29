@@ -1,4 +1,10 @@
-import { BasicGlobalZone, BasicInstrumentZone, BasicPresetZone } from "spessasynth_core";
+import {
+    BasicGlobalZone,
+    type BasicInstrument,
+    BasicInstrumentZone,
+    type BasicPreset,
+    BasicPresetZone
+} from "spessasynth_core";
 import type { GeneratorRowType } from "../instrument_editor/instrument_editor.tsx";
 import { GeneratorTableHeader } from "./table_header.tsx";
 import { NumberGeneratorRow } from "./generator_row.tsx";
@@ -18,7 +24,8 @@ export type LinkedZoneMap<T extends BasicPresetZone | BasicInstrumentZone> = {
 }[];
 
 export function GeneratorTable<
-    T extends BasicPresetZone | BasicInstrumentZone
+    T extends BasicPresetZone | BasicInstrumentZone,
+    A extends BasicPreset | BasicInstrument
 >({
     name,
     zones,
@@ -26,9 +33,11 @@ export function GeneratorTable<
     callback,
     manager,
     rows,
-    setView
+    setView,
+    element
 }: {
     name: string;
+    element: A;
     zones: T[];
     global: BasicGlobalZone;
     callback: () => unknown;
@@ -113,9 +122,12 @@ export function GeneratorTable<
         >
             <thead>
                 <GeneratorTableHeader
+                    callback={callback}
                     linkedZoneMap={linkedZoneMap}
                     name={name}
                     zones={zones}
+                    element={element}
+                    manager={manager}
                     setView={setView}
                 />
             </thead>
