@@ -4,7 +4,7 @@
     text-align: center;
     overflow-y: auto;
     flex-grow: 0;
-    width: min-content;
+    min-width: max-content;
     user-select: none;
     gap: var(--flex-gap);
 }
