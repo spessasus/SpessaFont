@@ -15,12 +15,20 @@ import {
 import { MenuList } from "../menu_list/menu_list.tsx";
 import "./bank_editor.css";
 import { SoundBankInfo } from "../info_view/sound_bank_info.tsx";
-import { BasicInstrument, BasicPreset, BasicSample } from "spessasynth_core";
+import {
+    BasicInstrument,
+    BasicPreset,
+    BasicSample,
+    sampleTypes,
+    type SampleTypeValue
+} from "spessasynth_core";
 import { PresetEditor } from "../preset_editor/preset_editor.tsx";
 import { InstrumentEditor } from "../instrument_editor/instrument_editor.tsx";
 import { SampleEditor } from "../sample_editor/sample_editor.tsx";
 import { DeleteSampleAction } from "../sample_editor/linked_instruments/delete_sample_action.ts";
 import { DeleteInstrumentAction } from "../instrument_editor/linked_presets/delete_instrument_action.ts";
+import { SetSampleTypeAction } from "../sample_editor/set_sample_type_action.ts";
+import { logInfo } from "../utils/core_utils.ts";
 
 export type BankEditorProps = {
     manager: SoundBankManager;
@@ -38,6 +46,7 @@ export const MemoizedBankEditor = React.memo(BankEditor);
 
 export type BankEditorRef = RefObject<{
     removeUnusedElements: () => void;
+    autoLinkSamples: () => void;
 } | null>;
 
 export function BankEditor({
@@ -72,7 +81,6 @@ export function BankEditor({
     useImperativeHandle(ref, () => {
         return {
             removeUnusedElements: () => {
-                console.log("REMOVING");
                 // remove unused elements with history
                 // samples
                 const sampleActions: DeleteSampleAction[] =
@@ -109,9 +117,82 @@ export function BankEditor({
                         []
                     );
                 manager.modifyBank([...sampleActions, ...instrumentActions]);
+            },
+
+            // automatically link stereo samples based on the name
+            autoLinkSamples: () => {
+                const actions: SetSampleTypeAction[] = [];
+                const linkedSamples = new Set<BasicSample>();
+                samples.forEach((sample) => {
+                    if (sample.linkedSample) {
+                        return;
+                    }
+
+                    const match = sample.sampleName.match(
+                        /[a-zA-Z!](?=\s*$|\)|$)/
+                    )?.[0];
+                    if (
+                        match?.toLowerCase() !== "l" &&
+                        match?.toLowerCase() !== "r"
+                    ) {
+                        return;
+                    }
+                    let replacement: string;
+                    let type: SampleTypeValue;
+                    switch (match) {
+                        default:
+                        case "l":
+                            replacement = "r";
+                            type = sampleTypes.leftSample;
+                            break;
+
+                        case "L":
+                            replacement = "R";
+                            type = sampleTypes.leftSample;
+                            break;
+
+                        case "r":
+                            replacement = "l";
+                            type = sampleTypes.rightSample;
+                            break;
+
+                        case "R":
+                            replacement = "L";
+                            type = sampleTypes.rightSample;
+                            break;
+                    }
+                    const linkedName = sample.sampleName.replace(
+                        /([a-zA-Z!])(?!.*[a-zA-Z!])/,
+                        replacement
+                    );
+                    const linkedSample = samples.find(
+                        (s) =>
+                            s.sampleName === linkedName &&
+                            !linkedSamples.has(s) &&
+                            !s.linkedSample
+                    );
+                    if (linkedSample) {
+                        linkedSamples.add(sample);
+                        linkedSamples.add(linkedSample);
+                        actions.push(
+                            new SetSampleTypeAction(
+                                sample,
+                                undefined,
+                                sample.sampleType,
+                                linkedSample,
+                                type,
+                                () => {
+                                    setSamples([...samples]);
+                                }
+                            )
+                        );
+                    }
+                });
+                logInfo(`Modified ${actions.length} samples.`);
+                manager.modifyBank(actions);
             }
         };
-    }, [manager, setView]);
+    }, [manager, samples, setView]);
 
     return (
         <div className={"main_content" + (shown ? "" : " hidden")}>

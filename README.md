@@ -9,7 +9,7 @@ No download needed!
 This is an online SoundFont/DLS editor based on [spessasynth_core](https://github.com/spessasus/spessasynth_core) and [spessasynth_lib](https://github.com/spessasus/spessasynth_lib),
 inspired by
 Davy7125's [polyphone](https://github.com/davy7125/polyphone).
-This is also my first TypeScript and React project.
+This is also my first TypeScript and React project. It's a bit messy, but it works! :-P
 
 
 > [!NOTE]
@@ -21,17 +21,27 @@ This is also my first TypeScript and React project.
 - **Fully online:** *No download needed!*
 - **Multiple tabs:** *Copy between soundfonts!*
 - **Multiple formats import and export:**
-  - SF2
-  - SF3
-  - SF2Pack (.sfogg vorbis compression)
-  - DLS
-  - Mobile DLS
+  - SF2 - SoundFonts!
+  - SF3 - Compressed SoundFonts with compression preservation!
+  - SFOGG - SF2Pack! *(import only)*
+  - DLS - DownLoadable Sounds with articulator support!
+  - Mobile DLS - *Apparently it's different from DLS... So I'm including it as well!*
 - **Built-in MIDI player:** *Test your bank with a MIDI file!*
-- **Real-time modulator and generator editing:** *Instant response to parameter changes!*
-- **Default Modulator Editing!:** *Via the DMOD chunk!*
-- **Limitless SoundFonts:** *Via the xdta chunk!*
+- **Real-time synthesizer:** 
+  - *Instant response to parameter changes!*
+  - *Full modulator support!*
+  - *Full generator support!*
+  - *GM, GM2, GS, XG support!*
+  - *Somewhat configurable!*
+- **SoundFont Extensions:**
+  - **Default modulator editing:** *Via the DMOD chunk!*
+  - **Limitless SoundFonts:** *Via the xdta chunk!*
 - **Undo and redo system:** *It was a pain to code...*
-- **Clipboard:** *Automatically inserts all needed elements!*
+- **Supports both light and dark modes!**
+- **Useful tools:**
+  - **Clipboard system:** *Automatically inserts all needed elements!*
+  - **Remove unused elements:** Trim the soundbank's size!
+  - **Auto-link samples:** *Automatically repair broken stereo samples based on names! (Looking at you, FluidR3_GM)*
 - **Built-in MIDI Keyboard:**
   - *Clickable!*
   - *Shows the key number and velocity!*

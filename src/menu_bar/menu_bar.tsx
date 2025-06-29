@@ -107,18 +107,22 @@ export function MenuBar({
                     click={closeTab}
                     text={fLoc + "close"}
                 ></MenuBarItem>
-                <MenuBarItem click={sf2} text={fLoc + "saveSF2"}></MenuBarItem>
-                <MenuBarItem click={dls} text={fLoc + "saveDLS"}></MenuBarItem>
-                <MenuBarItem click={sf3} text={fLoc + "saveSF3"}></MenuBarItem>
-                <MenuBarItem text={"v" + __APP_VERSION__}></MenuBarItem>
+                <MenuBarItem click={sf2} text={fLoc + "saveSF2"} />
+                <MenuBarItem click={dls} text={fLoc + "saveDLS"} />
+                <MenuBarItem click={sf3} text={fLoc + "saveSF3"} />
+                <MenuBarItem text={"v" + __APP_VERSION__} />
             </MenuBarDropdown>
             <MenuBarDropdown main={eLoc + "edit"}>
-                <MenuBarItem click={undo} text={eLoc + "undo"}></MenuBarItem>
-                <MenuBarItem click={redo} text={eLoc + "redo"}></MenuBarItem>
+                <MenuBarItem click={undo} text={eLoc + "undo"} />
+                <MenuBarItem click={redo} text={eLoc + "redo"} />
                 <MenuBarItem
                     click={() => bankEditorRef?.current?.removeUnusedElements()}
                     text={eLoc + "removeUnusedElements"}
-                ></MenuBarItem>
+                />
+                <MenuBarItem
+                    text={eLoc + "autoLinkSamples"}
+                    click={() => bankEditorRef?.current?.autoLinkSamples()}
+                />
             </MenuBarDropdown>
             {showMidiPlayer && (
                 <MIDIPlayer audioEngine={audioEngine}></MIDIPlayer>

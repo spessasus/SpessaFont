@@ -101,11 +101,12 @@ export const SampleEditor = React.memo(function ({
         // no need to use two actions a setSampleType automatically adjusts the second sample
         const action = [
             new SetSampleTypeAction(
-                sampleIndex,
+                sample,
                 sample.linkedSample,
                 sample.sampleType,
                 s,
-                type
+                type,
+                () => setSamples([...samples])
             )
         ];
         manager.modifyBank(action);

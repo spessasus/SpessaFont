@@ -12,7 +12,8 @@ export const MenuBarLocale = {
         edit: "Edit",
         undo: "Undo",
         redo: "Redo",
-        removeUnusedElements: "Remove Unused Elements"
+        removeUnusedElements: "Remove Unused Elements",
+        autoLinkSamples: "Auto-Link Stereo Samples"
     },
     midi: {
         player: "MIDI Player",

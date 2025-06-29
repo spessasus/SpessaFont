@@ -1,38 +1,36 @@
 import type { HistoryAction } from "../core_backend/history.ts";
 import type { BasicSample, SampleTypeValue } from "spessasynth_core";
-import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 
 export class SetSampleTypeAction implements HistoryAction {
-    private readonly sampleIndex: number;
+    private readonly sample: BasicSample;
     private readonly currentLink: BasicSample | undefined;
     private readonly currentType: SampleTypeValue;
     private readonly newLink: BasicSample | undefined;
     private readonly newType: SampleTypeValue;
+    private readonly callback: () => void;
 
     constructor(
-        sampleIndex: number,
+        sample: BasicSample,
         currentLink: BasicSample | undefined,
         currentType: SampleTypeValue,
         newLink: BasicSample | undefined,
-        newType: SampleTypeValue
+        newType: SampleTypeValue,
+        callback: () => void
     ) {
-        this.sampleIndex = sampleIndex;
+        this.callback = callback;
+        this.sample = sample;
         this.currentLink = currentLink;
         this.newLink = newLink;
         this.currentType = currentType;
         this.newType = newType;
     }
 
-    do(b: SoundBankManager) {
-        this.apply(b.samples[this.sampleIndex], this.newLink, this.newType);
+    do() {
+        this.apply(this.sample, this.newLink, this.newType);
     }
 
-    undo(b: SoundBankManager) {
-        this.apply(
-            b.samples[this.sampleIndex],
-            this.currentLink,
-            this.currentType
-        );
+    undo() {
+        this.apply(this.sample, this.currentLink, this.currentType);
     }
 
     private apply(
@@ -46,5 +44,6 @@ export class SetSampleTypeAction implements HistoryAction {
         } else {
             sample.setLinkedSample(newLink, newType);
         }
+        this.callback();
     }
 }
