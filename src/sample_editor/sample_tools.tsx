@@ -25,7 +25,9 @@ export function SampleTools({
     zoom,
     setZoom,
     sampleData,
-    setSampleData
+    setSampleData,
+    setLoopStart,
+    setLoopEnd
 }: {
     sample: BasicSample;
     engine: AudioEngine;
@@ -38,6 +40,8 @@ export function SampleTools({
     setZoom: (z: number) => unknown;
     sampleData: Float32Array;
     setSampleData: (d: Float32Array, rate: number) => unknown;
+    setLoopStart: (s: number) => unknown;
+    setLoopEnd: (e: number) => unknown;
 }) {
     const { t } = useTranslation();
     const sampleName = sample.sampleName;
@@ -209,6 +213,8 @@ export function SampleTools({
                         finalData[i] = (left[i] + right[i]) / 2;
                     }
                     setSampleData(finalData, audioBuffer.sampleRate);
+                    setLoopStart(0);
+                    setLoopEnd(finalData.length - 1);
                 }
             } else if (audioBuffer.numberOfChannels === 1) {
                 audioBuffer.copyFromChannel(audioBuffer.getChannelData(0), 0);

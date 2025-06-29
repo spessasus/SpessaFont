@@ -58,8 +58,6 @@ export const SampleEditor = React.memo(function ({
 
     const setSampleData = (data: Float32Array, rate: number) => {
         setSampleRate(rate);
-        setLoopStart(0);
-        setLoopEnd(data.length - 1);
         sample.setAudioData(data);
         setSampleDataLocal(data);
     };
@@ -146,7 +144,10 @@ export const SampleEditor = React.memo(function ({
 
     const loopStart = sample.sampleLoopStartIndex;
     const setLoopStart = (newStart: number) => {
-        newStart = Math.min(newStart, loopEnd, sampleData.length - 1);
+        newStart = Math.max(
+            Math.min(newStart, loopEnd, sampleData.length - 1),
+            0
+        );
         if (newStart === loopStart) {
             return newStart;
         }
@@ -156,7 +157,10 @@ export const SampleEditor = React.memo(function ({
 
     const loopEnd = sample.sampleLoopEndIndex;
     const setLoopEnd = (newEnd: number) => {
-        newEnd = Math.max(newEnd, loopStart, 0);
+        newEnd = Math.min(
+            Math.max(newEnd, loopStart, 0),
+            sampleData.length - 1
+        );
         if (newEnd === loopEnd) {
             return newEnd;
         }
@@ -363,6 +367,8 @@ export const SampleEditor = React.memo(function ({
                         setPlaybackStart={setPlaybackStart}
                         sample={sample}
                         engine={engine}
+                        setLoopStart={setLoopStart}
+                        setLoopEnd={setLoopEnd}
                         sampleData={sampleData}
                         setSampleData={setSampleData}
                     />
