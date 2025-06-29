@@ -32,8 +32,6 @@
     --active-scale: 0.9;
     --menu-bar-height: 3rem;
 
-    --main-content-height: calc(100vh - var(--menu-bar-height) * 2);
-
     /* theme colors */
     --primary-color: #510087;
     --border-color: #6e00b7;

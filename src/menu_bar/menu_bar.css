@@ -6,6 +6,7 @@
     align-items: center;
     overflow-x: auto;
     overflow-y: hidden;
+    min-height: var(--menu-bar-height);
 }
 
 .menu_bar_main * {
@@ -16,14 +17,15 @@
 .menu_bar {
     width: max-content;
     text-align: center;
+    height: 100%;
 }
 
 .menu_bar_button {
-    height: var(--menu-bar-height);
     align-items: center;
     cursor: pointer;
     font-size: 1.3rem;
     display: flex;
+    height: 100%;
 }
 
 
@@ -80,7 +82,6 @@
 
 .settings_button {
     color: var(--font-color);
-    height: var(--menu-bar-height);
 }
 
 .settings_button svg {
@@ -121,6 +122,6 @@
 }
 
 .menu_bar_button .gear {
-    height: 90%;
+    height: calc(var(--menu-bar-height) - 1rem);
     width: min-content;
 }
