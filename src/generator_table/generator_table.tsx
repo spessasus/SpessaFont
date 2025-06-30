@@ -79,79 +79,86 @@ export function GeneratorTable<
     }, [zones]);
 
     return (
-        <table
-            className={"zone_table"}
-            onKeyDown={(e) => {
-                const targetType = e.target as HTMLElement;
-                if (targetType.nodeName !== "INPUT") {
-                    return;
-                }
-                const target = targetType.parentElement as HTMLTableCellElement;
-                const rowEl = target.parentElement as HTMLTableRowElement;
-                const table = rowEl.parentElement as HTMLTableElement;
-                // subtract one because of the header column
-                let col =
-                    Array.prototype.indexOf.call(rowEl.children, target) - 1;
-                let row = Array.prototype.indexOf.call(table.children, rowEl);
-                switch (e.key) {
-                    default:
+        <div className={"zone_table_wrapper"}>
+            <table
+                className={"zone_table"}
+                onKeyDown={(e) => {
+                    const targetType = e.target as HTMLElement;
+                    if (targetType.nodeName !== "INPUT") {
                         return;
-                    case "ArrowUp":
-                        row = Math.max(0, row - 1);
-                        e.preventDefault();
-                        break;
+                    }
+                    const target =
+                        targetType.parentElement as HTMLTableCellElement;
+                    const rowEl = target.parentElement as HTMLTableRowElement;
+                    const table = rowEl.parentElement as HTMLTableElement;
+                    // subtract one because of the header column
+                    let col =
+                        Array.prototype.indexOf.call(rowEl.children, target) -
+                        1;
+                    let row = Array.prototype.indexOf.call(
+                        table.children,
+                        rowEl
+                    );
+                    switch (e.key) {
+                        default:
+                            return;
+                        case "ArrowUp":
+                            row = Math.max(0, row - 1);
+                            e.preventDefault();
+                            break;
 
-                    case "ArrowDown":
-                        row = Math.min(table.children.length - 1, row + 1);
-                        e.preventDefault();
-                        break;
+                        case "ArrowDown":
+                            row = Math.min(table.children.length - 1, row + 1);
+                            e.preventDefault();
+                            break;
 
-                    case "ArrowLeft":
-                        col = Math.max(0, col - 1);
-                        e.preventDefault();
-                        break;
+                        case "ArrowLeft":
+                            col = Math.max(0, col - 1);
+                            e.preventDefault();
+                            break;
 
-                    case "ArrowRight":
-                        col = Math.min(rowEl.children.length - 2, col + 1);
-                        e.preventDefault();
-                        break;
-                }
-                const nextEl = table.children?.[row]?.children?.[col + 1];
-                const input = nextEl?.children?.[0] as HTMLInputElement;
-                if (input) {
-                    input.focus();
-                }
-            }}
-        >
-            <thead>
-                <GeneratorTableHeader
-                    callback={callback}
-                    linkedZoneMap={linkedZoneMap}
-                    name={name}
-                    zones={zones}
-                    element={element}
-                    manager={manager}
-                    setView={setView}
-                />
-            </thead>
-            <tbody>
-                {rows.map((row) => (
-                    <NumberGeneratorRow<T>
-                        key={row.generator}
-                        generator={row.generator}
-                        manager={manager}
-                        zones={zones}
-                        linkedZoneMap={linkedZoneMap}
+                        case "ArrowRight":
+                            col = Math.min(rowEl.children.length - 2, col + 1);
+                            e.preventDefault();
+                            break;
+                    }
+                    const nextEl = table.children?.[row]?.children?.[col + 1];
+                    const input = nextEl?.children?.[0] as HTMLInputElement;
+                    if (input) {
+                        input.focus();
+                    }
+                }}
+            >
+                <thead>
+                    <GeneratorTableHeader
                         callback={callback}
-                        global={global}
-                        fromGenerator={row.fromGenerator}
-                        toGenerator={row.toGenerator}
-                        unit={row.unit}
-                        precision={row.precision}
-                        highlight={row.highlight}
+                        linkedZoneMap={linkedZoneMap}
+                        name={name}
+                        zones={zones}
+                        element={element}
+                        manager={manager}
+                        setView={setView}
                     />
-                ))}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {rows.map((row) => (
+                        <NumberGeneratorRow<T>
+                            key={row.generator}
+                            generator={row.generator}
+                            manager={manager}
+                            zones={zones}
+                            linkedZoneMap={linkedZoneMap}
+                            callback={callback}
+                            global={global}
+                            fromGenerator={row.fromGenerator}
+                            toGenerator={row.toGenerator}
+                            unit={row.unit}
+                            precision={row.precision}
+                            highlight={row.highlight}
+                        />
+                    ))}
+                </tbody>
+            </table>
+        </div>
     );
 }

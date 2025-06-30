@@ -326,18 +326,16 @@ export function InstrumentEditor({
     }, [engine.processor, instrument, manager]);
     return (
         <div className={"instrument_editor"}>
-            <div className={"zone_table_wrapper"}>
-                <GeneratorTable<BasicInstrumentZone, BasicInstrument>
-                    manager={manager}
-                    callback={update}
-                    rows={instrumentRows}
-                    element={instrument}
-                    zones={zones}
-                    global={global}
-                    name={instrument.instrumentName}
-                    setView={setView}
-                />
-            </div>
+            <GeneratorTable<BasicInstrumentZone, BasicInstrument>
+                manager={manager}
+                callback={update}
+                rows={instrumentRows}
+                element={instrument}
+                zones={zones}
+                global={global}
+                name={instrument.instrumentName}
+                setView={setView}
+            />
             <LinkedPresets
                 instrument={instrument}
                 manager={manager}

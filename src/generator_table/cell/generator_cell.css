@@ -7,11 +7,16 @@
     padding: 0.2rem;
     display: flex;
     justify-content: space-between;
+    gap: 1ch;
 }
 
 .generator_cell_header i {
     opacity: 0.5;
     cursor: help;
+}
+
+.generator_cell_header span {
+    white-space: nowrap;
 }
 
 .generator_cell {

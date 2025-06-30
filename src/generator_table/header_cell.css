@@ -34,11 +34,6 @@
     cursor: help;
 }
 
-.header_cell:first-child {
-    max-width: unset;
-    min-width: 15rem;
-}
-
 .header_cell .header_flex {
     display: flex;
     align-items: center;

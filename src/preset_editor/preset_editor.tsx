@@ -238,18 +238,16 @@ export function PresetEditor({
 
     return (
         <div className={"preset_editor"}>
-            <div className={"zone_table_wrapper"}>
-                <GeneratorTable<BasicPresetZone, BasicPreset>
-                    name={preset.presetName}
-                    zones={zones}
-                    element={preset}
-                    global={global}
-                    callback={update}
-                    rows={presetRows}
-                    setView={setView}
-                    manager={manager}
-                />
-            </div>
+            <GeneratorTable<BasicPresetZone, BasicPreset>
+                name={preset.presetName}
+                zones={zones}
+                element={preset}
+                global={global}
+                callback={update}
+                rows={presetRows}
+                setView={setView}
+                manager={manager}
+            />
             <BottomPresetBar
                 manager={manager}
                 setPresets={setPresets}
