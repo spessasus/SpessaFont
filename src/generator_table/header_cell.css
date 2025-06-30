@@ -16,21 +16,14 @@
     font-weight: bold;
 }
 
-.header_cell.stereo {
-    font-style: italic;
-    text-decoration: underline;
-    cursor: help;
-}
-
 .header_cell span {
     word-break: break-word;
     white-space: break-spaces;
     text-align: start;
 }
 
-.header_cell.stereo span {
+.header_cell.stereo span:first-child {
     font-style: italic;
-    text-decoration: underline;
     cursor: help;
 }
 

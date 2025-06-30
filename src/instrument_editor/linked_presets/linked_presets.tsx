@@ -29,16 +29,16 @@ export function LinkedPresets({
         return l;
     }, [instrument]);
 
-    const deleteInstrument = () => {
+    const deleteInstrument = () =>
         manager.modifyBank([
             new DeleteInstrumentAction(instrument, setInstruments, setView)
         ]);
-    };
 
     return (
         <div className={"bottom_bar"}>
             <div>
                 <WaitingInput
+                    className={"monospaced"}
                     type={"text"}
                     value={instrument.instrumentName}
                     setValue={(v) => {
@@ -72,9 +72,7 @@ export function LinkedPresets({
             )}
             {instrument.linkedPresets.length > 0 && (
                 <>
-                    <div>
-                        <b>{t("instrumentLocale.linkedTo")}</b>
-                    </div>
+                    <div>{t("instrumentLocale.linkedTo")}:</div>
                     {Array.from(linked).map((preset, i) => (
                         <div
                             className={"monospaced"}

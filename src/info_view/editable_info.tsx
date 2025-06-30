@@ -167,7 +167,6 @@ export function EditableBankInfo({
                 </span>
             </div>
             <div className={"comment"}>
-                <label htmlFor={"ICMT"}>{t("bankInfo.description")}</label>
                 <textarea
                     className={"pretty_input"}
                     id={"ICMT"}

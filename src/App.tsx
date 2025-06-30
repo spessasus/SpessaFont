@@ -95,32 +95,6 @@ function App() {
     const toggleSettings = () => setSettings(!settings);
 
     useEffect(() => {
-        function handleKeyDown(e: KeyboardEvent) {
-            if (!currentManager) {
-                return;
-            }
-            if (e.ctrlKey || e.metaKey) {
-                switch (e.key) {
-                    case "z":
-                        currentManager.undo();
-                        break;
-                    case "y":
-                        currentManager.redo();
-                        break;
-                    default:
-                        return;
-                }
-            }
-        }
-
-        window.addEventListener("keydown", handleKeyDown);
-
-        return () => {
-            window.removeEventListener("keydown", handleKeyDown);
-        };
-    }, [currentManager]);
-
-    useEffect(() => {
         function handleUnload(e: BeforeUnloadEvent) {
             if (tabs.some((t) => t.dirty)) {
                 e.preventDefault();

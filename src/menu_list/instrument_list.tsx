@@ -5,6 +5,7 @@ import type { SetViewType } from "../bank_editor/bank_editor.tsx";
 import {
     BasicInstrument,
     type BasicSample,
+    BasicZone,
     generatorTypes,
     sampleTypes
 } from "spessasynth_core";
@@ -19,6 +20,9 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { ESTIMATED_ROW_HEIGHT, OVERSCAN } from "./menu_list.tsx";
 import { CreateInstrumentAction } from "./create_actions/create_instrument_action.ts";
 import { STEREO_REGEX } from "../utils/stereo_regex.ts";
+import type { HistoryAction } from "../core_backend/history.ts";
+import { CreateZoneAction } from "../generator_table/create_zone_action.ts";
+import { addAndReorderStereoSamples } from "../utils/add_stereo_samples.ts";
 
 export function InstrumentList({
     view,
@@ -113,15 +117,10 @@ export function InstrumentList({
     );
 
     const createInstrument = useCallback(() => {
-        const samplesToAdd = new Set(selectedSamples);
-        // add linked
-        samplesToAdd.forEach((s) => {
-            if (s.linkedSample) {
-                samplesToAdd.add(s.linkedSample);
-            }
-        });
+        const samplesToAdd = addAndReorderStereoSamples(selectedSamples);
+
         const instrument = new BasicInstrument();
-        const firstSample = [...samplesToAdd][0];
+        const firstSample = samplesToAdd[0];
         if (firstSample.linkedSample) {
             instrument.instrumentName = firstSample.sampleName.replace(
                 STEREO_REGEX,
@@ -150,6 +149,35 @@ export function InstrumentList({
         manager.modifyBank([action]);
     }, [manager, selectedSamples, setInstruments, setView]);
 
+    const linkSamples = useCallback(
+        (inst: BasicInstrument) => {
+            const actions: HistoryAction[] = [];
+            const ordered = addAndReorderStereoSamples(selectedSamples);
+            ordered.forEach((sample) => {
+                const zone = new BasicZone();
+                if (sample.sampleType === sampleTypes.leftSample) {
+                    zone.setGenerator(generatorTypes.pan, -500);
+                } else if (sample.sampleType === sampleTypes.rightSample) {
+                    zone.setGenerator(generatorTypes.pan, 500);
+                }
+                actions.push(
+                    new CreateZoneAction<BasicInstrument, BasicSample>(
+                        inst,
+                        zone,
+                        sample,
+                        () => {
+                            setInstruments([...instruments]);
+                            setView(inst);
+                        }
+                    )
+                );
+            });
+            manager.modifyBank(actions);
+        },
+        [instruments, manager, selectedSamples, setInstruments, setView]
+    );
+
+    const link = selectedSamples.size > 0;
     return (
         <>
             <DropdownHeader
@@ -222,6 +250,8 @@ export function InstrumentList({
                                         instrument={inst}
                                         onClick={(e) => handleClick(e, inst)}
                                         setView={setView}
+                                        link={link}
+                                        onLink={() => linkSamples(inst)}
                                     ></InstrumentDisplay>
                                 </div>
                             );

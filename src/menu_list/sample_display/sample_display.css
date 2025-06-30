@@ -1,9 +1,8 @@
 .sample_display {
-
-    flex-grow: 1;
-    padding: 0.3rem;
+    padding: 0 0.3rem;
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
 .sample_display span {
@@ -18,12 +17,12 @@
 
 .sample_display * {
     font-size: 0.9rem;
-    text-align: end;
 }
 
 .sample_display svg {
-    width: 1rem;
-    height: 100%;
+    font-size: 1rem;
+    width: 1.3rem;
+    height: auto;
     margin-right: 1ch;
 }
 

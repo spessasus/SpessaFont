@@ -6,16 +6,40 @@
 .instrument_item {
     display: flex;
     justify-content: space-between;
-    font-size: 0.9rem;
     gap: 1ch;
+    padding: 0.1rem 0.5rem;
+}
+
+.instrument_item span {
+    font-size: 0.9rem;
+}
+
+.instrument_item svg {
+    cursor: pointer;
+}
+
+.instrument_item .left_buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    justify-content: center;
+}
+
+.instrument_item .left_buttons span {
+    display: flex;
+    align-items: center;
+}
+
+.instrument_item .triangle {
+    color: var(--instrument-item-color);
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    flex-grow: 1;
 }
 
 .instrument_item:hover, .instrument_item.selected {
     background: var(--top-buttons-color-end);
-}
-
-.instrument_item span {
-    font-size: 1em;
 }
 
 .instrument_item_name {
@@ -23,18 +47,6 @@
     text-overflow: ellipsis;
     overflow: hidden;
     text-align: end;
-    flex-grow: 1;
-    padding: 0.3rem;
-}
-
-.instrument_item .triangle {
-    color: var(--instrument-item-color);
-    font-size: 0.7rem;
-    width: 0.8em;
-    display: flex;
-    align-items: center;
-    justify-content: start;
-    padding: 0.3rem 0.3rem 0.3rem 0.5rem;
     flex-grow: 1;
 }
 

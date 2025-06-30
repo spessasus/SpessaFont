@@ -78,7 +78,6 @@ export function GeneratorTable<
         });
     }, [zones]);
 
-    // TODO: Zone creation!
     return (
         <div className={"zone_table_wrapper"}>
             <table

@@ -56,6 +56,9 @@ export function NumberGeneratorCell<
         placeholder = `${zone.sample.samplePitch} (${midiNoteToPitchClass(zone.sample.samplePitch)})`;
     } else if (zone instanceof BasicGlobalZone) {
         placeholder = v2txt(limits.def);
+        if (placeholder === "-1") {
+            placeholder = "-";
+        }
     }
 
     const style: CSSProperties = {};

@@ -46,7 +46,7 @@ export class HistoryManager {
             return;
         }
         action.forEach((a) => a.do(m));
-        logInfo(`Redid. Remaining undo history: ${this.undoHistory}`);
+        logInfo(`Redid. Remaining undo history: ${this.undoHistory.length}`);
         this.history.push(action);
         // update synth engine
         m.clearCache();
@@ -63,6 +63,7 @@ export class HistoryManager {
             return;
         }
 
+        console.log(action);
         action.toReversed().forEach((a) => a.undo(m));
         logInfo(`Undid. Remaining history: ${this.length}`);
         this.undoHistory.push(action);

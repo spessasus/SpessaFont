@@ -73,6 +73,12 @@ export function WaitingInput<T extends string | number>({
                 const stripped = e.target.value.replaceAll(suffix, "");
                 setVal(stripped);
             }}
+            onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    (e.target as HTMLInputElement).blur();
+                }
+            }}
             onChange={(e) => {
                 const stripped = e.target.value.replaceAll(suffix, "");
                 setText(stripped);

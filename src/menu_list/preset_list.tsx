@@ -6,7 +6,8 @@ import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
 import {
     type BasicInstrument,
     BasicPreset,
-    BasicSample
+    BasicSample,
+    BasicZone
 } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import * as React from "react";
@@ -23,6 +24,8 @@ import {
     PresetDisplay
 } from "./preset_display/preset_display.tsx";
 import { CreatePresetAction } from "./create_actions/create_preset_actions.ts";
+import type { HistoryAction } from "../core_backend/history.ts";
+import { CreateZoneAction } from "../generator_table/create_zone_action.ts";
 
 export function PresetList({
     view,
@@ -139,6 +142,27 @@ export function PresetList({
         manager.modifyBank([action]);
     }, [manager, presets, selectedInstruments, setPresets, setView]);
 
+    const linkInstruments = useCallback(
+        (preset: BasicPreset) => {
+            const actions: HistoryAction[] = [];
+            selectedInstruments.forEach((inst) =>
+                actions.push(
+                    new CreateZoneAction<BasicPreset, BasicInstrument>(
+                        preset,
+                        new BasicZone(),
+                        inst,
+                        () => {
+                            setPresets([...manager.presets]);
+                            setView(preset);
+                        }
+                    )
+                )
+            );
+            manager.modifyBank(actions);
+        },
+        [manager, selectedInstruments, setPresets, setView]
+    );
+
     return (
         <>
             <DropdownHeader
@@ -209,6 +233,8 @@ export function PresetList({
                                         setView={setView}
                                         view={view}
                                         selected={selectedPresets.has(p)}
+                                        link={selectedInstruments.size > 0}
+                                        onLink={() => linkInstruments(p.preset)}
                                     />
                                 </div>
                             );

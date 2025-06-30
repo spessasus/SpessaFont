@@ -13,8 +13,8 @@ import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import { STEREO_REGEX } from "../utils/stereo_regex.ts";
 
 export function GeneratorTableHeader<
-    T extends BasicPresetZone | BasicInstrumentZone,
-    A extends BasicInstrument | BasicPreset
+    ZoneType extends BasicPresetZone | BasicInstrumentZone,
+    ElementType extends BasicInstrument | BasicPreset
 >({
     zones,
     element,
@@ -25,10 +25,10 @@ export function GeneratorTableHeader<
     manager
 }: {
     name: string;
-    element: A;
-    zones: T[];
+    element: ElementType;
+    zones: ZoneType[];
     setView: SetViewType;
-    linkedZoneMap: LinkedZoneMap<T>;
+    linkedZoneMap: LinkedZoneMap<ZoneType>;
     callback: () => unknown;
     manager: SoundBankManager;
 }) {
@@ -88,12 +88,35 @@ export function GeneratorTableHeader<
                                 onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    const action = new DeleteZoneAction<A>(
-                                        element,
-                                        i,
-                                        callback
-                                    );
-                                    manager.modifyBank([action]);
+                                    const actions = [
+                                        new DeleteZoneAction<ElementType>(
+                                            element,
+                                            i,
+                                            callback
+                                        )
+                                    ];
+                                    if (
+                                        z instanceof BasicInstrumentZone &&
+                                        z.sample.linkedSample
+                                    ) {
+                                        const link = z.sample.linkedSample;
+                                        const linkedIndex = zones.findIndex(
+                                            (zon) =>
+                                                zon instanceof
+                                                    BasicInstrumentZone &&
+                                                zon.sample === link
+                                        );
+                                        if (linkedIndex >= 0) {
+                                            actions.push(
+                                                new DeleteZoneAction<ElementType>(
+                                                    element,
+                                                    linkedIndex,
+                                                    callback
+                                                )
+                                            );
+                                        }
+                                    }
+                                    manager.modifyBank(actions);
                                 }}
                             >
                                 ✖

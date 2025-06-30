@@ -6,7 +6,7 @@ import "./menu_bar.css";
 import { useTranslation } from "react-i18next";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import { Gear } from "./gear.tsx";
-import { type RefObject, useCallback } from "react";
+import { type RefObject, useCallback, useEffect } from "react";
 import type { BankEditorRef } from "../bank_editor/bank_editor.tsx";
 
 // @ts-expect-error chromium check is here
@@ -94,6 +94,40 @@ export function MenuBar({
     function redo() {
         manager.redo();
     }
+
+    // keybinds
+
+    useEffect(() => {
+        function handleKeyDown(e: KeyboardEvent) {
+            if (!manager) {
+                return;
+            }
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key) {
+                    case "z":
+                        e.preventDefault();
+                        undo();
+                        break;
+                    case "y":
+                        e.preventDefault();
+                        redo();
+                        break;
+                    case "s":
+                        e.preventDefault();
+                        sf2();
+                        break;
+                    default:
+                        return;
+                }
+            }
+        }
+
+        window.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [manager, redo, sf2, undo]);
 
     return (
         <div className={"menu_bar_main"}>

@@ -27,16 +27,7 @@ export class DeleteZoneAction<T extends BasicInstrument | BasicPreset>
 
     do() {
         this.el.deleteZone(this.index, true);
-        this.ensureImmutability();
-        this.callback();
-    }
-
-    ensureImmutability() {
-        if (this.el instanceof BasicInstrument) {
-            this.el.instrumentZones = [...this.el.instrumentZones];
-        } else {
-            this.el.presetZones = [...this.el.presetZones];
-        }
+        this.applyChanges();
     }
 
     undo() {
@@ -49,7 +40,15 @@ export class DeleteZoneAction<T extends BasicInstrument | BasicPreset>
             z.copyFrom(this.zone);
             z.setInstrument((this.zone as BasicPresetZone).instrument);
         }
-        this.ensureImmutability();
+        this.applyChanges();
+    }
+
+    private applyChanges() {
+        if (this.el instanceof BasicInstrument) {
+            this.el.instrumentZones = [...this.el.instrumentZones];
+        } else {
+            this.el.presetZones = [...this.el.presetZones];
+        }
         this.callback();
     }
 }

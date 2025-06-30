@@ -9,6 +9,7 @@ import {
 } from "spessasynth_core";
 import { type HistoryActionGroup, HistoryManager } from "./history.ts";
 import { encodeVorbis } from "./encode_vorbis.ts";
+import { reorderInstrumentZones } from "../utils/reorder_instrument_zones.ts";
 
 export type BankEditView = "info" | SoundBankElement;
 
@@ -67,6 +68,11 @@ export default class SoundBankManager extends BasicSoundBank {
                   ? -1
                   : 0
         );
+
+        // sort stereo zones
+        this.instruments.forEach((i) => {
+            i.instrumentZones = reorderInstrumentZones(i.instrumentZones);
+        });
     }
 
     getBankName(unnamed: string) {

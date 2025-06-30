@@ -8,6 +8,7 @@
     justify-content: space-between;
     font-size: 0.9rem;
     gap: 1ch;
+    padding: 0.1rem 0.5rem;
 }
 
 .preset_item:hover, .preset_item.selected {
@@ -15,7 +16,7 @@
 }
 
 .preset_item span {
-    font-size: 1em;
+    font-size: 0.9rem;
 }
 
 .preset_item_name {
@@ -24,22 +25,25 @@
     overflow: hidden;
     text-align: end;
     flex-grow: 1;
-    padding: 0.3rem 0.3rem 0.3rem 0;
 }
 
 .left_group {
     display: flex;
     align-items: center;
-    gap: var(--flex-gap);;
-    padding: 0.3rem;
+    gap: 0.3rem;
+}
+
+.left_group span:not(.monospaced) {
+    font-size: 1rem;
 }
 
 .left_group .triangle {
     color: var(--preset-item-color);
-    font-size: 0.7rem;
-    width: 0.8em;
-    padding: 0.1rem;
     flex-grow: 1;
+}
+
+.left_group svg {
+    cursor: pointer;
 }
 
 .preset_instruments {

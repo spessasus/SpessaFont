@@ -40,8 +40,8 @@ export function LinkedInstruments({
         <div className={"bottom_bar"}>
             {sample.isCompressed && (
                 <div>
-                    <strong className={"warning"}>
-                        {t("sampleLocale.compressedSample")}
+                    <strong>
+                        <i>{t("sampleLocale.compressedSample")}</i>
                     </strong>
                 </div>
             )}
@@ -59,9 +59,7 @@ export function LinkedInstruments({
             )}
             {sample.linkedInstruments.length > 0 && (
                 <>
-                    <div>
-                        <b>{t("sampleLocale.linkedTo")}</b>
-                    </div>
+                    <div>{t("sampleLocale.linkedTo")}:</div>
                     {Array.from(linked).map((inst, i) => (
                         <div
                             className={"monospaced"}
