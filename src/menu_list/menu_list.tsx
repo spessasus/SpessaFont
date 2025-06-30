@@ -222,6 +222,7 @@ export const MenuList = React.memo(function ({
                 <InstrumentList
                     clipboard={clipboard}
                     instruments={filteredInstruments}
+                    setSamples={setSamples}
                     setInstruments={setInstruments}
                     setView={setView}
                     view={view}
@@ -236,6 +237,8 @@ export const MenuList = React.memo(function ({
                     setView={setView}
                     clipboard={clipboard}
                     presets={filteredPresets}
+                    setSamples={setSamples}
+                    setInstruments={setInstruments}
                     setPresets={setPresets}
                     manager={manager}
                     selectedInstruments={selectedInstruments}

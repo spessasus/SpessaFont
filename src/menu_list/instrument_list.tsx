@@ -25,6 +25,7 @@ export function InstrumentList({
     setView,
     clipboard,
     instruments,
+    setSamples,
     setInstruments,
     manager,
     setSelectedInstruments,
@@ -35,6 +36,7 @@ export function InstrumentList({
     setView: SetViewType;
     clipboard: ClipboardManager;
     instruments: BasicInstrument[];
+    setSamples: (s: BasicSample[]) => unknown;
     setInstruments: (i: BasicInstrument[]) => unknown;
     manager: SoundBankManager;
     selectedInstruments: Set<BasicInstrument>;
@@ -45,6 +47,13 @@ export function InstrumentList({
     const [showInstruments, setShowInstruments] = useState(
         view instanceof BasicInstrument
     );
+
+    useEffect(() => {
+        if (view instanceof BasicInstrument) {
+            setSelectedInstruments(new Set<BasicInstrument>([view]));
+        }
+    }, [setSelectedInstruments, view]);
+
     // keep open states for instruments
     const [openInstruments, setOpenInstruments] = useState<
         Record<string, boolean>
@@ -136,11 +145,10 @@ export function InstrumentList({
         const action = new CreateInstrumentAction(
             instrument,
             setInstruments,
-            instruments.length - 1,
             setView
         );
         manager.modifyBank([action]);
-    }, [instruments.length, manager, selectedSamples, setInstruments, setView]);
+    }, [manager, selectedSamples, setInstruments, setView]);
 
     return (
         <>
@@ -152,7 +160,12 @@ export function InstrumentList({
                     setInstruments([...manager.instruments]);
                 }}
                 onPaste={() => {
-                    clipboard.pasteInstruments(manager);
+                    clipboard.pasteInstruments(
+                        manager,
+                        setSamples,
+                        setInstruments,
+                        setView
+                    );
                     setInstruments([
                         ...manager.instruments.toSorted((a, b) =>
                             a.instrumentName > b.instrumentName

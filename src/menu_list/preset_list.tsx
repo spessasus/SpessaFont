@@ -3,7 +3,11 @@ import SoundBankManager, {
 } from "../core_backend/sound_bank_manager.ts";
 import type { SetViewType } from "../bank_editor/bank_editor.tsx";
 import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
-import { type BasicInstrument, BasicPreset } from "spessasynth_core";
+import {
+    type BasicInstrument,
+    BasicPreset,
+    BasicSample
+} from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import * as React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -27,13 +31,17 @@ export function PresetList({
     presets,
     setPresets,
     manager,
-    selectedInstruments
+    selectedInstruments,
+    setInstruments,
+    setSamples
 }: {
     view: BankEditView;
     setView: SetViewType;
     clipboard: ClipboardManager;
     presets: MappedPresetType[];
     setPresets: (i: BasicPreset[]) => unknown;
+    setInstruments: (i: BasicInstrument[]) => unknown;
+    setSamples: (s: BasicSample[]) => unknown;
     selectedInstruments: Set<BasicInstrument>;
     manager: SoundBankManager;
 }) {
@@ -46,6 +54,16 @@ export function PresetList({
     const [selectedPresets, setSelectedPresets] = useState(
         new Set<MappedPresetType>()
     );
+
+    useEffect(() => {
+        if (view instanceof BasicPreset) {
+            setSelectedPresets(
+                new Set<MappedPresetType>([
+                    presets.find((p) => p.preset === view) ?? presets[0]
+                ])
+            );
+        }
+    }, [presets, view]);
 
     // virtualize
     const presetsParentRef = useRef<HTMLDivElement>(null);
@@ -117,14 +135,9 @@ export function PresetList({
                     p.preset.bank === preset.bank
             );
         }
-        const action = new CreatePresetAction(
-            preset,
-            setPresets,
-            presets.length - 1,
-            setView
-        );
+        const action = new CreatePresetAction(preset, setPresets, setView);
         manager.modifyBank([action]);
-    }, [manager, presets.length, selectedInstruments, setPresets, setView]);
+    }, [manager, presets, selectedInstruments, setPresets, setView]);
 
     return (
         <>
@@ -139,7 +152,13 @@ export function PresetList({
                     setPresets([...manager.presets]);
                 }}
                 onPaste={() => {
-                    clipboard.pastePresets(manager);
+                    clipboard.pastePresets(
+                        manager,
+                        setPresets,
+                        setInstruments,
+                        setSamples,
+                        setView
+                    );
                     setPresets([
                         ...manager.presets.toSorted((a, b) =>
                             a.presetName > b.presetName

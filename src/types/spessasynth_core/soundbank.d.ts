@@ -1,6 +1,6 @@
 declare module "spessasynth_core" {
     export const sampleTypes: {
-        monoSample: 0;
+        monoSample: 1;
         rightSample: 2;
         leftSample: 4;
         linkedSample: 8;
@@ -52,6 +52,8 @@ declare module "spessasynth_core" {
         linkTo(i: BasicInstrument);
 
         unlinkFrom(i: BasicInstrument);
+
+        setCompressedData(compressed: Uint8Array);
     }
 
     export class BasicInstrument {

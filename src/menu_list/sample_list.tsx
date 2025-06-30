@@ -88,12 +88,7 @@ export function SampleList({
             );
             sample.setAudioData(out);
             const actions = [
-                new CreateSampleAction(
-                    sample,
-                    setSamples,
-                    samples.length - 1,
-                    setView
-                )
+                new CreateSampleAction(sample, setSamples, setView)
             ];
             // add the stereo sample if more channels
             if (audioBuffer.numberOfChannels > 1) {
@@ -110,19 +105,14 @@ export function SampleList({
                 sample2.setAudioData(otherOut);
                 sample2.setLinkedSample(sample, sampleTypes.rightSample);
                 actions.push(
-                    new CreateSampleAction(
-                        sample2,
-                        setSamples,
-                        samples.length,
-                        setView
-                    )
+                    new CreateSampleAction(sample2, setSamples, setView)
                 );
             }
             manager.modifyBank(actions);
             setShowSamples(true);
         };
         input.click();
-    }, [engine.context, manager, samples.length, setSamples, setView]);
+    }, [engine.context, manager, setSamples, setView]);
 
     const handleClick = (
         e: React.MouseEvent<HTMLDivElement, MouseEvent>,
@@ -161,7 +151,7 @@ export function SampleList({
                 }}
                 paste={clipboard.hasSamples()}
                 onPaste={() => {
-                    clipboard.pasteSamples(manager);
+                    clipboard.pasteSamples(manager, setSamples, setView);
                     setSamples([
                         ...manager.samples.toSorted((a, b) =>
                             a.sampleName > b.sampleName

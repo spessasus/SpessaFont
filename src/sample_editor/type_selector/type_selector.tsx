@@ -85,6 +85,9 @@ export function TypeSelector({
                         setType(parseInt(e.target.value) as SampleTypeValue)
                     }
                 >
+                    <option disabled={true} value={0}>
+                        {t("sampleLocale.types.invalid")}
+                    </option>
                     <option value={sampleTypes.monoSample}>
                         {t("sampleLocale.types.mono")}
                     </option>

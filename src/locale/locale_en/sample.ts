@@ -10,6 +10,7 @@ export const SampleLocale = {
     unlinked: "Unlinked",
     waveZoom: "Wave Zoom",
     types: {
+        invalid: "Invalid",
         mono: "Mono",
         left: "Left",
         right: "Right",

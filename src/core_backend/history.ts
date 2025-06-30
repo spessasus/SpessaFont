@@ -23,6 +23,7 @@ export class HistoryManager {
         return this.undoHistory.length;
     }
 
+    // do the initial action
     do(m: SoundBankManager, action: HistoryActionGroup) {
         if (action.length === 0) {
             return;
@@ -35,6 +36,7 @@ export class HistoryManager {
         m.clearCache();
     }
 
+    // redo undone action
     redo(m: SoundBankManager) {
         if (this.undoLength < 1) {
             return;
@@ -50,6 +52,7 @@ export class HistoryManager {
         m.clearCache();
     }
 
+    // undo the action
     undo(m: SoundBankManager) {
         if (this.length < 1) {
             return;

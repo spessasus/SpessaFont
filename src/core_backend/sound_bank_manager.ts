@@ -157,8 +157,11 @@ export default class SoundBankManager extends BasicSoundBank {
         this.sequencer.currentTime -= 0.1;
     }
 
-    modifyBank(action: HistoryActionGroup) {
-        this.history.do(this, action);
+    modifyBank(actions: HistoryActionGroup) {
+        if (actions.length === 0) {
+            return;
+        }
+        this.history.do(this, actions);
         this.dirty = true;
         this.changeCallback();
     }
@@ -173,6 +176,7 @@ export default class SoundBankManager extends BasicSoundBank {
 
     redo() {
         this.history.redo(this);
+        this.dirty = true;
         this.changeCallback();
     }
 
