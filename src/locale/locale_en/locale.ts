@@ -23,7 +23,9 @@ export const localeEnglish = {
         openPrompt: "Open a file to get started",
         newPrompt: "Or start with an empty file...",
         copyright:
-            "Created by Spessasus using spessasynth_core and spessasynth_lib."
+            "Created by Spessasus using spessasynth_core and spessasynth_lib.",
+        copyrightTwo:
+            "Copyright © Spessasus 2025, Licensed under the Apache-2.0 License."
     },
     poweredBy: "Powered by",
     firefox: "Consider using Firefox for the best performance",

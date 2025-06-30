@@ -258,9 +258,10 @@ function App() {
                     <h2 onClick={() => openNewBankTab()}>
                         {t("welcome.newPrompt")}
                     </h2>
-                    <h3 className={"welcome_copyright"}>
-                        {t("welcome.copyright")}
-                    </h3>
+                    <div className={"welcome_copyright"}>
+                        <h3>{t("welcome.copyright")}</h3>
+                        <h3>{t("welcome.copyrightTwo")}</h3>
+                    </div>
                 </div>
             )}
 
