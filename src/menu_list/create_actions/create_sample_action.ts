@@ -1,7 +1,7 @@
-import type { HistoryAction } from "../core_backend/history.ts";
+import type { HistoryAction } from "../../core_backend/history.ts";
 import type { BasicSample } from "spessasynth_core";
-import type { SetViewType } from "../bank_editor/bank_editor.tsx";
-import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
+import type { SetViewType } from "../../bank_editor/bank_editor.tsx";
+import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
 
 export class CreateSampleAction implements HistoryAction {
     private readonly sample: BasicSample;

@@ -3,10 +3,10 @@ import SoundBankManager, {
 } from "../core_backend/sound_bank_manager.ts";
 import type { SetViewType } from "../bank_editor/bank_editor.tsx";
 import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
-import { BasicPreset } from "spessasynth_core";
+import { type BasicInstrument, BasicPreset } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import * as React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
     ESTIMATED_ROW_HEIGHT,
@@ -18,6 +18,7 @@ import {
     type OpenPresetDisplayType,
     PresetDisplay
 } from "./preset_display/preset_display.tsx";
+import { CreatePresetAction } from "./create_actions/create_preset_actions.ts";
 
 export function PresetList({
     view,
@@ -25,13 +26,15 @@ export function PresetList({
     clipboard,
     presets,
     setPresets,
-    manager
+    manager,
+    selectedInstruments
 }: {
     view: BankEditView;
     setView: SetViewType;
     clipboard: ClipboardManager;
     presets: MappedPresetType[];
     setPresets: (i: BasicPreset[]) => unknown;
+    selectedInstruments: Set<BasicInstrument>;
     manager: SoundBankManager;
 }) {
     const { t } = useTranslation();
@@ -68,32 +71,65 @@ export function PresetList({
         }
     }, [presets, presetsVirtualizer, view]);
 
-    const handleClick = (
-        e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-        preset: MappedPresetType
-    ) => {
-        const newSet = new Set<MappedPresetType>();
-        newSet.add(preset);
-        if (e.shiftKey && view instanceof BasicPreset) {
-            const viewIndex = presets.findIndex((p) => p.preset === view);
-            const instIndex = presets.indexOf(preset);
-            const start = Math.min(viewIndex, instIndex);
-            const end = Math.max(viewIndex, instIndex);
-            presets.slice(start, end + 1).forEach((i) => newSet.add(i));
-        } else if (e.ctrlKey && view instanceof BasicPreset) {
-            selectedPresets.forEach((i) => newSet.add(i));
-            if (selectedPresets.has(preset)) {
-                newSet.delete(preset);
+    const handleClick = useCallback(
+        (
+            e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+            preset: MappedPresetType
+        ) => {
+            const newSet = new Set<MappedPresetType>();
+            newSet.add(preset);
+            if (e.shiftKey && view instanceof BasicPreset) {
+                const viewIndex = presets.findIndex((p) => p.preset === view);
+                const instIndex = presets.indexOf(preset);
+                const start = Math.min(viewIndex, instIndex);
+                const end = Math.max(viewIndex, instIndex);
+                presets.slice(start, end + 1).forEach((i) => newSet.add(i));
+            } else if (e.ctrlKey && view instanceof BasicPreset) {
+                selectedPresets.forEach((i) => newSet.add(i));
+                if (selectedPresets.has(preset)) {
+                    newSet.delete(preset);
+                }
+            } else {
+                setView(preset.preset);
             }
-        } else {
-            setView(preset.preset);
+            setSelectedPresets(newSet);
+        },
+        [presets, selectedPresets, setView, view]
+    );
+
+    const createPreset = useCallback(() => {
+        const preset = new BasicPreset(manager);
+        preset.presetName = [...selectedInstruments][0].instrumentName;
+        selectedInstruments.forEach((i) => {
+            const zone = preset.createZone();
+            zone.setInstrument(i);
+        });
+        let found = !!presets.find(
+            (p) =>
+                p.preset.program === preset.program &&
+                p.preset.bank === preset.bank
+        );
+        while (found) {
+            preset.bank++;
+            found = !!presets.find(
+                (p) =>
+                    p.preset.program === preset.program &&
+                    p.preset.bank === preset.bank
+            );
         }
-        setSelectedPresets(newSet);
-    };
+        const action = new CreatePresetAction(
+            preset,
+            setPresets,
+            presets.length - 1,
+            setView
+        );
+        manager.modifyBank([action]);
+    }, [manager, presets.length, selectedInstruments, setPresets, setView]);
 
     return (
         <>
             <DropdownHeader
+                add={selectedInstruments.size > 0}
                 copy={selectedPresets.size > 0}
                 paste={clipboard.hasPresets()}
                 onCopy={() => {
@@ -114,7 +150,7 @@ export function PresetList({
                         )
                     ]);
                 }}
-                onAdd={() => console.log("add preset")}
+                onAdd={createPreset}
                 onClick={() => setShowPresets(!showPresets)}
                 open={showPresets}
                 text={t("presetList.presets")}

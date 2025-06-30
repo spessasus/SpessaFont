@@ -25,3 +25,7 @@
     border-bottom: solid 1px var(--track-border-color);
     font-size: 1rem;
 }
+
+.bottom_bar input[type="text"] {
+    width: 40ch;
+}

@@ -10,6 +10,7 @@ import type { LinkedZoneMap } from "./generator_table.tsx";
 import "./header_cell.css";
 import { DeleteZoneAction } from "./delete_zone_action.ts";
 import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
+import { STEREO_REGEX } from "../utils/stereo_regex.ts";
 
 export function GeneratorTableHeader<
     T extends BasicPresetZone | BasicInstrumentZone,
@@ -58,7 +59,7 @@ export function GeneratorTableHeader<
                 let stereo = false;
                 if (linked.index === 2) {
                     span = 2;
-                    name = name.replace(/[RL]$/, "");
+                    name = name.replace(STEREO_REGEX, "").trim();
                     stereo = true;
                 }
 

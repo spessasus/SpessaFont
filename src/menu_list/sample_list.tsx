@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import SoundBankManager, {
     type BankEditView
 } from "../core_backend/sound_bank_manager.ts";
-import { CreateSampleAction } from "./create_sample_action.ts";
+import { CreateSampleAction } from "./create_actions/create_sample_action.ts";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import type { SetViewType } from "../bank_editor/bank_editor.tsx";
 import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
@@ -21,7 +21,9 @@ export function SampleList({
     manager,
     engine,
     setSamples,
-    clipboard
+    clipboard,
+    selectedSamples,
+    setSelectedSamples
 }: {
     samples: BasicSample[];
     view: BankEditView;
@@ -30,6 +32,8 @@ export function SampleList({
     engine: AudioEngine;
     setSamples: (s: BasicSample[]) => unknown;
     clipboard: ClipboardManager;
+    selectedSamples: Set<BasicSample>;
+    setSelectedSamples: (s: Set<BasicSample>) => unknown;
 }) {
     const { t } = useTranslation();
     const [showSamples, setShowSamples] = useState(view instanceof BasicSample);
@@ -40,9 +44,6 @@ export function SampleList({
         estimateSize: () => ESTIMATED_ROW_HEIGHT,
         overscan: OVERSCAN
     });
-    const [selectedSamples, setSelectedSamples] = useState(
-        new Set<BasicSample>()
-    );
 
     useEffect(() => {
         if (!(view instanceof BasicSample)) {
@@ -55,7 +56,7 @@ export function SampleList({
                 100
             );
         }
-    }, [samples, samplesVirtualizer, view]);
+    }, [samples, samplesVirtualizer, setSelectedSamples, view]);
 
     const addSample = useCallback(() => {
         const input = document.createElement("input");

@@ -9,7 +9,8 @@ export function DropdownHeader({
     copy,
     onCopy,
     paste,
-    onPaste
+    onPaste,
+    add = true
 }: {
     text: string;
     open: boolean;
@@ -19,21 +20,24 @@ export function DropdownHeader({
     onCopy: () => unknown;
     paste: boolean;
     onPaste: () => unknown;
+    add?: boolean;
 }) {
     const { t } = useTranslation();
     return (
         <div onClick={onClick} className={`item_group_header`}>
             <div className={"left_buttons"}>
-                <div
-                    title={t("addNew")}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        onAdd();
-                    }}
-                >
-                    +
-                </div>
+                {add && (
+                    <div
+                        title={t("addNew")}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            onAdd();
+                        }}
+                    >
+                        +
+                    </div>
+                )}
                 {copy && (
                     <div
                         className={"svg_wrapper copy"}

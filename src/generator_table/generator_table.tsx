@@ -3,7 +3,8 @@ import {
     type BasicInstrument,
     BasicInstrumentZone,
     type BasicPreset,
-    BasicPresetZone
+    BasicPresetZone,
+    type BasicZone
 } from "spessasynth_core";
 import type { GeneratorRowType } from "../instrument_editor/instrument_editor.tsx";
 import { GeneratorTableHeader } from "./table_header.tsx";
@@ -45,35 +46,37 @@ export function GeneratorTable<
     setView: SetViewType;
     manager: SoundBankManager;
 }) {
-    // if true, the next zone is a stereo sample pair!
-    const linkedZoneMap: LinkedZoneMap<T> = useMemo(
-        () =>
-            zones.map((z, i) => {
-                let linkedZoneIndex = -1;
-                if (z instanceof BasicInstrumentZone) {
-                    const linkedSample = z.sample.linkedSample;
-                    if (linkedSample) {
-                        linkedZoneIndex = zones.findIndex(
-                            (z) =>
-                                z instanceof BasicInstrumentZone &&
-                                z.sample === linkedSample
-                        );
-                    }
+    // 0 means no link; 1 means that the next sample is a link; 2 means that the previous sample is a link!
+    const linkedZoneMap: LinkedZoneMap<T> = useMemo(() => {
+        const linkedZones = new Set<BasicZone>();
+        return zones.map((z, i) => {
+            let linkedZoneIndex = -1;
+            if (z instanceof BasicInstrumentZone) {
+                const linkedSample = z.sample.linkedSample;
+                if (linkedSample) {
+                    linkedZoneIndex = zones.findIndex(
+                        (z) =>
+                            !linkedZones.has(z) &&
+                            z instanceof BasicInstrumentZone &&
+                            z.sample === linkedSample
+                    );
                 }
-                if (linkedZoneIndex < 0) {
-                    return { index: 0, zone: undefined };
-                }
-                const linkedZone = zones[linkedZoneIndex];
-                if (linkedZoneIndex === i + 1) {
-                    return { index: 1, zone: linkedZone };
-                }
-                if (linkedZoneIndex === i - 1) {
-                    return { index: 2, zone: linkedZone };
-                }
-                return { index: 0, zone: linkedZone };
-            }),
-        [zones]
-    );
+            }
+            if (linkedZoneIndex < 0) {
+                return { index: 0, zone: undefined };
+            }
+            const linkedZone = zones[linkedZoneIndex];
+            if (linkedZoneIndex === i + 1) {
+                return { index: 1, zone: linkedZone };
+            }
+            if (linkedZoneIndex === i - 1) {
+                linkedZones.add(linkedZone);
+                linkedZones.add(z);
+                return { index: 2, zone: linkedZone };
+            }
+            return { index: 0, zone: linkedZone };
+        });
+    }, [zones]);
 
     return (
         <table

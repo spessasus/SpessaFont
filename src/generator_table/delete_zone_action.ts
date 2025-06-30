@@ -26,7 +26,7 @@ export class DeleteZoneAction<T extends BasicInstrument | BasicPreset>
     }
 
     do() {
-        this.el.deleteZone(this.index);
+        this.el.deleteZone(this.index, true);
         this.ensureImmutability();
         this.callback();
     }

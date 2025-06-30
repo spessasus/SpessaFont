@@ -61,7 +61,7 @@ declare module "spessasynth_core" {
         globalZone: BasicGlobalZone;
         linkedPresets: BasicPreset[];
 
-        deleteZone(index: number): boolean;
+        deleteZone(index: number, force = false): boolean;
 
         linkTo(p: BasicPreset);
 

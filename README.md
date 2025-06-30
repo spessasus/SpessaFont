@@ -19,7 +19,7 @@ This is also my first TypeScript and React project. It's a bit messy, but it wor
 
 ## Features
 - **Fully online:** *No download needed!*
-- **Multiple tabs:** *Copy between soundfonts!*
+- **Multiple tabs:** *Copy between sound banks or edit multiple of them at once!*
 - **Multiple formats import and export:**
   - SF2 - SoundFonts!
   - SF3 - Compressed SoundFonts with compression preservation!
@@ -58,8 +58,10 @@ This is also my first TypeScript and React project. It's a bit messy, but it wor
   - **Grouped stereo samples:** *Avoid clutter when making stereo banks!*
   - **Default values are shown:** *So you don't need to look them up!*
   - **Normal units:** *Only in the instrument editor...*
+  - **Automatic stereo sample adding:** *Forgot to select the right sample? No problem!*
+  - **Duplicate preset numbers safeguard:** *Of course!*
 
-## Gallery
+## Some screenshots!
 <img src="https://github.com/user-attachments/assets/2efe807b-dc35-4108-a503-2d134a71bc2d" width="30%"></img> 
 <img src="https://github.com/user-attachments/assets/4244a515-e4d1-4d73-b5b6-27bbbb9b3b1d" width="30%"></img> 
 <img src="https://github.com/user-attachments/assets/59f31726-9935-4700-8c78-1c76f62c80d0" width="30%"></img> 
@@ -70,28 +72,23 @@ This is also my first TypeScript and React project. It's a bit messy, but it wor
 
 
 
-
-
-
 ## Building from source
-### Development (and testing it for yourself)
+### Development
 1. Make sure you have Node.js installed
 2. Clone this repository
 3. `npm install`
 4. `npm run dev`
+5. Open the link that appears in the terminal
 
 
 ### Build for production
-
-> [!NOTE]
-> The sources sometimes may be not buildable for production (e.g., unused variables throwing TS errors)
->, So it's recommended to use the dev mode.
 
 1. Make sure you have Node.js installed
 2. Clone this repository
 3. Clone
 4. `npm install`
 5. `npm run build`
+6. The `dist` directory contains the built HTML and other files
 
 
 

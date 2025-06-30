@@ -12,6 +12,10 @@ import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
 import { SampleList } from "./sample_list.tsx";
 import { InstrumentList } from "./instrument_list.tsx";
 import { PresetList } from "./preset_list.tsx";
+import type { HistoryAction } from "../core_backend/history.ts";
+import { DeleteInstrumentAction } from "../instrument_editor/linked_presets/delete_instrument_action.ts";
+import { DeleteSampleAction } from "../sample_editor/linked_instruments/delete_sample_action.ts";
+import { DeletePresetAction } from "../preset_editor/bottom_bar/delete_preset_action.ts";
 
 export const ESTIMATED_ROW_HEIGHT = 30;
 export const OVERSCAN = 5;
@@ -47,18 +51,53 @@ export const MenuList = React.memo(function ({
 }: MenuListProps) {
     const [open, setOpen] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
-
-    useEffect(() => {
-        setSearchQuery("");
-    }, [manager]);
-
-    const { t } = useTranslation();
     const setView = useCallback(
         (v: BankEditView) => {
             sv(v);
         },
         [sv]
     );
+
+    useEffect(() => {
+        setSearchQuery("");
+    }, [manager]);
+
+    // useeffect for delete
+    useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key !== "Delete") {
+                return;
+            }
+            let action: HistoryAction;
+            if (view instanceof BasicInstrument) {
+                if (view.useCount > 0) {
+                    return;
+                }
+                action = new DeleteInstrumentAction(
+                    view,
+                    setInstruments,
+                    setView
+                );
+            } else if (view instanceof BasicSample) {
+                if (view.useCount > 0) {
+                    return;
+                }
+                action = new DeleteSampleAction(view, setSamples, setView);
+            } else if (view instanceof BasicPreset) {
+                action = new DeletePresetAction(view, setPresets, setView);
+            } else {
+                return;
+            }
+            manager.modifyBank([action]);
+        };
+        document.addEventListener("keydown", onKeyDown);
+        return () => {
+            document.removeEventListener("keydown", onKeyDown);
+        };
+    }, [manager, setInstruments, setPresets, setSamples, setView, view]);
+
+    const { t } = useTranslation();
+
     const presetNameMap: MappedPresetType[] = useMemo(() => {
         return presets.map((p) => {
             return {
@@ -132,6 +171,13 @@ export const MenuList = React.memo(function ({
             };
         }, [searchQueryLower, samples, instruments, presetNameMap]);
 
+    const [selectedSamples, setSelectedSamples] = useState(
+        new Set<BasicSample>()
+    );
+    const [selectedInstruments, setSelectedInstruments] = useState(
+        new Set<BasicInstrument>()
+    );
+
     if (!open) {
         return (
             <div className={"menu_list_closed"} onClick={() => setOpen(true)}>
@@ -169,6 +215,8 @@ export const MenuList = React.memo(function ({
                     setSamples={setSamples}
                     setView={setView}
                     clipboard={clipboard}
+                    selectedSamples={selectedSamples}
+                    setSelectedSamples={setSelectedSamples}
                 />
 
                 <InstrumentList
@@ -178,6 +226,9 @@ export const MenuList = React.memo(function ({
                     setView={setView}
                     view={view}
                     manager={manager}
+                    selectedInstruments={selectedInstruments}
+                    setSelectedInstruments={setSelectedInstruments}
+                    selectedSamples={selectedSamples}
                 />
 
                 <PresetList
@@ -187,6 +238,7 @@ export const MenuList = React.memo(function ({
                     presets={filteredPresets}
                     setPresets={setPresets}
                     manager={manager}
+                    selectedInstruments={selectedInstruments}
                 />
                 <div className={"search_bar"}>
                     <input

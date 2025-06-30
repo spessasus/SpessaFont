@@ -2,16 +2,23 @@ import SoundBankManager, {
     type BankEditView
 } from "../core_backend/sound_bank_manager.ts";
 import type { SetViewType } from "../bank_editor/bank_editor.tsx";
-import { BasicInstrument } from "spessasynth_core";
+import {
+    BasicInstrument,
+    type BasicSample,
+    generatorTypes,
+    sampleTypes
+} from "spessasynth_core";
 import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
 import { DropdownHeader } from "./dropdown_header/dropdown_header.tsx";
 import { InstrumentDisplay } from "./instrument_display/instrument_display.tsx";
 
 import * as React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ESTIMATED_ROW_HEIGHT, OVERSCAN } from "./menu_list.tsx";
+import { CreateInstrumentAction } from "./create_actions/create_instrument_action.ts";
+import { STEREO_REGEX } from "../utils/stereo_regex.ts";
 
 export function InstrumentList({
     view,
@@ -19,7 +26,10 @@ export function InstrumentList({
     clipboard,
     instruments,
     setInstruments,
-    manager
+    manager,
+    setSelectedInstruments,
+    selectedInstruments,
+    selectedSamples
 }: {
     view: BankEditView;
     setView: SetViewType;
@@ -27,6 +37,9 @@ export function InstrumentList({
     instruments: BasicInstrument[];
     setInstruments: (i: BasicInstrument[]) => unknown;
     manager: SoundBankManager;
+    selectedInstruments: Set<BasicInstrument>;
+    selectedSamples: Set<BasicSample>;
+    setSelectedInstruments: (i: Set<BasicInstrument>) => unknown;
 }) {
     const { t } = useTranslation();
     const [showInstruments, setShowInstruments] = useState(
@@ -36,9 +49,6 @@ export function InstrumentList({
     const [openInstruments, setOpenInstruments] = useState<
         Record<string, boolean>
     >({});
-    const [selectedInstruments, setSelectedInstruments] = useState(
-        new Set<BasicInstrument>()
-    );
 
     // virtualize
     const instrumentsParentRef = useRef<HTMLDivElement>(null);
@@ -59,34 +69,83 @@ export function InstrumentList({
                 instrumentsVirtualizer.scrollToIndex(instruments.indexOf(view));
             }, 100);
         }
-    }, [instruments, instrumentsVirtualizer, view]);
+    }, [instruments, instrumentsVirtualizer, setSelectedInstruments, view]);
 
-    const handleClick = (
-        e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-        inst: BasicInstrument
-    ) => {
-        const newSet = new Set<BasicInstrument>();
-        newSet.add(inst);
-        if (e.shiftKey && view instanceof BasicInstrument) {
-            const viewIndex = instruments.indexOf(view);
-            const instIndex = instruments.indexOf(inst);
-            const start = Math.min(viewIndex, instIndex);
-            const end = Math.max(viewIndex, instIndex);
-            instruments.slice(start, end + 1).forEach((i) => newSet.add(i));
-        } else if (e.ctrlKey && view instanceof BasicInstrument) {
-            selectedInstruments.forEach((i) => newSet.add(i));
-            if (selectedInstruments.has(inst)) {
-                newSet.delete(inst);
+    const handleClick = useCallback(
+        (
+            e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+            inst: BasicInstrument
+        ) => {
+            const newSet = new Set<BasicInstrument>();
+            newSet.add(inst);
+            if (e.shiftKey && view instanceof BasicInstrument) {
+                const viewIndex = instruments.indexOf(view);
+                const instIndex = instruments.indexOf(inst);
+                const start = Math.min(viewIndex, instIndex);
+                const end = Math.max(viewIndex, instIndex);
+                instruments.slice(start, end + 1).forEach((i) => newSet.add(i));
+            } else if (e.ctrlKey && view instanceof BasicInstrument) {
+                selectedInstruments.forEach((i) => newSet.add(i));
+                if (selectedInstruments.has(inst)) {
+                    newSet.delete(inst);
+                }
+            } else {
+                setView(inst);
             }
+            setSelectedInstruments(newSet);
+        },
+        [
+            instruments,
+            selectedInstruments,
+            setSelectedInstruments,
+            setView,
+            view
+        ]
+    );
+
+    const createInstrument = useCallback(() => {
+        const samplesToAdd = new Set(selectedSamples);
+        // add linked
+        samplesToAdd.forEach((s) => {
+            if (s.linkedSample) {
+                samplesToAdd.add(s.linkedSample);
+            }
+        });
+        const instrument = new BasicInstrument();
+        const firstSample = [...samplesToAdd][0];
+        if (firstSample.linkedSample) {
+            instrument.instrumentName = firstSample.sampleName.replace(
+                STEREO_REGEX,
+                ""
+            );
         } else {
-            setView(inst);
+            instrument.instrumentName = firstSample.sampleName;
         }
-        setSelectedInstruments(newSet);
-    };
+        // add loop for convenience
+        instrument.globalZone.setGenerator(generatorTypes.sampleModes, 1);
+        samplesToAdd.forEach((s) => {
+            const zone = instrument.createZone();
+            zone.setSample(s);
+            // sample types!
+            if (s.sampleType === sampleTypes.leftSample) {
+                zone.setGenerator(generatorTypes.pan, -500);
+            } else if (s.sampleType === sampleTypes.rightSample) {
+                zone.setGenerator(generatorTypes.pan, 500);
+            }
+        });
+        const action = new CreateInstrumentAction(
+            instrument,
+            setInstruments,
+            instruments.length - 1,
+            setView
+        );
+        manager.modifyBank([action]);
+    }, [instruments.length, manager, selectedSamples, setInstruments, setView]);
 
     return (
         <>
             <DropdownHeader
+                add={selectedSamples.size > 0}
                 copy={selectedInstruments.size > 0}
                 onCopy={() => {
                     clipboard.copyInstruments(Array.from(selectedInstruments));
@@ -105,7 +164,7 @@ export function InstrumentList({
                     ]);
                 }}
                 paste={clipboard.hasInstruments()}
-                onAdd={() => console.log("add instrument")}
+                onAdd={createInstrument}
                 onClick={() => setShowInstruments(!showInstruments)}
                 open={showInstruments}
                 text={t("presetList.instruments")}

@@ -82,16 +82,16 @@ export function BankEditor({
         return {
             removeUnusedElements: () => {
                 // remove unused elements with history
-                // samples
-                const sampleActions: DeleteSampleAction[] =
-                    manager.samples.reduce(
-                        (actions: DeleteSampleAction[], sample) => {
-                            if (sample.useCount === 0) {
-                                console.log(sample.sampleName);
+                const deletedInstruments = new Set<BasicInstrument>();
+                const instrumentActions: DeleteInstrumentAction[] =
+                    manager.instruments.reduce(
+                        (actions: DeleteInstrumentAction[], instrument) => {
+                            if (instrument.useCount === 0) {
+                                deletedInstruments.add(instrument);
                                 actions.push(
-                                    new DeleteSampleAction(
-                                        sample,
-                                        setSamples,
+                                    new DeleteInstrumentAction(
+                                        instrument,
+                                        setInstruments,
                                         setView
                                     )
                                 );
@@ -100,14 +100,22 @@ export function BankEditor({
                         },
                         []
                     );
-                const instrumentActions: DeleteInstrumentAction[] =
-                    manager.instruments.reduce(
-                        (actions: DeleteInstrumentAction[], instrument) => {
-                            if (instrument.useCount === 0) {
+
+                const sampleActions: DeleteSampleAction[] =
+                    manager.samples.reduce(
+                        (actions: DeleteSampleAction[], sample) => {
+                            // determine the use count
+                            let useCount = sample.useCount;
+                            sample.linkedInstruments.forEach((i) => {
+                                if (deletedInstruments.has(i)) {
+                                    useCount--;
+                                }
+                            });
+                            if (useCount === 0) {
                                 actions.push(
-                                    new DeleteInstrumentAction(
-                                        instrument,
-                                        setInstruments,
+                                    new DeleteSampleAction(
+                                        sample,
+                                        setSamples,
                                         setView
                                     )
                                 );
@@ -188,8 +196,10 @@ export function BankEditor({
                         );
                     }
                 });
-                logInfo(`Modified ${actions.length} samples.`);
-                manager.modifyBank(actions);
+                if (actions.length > 0) {
+                    logInfo(`Modified ${actions.length} samples.`);
+                    manager.modifyBank(actions);
+                }
             }
         };
     }, [manager, samples, setView]);
