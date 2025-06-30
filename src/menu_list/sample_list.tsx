@@ -46,17 +46,23 @@ export function SampleList({
     });
 
     useEffect(() => {
-        if (!(view instanceof BasicSample)) {
-            setSelectedSamples(new Set<BasicSample>());
-        } else {
-            setSelectedSamples(new Set<BasicSample>([view]));
+        if (view instanceof BasicSample) {
+            if (!selectedSamples.has(view)) {
+                setSelectedSamples(new Set<BasicSample>([view]));
+            }
             setShowSamples(true);
             setTimeout(
                 () => samplesVirtualizer.scrollToIndex(samples.indexOf(view)),
                 100
             );
         }
-    }, [samples, samplesVirtualizer, setSelectedSamples, view]);
+    }, [
+        samples,
+        samplesVirtualizer,
+        selectedSamples,
+        setSelectedSamples,
+        view
+    ]);
 
     const addSample = useCallback(() => {
         const input = document.createElement("input");

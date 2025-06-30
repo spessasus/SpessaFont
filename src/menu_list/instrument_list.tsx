@@ -73,16 +73,22 @@ export function InstrumentList({
     });
 
     useEffect(() => {
-        if (!(view instanceof BasicInstrument)) {
-            setSelectedInstruments(new Set<BasicInstrument>());
-        } else {
+        if (view instanceof BasicInstrument) {
             setShowInstruments(true);
-            setSelectedInstruments(new Set<BasicInstrument>([view]));
+            if (!selectedInstruments.has(view)) {
+                setSelectedInstruments(new Set<BasicInstrument>([view]));
+            }
             setTimeout(() => {
                 instrumentsVirtualizer.scrollToIndex(instruments.indexOf(view));
             }, 100);
         }
-    }, [instruments, instrumentsVirtualizer, setSelectedInstruments, view]);
+    }, [
+        instruments,
+        instrumentsVirtualizer,
+        selectedInstruments,
+        setSelectedInstruments,
+        view
+    ]);
 
     const handleClick = useCallback(
         (

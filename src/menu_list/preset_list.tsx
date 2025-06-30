@@ -55,14 +55,15 @@ export function PresetList({
         Record<string, OpenPresetDisplayType>
     >({});
     const [selectedPresets, setSelectedPresets] = useState(
-        new Set<MappedPresetType>()
+        new Set<BasicPreset>()
     );
 
     useEffect(() => {
         if (view instanceof BasicPreset) {
             setSelectedPresets(
-                new Set<MappedPresetType>([
-                    presets.find((p) => p.preset === view) ?? presets[0]
+                new Set<BasicPreset>([
+                    presets.find((p) => p.preset === view)?.preset ??
+                        presets[0].preset
                 ])
             );
         }
@@ -78,10 +79,11 @@ export function PresetList({
     });
 
     useEffect(() => {
-        if (!(view instanceof BasicPreset)) {
-            setSelectedPresets(new Set<MappedPresetType>());
-        } else {
+        if (view instanceof BasicPreset) {
             setShowPresets(true);
+            if (!selectedPresets.has(view)) {
+                setSelectedPresets(new Set<BasicPreset>([view]));
+            }
             setTimeout(
                 () =>
                     presetsVirtualizer.scrollToIndex(
@@ -90,25 +92,27 @@ export function PresetList({
                 100
             );
         }
-    }, [presets, presetsVirtualizer, view]);
+    }, [presets, presetsVirtualizer, selectedPresets, view]);
 
     const handleClick = useCallback(
         (
             e: React.MouseEvent<HTMLDivElement, MouseEvent>,
             preset: MappedPresetType
         ) => {
-            const newSet = new Set<MappedPresetType>();
-            newSet.add(preset);
+            const newSet = new Set<BasicPreset>();
+            newSet.add(preset.preset);
             if (e.shiftKey && view instanceof BasicPreset) {
                 const viewIndex = presets.findIndex((p) => p.preset === view);
                 const instIndex = presets.indexOf(preset);
                 const start = Math.min(viewIndex, instIndex);
                 const end = Math.max(viewIndex, instIndex);
-                presets.slice(start, end + 1).forEach((i) => newSet.add(i));
+                presets
+                    .slice(start, end + 1)
+                    .forEach((i) => newSet.add(i.preset));
             } else if (e.ctrlKey && view instanceof BasicPreset) {
                 selectedPresets.forEach((i) => newSet.add(i));
-                if (selectedPresets.has(preset)) {
-                    newSet.delete(preset);
+                if (selectedPresets.has(preset.preset)) {
+                    newSet.delete(preset.preset);
                 }
             } else {
                 setView(preset.preset);
@@ -170,9 +174,7 @@ export function PresetList({
                 copy={selectedPresets.size > 0}
                 paste={clipboard.hasPresets()}
                 onCopy={() => {
-                    clipboard.copyPresets(
-                        Array.from(selectedPresets).map((p) => p.preset)
-                    );
+                    clipboard.copyPresets(Array.from(selectedPresets));
                     setPresets([...manager.presets]);
                 }}
                 onPaste={() => {
@@ -232,7 +234,7 @@ export function PresetList({
                                         p={p}
                                         setView={setView}
                                         view={view}
-                                        selected={selectedPresets.has(p)}
+                                        selected={selectedPresets.has(p.preset)}
                                         link={selectedInstruments.size > 0}
                                         onLink={() => linkInstruments(p.preset)}
                                     />

@@ -7,6 +7,7 @@
     position: relative;
     align-self: stretch;
     border-radius: var(--primary-border-radius);
+    overflow: hidden;
 }
 
 .wave_view * {

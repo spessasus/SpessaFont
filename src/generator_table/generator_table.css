@@ -1,6 +1,8 @@
 .zone_table_wrapper {
     overflow: auto;
     flex: 1;
+    padding-right: 1rem;
+    padding-bottom: 1rem;
 }
 
 .zone_table {
@@ -9,6 +11,7 @@
     border: solid 1px var(--track-border-color);
     /*rounded corners hidden overflow*/
     overflow: hidden;
+    background: var(--top-color-start);
 }
 
 .zone_table * {
@@ -18,7 +21,7 @@
 .zone_table th {
     font-weight: normal;
     user-select: none;
-    background: var(--top-buttons-color-start);
+    background: var(--top-buttons-color-end);
 }
 
 .zone_table td {

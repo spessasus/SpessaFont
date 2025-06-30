@@ -36,7 +36,6 @@ export function RangeGeneratorCell({
         }
     }
 
-    // TODO: ADD HISTORY FOR THIS
     const setValue = (typedText: string) => {
         const v = typedText.replace(/[^0-9-]/g, "");
         if (typedText === rangeText) {

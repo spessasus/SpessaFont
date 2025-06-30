@@ -5,6 +5,7 @@ import "./wave_view.css";
 
 const SCALE_LINES_COUNT = 8;
 const MIN_WAVE_THICKNESS = 1;
+const MAX_LINE_THICKNESS = 10;
 const LINE_WIDTH_CONSTANT = 0.9;
 
 type WaveViewProps = {
@@ -116,9 +117,9 @@ export const WaveView = React.memo(function ({
         // draw waveform
         ctx.strokeStyle = getStyle("--primary-color");
         const samplesPerPixel = dataLength / width;
-        ctx.lineWidth = Math.max(
-            MIN_WAVE_THICKNESS,
-            LINE_WIDTH_CONSTANT / samplesPerPixel
+        ctx.lineWidth = Math.min(
+            Math.max(MIN_WAVE_THICKNESS, LINE_WIDTH_CONSTANT / samplesPerPixel),
+            MAX_LINE_THICKNESS
         );
         const amplifier = halfHeight;
         ctx.beginPath();
