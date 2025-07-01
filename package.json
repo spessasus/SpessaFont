@@ -16,6 +16,7 @@
     "i18next": "^25.2.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-hot-toast": "^2.5.2",
     "react-i18next": "^15.5.2",
     "spessasynth_core": "latest",
     "spessasynth_lib": "latest"

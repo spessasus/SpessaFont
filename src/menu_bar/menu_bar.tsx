@@ -6,12 +6,15 @@ import "./menu_bar.css";
 import { useTranslation } from "react-i18next";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import { Gear } from "./gear.tsx";
-import { type RefObject, useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import type { BankEditorRef } from "../bank_editor/bank_editor.tsx";
 import { ACCEPTED_FORMATS } from "../utils/accepted_formats.ts";
+import toast from "react-hot-toast";
 
 // @ts-expect-error chromium check is here
 const isChrome: boolean = window["chrome"] !== undefined;
+
+const waitForRefresh = () => new Promise((r) => setTimeout(r, 200));
 
 export function MenuBar({
     toggleSettings,
@@ -21,8 +24,6 @@ export function MenuBar({
     manager,
     showMidiPlayer,
     toggleKeyboard,
-    setIsLoading,
-    savingRef,
     bankEditorRef
 }: {
     audioEngine: AudioEngine;
@@ -32,8 +33,6 @@ export function MenuBar({
     manager: SoundBankManager;
     showMidiPlayer: boolean;
     toggleKeyboard: () => void;
-    setIsLoading: (l: boolean) => unknown;
-    savingRef: RefObject<HTMLSpanElement | null>;
     bankEditorRef: BankEditorRef;
 }) {
     const fLoc = "menuBarLocale.file.";
@@ -45,7 +44,7 @@ export function MenuBar({
         input.type = "file";
         input.accept = ACCEPTED_FORMATS;
         input.click();
-        input.onchange = async () => {
+        input.onchange = () => {
             const file: File | undefined = input.files?.[0];
             if (!file) {
                 return;
@@ -54,39 +53,35 @@ export function MenuBar({
         };
     }
 
-    const progressFunc = useCallback(
-        async (_s: string, n: number, c: number) => {
-            if (savingRef.current) {
-                savingRef.current.textContent = `${((n / c) * 100).toFixed()}%`;
-            }
-        },
-        [savingRef]
-    );
-
     function newFile() {
         openTab();
     }
 
-    const sf2 = useCallback(() => {
-        setIsLoading(true);
-        setTimeout(() => {
-            manager.save("sf2", progressFunc).then(() => setIsLoading(false));
-        }, 200);
-    }, [manager, progressFunc, setIsLoading]);
-
-    function dls() {
-        setIsLoading(true);
-        setTimeout(() => {
-            manager.save("dls", progressFunc).then(() => setIsLoading(false));
-        }, 200);
-    }
-
-    function sf3() {
-        setIsLoading(true);
-        setTimeout(() => {
-            manager.save("sf3", progressFunc).then(() => setIsLoading(false));
-        }, 200);
-    }
+    const saveWithToasts = useCallback(
+        async (format: "sf2" | "dls" | "sf3") => {
+            const id = toast.loading(t("loadingAndSaving.savingSoundBank"));
+            await waitForRefresh();
+            await manager.save(
+                format,
+                async (_sampleName, writtenCount, totalSampleCount) => {
+                    toast.loading(
+                        `${t("loadingAndSaving.writingSamples")} (${
+                            Math.floor(
+                                (writtenCount / totalSampleCount) * 100_00
+                            ) /
+                                100 +
+                            "%"
+                        })`,
+                        {
+                            id
+                        }
+                    );
+                }
+            );
+            toast.success(t("loadingAndSaving.savedSuccessfully"), { id });
+        },
+        [manager, t]
+    );
 
     // keybinds
 
@@ -107,7 +102,7 @@ export function MenuBar({
                         break;
                     case "s":
                         e.preventDefault();
-                        sf2();
+                        saveWithToasts("sf2").then();
                         break;
                     default:
                         return;
@@ -120,7 +115,7 @@ export function MenuBar({
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
         };
-    }, [manager, sf2]);
+    }, [manager, saveWithToasts]);
 
     return (
         <div className={"menu_bar_main"}>
@@ -134,9 +129,18 @@ export function MenuBar({
                     click={closeTab}
                     text={fLoc + "close"}
                 ></MenuBarItem>
-                <MenuBarItem click={sf2} text={fLoc + "saveSF2"} />
-                <MenuBarItem click={dls} text={fLoc + "saveDLS"} />
-                <MenuBarItem click={sf3} text={fLoc + "saveSF3"} />
+                <MenuBarItem
+                    click={() => saveWithToasts("sf2")}
+                    text={fLoc + "saveSF2"}
+                />
+                <MenuBarItem
+                    click={() => saveWithToasts("dls")}
+                    text={fLoc + "saveDLS"}
+                />
+                <MenuBarItem
+                    click={() => saveWithToasts("sf3")}
+                    text={fLoc + "saveSF3"}
+                />
                 <MenuBarItem
                     click={() => document.body.requestFullscreen()}
                     text={fLoc + "fullscreen"}

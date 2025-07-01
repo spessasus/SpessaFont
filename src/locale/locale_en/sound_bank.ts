@@ -1,9 +1,13 @@
 export const SoundBankLocale = {
-    savingFile: "Saving file...",
-    writingSamples: "Writing Samples...",
     globalZone: "Global Zone",
     createNewZone: "Create New Zone",
     thisIsAStereoSamplePair: "This is a stereo sample pair.",
+
+    modifiedSamples: "Modified {{count}} samples.",
+    noSamplesWereChanged: "No samples were changed.",
+    removedElements:
+        "Removed {{instruments}} instruments and {{samples}} samples.",
+
     loopingModes: {
         noLoop: "No Loop",
         loop: "Loop",

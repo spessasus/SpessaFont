@@ -112,7 +112,7 @@ export default class SoundBankManager extends BasicSoundBank {
 
     async save(
         format: "sf2" | "dls" | "sf3",
-        progressFunction: ProgressFunction
+        progressFunction?: ProgressFunction
     ) {
         let binary: Uint8Array;
         switch (format) {

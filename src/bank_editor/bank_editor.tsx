@@ -28,7 +28,8 @@ import { SampleEditor } from "../sample_editor/sample_editor.tsx";
 import { DeleteSampleAction } from "../sample_editor/linked_instruments/delete_sample_action.ts";
 import { DeleteInstrumentAction } from "../instrument_editor/linked_presets/delete_instrument_action.ts";
 import { SetSampleTypeAction } from "../sample_editor/set_sample_type_action.ts";
-import { logInfo } from "../utils/core_utils.ts";
+import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 export type BankEditorProps = {
     manager: SoundBankManager;
@@ -60,6 +61,7 @@ export function BankEditor({
     ref,
     setEnabledKeys
 }: BankEditorProps) {
+    const { t } = useTranslation();
     const [view, setViewLocal] = useState<BankEditView>(manager.currentView);
     const [samples, setSamples] = useState(manager.samples);
     const [instruments, setInstruments] = useState(manager.instruments);
@@ -142,6 +144,12 @@ export function BankEditor({
                         []
                     );
                 manager.modifyBank([...sampleActions, ...instrumentActions]);
+                toast.success(
+                    t("soundBankLocale.removedElements", {
+                        instruments: instrumentActions.length,
+                        samples: sampleActions.length
+                    })
+                );
             },
 
             // automatically link stereo samples based on the name
@@ -214,12 +222,18 @@ export function BankEditor({
                     }
                 });
                 if (actions.length > 0) {
-                    logInfo(`Modified ${actions.length} samples.`);
+                    toast.success(
+                        t("soundBankLocale.modifiedSamples", {
+                            count: actions.length
+                        })
+                    );
                     manager.modifyBank(actions);
+                } else {
+                    toast(t("soundBankLocale.noSamplesWereChanged"));
                 }
             }
         };
-    }, [manager, samples, setView]);
+    }, [manager, samples, setView, t]);
 
     return (
         <div className={"main_content" + (shown ? "" : " hidden")}>

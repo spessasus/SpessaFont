@@ -32,14 +32,15 @@ export const localeEnglish = {
     unsavedChanges: "This file has unsaved changes.",
     getUserInput: "Press anywhere to start the app",
 
-    synthInit: {
-        genericLoading: "Loading...",
-        loadingSoundfont: "Loading SoundFont...",
-        loadingBundledSoundfont: "Loading bundled SoundFont...",
-        startingSynthesizer: "Starting Synthesizer...",
-        savingSoundfont: "Saving SoundFont for reuse...",
-        noWebAudio: "Your browser does not support Web Audio.",
-        done: "Ready!"
+    loadingAndSaving: {
+        loadingFileFromDisk: "Loading file from disk...",
+        parsingSoundBank: "Parsing sound bank...",
+        errorLoadingSoundBank: "Error loading sound bank!",
+        chromeError: "File too large to be opened on Chromium-based browsers.",
+
+        savingSoundBank: "Saving sound bank...",
+        savedSuccessfully: "Saved successfully!",
+        writingSamples: "Writing Samples..."
     },
 
     error: "Error",
