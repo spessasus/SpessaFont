@@ -66,12 +66,12 @@ export function MenuBar({
         openTab();
     }
 
-    function sf2() {
+    const sf2 = useCallback(() => {
         setIsLoading(true);
         setTimeout(() => {
             manager.save("sf2", progressFunc).then(() => setIsLoading(false));
         }, 200);
-    }
+    }, [manager, progressFunc, setIsLoading]);
 
     function dls() {
         setIsLoading(true);
@@ -87,14 +87,6 @@ export function MenuBar({
         }, 200);
     }
 
-    function undo() {
-        manager.undo();
-    }
-
-    function redo() {
-        manager.redo();
-    }
-
     // keybinds
 
     useEffect(() => {
@@ -106,11 +98,11 @@ export function MenuBar({
                 switch (e.key) {
                     case "z":
                         e.preventDefault();
-                        undo();
+                        manager.undo();
                         break;
                     case "y":
                         e.preventDefault();
-                        redo();
+                        manager.redo();
                         break;
                     case "s":
                         e.preventDefault();
@@ -127,7 +119,7 @@ export function MenuBar({
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
         };
-    }, [manager, redo, sf2, undo]);
+    }, [manager, sf2]);
 
     return (
         <div className={"menu_bar_main"}>
@@ -144,11 +136,21 @@ export function MenuBar({
                 <MenuBarItem click={sf2} text={fLoc + "saveSF2"} />
                 <MenuBarItem click={dls} text={fLoc + "saveDLS"} />
                 <MenuBarItem click={sf3} text={fLoc + "saveSF3"} />
+                <MenuBarItem
+                    click={() => document.body.requestFullscreen()}
+                    text={fLoc + "fullscreen"}
+                />
                 <MenuBarItem text={"v" + __APP_VERSION__} />
             </MenuBarDropdown>
             <MenuBarDropdown main={eLoc + "edit"}>
-                <MenuBarItem click={undo} text={eLoc + "undo"} />
-                <MenuBarItem click={redo} text={eLoc + "redo"} />
+                <MenuBarItem
+                    click={() => manager.undo()}
+                    text={eLoc + "undo"}
+                />
+                <MenuBarItem
+                    click={() => manager.redo()}
+                    text={eLoc + "redo"}
+                />
                 <MenuBarItem
                     click={() => bankEditorRef?.current?.removeUnusedElements()}
                     text={eLoc + "removeUnusedElements"}
