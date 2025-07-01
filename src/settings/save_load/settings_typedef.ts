@@ -16,7 +16,7 @@ export const SPESSAFONT_SETTINGS_KEY = "SPESSAFONT-USER-SETTINGS";
 
 export const DEFAULT_SETTINGS: SavedSettingsType = {
     lang: UNSET_LANGUAGE,
-    volume: 1,
+    volume: 2,
     theme: "dark",
     interpolation: interpolationTypes.fourthOrder,
     reverbLevel: 1,

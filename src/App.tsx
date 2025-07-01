@@ -27,6 +27,7 @@ import {
     type BankEditorRef,
     MemoizedBankEditor
 } from "./bank_editor/bank_editor.tsx";
+import type { KeyboardRef } from "./keyboard/keyboard/keyboard.tsx";
 
 // apply locale
 const initialSettings = loadSettings();
@@ -67,6 +68,7 @@ function App() {
     const [theme, setTheme] = useState(getSetting("theme", initialSettings));
     const [activeTab, setActiveTab] = useState<number>(0); // index in tabs[]
     const bankEditorRef: BankEditorRef = useRef(null);
+    const keyboardRef = useRef<KeyboardRef>(null);
 
     const currentManager: SoundBankManager | undefined = useMemo(
         () => tabs[activeTab],
@@ -222,6 +224,7 @@ function App() {
                     manager={currentManager}
                     audioEngine={audioEngine}
                     clipboardManager={clipboardManager}
+                    keyboardRef={keyboardRef}
                 />
             )}
 
@@ -241,6 +244,7 @@ function App() {
 
             {showKeyboard && (
                 <KeyboardController
+                    keyboardRef={keyboardRef}
                     ccOptions={ccOptions}
                     engine={audioEngine}
                 ></KeyboardController>

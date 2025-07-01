@@ -1,4 +1,10 @@
-import { type RefObject, useEffect, useImperativeHandle, useRef } from "react";
+import {
+    type RefObject,
+    useEffect,
+    useImperativeHandle,
+    useRef,
+    useState
+} from "react";
 import "./keyboard.css";
 import type { AudioEngine } from "../../core_backend/audio_engine.ts";
 import { KEYBOARD_TARGET_CHANNEL } from "../target_channel.ts";
@@ -8,11 +14,12 @@ function isBlackNoteNumber(midiNote: number) {
     return [1, 3, 6, 8, 10].includes(pitchClass);
 }
 
-export type KeyboardPressRef = {
+export type KeyboardRef = {
     clearAll: () => void;
     pressNote: (midiNote: number) => void;
     releaseNote: (midiNote: number) => void;
-};
+    setEnabledNotes: (disabled: boolean[]) => void;
+} | null;
 
 const pressedKeys: Set<number> = new Set();
 let mouseHeld = false;
@@ -25,12 +32,15 @@ export function Keyboard({
     velocityDisplay
 }: {
     engine: AudioEngine;
-    ref: RefObject<KeyboardPressRef | null>;
+    ref: RefObject<KeyboardRef | null>;
     keyDisplay: RefObject<HTMLSpanElement | null>;
     velocityDisplay: RefObject<HTMLSpanElement | null>;
 }) {
     const keysRef = useRef<HTMLDivElement[]>([]);
     const keyboardRef = useRef<HTMLDivElement | null>(null);
+    const [enabledKeys, setEnabledKeys] = useState<boolean[]>(() =>
+        Array(128).fill(true)
+    );
 
     useImperativeHandle(ref, () => ({
         clearAll() {
@@ -48,6 +58,15 @@ export function Keyboard({
         releaseNote(midiNote: number) {
             pressedKeys.delete(midiNote);
             keysRef?.current?.[midiNote]?.classList?.remove("pressed");
+        },
+
+        setEnabledNotes(d: boolean[]) {
+            if (d.length !== 128) {
+                throw new Error(
+                    `Disabled array should have 128 elements, received ${d.length}`
+                );
+            }
+            setEnabledKeys(d);
         }
     }));
 
@@ -173,6 +192,9 @@ export function Keyboard({
         <div className="keyboard" ref={keyboardRef}>
             {keys.map((midiNote) => {
                 let className = "key";
+                if (!enabledKeys[midiNote]) {
+                    className += " disabled";
+                }
                 if (isBlackNoteNumber(midiNote)) {
                     className += " sharp_key";
                 } else {

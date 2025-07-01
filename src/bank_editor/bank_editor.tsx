@@ -29,6 +29,7 @@ import { DeleteSampleAction } from "../sample_editor/linked_instruments/delete_s
 import { DeleteInstrumentAction } from "../instrument_editor/linked_presets/delete_instrument_action.ts";
 import { SetSampleTypeAction } from "../sample_editor/set_sample_type_action.ts";
 import { logInfo } from "../utils/core_utils.ts";
+import type { KeyboardRef } from "../keyboard/keyboard/keyboard.tsx";
 
 export type BankEditorProps = {
     manager: SoundBankManager;
@@ -38,6 +39,7 @@ export type BankEditorProps = {
     ccOptions: JSX.Element;
     shown: boolean;
     ref: BankEditorRef;
+    keyboardRef: RefObject<KeyboardRef>;
 };
 
 export type SetViewType = (v: BankEditView) => unknown;
@@ -56,7 +58,8 @@ export function BankEditor({
     destinationOptions,
     ccOptions,
     shown,
-    ref
+    ref,
+    keyboardRef
 }: BankEditorProps) {
     const [view, setViewLocal] = useState<BankEditView>(manager.currentView);
     const [samples, setSamples] = useState(manager.samples);
@@ -77,6 +80,15 @@ export function BankEditor({
         setPresets(manager.presets);
         setView(manager.currentView);
     }, [manager, setView]);
+
+    useEffect(() => {
+        if (
+            !(view instanceof BasicInstrument) &&
+            !(view instanceof BasicPreset)
+        ) {
+            keyboardRef?.current?.setEnabledNotes(Array(128).fill(true));
+        }
+    }, [keyboardRef, view]);
 
     useImperativeHandle(ref, () => {
         return {
@@ -237,6 +249,7 @@ export function BankEditor({
                         setView={setView}
                         presets={presets}
                         setPresets={setPresets}
+                        keyboardRef={keyboardRef}
                     ></PresetEditor>
                 )}
                 {view instanceof BasicInstrument && (
@@ -247,6 +260,7 @@ export function BankEditor({
                         setView={setView}
                         setInstruments={setInstruments}
                         instruments={instruments}
+                        keyboardRef={keyboardRef}
                     ></InstrumentEditor>
                 )}
                 {view instanceof BasicSample && (

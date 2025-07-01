@@ -1,6 +1,6 @@
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import "./keyboard_controller.css";
-import { Keyboard, type KeyboardPressRef } from "./keyboard/keyboard.tsx";
+import { Keyboard, type KeyboardRef } from "./keyboard/keyboard.tsx";
 import * as React from "react";
 import { type JSX, type RefObject, useEffect, useRef, useState } from "react";
 import { midiControllers } from "spessasynth_core";
@@ -30,10 +30,12 @@ const INITIAL_CC_LIST: number[] = [
 
 export function KeyboardController({
     engine,
-    ccOptions
+    ccOptions,
+    keyboardRef
 }: {
     engine: AudioEngine;
     ccOptions: JSX.Element;
+    keyboardRef: RefObject<KeyboardRef>;
 }) {
     const { t } = useTranslation();
     const [controllers, setControllers] = useState(INITIAL_CC_LIST);
@@ -44,7 +46,6 @@ export function KeyboardController({
     });
 
     const pitchRef = useRef<OtherCCRef>(null);
-    const keyboardRef = useRef<KeyboardPressRef>(null);
     const keyDisplayRef = useRef<HTMLSpanElement>(null);
     const velocityDisplayRef = useRef<HTMLSpanElement>(null);
 
@@ -86,7 +87,7 @@ export function KeyboardController({
                 }
             }
         };
-    }, [controllers, engine.processor]);
+    }, [controllers, engine.processor, keyboardRef]);
 
     return (
         <div className={"keyboard_controller"}>

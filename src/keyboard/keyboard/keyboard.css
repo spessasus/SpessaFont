@@ -4,8 +4,7 @@
     display: flex;
     flex-wrap: nowrap;
     align-items: stretch;
-    --current-min-height: 4;
-    min-height: calc(var(--current-min-height) * 1vw);
+    height: 5vw;
     background: black;
     overflow: hidden;
     width: 100%;
@@ -41,7 +40,7 @@
 }
 
 .keyboard .key.disabled {
-    filter: invert(0.6);
+    background: linear-gradient(65deg, #333, #888);
 }
 
 
