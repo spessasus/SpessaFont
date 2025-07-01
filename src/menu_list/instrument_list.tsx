@@ -192,7 +192,7 @@ export function InstrumentList({
                 add={selectedSamples.size > 0}
                 copy={selectedInstruments.size > 0}
                 onCopy={() => {
-                    clipboard.copyInstruments(Array.from(selectedInstruments));
+                    clipboard.copyInstruments(selectedInstruments);
                     setInstruments([...manager.instruments]);
                 }}
                 onPaste={() => {

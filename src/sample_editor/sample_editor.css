@@ -21,13 +21,6 @@
     font-size: 1.5rem;
 }
 
-.info_row {
-    gap: var(--flex-gap);;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-}
-
 .tools {
     align-items: center;
     justify-content: start;

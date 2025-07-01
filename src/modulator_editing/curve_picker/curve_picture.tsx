@@ -101,7 +101,7 @@ function getOrCreateCurveCanvas(curve: ModulatorCurveType): HTMLCanvasElement {
     }
     ctx.stroke();
 
-    // Draw curve
+    // Draw the curve
     const actualWidth = WIDTH - CURVE_MARGIN * 2;
     const actualHeight = HEIGHT - CURVE_MARGIN * 2;
     ctx.lineWidth = 7;

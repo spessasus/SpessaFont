@@ -51,6 +51,16 @@ export const MenuList = React.memo(function ({
 }: MenuListProps) {
     const [open, setOpen] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
+    const [selectedSamples, setSelectedSamples] = useState(
+        new Set<BasicSample>()
+    );
+    const [selectedInstruments, setSelectedInstruments] = useState(
+        new Set<BasicInstrument>()
+    );
+    const [selectedPresets, setSelectedPresets] = useState(
+        new Set<BasicPreset>()
+    );
+
     const setView = useCallback(
         (v: BankEditView) => {
             sv(v);
@@ -62,39 +72,129 @@ export const MenuList = React.memo(function ({
         setSearchQuery("");
     }, [manager]);
 
-    // useeffect for delete
+    // useeffect for delete, copy and paste
     useEffect(() => {
         const onKeyDown = (e: KeyboardEvent) => {
-            if (e.key !== "Delete") {
-                return;
-            }
-            let action: HistoryAction;
-            if (view instanceof BasicInstrument) {
-                if (view.useCount > 0) {
+            switch (e.key) {
+                default:
                     return;
+
+                case "Delete":
+                    {
+                        let action: HistoryAction;
+                        if (view instanceof BasicInstrument) {
+                            if (view.useCount > 0) {
+                                return;
+                            }
+                            action = new DeleteInstrumentAction(
+                                view,
+                                setInstruments,
+                                setView
+                            );
+                        } else if (view instanceof BasicSample) {
+                            if (view.useCount > 0) {
+                                return;
+                            }
+                            action = new DeleteSampleAction(
+                                view,
+                                setSamples,
+                                setView
+                            );
+                        } else if (view instanceof BasicPreset) {
+                            action = new DeletePresetAction(
+                                view,
+                                setPresets,
+                                setView
+                            );
+                        } else {
+                            return;
+                        }
+                        manager.modifyBank([action]);
+                    }
+                    break;
+
+                case "c":
+                    {
+                        if (e.ctrlKey) {
+                            if (selectedSamples.size > 0) {
+                                clipboard.copySamples(selectedSamples);
+                                setSamples([...manager.samples]);
+                            }
+                            if (selectedPresets.size > 0) {
+                                clipboard.copyPresets(selectedPresets);
+                            }
+                            if (selectedInstruments.size > 0) {
+                                clipboard.copyInstruments(selectedInstruments);
+                            }
+                        }
+                    }
+                    break;
+
+                case "v": {
+                    if (e.ctrlKey) {
+                        clipboard.pasteSamples(manager, setSamples, setView);
+                        setSamples([
+                            ...manager.samples.toSorted((a, b) =>
+                                a.sampleName > b.sampleName
+                                    ? 1
+                                    : b.sampleName > a.sampleName
+                                      ? -1
+                                      : 0
+                            )
+                        ]);
+
+                        clipboard.pastePresets(
+                            manager,
+                            setPresets,
+                            setInstruments,
+                            setSamples,
+                            setView
+                        );
+                        setPresets([
+                            ...manager.presets.toSorted((a, b) =>
+                                a.presetName > b.presetName
+                                    ? 1
+                                    : b.presetName > a.presetName
+                                      ? -1
+                                      : 0
+                            )
+                        ]);
+
+                        clipboard.pasteInstruments(
+                            manager,
+                            setSamples,
+                            setInstruments,
+                            setView
+                        );
+                        setInstruments([
+                            ...manager.instruments.toSorted((a, b) =>
+                                a.instrumentName > b.instrumentName
+                                    ? 1
+                                    : b.instrumentName > a.instrumentName
+                                      ? -1
+                                      : 0
+                            )
+                        ]);
+                    }
                 }
-                action = new DeleteInstrumentAction(
-                    view,
-                    setInstruments,
-                    setView
-                );
-            } else if (view instanceof BasicSample) {
-                if (view.useCount > 0) {
-                    return;
-                }
-                action = new DeleteSampleAction(view, setSamples, setView);
-            } else if (view instanceof BasicPreset) {
-                action = new DeletePresetAction(view, setPresets, setView);
-            } else {
-                return;
             }
-            manager.modifyBank([action]);
         };
         document.addEventListener("keydown", onKeyDown);
         return () => {
             document.removeEventListener("keydown", onKeyDown);
         };
-    }, [manager, setInstruments, setPresets, setSamples, setView, view]);
+    }, [
+        clipboard,
+        manager,
+        selectedInstruments,
+        selectedPresets,
+        selectedSamples,
+        setInstruments,
+        setPresets,
+        setSamples,
+        setView,
+        view
+    ]);
 
     const { t } = useTranslation();
 
@@ -171,13 +271,6 @@ export const MenuList = React.memo(function ({
             };
         }, [searchQueryLower, samples, instruments, presetNameMap]);
 
-    const [selectedSamples, setSelectedSamples] = useState(
-        new Set<BasicSample>()
-    );
-    const [selectedInstruments, setSelectedInstruments] = useState(
-        new Set<BasicInstrument>()
-    );
-
     if (!open) {
         return (
             <div className={"menu_list_closed"} onClick={() => setOpen(true)}>
@@ -242,6 +335,8 @@ export const MenuList = React.memo(function ({
                     setPresets={setPresets}
                     manager={manager}
                     selectedInstruments={selectedInstruments}
+                    selectedPresets={selectedPresets}
+                    setSelectedPresets={setSelectedPresets}
                 />
                 <div className={"search_bar"}>
                     <input

@@ -36,7 +36,7 @@
     position: relative;
 }
 
-.controller_ranger:hover {
+.controller_range:hover {
     filter: brightness(1.2);
 }
 

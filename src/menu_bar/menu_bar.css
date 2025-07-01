@@ -12,6 +12,7 @@
 .menu_bar_main * {
     user-select: none;
     white-space: nowrap;
+    font-size: 1.1rem;
 }
 
 .menu_bar {
@@ -23,7 +24,6 @@
 .menu_bar_button {
     align-items: center;
     cursor: pointer;
-    font-size: 1rem;
     display: flex;
     height: 100%;
 }

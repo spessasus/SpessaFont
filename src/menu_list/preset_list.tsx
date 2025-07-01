@@ -36,7 +36,9 @@ export function PresetList({
     manager,
     selectedInstruments,
     setInstruments,
-    setSamples
+    setSamples,
+    selectedPresets,
+    setSelectedPresets
 }: {
     view: BankEditView;
     setView: SetViewType;
@@ -46,6 +48,8 @@ export function PresetList({
     setInstruments: (i: BasicInstrument[]) => unknown;
     setSamples: (s: BasicSample[]) => unknown;
     selectedInstruments: Set<BasicInstrument>;
+    selectedPresets: Set<BasicPreset>;
+    setSelectedPresets: (p: Set<BasicPreset>) => unknown;
     manager: SoundBankManager;
 }) {
     const { t } = useTranslation();
@@ -54,22 +58,6 @@ export function PresetList({
     const [openPresets, setOpenPresets] = useState<
         Record<string, OpenPresetDisplayType>
     >({});
-    const [selectedPresets, setSelectedPresets] = useState(
-        new Set<BasicPreset>()
-    );
-
-    useEffect(() => {
-        if (view instanceof BasicPreset) {
-            setSelectedPresets(
-                new Set<BasicPreset>([
-                    presets.find((p) => p.preset === view)?.preset ??
-                        presets[0].preset
-                ])
-            );
-        } else if (selectedPresets.size > 0) {
-            setSelectedPresets(new Set<BasicPreset>());
-        }
-    }, [presets, selectedPresets.size, view]);
 
     // virtualize
     const presetsParentRef = useRef<HTMLDivElement>(null);
@@ -80,6 +68,7 @@ export function PresetList({
         overscan: OVERSCAN
     });
 
+    // update selected presets based on view
     useEffect(() => {
         if (view instanceof BasicPreset) {
             setShowPresets(true);
@@ -93,8 +82,16 @@ export function PresetList({
                     ),
                 100
             );
+        } else if (selectedPresets.size > 0) {
+            setSelectedPresets(new Set<BasicPreset>());
         }
-    }, [presets, presetsVirtualizer, selectedPresets, view]);
+    }, [
+        presets,
+        presetsVirtualizer,
+        selectedPresets,
+        setSelectedPresets,
+        view
+    ]);
 
     const handleClick = useCallback(
         (
@@ -103,11 +100,12 @@ export function PresetList({
         ) => {
             const newSet = new Set<BasicPreset>();
             newSet.add(preset.preset);
+            console.log(preset.preset.presetName);
             if (e.shiftKey && view instanceof BasicPreset) {
                 const viewIndex = presets.findIndex((p) => p.preset === view);
-                const instIndex = presets.indexOf(preset);
-                const start = Math.min(viewIndex, instIndex);
-                const end = Math.max(viewIndex, instIndex);
+                const presetIndex = presets.indexOf(preset);
+                const start = Math.min(viewIndex, presetIndex);
+                const end = Math.max(viewIndex, presetIndex);
                 presets
                     .slice(start, end + 1)
                     .forEach((i) => newSet.add(i.preset));
@@ -121,7 +119,7 @@ export function PresetList({
             }
             setSelectedPresets(newSet);
         },
-        [presets, selectedPresets, setView, view]
+        [presets, selectedPresets, setSelectedPresets, setView, view]
     );
 
     const createPreset = useCallback(() => {
@@ -176,7 +174,7 @@ export function PresetList({
                 copy={selectedPresets.size > 0}
                 paste={clipboard.hasPresets()}
                 onCopy={() => {
-                    clipboard.copyPresets(Array.from(selectedPresets));
+                    clipboard.copyPresets(selectedPresets);
                     setPresets([...manager.presets]);
                 }}
                 onPaste={() => {

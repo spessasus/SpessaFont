@@ -18,7 +18,7 @@ declare module "spessasynth_lib" {
         /** the difference between frequencies of oscillators, in Hz */
         oscillatorFrequencyVariation?: number;
 
-        /** how much will oscillator alter the delay in delay nodes, in seconds */
+        /** specifies how much will oscillator alter the delay in delay nodes, in seconds */
         oscillatorGain?: number;
     };
 

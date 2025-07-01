@@ -9,12 +9,6 @@
     gap: var(--flex-gap);
 }
 
-.sound_bank_info .stats .wrapper {
-    display: flex;
-    flex-direction: column;
-    text-align: center;
-}
-
 .sound_bank_info .stats h1 {
     background: var(--primary-color);
     width: 100%;

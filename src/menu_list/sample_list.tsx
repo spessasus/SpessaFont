@@ -154,7 +154,7 @@ export function SampleList({
                 open={showSamples}
                 copy={selectedSamples.size > 0}
                 onCopy={() => {
-                    clipboard.copySamples(Array.from(selectedSamples));
+                    clipboard.copySamples(selectedSamples);
                     setSamples([...manager.samples]);
                 }}
                 paste={clipboard.hasSamples()}

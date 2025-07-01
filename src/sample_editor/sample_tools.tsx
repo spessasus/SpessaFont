@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SamplePlayerState } from "./sample_editor.tsx";
 import { ControllerRange } from "../fancy_inputs/controller_range/controller_range.tsx";
 import { useTranslation } from "react-i18next";
@@ -58,7 +58,7 @@ export function SampleTools({
         // resample if sample range is ridiculous
         // test case: Calm 4 with a whopping 384 kHz
 
-        let audioData = sampleData;
+        let audioData = sample.getAudioData();
         let bufferRate = sampleRate;
         if (sampleRate < 8000 || sampleRate > 96000) {
             // resample to 48kHz
@@ -75,16 +75,16 @@ export function SampleTools({
 
         const buf = engine.context.createBuffer(
             1,
-            sampleData.length,
+            sample.getAudioData().length,
             bufferRate
         );
         buf.getChannelData(0).set(audioData);
         return buf;
-    }, [engine.context, sampleRate, sampleData]);
+    }, [sample, sampleRate, engine.context]);
 
     const playerRef = useRef<AudioBufferSourceNode | null>(null);
 
-    const stopSampleInternal = () => {
+    const stopSampleInternal = useCallback(() => {
         if (playerRef.current) {
             try {
                 playerRef.current.stop();
@@ -92,17 +92,22 @@ export function SampleTools({
                 console.warn("audio already stopped or invalid", e);
             }
             playerRef.current.disconnect();
+            playerRef.current = null;
         }
-    };
+    }, []);
 
     // stop and clean up on unmounting or sample change
     useEffect(() => {
         return () => {
+            // don't stop the sample automatically
+            if (playerRef.current) {
+                playerRef.current.onended = null;
+            }
             stopSampleInternal();
             setZoom(1);
             setInputZoom(100);
         };
-    }, [sample, setZoom]);
+    }, [sample, setZoom, stopSampleInternal]);
 
     // update loop
     useEffect(() => {
@@ -112,39 +117,64 @@ export function SampleTools({
         }
     }, [loopEnd, loopStart, playerState, sampleRate]);
 
+    // update detune
     useEffect(() => {
         if (playerState !== "stopped" && playerRef.current) {
             playerRef.current.detune.value = centCorrection;
         }
     }, [centCorrection, playerState]);
 
-    const playSample = (loop: boolean) => {
-        stopSampleInternal();
-        const player = engine.context.createBufferSource();
-        player.detune.value = centCorrection;
-        player.buffer = buffer;
-        player.onended = stopPlayer;
-        playerRef.current = player;
-        if (loop) {
-            player.loopStart = loopStart / sampleRate;
-            player.loopEnd = loopEnd / sampleRate;
-            player.loop = true;
-        }
-
-        const gain = new GainNode(engine.context, {
-            gain: DEFAULT_SAMPLE_GAIN
-        });
-        player.connect(gain).connect(engine.targetNode);
-        setPlaybackStart(engine.context.currentTime - 0.1);
-        player.start();
-        setPlayerState(loop ? "playing_loop" : "playing");
-    };
-
-    const stopPlayer = () => {
+    const stopPlayer = useCallback(() => {
         stopSampleInternal();
         setPlaybackStart(-1);
         setPlayerState("stopped");
-    };
+    }, [setPlaybackStart, setPlayerState, stopSampleInternal]);
+
+    const playSample = useCallback(
+        (loop: boolean) => {
+            stopSampleInternal();
+            const player = engine.context.createBufferSource();
+            player.detune.value = centCorrection;
+            player.buffer = buffer;
+            player.onended = stopPlayer;
+            playerRef.current = player;
+            if (loop) {
+                player.loopStart = loopStart / sampleRate;
+                player.loopEnd = loopEnd / sampleRate;
+                player.loop = true;
+            }
+
+            const gain = new GainNode(engine.context, {
+                gain: DEFAULT_SAMPLE_GAIN
+            });
+            player.connect(gain).connect(engine.targetNode);
+            setPlaybackStart(engine.context.currentTime - 0.1);
+            player.start();
+            setPlayerState(loop ? "playing_loop" : "playing");
+        },
+        [
+            buffer,
+            centCorrection,
+            engine.context,
+            engine.targetNode,
+            loopEnd,
+            loopStart,
+            sampleRate,
+            setPlaybackStart,
+            setPlayerState,
+            stopPlayer,
+            stopSampleInternal
+        ]
+    );
+
+    // restart loop playback
+    useEffect(() => {
+        if (playerState === "playing_loop" && !playerRef.current) {
+            playSample(true);
+        } else if (!playerRef.current) {
+            stopPlayer();
+        }
+    }, [playSample, playerState, stopPlayer]);
 
     const exportWav = () => {
         const blob = audioBufferToWav(buffer, false);

@@ -13,16 +13,6 @@
     gap: var(--flex-gap);;
 }
 
-.sound_bank_info_welcome {
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-.sound_bank_info_welcome h3 {
-    margin-top: 10rem;
-}
-
 .sound_bank_info .fields {
     width: 100%;
     display: grid;

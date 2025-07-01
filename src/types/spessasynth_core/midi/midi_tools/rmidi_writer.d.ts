@@ -13,7 +13,8 @@ declare module "spessasynth_core" {
      * @property {string|unescape} midiEncoding - the encoding of the inner MIDI file
      */
     import type SoundBankManager from "../../../../core_backend/sound_bank_manager.ts";
-    
+    import { IndexedByteArray } from "spessasynth_core";
+
     /**
      * Writes an RMIDI file
      * @this {BasicMIDI}
@@ -74,7 +75,7 @@ declare module "spessasynth_core" {
          */
         genre: string | undefined;
         /**
-         * - the image for the file (album cover)
+         * - the image for the file (the album cover)
          */
         picture: ArrayBuffer | undefined;
         /**
@@ -92,7 +93,6 @@ declare module "spessasynth_core" {
         /**
          * - the encoding of the inner MIDI file
          */
-        midiEncoding: string | typeof unescape;
+        midiEncoding: string | undefined;
     };
-    import { IndexedByteArray } from "spessasynth_core";
 }
