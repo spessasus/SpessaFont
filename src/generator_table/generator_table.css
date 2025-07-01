@@ -12,10 +12,12 @@
     /*rounded corners hidden overflow*/
     overflow: hidden;
     background: var(--top-color-start);
+    --generator-table-font-size: 0.95rem;
 }
 
 .zone_table * {
     transition: none;
+    font-size: var(--generator-table-font-size);
 }
 
 .zone_table th {

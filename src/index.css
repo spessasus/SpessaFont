@@ -21,7 +21,7 @@
     --top-buttons-color-end: #333;
     --top-buttons-color: linear-gradient(201deg, var(--top-buttons-color-start), var(--top-buttons-color-end));
 
-    --font-color: #ccc;
+    --font-color: #eee;
     --top-index: 100;
 
     --top-color-start: #101010;
@@ -36,7 +36,7 @@
     --primary-color: #510087;
     --border-color: #6e00b7;
     --track-color: #333;
-    --track-border-color: #444;
+    --track-border-color: #494949;
 
     --preset-item-color: darkred;
     --instrument-item-color: dodgerblue;

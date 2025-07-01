@@ -35,6 +35,7 @@
 
 .left_group span:not(.monospaced) {
     font-size: 1rem;
+    display: flex;
 }
 
 .left_group .triangle {
