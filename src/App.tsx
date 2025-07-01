@@ -18,7 +18,6 @@ import { AudioEngine } from "./core_backend/audio_engine.ts";
 import { ClipboardManager } from "./core_backend/clipboard_manager.ts";
 import { Settings } from "./settings/settings.tsx";
 import { TabList } from "./tab_list/tab_list.tsx";
-import { loadSoundFont } from "spessasynth_core";
 import { LocaleList } from "./locale/locale_list.ts";
 import { KeyboardController } from "./keyboard/keyboard_controller.tsx";
 import { DestinationsOptions } from "./utils/translated_options/destination_options.tsx";
@@ -27,7 +26,9 @@ import {
     type BankEditorRef,
     MemoizedBankEditor
 } from "./bank_editor/bank_editor.tsx";
-import type { KeyboardRef } from "./keyboard/keyboard/keyboard.tsx";
+import { ACCEPTED_FORMATS } from "./utils/accepted_formats.ts";
+import { loadSoundBank } from "./core_backend/load_sound_bank.ts";
+import type { BasicSoundBank } from "spessasynth_core";
 
 // apply locale
 const initialSettings = loadSettings();
@@ -68,7 +69,9 @@ function App() {
     const [theme, setTheme] = useState(getSetting("theme", initialSettings));
     const [activeTab, setActiveTab] = useState<number>(0); // index in tabs[]
     const bankEditorRef: BankEditorRef = useRef(null);
-    const keyboardRef = useRef<KeyboardRef>(null);
+    const [enabledKeys, setEnabledKeys] = useState<boolean[]>(
+        Array(128).fill(true)
+    );
 
     const currentManager: SoundBankManager | undefined = useMemo(
         () => tabs[activeTab],
@@ -112,10 +115,15 @@ function App() {
     const openNewBankTab = useCallback(async (bankFile?: File) => {
         setIsLoading(true);
 
-        let bank: SoundBankManager | undefined = undefined;
+        let bank: BasicSoundBank | undefined = undefined;
         if (bankFile) {
-            const buf = await bankFile.arrayBuffer();
-            bank = loadSoundFont(buf);
+            try {
+                bank = loadSoundBank(await bankFile.arrayBuffer());
+            } catch (e) {
+                console.error(e);
+                setIsLoading(false);
+                return;
+            }
         }
 
         // will automatically create an empty bank if not provided
@@ -133,7 +141,7 @@ function App() {
     const openFile = useCallback(() => {
         const input = document.createElement("input");
         input.type = "file";
-        input.accept = ".sf2,.dls,.sf3,.sfogg";
+        input.accept = ACCEPTED_FORMATS;
         input.click();
         input.onchange = async () => {
             const file: File | undefined = input.files?.[0];
@@ -170,6 +178,7 @@ function App() {
     const showSettings = settings && !isLoading && !isSaving;
     const showEditor = !showWelcome && !showSettings && !isLoading;
     const savingRef = useRef<HTMLSpanElement>(null);
+
     return (
         <div
             className={`spessafont_main ${theme === "light" ? "light_mode" : ""}`}
@@ -224,7 +233,7 @@ function App() {
                     manager={currentManager}
                     audioEngine={audioEngine}
                     clipboardManager={clipboardManager}
-                    keyboardRef={keyboardRef}
+                    setEnabledKeys={setEnabledKeys}
                 />
             )}
 
@@ -244,7 +253,7 @@ function App() {
 
             {showKeyboard && (
                 <KeyboardController
-                    keyboardRef={keyboardRef}
+                    enabledKeys={enabledKeys}
                     ccOptions={ccOptions}
                     engine={audioEngine}
                 ></KeyboardController>

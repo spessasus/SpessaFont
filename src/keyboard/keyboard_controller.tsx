@@ -31,11 +31,11 @@ const INITIAL_CC_LIST: number[] = [
 export function KeyboardController({
     engine,
     ccOptions,
-    keyboardRef
+    enabledKeys
 }: {
     engine: AudioEngine;
     ccOptions: JSX.Element;
-    keyboardRef: RefObject<KeyboardRef>;
+    enabledKeys: boolean[];
 }) {
     const { t } = useTranslation();
     const [controllers, setControllers] = useState(INITIAL_CC_LIST);
@@ -48,6 +48,7 @@ export function KeyboardController({
     const pitchRef = useRef<OtherCCRef>(null);
     const keyDisplayRef = useRef<HTMLSpanElement>(null);
     const velocityDisplayRef = useRef<HTMLSpanElement>(null);
+    const keyboardRef = useRef<KeyboardRef>(null);
 
     useEffect(() => {
         engine.processor.onEventCall = (e, d) => {
@@ -96,6 +97,7 @@ export function KeyboardController({
                 engine={engine}
                 keyDisplay={keyDisplayRef}
                 velocityDisplay={velocityDisplayRef}
+                enabledKeys={enabledKeys}
             ></Keyboard>
             <div className={"controller_row_scroll"}>
                 <div className={"controller_row controller_row_main"}>
@@ -129,7 +131,7 @@ export function KeyboardController({
                             <span>{t("keyboardLocale.midiKey")}</span>
                             <span
                                 className={"monospaced"}
-                                style={{ marginLeft: "1ch" }}
+                                style={{ marginLeft: "1ch", width: "3ch" }}
                                 ref={keyDisplayRef}
                             >
                                 127
@@ -140,7 +142,7 @@ export function KeyboardController({
                             <span>{t("keyboardLocale.velocity")}</span>
                             <span
                                 className={"monospaced"}
-                                style={{ marginLeft: "1ch" }}
+                                style={{ marginLeft: "1ch", width: "3ch" }}
                                 ref={velocityDisplayRef}
                             >
                                 127

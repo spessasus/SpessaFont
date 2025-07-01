@@ -6,7 +6,7 @@ import {
     generatorTypes
 } from "spessasynth_core";
 import "./instrument_editor.css";
-import { type RefObject, useEffect } from "react";
+import { useEffect } from "react";
 import { KEYBOARD_TARGET_CHANNEL } from "../keyboard/target_channel.ts";
 import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import type { SetViewType } from "../bank_editor/bank_editor.tsx";
@@ -20,7 +20,6 @@ import {
 } from "../utils/conversion_helpers.ts";
 import { LinkedPresets } from "./linked_presets/linked_presets.tsx";
 import { GeneratorTable } from "../generator_table/generator_table.tsx";
-import type { KeyboardRef } from "../keyboard/keyboard/keyboard.tsx";
 import { getZonesClickableKeys } from "../utils/get_instrument_clickable_keys.ts";
 
 type InstrumentEditorProps = {
@@ -30,7 +29,7 @@ type InstrumentEditorProps = {
     setView: SetViewType;
     setInstruments: (s: BasicInstrument[]) => void;
     instruments: BasicInstrument[];
-    keyboardRef: RefObject<KeyboardRef>;
+    setEnabledKeys: (k: boolean[]) => unknown;
 };
 export type GeneratorRowType = {
     generator: generatorTypes;
@@ -305,7 +304,7 @@ export function InstrumentEditor({
     setInstruments,
     instruments,
     setView,
-    keyboardRef
+    setEnabledKeys
 }: InstrumentEditorProps) {
     const update = () => {
         instrument.instrumentZones = [...instrument.instrumentZones];
@@ -337,10 +336,8 @@ export function InstrumentEditor({
     }, [engine.processor, instrument, manager]);
 
     useEffect(() => {
-        keyboardRef?.current?.setEnabledNotes(
-            getZonesClickableKeys(zones, global.keyRange)
-        );
-    }, [zones, keyboardRef, global.keyRange]);
+        setEnabledKeys(getZonesClickableKeys(zones, global.keyRange));
+    }, [zones, setEnabledKeys, global.keyRange]);
 
     return (
         <div className={"instrument_editor"}>

@@ -1,10 +1,4 @@
-import {
-    type RefObject,
-    useEffect,
-    useImperativeHandle,
-    useRef,
-    useState
-} from "react";
+import { type RefObject, useEffect, useImperativeHandle, useRef } from "react";
 import "./keyboard.css";
 import type { AudioEngine } from "../../core_backend/audio_engine.ts";
 import { KEYBOARD_TARGET_CHANNEL } from "../target_channel.ts";
@@ -18,7 +12,6 @@ export type KeyboardRef = {
     clearAll: () => void;
     pressNote: (midiNote: number) => void;
     releaseNote: (midiNote: number) => void;
-    setEnabledNotes: (disabled: boolean[]) => void;
 } | null;
 
 const pressedKeys: Set<number> = new Set();
@@ -29,18 +22,17 @@ export function Keyboard({
     engine,
     ref,
     keyDisplay,
-    velocityDisplay
+    velocityDisplay,
+    enabledKeys
 }: {
     engine: AudioEngine;
     ref: RefObject<KeyboardRef | null>;
     keyDisplay: RefObject<HTMLSpanElement | null>;
     velocityDisplay: RefObject<HTMLSpanElement | null>;
+    enabledKeys: boolean[];
 }) {
     const keysRef = useRef<HTMLDivElement[]>([]);
     const keyboardRef = useRef<HTMLDivElement | null>(null);
-    const [enabledKeys, setEnabledKeys] = useState<boolean[]>(() =>
-        Array(128).fill(true)
-    );
 
     useImperativeHandle(ref, () => ({
         clearAll() {
@@ -58,15 +50,6 @@ export function Keyboard({
         releaseNote(midiNote: number) {
             pressedKeys.delete(midiNote);
             keysRef?.current?.[midiNote]?.classList?.remove("pressed");
-        },
-
-        setEnabledNotes(d: boolean[]) {
-            if (d.length !== 128) {
-                throw new Error(
-                    `Disabled array should have 128 elements, received ${d.length}`
-                );
-            }
-            setEnabledKeys(d);
         }
     }));
 

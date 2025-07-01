@@ -6,14 +6,13 @@ import {
 import "./preset_editor.css";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import type { SetViewType } from "../bank_editor/bank_editor.tsx";
-import { type RefObject, useEffect } from "react";
+import { useEffect } from "react";
 import { cb2db, db2cb } from "../utils/conversion_helpers.ts";
 import { BottomPresetBar } from "./bottom_bar/bottom_bar.tsx";
 import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import type { GeneratorRowType } from "../instrument_editor/instrument_editor.tsx";
 import { GeneratorTable } from "../generator_table/generator_table.tsx";
 import { KEYBOARD_TARGET_CHANNEL } from "../keyboard/target_channel.ts";
-import type { KeyboardRef } from "../keyboard/keyboard/keyboard.tsx";
 import { getZonesClickableKeys } from "../utils/get_instrument_clickable_keys.ts";
 
 const presetRows: GeneratorRowType[] = [
@@ -209,7 +208,7 @@ export function PresetEditor({
     setPresets,
     setView,
     manager,
-    keyboardRef
+    setEnabledKeys
 }: {
     preset: BasicPreset;
     engine: AudioEngine;
@@ -217,7 +216,7 @@ export function PresetEditor({
     setPresets: (p: BasicPreset[]) => unknown;
     setView: SetViewType;
     manager: SoundBankManager;
-    keyboardRef: RefObject<KeyboardRef>;
+    setEnabledKeys: (k: boolean[]) => unknown;
 }) {
     const update = () => {
         preset.presetZones = [...preset.presetZones];
@@ -255,8 +254,8 @@ export function PresetEditor({
             }
         );
 
-        keyboardRef?.current?.setEnabledNotes(clickableBool);
-    }, [global.keyRange.max, global.keyRange.min, keyboardRef, zones]);
+        setEnabledKeys(clickableBool);
+    }, [global.keyRange.max, global.keyRange.min, setEnabledKeys, zones]);
 
     return (
         <div className={"preset_editor"}>

@@ -1,7 +1,7 @@
 declare module "spessasynth_core" {
     import type { midiControllers } from "./midi/midi_message";
 
-    export interface IndexedByteArray extends Uint8Array {
+    export class IndexedByteArray extends Uint8Array {
         currentIndex: number;
     }
 

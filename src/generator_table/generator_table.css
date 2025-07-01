@@ -12,7 +12,7 @@
     /*rounded corners hidden overflow*/
     overflow: hidden;
     background: var(--top-color-start);
-    --generator-table-font-size: 0.95rem;
+    --generator-table-font-size: 1rem;
 }
 
 .zone_table * {

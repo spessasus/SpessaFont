@@ -8,6 +8,7 @@ import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import { Gear } from "./gear.tsx";
 import { type RefObject, useCallback, useEffect } from "react";
 import type { BankEditorRef } from "../bank_editor/bank_editor.tsx";
+import { ACCEPTED_FORMATS } from "../utils/accepted_formats.ts";
 
 // @ts-expect-error chromium check is here
 const isChrome: boolean = window["chrome"] !== undefined;
@@ -42,7 +43,7 @@ export function MenuBar({
     function openFile() {
         const input = document.createElement("input");
         input.type = "file";
-        input.accept = ".sf2,.dls,.sf3,.sfogg";
+        input.accept = ACCEPTED_FORMATS;
         input.click();
         input.onchange = async () => {
             const file: File | undefined = input.files?.[0];

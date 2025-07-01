@@ -29,7 +29,6 @@ import { DeleteSampleAction } from "../sample_editor/linked_instruments/delete_s
 import { DeleteInstrumentAction } from "../instrument_editor/linked_presets/delete_instrument_action.ts";
 import { SetSampleTypeAction } from "../sample_editor/set_sample_type_action.ts";
 import { logInfo } from "../utils/core_utils.ts";
-import type { KeyboardRef } from "../keyboard/keyboard/keyboard.tsx";
 
 export type BankEditorProps = {
     manager: SoundBankManager;
@@ -39,7 +38,7 @@ export type BankEditorProps = {
     ccOptions: JSX.Element;
     shown: boolean;
     ref: BankEditorRef;
-    keyboardRef: RefObject<KeyboardRef>;
+    setEnabledKeys: (k: boolean[]) => unknown;
 };
 
 export type SetViewType = (v: BankEditView) => unknown;
@@ -59,7 +58,7 @@ export function BankEditor({
     ccOptions,
     shown,
     ref,
-    keyboardRef
+    setEnabledKeys
 }: BankEditorProps) {
     const [view, setViewLocal] = useState<BankEditView>(manager.currentView);
     const [samples, setSamples] = useState(manager.samples);
@@ -80,15 +79,21 @@ export function BankEditor({
         setPresets(manager.presets);
         setView(manager.currentView);
     }, [manager, setView]);
-
     useEffect(() => {
         if (
-            !(view instanceof BasicInstrument) &&
-            !(view instanceof BasicPreset)
+            !shown ||
+            (!(view instanceof BasicInstrument) &&
+                !(view instanceof BasicPreset))
         ) {
-            keyboardRef?.current?.setEnabledNotes(Array(128).fill(true));
+            setEnabledKeys(Array(128).fill(true));
         }
-    }, [keyboardRef, view]);
+    }, [setEnabledKeys, shown, view]);
+
+    useEffect(() => {
+        return () => {
+            setEnabledKeys(Array(128).fill(true));
+        };
+    }, [setEnabledKeys]);
 
     useImperativeHandle(ref, () => {
         return {
@@ -249,7 +254,7 @@ export function BankEditor({
                         setView={setView}
                         presets={presets}
                         setPresets={setPresets}
-                        keyboardRef={keyboardRef}
+                        setEnabledKeys={setEnabledKeys}
                     ></PresetEditor>
                 )}
                 {view instanceof BasicInstrument && (
@@ -260,7 +265,7 @@ export function BankEditor({
                         setView={setView}
                         setInstruments={setInstruments}
                         instruments={instruments}
-                        keyboardRef={keyboardRef}
+                        setEnabledKeys={setEnabledKeys}
                     ></InstrumentEditor>
                 )}
                 {view instanceof BasicSample && (

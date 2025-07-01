@@ -48,7 +48,7 @@ export function OtherControllers({
     }));
 
     const midiPanic = () => {
-        engine.processor.stopAllChannels();
+        engine.processor.stopAllChannels(true);
     };
 
     const systemReset = () => {
