@@ -66,6 +66,8 @@ export function PresetList({
                         presets[0].preset
                 ])
             );
+        } else {
+            setSelectedPresets(new Set<BasicPreset>());
         }
     }, [presets, view]);
 

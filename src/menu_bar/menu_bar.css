@@ -23,7 +23,7 @@
 .menu_bar_button {
     align-items: center;
     cursor: pointer;
-    font-size: 1.3rem;
+    font-size: 1rem;
     display: flex;
     height: 100%;
 }
@@ -31,7 +31,7 @@
 
 .menu_bar_contents {
     transition: all 0.2s ease;
-    transform: translateY(-0.2rem);
+    transform: translateY(-0.1rem);
     transform-origin: top center;
     z-index: 100;
     position: absolute;
@@ -46,7 +46,7 @@
 }
 
 .menu_bar:hover .menu_bar_contents {
-    transform: translateY(-0.2rem);
+    transform: translateY(-0.1rem);
     opacity: 1;
     visibility: visible;
 }
@@ -64,7 +64,6 @@
 
 .flex_menu_bar div {
     background: var(--primary-color);
-    font-size: 1.3rem;
     cursor: pointer;
     padding: 0 0.5rem;
     transition: all 0.2s ease;
@@ -119,7 +118,6 @@
 .midi_voice_display {
     height: 100%;
     background: transparent;
-    font-size: 1.3rem;
     margin-right: 1ch;
     display: flex;
     align-items: center;
@@ -128,6 +126,6 @@
 }
 
 .menu_bar_button .gear {
-    height: calc(var(--menu-bar-height) - 1rem);
+    height: calc(var(--menu-bar-height) * 2 / 3);
     width: min-content;
 }

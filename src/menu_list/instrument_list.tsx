@@ -81,6 +81,8 @@ export function InstrumentList({
             setTimeout(() => {
                 instrumentsVirtualizer.scrollToIndex(instruments.indexOf(view));
             }, 100);
+        } else {
+            setSelectedInstruments(new Set<BasicInstrument>());
         }
     }, [
         instruments,
