@@ -88,10 +88,10 @@ declare module "spessasynth_core" {
 
         setGenerator(type: generatorTypes, value: number);
 
-        getGeneratorValue(
+        getGeneratorValue<T>(
             type: generatorTypes,
-            notFoundValue: number | null
-        ): number | null;
+            notFoundValue: T
+        ): number | T;
     }
 
     export class BasicGlobalZone extends BasicZone {

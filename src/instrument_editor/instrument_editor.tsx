@@ -280,6 +280,18 @@ const instrumentRows: GeneratorRowType[] = [
     },
     {
         generator: generatorTypes.velocity
+    },
+    {
+        generator: generatorTypes.startAddrsOffset
+    },
+    {
+        generator: generatorTypes.endAddrOffset
+    },
+    {
+        generator: generatorTypes.startloopAddrsOffset
+    },
+    {
+        generator: generatorTypes.endloopAddrsOffset
     }
 ];
 
