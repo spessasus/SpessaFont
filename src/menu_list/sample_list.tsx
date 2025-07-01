@@ -55,7 +55,7 @@ export function SampleList({
                 () => samplesVirtualizer.scrollToIndex(samples.indexOf(view)),
                 100
             );
-        } else {
+        } else if (selectedSamples.size > 0) {
             setSelectedSamples(new Set<BasicSample>());
         }
     }, [

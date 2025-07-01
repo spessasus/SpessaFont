@@ -6,7 +6,7 @@ import {
 import "./preset_editor.css";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import type { SetViewType } from "../bank_editor/bank_editor.tsx";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { cb2db, db2cb } from "../utils/conversion_helpers.ts";
 import { BottomPresetBar } from "./bottom_bar/bottom_bar.tsx";
 import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
@@ -215,13 +215,7 @@ export function PresetEditor({
     setView: SetViewType;
     manager: SoundBankManager;
 }) {
-    const zones = useMemo(
-        () =>
-            preset.presetZones.toSorted(
-                (z1, z2) => z1.keyRange.min - z2.keyRange.min
-            ),
-        [preset.presetZones]
-    );
+    const zones = preset.presetZones;
 
     const global = preset.globalZone;
     const update = () => {

@@ -66,10 +66,10 @@ export function PresetList({
                         presets[0].preset
                 ])
             );
-        } else {
+        } else if (selectedPresets.size > 0) {
             setSelectedPresets(new Set<BasicPreset>());
         }
-    }, [presets, view]);
+    }, [presets, selectedPresets.size, view]);
 
     // virtualize
     const presetsParentRef = useRef<HTMLDivElement>(null);

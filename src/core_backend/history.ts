@@ -63,7 +63,6 @@ export class HistoryManager {
             return;
         }
 
-        console.log(action);
         action.toReversed().forEach((a) => a.undo(m));
         logInfo(`Undid. Remaining history: ${this.length}`);
         this.undoHistory.push(action);

@@ -222,6 +222,7 @@ export function BankEditor({
             <div className={"main_content_window"}>
                 {view === "info" && (
                     <SoundBankInfo
+                        engine={audioEngine}
                         destinationOptions={destinationOptions}
                         ccOptions={ccOptions}
                         manager={manager}

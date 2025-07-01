@@ -5,6 +5,10 @@ import {
     type BasicZone
 } from "spessasynth_core";
 import type { HistoryAction } from "../core_backend/history.ts";
+import {
+    reorderInstrumentZones,
+    ZONE_SORTING_FUNCTION
+} from "../utils/reorder_zones.ts";
 
 export class CreateZoneAction<
     ElementType extends BasicInstrument | BasicPreset,
@@ -58,15 +62,19 @@ export class CreateZoneAction<
         if (index < 0) {
             throw new Error("Invalid index for undoing zone creation.");
         }
-        this.el.deleteZone(index);
+        this.el.deleteZone(index, true);
         this.applyChanges();
     }
 
     private applyChanges() {
         if (this.el instanceof BasicInstrument) {
-            this.el.instrumentZones = [...this.el.instrumentZones];
+            this.el.instrumentZones = reorderInstrumentZones(
+                this.el.instrumentZones
+            );
         } else {
-            this.el.presetZones = [...this.el.presetZones];
+            this.el.presetZones = this.el.presetZones.toSorted(
+                ZONE_SORTING_FUNCTION
+            );
         }
         this.callback();
     }

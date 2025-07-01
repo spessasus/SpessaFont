@@ -6,7 +6,7 @@ import {
     generatorTypes
 } from "spessasynth_core";
 import "./instrument_editor.css";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { KEYBOARD_TARGET_CHANNEL } from "../keyboard/target_channel.ts";
 import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import type { SetViewType } from "../bank_editor/bank_editor.tsx";
@@ -303,13 +303,7 @@ export function InstrumentEditor({
     instruments,
     setView
 }: InstrumentEditorProps) {
-    const zones = useMemo(
-        () =>
-            instrument.instrumentZones.toSorted(
-                (z1, z2) => z1.keyRange.min - z2.keyRange.min
-            ),
-        [instrument.instrumentZones]
-    );
+    const zones = instrument.instrumentZones;
 
     const update = () => {
         setInstruments([...instruments]);

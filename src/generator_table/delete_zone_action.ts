@@ -6,6 +6,10 @@ import {
     type BasicPresetZone,
     type BasicZone
 } from "spessasynth_core";
+import {
+    reorderInstrumentZones,
+    ZONE_SORTING_FUNCTION
+} from "../utils/reorder_zones.ts";
 
 export class DeleteZoneAction<T extends BasicInstrument | BasicPreset>
     implements HistoryAction
@@ -45,9 +49,13 @@ export class DeleteZoneAction<T extends BasicInstrument | BasicPreset>
 
     private applyChanges() {
         if (this.el instanceof BasicInstrument) {
-            this.el.instrumentZones = [...this.el.instrumentZones];
+            this.el.instrumentZones = reorderInstrumentZones(
+                this.el.instrumentZones
+            );
         } else {
-            this.el.presetZones = [...this.el.presetZones];
+            this.el.presetZones = this.el.presetZones.toSorted(
+                ZONE_SORTING_FUNCTION
+            );
         }
         this.callback();
     }

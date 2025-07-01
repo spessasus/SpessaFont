@@ -7,16 +7,19 @@ import { DefaultModulatorList } from "./default_modulators/default_modulators.ts
 import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
 import { useTranslation } from "react-i18next";
+import type { AudioEngine } from "../core_backend/audio_engine.ts";
 
 export function SoundBankInfo({
     manager,
     clipboard,
     ccOptions,
+    engine,
     destinationOptions
 }: {
     manager: SoundBankManager;
     clipboard: ClipboardManager;
     ccOptions: JSX.Element;
+    engine: AudioEngine;
     destinationOptions: JSX.Element;
 }) {
     const { t } = useTranslation();
@@ -33,6 +36,7 @@ export function SoundBankInfo({
         return (
             <div className={"sound_bank_info"}>
                 <DefaultModulatorList
+                    engine={engine}
                     destinationOptions={destinationOptions}
                     ccOptions={ccOptions}
                     manager={manager}
