@@ -42,3 +42,9 @@
 .controller_column * {
     text-align: center;
 }
+
+.keyboard_controller .controller_column .number_display {
+    margin-left: 1ch;
+    width: 3ch;
+    display: inline-block;
+}

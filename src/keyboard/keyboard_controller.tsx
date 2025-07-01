@@ -130,8 +130,7 @@ export function KeyboardController({
                         <div>
                             <span>{t("keyboardLocale.midiKey")}</span>
                             <span
-                                className={"monospaced"}
-                                style={{ marginLeft: "1ch", width: "3ch" }}
+                                className={"monospaced number_display"}
                                 ref={keyDisplayRef}
                             >
                                 127
@@ -141,8 +140,7 @@ export function KeyboardController({
                         <div>
                             <span>{t("keyboardLocale.velocity")}</span>
                             <span
-                                className={"monospaced"}
-                                style={{ marginLeft: "1ch", width: "3ch" }}
+                                className={"monospaced number_display"}
                                 ref={velocityDisplayRef}
                             >
                                 127
