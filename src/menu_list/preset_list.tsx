@@ -100,7 +100,6 @@ export function PresetList({
         ) => {
             const newSet = new Set<BasicPreset>();
             newSet.add(preset.preset);
-            console.log(preset.preset.presetName);
             if (e.shiftKey && view instanceof BasicPreset) {
                 const viewIndex = presets.findIndex((p) => p.preset === view);
                 const presetIndex = presets.indexOf(preset);

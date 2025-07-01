@@ -149,10 +149,10 @@ input[type=number] {
 
 .pretty_outline {
     background: var(--top-buttons-color-end);
-    padding: 0.5rem;
     border-radius: var(--primary-border-radius);
     border: solid var(--track-border-color) 1px;
     font-size: 1rem;
+    padding: 0.2rem;
 }
 
 .welcome {
@@ -191,6 +191,12 @@ input[type=number] {
 
 .warning {
     color: red !important;
+}
+
+input:focus, select:focus {
+    transition: none;
+    outline: ridge var(--border-color) 0.2rem;
+    border-radius: calc(var(--primary-border-radius) / 2);
 }
 
 

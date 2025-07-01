@@ -1,5 +1,4 @@
 export const ModulatorLocale = {
-    modulator: "Modulator",
     actions: {
         modulators: "Modulators" // plural
     },

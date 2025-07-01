@@ -26,9 +26,7 @@ export function ModulatorList({
     destinationOptions
 }: ModulatorListProps) {
     const { t } = useTranslation();
-    const [selectedMods, setSelectedMods] = useState<boolean[]>(
-        Array(modulatorList.length).fill(false)
-    );
+    const [selectedMods, setSelectedMods] = useState(new Set<Modulator>());
     const [clipboard, setClipboard] = useState(
         clipboardManager.getModulators()
     );
@@ -54,13 +52,13 @@ export function ModulatorList({
     };
 
     const deleteSelected = () => {
-        const newList = modulatorList.filter((_m, i) => !selectedMods[i]);
+        const newList = modulatorList.filter((m) => !selectedMods.has(m));
         setModulatorList(newList);
-        setSelectedMods(Array(newList.length).fill(false));
+        setSelectedMods(new Set<Modulator>());
     };
 
     const copyToCliboard = () => {
-        const toCopy = modulatorList.filter((_m, i) => selectedMods[i]);
+        const toCopy = Array.from(selectedMods);
         clipboardManager.copyModulators(toCopy);
         setClipboard(toCopy);
     };
@@ -74,7 +72,7 @@ export function ModulatorList({
         null
     );
 
-    const hasSelectedMods = selectedMods.some((s) => s);
+    const hasSelectedMods = selectedMods.size > 0;
 
     return (
         <div className={"modulator_list"}>
@@ -88,13 +86,17 @@ export function ModulatorList({
                 </div>
                 <div
                     onClick={newModulator}
-                    className={"modulator_main modulator_list_button"}
+                    className={
+                        "modulator_main modulator_list_button hover_brightness"
+                    }
                 >
                     {t("menuBarLocale.file.new")}
                 </div>
                 {clipboard.length > 0 && (
                     <div
-                        className={"modulator_main modulator_list_button"}
+                        className={
+                            "modulator_main modulator_list_button hover_brightness"
+                        }
                         onClick={pasteFromClipboard}
                     >
                         {t("paste")}
@@ -103,7 +105,9 @@ export function ModulatorList({
                 {hasSelectedMods && (
                     <div
                         onClick={copyToCliboard}
-                        className={"modulator_main modulator_list_button"}
+                        className={
+                            "modulator_main modulator_list_button hover_brightness"
+                        }
                     >
                         {t("copy")}
                     </div>
@@ -111,7 +115,9 @@ export function ModulatorList({
                 {hasSelectedMods && (
                     <div
                         onClick={deleteSelected}
-                        className={"modulator_main modulator_list_button"}
+                        className={
+                            "modulator_main modulator_list_button hover_brightness"
+                        }
                     >
                         {t("delete")}
                     </div>
@@ -131,9 +137,12 @@ export function ModulatorList({
                     };
 
                     const setSelected = (s: boolean) => {
-                        const newSelected = [...selectedMods];
-                        newSelected[i] = s;
-                        setSelectedMods(newSelected);
+                        if (s) {
+                            selectedMods.add(mod);
+                        } else {
+                            selectedMods.delete(mod);
+                        }
+                        setSelectedMods(new Set<Modulator>(selectedMods));
                     };
 
                     return (
@@ -147,7 +156,7 @@ export function ModulatorList({
                             deleteModulator={deleteMod}
                             setActiveModPickerId={setActiveModPickerId}
                             activeModPickerId={activeModPickerId}
-                            selected={selectedMods[i]}
+                            selected={selectedMods.has(mod)}
                             setSelected={setSelected}
                         ></ModulatorView>
                     );

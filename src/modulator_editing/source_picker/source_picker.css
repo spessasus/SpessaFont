@@ -1,7 +1,6 @@
 .source_picker {
     display: flex;
     flex-direction: row;
-    margin: 0.2rem;
     width: 100%;
     justify-content: space-between;
 }
@@ -12,6 +11,7 @@
     border: none;
     font-size: 1rem;
     text-align: start;
+    width: 20ch;
 }
 
 .source_picker input {

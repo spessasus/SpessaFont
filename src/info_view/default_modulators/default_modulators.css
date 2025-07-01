@@ -3,6 +3,7 @@
     flex-direction: column;
     align-items: center;
     flex-grow: 2;
+    gap: var(--flex-gap);
 }
 
 .default_modulators_title {

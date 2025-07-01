@@ -20,24 +20,21 @@ export function ModulatorSourcePicker({
 }) {
     const { t } = useTranslation();
     const isCC = source.usesCC;
-    const selectValue = isCC ? "controller" : source.sourceIndex.toString();
+    const selectValue = isCC
+        ? source.sourceIndex.toString()
+        : (-source.sourceIndex).toString();
 
     const handleSelectChange = (e: ChangeEvent<HTMLSelectElement>) => {
-        const value = e.target.value;
-        if (value === "controller") {
-            setSource({ usesCC: true, sourceIndex: 1 }); // default to CC1 (mod wheel)
+        const num = parseInt(e.target.value);
+
+        if (num >= 0) {
+            setSource({ usesCC: true, sourceIndex: num });
         } else {
             setSource({
                 usesCC: false,
-                sourceIndex: parseInt(value) || source.sourceIndex
+                sourceIndex: -num
             });
         }
-    };
-
-    const handleMidiCCChange = (e: ChangeEvent<HTMLSelectElement>) => {
-        const input = e.target.value;
-        const value = parseInt(input);
-        setSource({ usesCC: true, sourceIndex: value });
     };
 
     return (
@@ -47,49 +44,29 @@ export function ModulatorSourcePicker({
                 value={selectValue}
                 className={"monospaced"}
             >
-                <option value={modulatorSources.noController}>
+                <option value={-modulatorSources.noController}>
                     {t("modulatorLocale.sources.noController")}
                 </option>
-                <option value={modulatorSources.noteOnVelocity}>
+                <option value={-modulatorSources.noteOnVelocity}>
                     {t("modulatorLocale.sources.velocity")}
                 </option>
-                <option value={modulatorSources.noteOnKeyNum}>
+                <option value={-modulatorSources.noteOnKeyNum}>
                     {t("modulatorLocale.sources.midiNote")}
                 </option>
-                <option value={modulatorSources.polyPressure}>
+                <option value={-modulatorSources.polyPressure}>
                     {t("modulatorLocale.sources.polyPressure")}
                 </option>
-                <option value={modulatorSources.channelPressure}>
+                <option value={-modulatorSources.channelPressure}>
                     {t("modulatorLocale.sources.channelPressure")}
                 </option>
-                <option value={modulatorSources.pitchWheel}>
+                <option value={-modulatorSources.pitchWheel}>
                     {t("modulatorLocale.sources.pitchWheel")}
                 </option>
-                <option value={modulatorSources.pitchWheelRange}>
+                <option value={-modulatorSources.pitchWheelRange}>
                     {t("modulatorLocale.sources.pitchWheelRange")}
                 </option>
-                <option value="controller">
-                    {t("modulatorLocale.sources.midiController")}
-                </option>
+                {ccOptions}
             </select>
-            {isCC && (
-                <select
-                    className="midi_cc_selector monospaced"
-                    value={source.sourceIndex}
-                    onChange={handleMidiCCChange}
-                >
-                    {ccOptions}
-                </select>
-            )}
-
-            {!isCC && (
-                // phantom input to even out the width
-                <input
-                    className="monospaced"
-                    style={{ width: "8ch" }}
-                    disabled={true}
-                />
-            )}
         </div>
     );
 }

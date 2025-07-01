@@ -1,8 +1,5 @@
 .modulator_main {
-    width: auto;
     background: var(--top-buttons-color);
-    margin: 0.5rem;
-    padding: 0.1rem;
     border-radius: var(--primary-border-radius);
     border: solid var(--track-border-color) 1px;
     display: flex;
@@ -11,6 +8,10 @@
     transition: all 0.2s ease;
     flex-wrap: wrap;
     justify-content: center;
+    gap: var(--flex-gap);
+    position: relative;
+    padding-bottom: 0.5rem;
+    padding-top: 0.5rem;
 }
 
 .modulator_main.selected {
@@ -20,7 +21,7 @@
 
 .modulator_main svg {
     color: var(--font-color);
-    margin-left: -0.5rem;
+    margin: -0.5rem;
 }
 
 .modulator_main * {
@@ -30,44 +31,45 @@
 .modulator_title {
     display: flex;
     flex-direction: column;
-    margin: 1rem 0 1rem 1rem;
+    gap: var(--flex-gap);
 }
 
-.modulator_title h3 {
-    white-space: break-spaces;
-    width: min-content;
+.modulator_title_left {
+    position: absolute;
+    left: 1ch;
+    top: 1ch;
 }
 
-.modulator_title span {
-    display: block;
+.modulator_title_right {
     cursor: pointer;
-    margin-top: 0.5rem;
-}
-
-.modulator_main .transform_box {
-    display: flex;
-    align-items: center;
-    border-radius: var(--primary-border-radius);
-    border: solid var(--track-border-color) 1px;
-    margin: 0.5rem 1rem;
+    position: absolute;
+    right: 1ch;
+    top: 0.1ch;
+    height: min-content;
+    font-weight: bolder;
 }
 
 .modulator_main .source_pair {
     display: flex;
     flex-direction: column;
-    margin-left: 1rem;
+    gap: var(--flex-gap);
 }
 
 .modulator_main .amount_input, .modulator_main .transform_selector {
     font-size: 1rem;
-    margin: 0.5rem;
 }
 
 .amount_input {
     text-align: end;
-    width: 6rem;
+    width: 8ch;
 }
 
-.destination_picker {
-    margin-right: 1rem;
+.modulator_main .pretty_input {
+    display: flex;
+}
+
+.modulator_main .pretty_input select, .modulator_main .pretty_input input {
+    background: transparent;
+    border: none;
+    font-size: 1rem;
 }

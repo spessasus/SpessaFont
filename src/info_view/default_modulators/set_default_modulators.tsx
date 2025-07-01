@@ -3,27 +3,27 @@ import { Modulator } from "spessasynth_core";
 import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
 
 export class SetDefaultModulators implements HistoryAction {
-    setDmods: (d: Modulator[]) => void;
+    private readonly callback: () => void;
     private readonly oldVal: Modulator[];
     private readonly newVal: Modulator[];
 
     constructor(
-        setDmods: (d: Modulator[]) => void,
+        callback: () => void,
         newVal: Modulator[],
         oldVal: Modulator[]
     ) {
-        this.setDmods = setDmods;
+        this.callback = callback;
         this.oldVal = oldVal;
         this.newVal = newVal;
     }
 
     do(b: SoundBankManager) {
-        b.defaultModulators = this.newVal;
-        this.setDmods(this.newVal);
+        b.defaultModulators = [...this.newVal];
+        this.callback();
     }
 
     undo(b: SoundBankManager) {
-        b.defaultModulators = this.oldVal;
-        this.setDmods(this.oldVal);
+        b.defaultModulators = [...this.oldVal];
+        this.callback();
     }
 }

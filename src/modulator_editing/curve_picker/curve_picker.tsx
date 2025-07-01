@@ -53,7 +53,7 @@ export function ModulatorCurvePicker({
                         {allCurveTypes.map((c, index) => (
                             <div
                                 key={index}
-                                className="modulator_curve_pick pretty_outline hover_brightness responsive_button"
+                                className={`modulator_curve_pick pretty_outline responsive_button ${c.curveType === curveType.curveType && c.bipolar === curveType.bipolar && c.positive === curveType.positive ? "selected" : ""}`}
                                 onClick={() => setCurve(c)}
                             >
                                 <ModulatorCurvePicture curve={c} />

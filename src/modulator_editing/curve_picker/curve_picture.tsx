@@ -53,7 +53,7 @@ function getOrCreateCurveCanvas(curve: ModulatorCurveType): HTMLCanvasElement {
     ctx.clearRect(0, 0, WIDTH, HEIGHT);
 
     // Draw axis arrows
-    ctx.strokeStyle = "white";
+    ctx.strokeStyle = "#555";
     ctx.lineCap = "round";
     ctx.lineWidth = 3;
 
@@ -104,6 +104,7 @@ function getOrCreateCurveCanvas(curve: ModulatorCurveType): HTMLCanvasElement {
     // Draw the curve
     const actualWidth = WIDTH - CURVE_MARGIN * 2;
     const actualHeight = HEIGHT - CURVE_MARGIN * 2;
+    ctx.globalAlpha = 1;
     ctx.lineWidth = 7;
     ctx.strokeStyle = "#6e00b7";
     ctx.beginPath();

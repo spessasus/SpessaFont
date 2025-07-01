@@ -1,7 +1,5 @@
 .modulator_curve_picker {
     cursor: pointer;
-    padding: 0.2rem;
-    margin: 0.2rem;
     position: relative;
 }
 
@@ -23,7 +21,6 @@
     top: 4rem;
     align-items: center;
     justify-content: center;
-    left: -10.7rem;
     padding: 0.3rem;
 }
 
@@ -35,4 +32,8 @@
 .modulator_curve_pick {
     margin: 0.3rem;
     cursor: pointer;
+}
+
+.modulator_curve_pick.selected {
+    filter: brightness(1.8);
 }

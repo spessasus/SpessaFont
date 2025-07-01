@@ -96,19 +96,10 @@ export function ModulatorView({
             }}
             className={`modulator_main ${selected ? "selected" : ""}`}
         >
-            <div className={"modulator_title"}>
-                <h3>
-                    {t("modulatorLocale.modulator")} #{modulatorNumber}
-                </h3>
-                <span
-                    className={
-                        "pretty_outline responsive_button hover_brightness"
-                    }
-                    onClick={deleteModulator}
-                >
-                    {t("modulatorLocale.delete")}
-                </span>
-            </div>
+            <h4 className={"modulator_title_left"}>#{modulatorNumber}</h4>
+            <h2 className={"modulator_title_right"} onClick={deleteModulator}>
+                &times;
+            </h2>
             <div className={"source_pair"}>
                 <ModulatorSourcePicker
                     ccOptions={ccList}
@@ -127,41 +118,41 @@ export function ModulatorView({
                     }}
                 ></ModulatorSourcePicker>
             </div>
-            <div className={"transform_box"}>
-                <div className={"source_pair"}>
-                    <ModulatorCurvePicker
-                        id={`${modulatorNumber}-1`}
-                        isActive={activeModPickerId === `${modulatorNumber}-1`}
-                        setActive={() =>
-                            setActiveModPickerId(`${modulatorNumber}-1`)
-                        }
-                        setNotActive={() => setActiveModPickerId("")}
-                        curveType={{
-                            curveType: mod.sourceCurveType,
-                            bipolar: mod.sourcePolarity === 1,
-                            positive: mod.sourceDirection === 0
-                        }}
-                        setCurveType={setCurveType}
-                    ></ModulatorCurvePicker>
-                    <ModulatorCurvePicker
-                        id={`${modulatorNumber}-2`}
-                        isActive={activeModPickerId === `${modulatorNumber}-2`}
-                        setNotActive={() => setActiveModPickerId("")}
-                        setActive={() =>
-                            setActiveModPickerId(`${modulatorNumber}-2`)
-                        }
-                        curveType={{
-                            curveType: mod.secSrcCurveType,
-                            bipolar: mod.secSrcPolarity === 1,
-                            positive: mod.secSrcDirection === 0
-                        }}
-                        setCurveType={setSecCurveType}
-                    ></ModulatorCurvePicker>
-                </div>
-                <ModulatorDiagram></ModulatorDiagram>
+            <div className={"source_pair"}>
+                <ModulatorCurvePicker
+                    id={`${modulatorNumber}-1`}
+                    isActive={activeModPickerId === `${modulatorNumber}-1`}
+                    setActive={() =>
+                        setActiveModPickerId(`${modulatorNumber}-1`)
+                    }
+                    setNotActive={() => setActiveModPickerId("")}
+                    curveType={{
+                        curveType: mod.sourceCurveType,
+                        bipolar: mod.sourcePolarity === 1,
+                        positive: mod.sourceDirection === 0
+                    }}
+                    setCurveType={setCurveType}
+                ></ModulatorCurvePicker>
+                <ModulatorCurvePicker
+                    id={`${modulatorNumber}-2`}
+                    isActive={activeModPickerId === `${modulatorNumber}-2`}
+                    setNotActive={() => setActiveModPickerId("")}
+                    setActive={() =>
+                        setActiveModPickerId(`${modulatorNumber}-2`)
+                    }
+                    curveType={{
+                        curveType: mod.secSrcCurveType,
+                        bipolar: mod.secSrcPolarity === 1,
+                        positive: mod.secSrcDirection === 0
+                    }}
+                    setCurveType={setSecCurveType}
+                ></ModulatorCurvePicker>
+            </div>
+            <ModulatorDiagram></ModulatorDiagram>
+            <div className={"pretty_input"}>
                 <input
                     type="text"
-                    className="pretty_input amount_input monospaced"
+                    className=" amount_input monospaced"
                     placeholder={`${AMOUNT_PREFIX} ${t("modulatorLocale.amount")}`}
                     value={`${AMOUNT_PREFIX}${mod.transformAmount}`}
                     onChange={(e) => {
@@ -186,7 +177,7 @@ export function ModulatorView({
                     }}
                 />
                 <select
-                    className={"pretty_outline transform_selector monospaced"}
+                    className={"transform_selector monospaced"}
                     value={mod.transformType}
                     onChange={(e) =>
                         setTransformType(parseInt(e.target.value) || 0)
@@ -200,6 +191,7 @@ export function ModulatorView({
                     </option>
                 </select>
             </div>
+
             <DestinationPicker
                 destinationList={destinationList}
                 destination={mod.modulatorDestination}

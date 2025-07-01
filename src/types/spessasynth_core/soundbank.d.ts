@@ -215,5 +215,5 @@ declare module "spessasynth_core" {
         removeUnusedElements();
     }
 
-    export const loadSoundFont: (buffer: ArrayBuffer) => SoundBankManager;
+    export const loadSoundFont: (buffer: ArrayBuffer) => BasicSoundBank;
 }

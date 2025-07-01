@@ -6,16 +6,20 @@
     align-self: stretch;
     align-items: center;
     flex-grow: 1;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    gap: var(--flex-gap);
 }
 
 .modulator_list .list_contents {
     overflow-y: auto;
-    align-items: center;
+    align-items: stretch;
     display: flex;
     flex-direction: column;
     flex-grow: 1;
     overflow-x: auto;
     align-self: stretch;
+    gap: var(--flex-gap);
 }
 
 .modulator_list .action_buttons {
@@ -23,14 +27,11 @@
     margin: 0;
     align-items: center;
     justify-content: center;
+    gap: var(--flex-gap);
 }
 
 
 .modulator_list .modulator_list_button {
     padding: 0.5rem;
     cursor: pointer;
-}
-
-.modulator_list .modulator_list_button:hover {
-    filter: brightness(1.8);
 }

@@ -97,7 +97,7 @@ declare module "spessasynth_core" {
         /**
          * - the soundfont itself
          */
-        soundfont: SoundBankManager;
+        soundfont: BasicSoundBank;
         /**
          * - the soundfont's bank offset
          */
