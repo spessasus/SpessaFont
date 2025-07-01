@@ -110,7 +110,7 @@ export function BankInfoStats({
                 </span>
             </div>
 
-            <span style={{ marginTop: 0, border: "none" }}>
+            <span style={{ marginTop: "auto", border: "none" }}>
                 <label>{t("poweredBy")}</label>
                 <pre className={"monospaced"}>spessasynth_core</pre>
             </span>

@@ -36,15 +36,16 @@
 
 .modulator_title_left {
     position: absolute;
-    left: 1ch;
-    top: 1ch;
+    left: 0.3rem;
+    top: 0.3rem;
 }
 
 .modulator_title_right {
     cursor: pointer;
     position: absolute;
-    right: 1ch;
-    top: 0.1ch;
+    right: 0.3rem;
+    line-height: 1rem;
+    top: 0.3rem;
     height: min-content;
     font-weight: bolder;
 }

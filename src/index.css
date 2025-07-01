@@ -196,7 +196,6 @@ input[type=number] {
 input:focus, select:focus {
     transition: none;
     outline: ridge var(--border-color) 0.2rem;
-    border-radius: calc(var(--primary-border-radius) / 2);
 }
 
 
