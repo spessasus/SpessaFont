@@ -3,20 +3,15 @@
 Fully online SoundFont/DLS Editor, written in TypeScript and React.
 No download needed!
 
-## [Link](https://spessasus.github.io/SpessaFont)
+**v1.0.0 is here!**
+
+## [Try it out!](https://spessasus.github.io/SpessaFont)
 
 ## Description
 This is an online SoundFont/DLS editor based on [spessasynth_core](https://github.com/spessasus/spessasynth_core) and [spessasynth_lib](https://github.com/spessasus/spessasynth_lib),
 inspired by
 Davy7125's [polyphone](https://github.com/davy7125/polyphone).
 This is also my first TypeScript and React project. It's a bit messy, but it works! :-P
-
-
-> [!NOTE]
-> This is still in progress!
-> There are still features not yet implemented or tested.
-> Use at your own discretion.
-
 ## Features
 - **Fully online:** *No download needed!*
 - **Multiple tabs:** *Copy between sound banks or edit multiple of them at once!*

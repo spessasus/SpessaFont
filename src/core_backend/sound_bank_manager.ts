@@ -1,4 +1,5 @@
 import {
+    type BasicInstrument,
     BasicSoundBank,
     loadSoundFont,
     type ProgressFunction,
@@ -72,13 +73,14 @@ export default class SoundBankManager extends BasicSoundBank {
         );
 
         // sort stereo zones
-        this.instruments.forEach(
-            (i) =>
-                (i.instrumentZones = reorderInstrumentZones(i.instrumentZones))
-        );
+        this.instruments.forEach((i) => this.sortInstrumentZones(i));
 
         // sort preset zones
         this.presets.forEach((p) => p.presetZones.sort(ZONE_SORTING_FUNCTION));
+    }
+
+    sortInstrumentZones(i: BasicInstrument) {
+        i.instrumentZones = reorderInstrumentZones(i.instrumentZones);
     }
 
     getBankName(unnamed: string) {

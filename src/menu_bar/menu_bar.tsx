@@ -117,6 +117,29 @@ export function MenuBar({
         };
     }, [manager, saveWithToasts]);
 
+    const about = useCallback(() => {
+        toast(
+            (tost) => (
+                <div className={"toast_col"}>
+                    <span>
+                        <strong>{t("titleMessage")}</strong>
+                    </span>
+                    <span>{t("welcome.copyrightTwo")}</span>
+                    <span>{"v" + __APP_VERSION__}</span>
+                    <span
+                        onClick={() => toast.dismiss(tost.id)}
+                        className={"pretty_outline"}
+                    >
+                        {t(fLoc + "close")}
+                    </span>
+                </div>
+            ),
+            {
+                duration: Infinity
+            }
+        );
+    }, [t]);
+
     return (
         <div className={"menu_bar_main"}>
             <MenuBarDropdown main={fLoc + "file"}>
@@ -145,7 +168,7 @@ export function MenuBar({
                     click={() => document.body.requestFullscreen()}
                     text={fLoc + "fullscreen"}
                 />
-                <MenuBarItem text={"v" + __APP_VERSION__} />
+                <MenuBarItem click={about} text={fLoc + "about"} />
             </MenuBarDropdown>
             <MenuBarDropdown main={eLoc + "edit"}>
                 <MenuBarItem

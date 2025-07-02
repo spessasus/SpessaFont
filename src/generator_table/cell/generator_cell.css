@@ -1,5 +1,6 @@
 .generator_cell_header {
     cursor: not-allowed;
+    text-align: left;
 }
 
 .generator_cell_header > div {
@@ -60,4 +61,16 @@
 
 .generator_row_highlight .generator_cell {
     background: var(--top-buttons-color-start);
+}
+
+.modulator_cell {
+    cursor: pointer;
+    font-style: italic;
+    opacity: 0.6;
+}
+
+.modulator_cell.modulated {
+    font-weight: bold;
+    opacity: 1;
+    font-style: unset;
 }

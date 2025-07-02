@@ -7,7 +7,8 @@ export const MenuBarLocale = {
         saveSF2: "Save SF2",
         saveDLS: "Export DLS",
         saveSF3: "Export SF3",
-        fullscreen: "Fullscreen"
+        fullscreen: "Fullscreen",
+        about: "About"
     },
     edit: {
         edit: "Edit",

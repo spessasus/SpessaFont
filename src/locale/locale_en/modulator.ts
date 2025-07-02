@@ -1,9 +1,6 @@
 export const ModulatorLocale = {
-    actions: {
-        modulators: "Modulators" // plural
-    },
-
-    delete: "Delete",
+    modulators: "Modulators", // plural
+    editingModulators: "Editing Modulators for {{name}}",
     sources: {
         noController: "No Controller = 1",
         velocity: "NoteOn Velocity",

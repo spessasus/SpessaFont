@@ -196,10 +196,33 @@ function App() {
                 closeTabLocal(index);
                 return;
             }
-            const confirmed = window.confirm(t("unsavedChanges"));
-            if (confirmed) {
-                closeTabLocal(index);
-            }
+            toast.error(
+                (tost) => (
+                    <div className={"toast_col"}>
+                        <span>{t("unsavedChanges")}</span>
+                        <div className={"toast_row"}>
+                            <span
+                                onClick={() => {
+                                    toast.dismiss(tost.id);
+                                    closeTabLocal(index);
+                                }}
+                                className={"pretty_outline"}
+                            >
+                                {t("discard")}
+                            </span>
+                            <span
+                                onClick={() => toast.dismiss(tost.id)}
+                                className={"pretty_outline"}
+                            >
+                                {t("keep")}
+                            </span>
+                        </div>
+                    </div>
+                ),
+                {
+                    duration: Infinity
+                }
+            );
         },
         [closeTabLocal, t, tabs]
     );

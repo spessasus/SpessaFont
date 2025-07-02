@@ -1,0 +1,16 @@
+.zone_modulators {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    gap: var(--flex-gap);
+    flex-grow: 1;
+}
+
+.zone_modulators .close {
+    position: absolute;
+    top: 1ch;
+    right: 1ch;
+    cursor: pointer;
+    line-height: 1rem;
+}

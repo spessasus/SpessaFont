@@ -1,4 +1,5 @@
 import {
+    type BasicInstrument,
     type BasicZone,
     generatorTypes,
     type SoundFontRange
@@ -15,6 +16,7 @@ export function RangeGeneratorCell({
     generator,
     callback,
     manager,
+    instrument,
     colSpan
 }: Omit<GeneratorProps, "generator"> & {
     zone: BasicZone;
@@ -23,6 +25,7 @@ export function RangeGeneratorCell({
     linkedZone?: BasicZone;
     generator: generatorTypes.keyRange | generatorTypes.velRange;
     colSpan: number;
+    instrument?: BasicInstrument;
 }) {
     const isKeyRange = generator === generatorTypes.keyRange;
     const range = isKeyRange ? keyRange : velRange;
@@ -54,13 +57,20 @@ export function RangeGeneratorCell({
             newRange.max = Math.max(min, Math.min(127, max));
         }
 
+        const callbackReal = () => {
+            if (instrument) {
+                manager.sortInstrumentZones(instrument);
+            }
+            callback();
+        };
+
         const actions = [
             new SetRangeAction(
                 zone,
                 generator,
                 { ...range },
                 { ...newRange },
-                callback
+                callbackReal
             )
         ];
 
@@ -74,7 +84,7 @@ export function RangeGeneratorCell({
                     generator,
                     { ...oldLinked },
                     { ...newRange },
-                    callback
+                    callbackReal
                 )
             );
         }

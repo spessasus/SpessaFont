@@ -14,6 +14,7 @@ import type { GeneratorRowType } from "../instrument_editor/instrument_editor.ts
 import { GeneratorTable } from "../generator_table/generator_table.tsx";
 import { KEYBOARD_TARGET_CHANNEL } from "../keyboard/target_channel.ts";
 import { getZonesClickableKeys } from "../utils/get_instrument_clickable_keys.ts";
+import type { ModulatorListGlobals } from "../modulator_editing/modulator_list/modulator_list.tsx";
 
 const presetRows: GeneratorRowType[] = [
     {
@@ -208,7 +209,10 @@ export function PresetEditor({
     setPresets,
     setView,
     manager,
-    setEnabledKeys
+    setEnabledKeys,
+    destinationOptions,
+    ccOptions,
+    clipboardManager
 }: {
     preset: BasicPreset;
     engine: AudioEngine;
@@ -217,7 +221,7 @@ export function PresetEditor({
     setView: SetViewType;
     manager: SoundBankManager;
     setEnabledKeys: (k: boolean[]) => unknown;
-}) {
+} & ModulatorListGlobals) {
     const update = () => {
         preset.presetZones = [...preset.presetZones];
         setPresets([...presets]);
@@ -268,6 +272,9 @@ export function PresetEditor({
                 rows={presetRows}
                 setView={setView}
                 manager={manager}
+                ccOptions={ccOptions}
+                clipboardManager={clipboardManager}
+                destinationOptions={destinationOptions}
             />
             <BottomPresetBar
                 manager={manager}

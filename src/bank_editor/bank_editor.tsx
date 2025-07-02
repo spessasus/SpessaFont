@@ -269,6 +269,9 @@ export function BankEditor({
                         presets={presets}
                         setPresets={setPresets}
                         setEnabledKeys={setEnabledKeys}
+                        clipboardManager={clipboardManager}
+                        ccOptions={ccOptions}
+                        destinationOptions={destinationOptions}
                     ></PresetEditor>
                 )}
                 {view instanceof BasicInstrument && (
@@ -280,6 +283,9 @@ export function BankEditor({
                         setInstruments={setInstruments}
                         instruments={instruments}
                         setEnabledKeys={setEnabledKeys}
+                        clipboardManager={clipboardManager}
+                        ccOptions={ccOptions}
+                        destinationOptions={destinationOptions}
                     ></InstrumentEditor>
                 )}
                 {view instanceof BasicSample && (

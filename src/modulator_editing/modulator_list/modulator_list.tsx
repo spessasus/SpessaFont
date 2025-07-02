@@ -10,12 +10,15 @@ import { useTranslation } from "react-i18next";
 import { type JSX, useState } from "react";
 import type { ClipboardManager } from "../../core_backend/clipboard_manager.ts";
 
-type ModulatorListProps = {
-    modulatorList: Modulator[];
-    setModulatorList: (l: Modulator[]) => void;
+export type ModulatorListGlobals = {
     clipboardManager: ClipboardManager;
     ccOptions: JSX.Element;
     destinationOptions: JSX.Element;
+};
+
+type ModulatorListProps = ModulatorListGlobals & {
+    modulatorList: Modulator[];
+    setModulatorList: (l: Modulator[]) => void;
 };
 
 export function ModulatorList({
@@ -57,7 +60,7 @@ export function ModulatorList({
         setSelectedMods(new Set<Modulator>());
     };
 
-    const copyToCliboard = () => {
+    const copyToClipboard = () => {
         const toCopy = Array.from(selectedMods);
         clipboardManager.copyModulators(toCopy);
         setClipboard(toCopy);
@@ -81,8 +84,7 @@ export function ModulatorList({
                     style={{ cursor: "default" }}
                     className={"modulator_main modulator_list_button"}
                 >
-                    {t("modulatorLocale.actions.modulators")}:{" "}
-                    {modulatorList.length}
+                    {t("modulatorLocale.modulators")}: {modulatorList.length}
                 </div>
                 <div
                     onClick={newModulator}
@@ -104,7 +106,7 @@ export function ModulatorList({
                 )}
                 {hasSelectedMods && (
                     <div
-                        onClick={copyToCliboard}
+                        onClick={copyToClipboard}
                         className={
                             "modulator_main modulator_list_button hover_brightness"
                         }

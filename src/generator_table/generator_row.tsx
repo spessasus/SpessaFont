@@ -1,6 +1,7 @@
 import "./cell/generator_cell.css";
 import {
     type BasicGlobalZone,
+    type BasicInstrument,
     BasicInstrumentZone,
     type BasicPresetZone,
     generatorTypes
@@ -32,6 +33,7 @@ export function NumberGeneratorRow<
     manager,
     global,
     generator,
+    instrument,
     zones,
     linkedZoneMap,
     unit = "",
@@ -45,6 +47,7 @@ export function NumberGeneratorRow<
     highlight?: boolean;
     zones: T[];
     linkedZoneMap: LinkedZoneMap<T>;
+    instrument?: BasicInstrument;
 }) {
     const { t } = useTranslation();
     const isRange =
@@ -93,13 +96,14 @@ export function NumberGeneratorRow<
                             <RangeGeneratorCell
                                 colSpan={span}
                                 manager={manager}
-                                linkedZone={linked.zone}
+                                linkedZone={linked.linkedZone}
                                 callback={callback}
                                 generator={generator}
                                 zone={z}
                                 keyRange={z.keyRange}
                                 velRange={z.velRange}
                                 key={i}
+                                instrument={instrument}
                             />
                         );
                     })}
@@ -130,7 +134,7 @@ export function NumberGeneratorRow<
                             <OffsetGeneratorCell
                                 colSpan={span}
                                 manager={manager}
-                                linkedZone={linked.zone}
+                                linkedZone={linked.linkedZone}
                                 callback={callback}
                                 generatorType={generator}
                                 zone={z}
@@ -168,7 +172,7 @@ export function NumberGeneratorRow<
                             <NumberGeneratorCell
                                 colSpan={span}
                                 manager={manager}
-                                linkedZone={linked.zone}
+                                linkedZone={linked.linkedZone}
                                 callback={callback}
                                 generator={generator}
                                 zone={z}

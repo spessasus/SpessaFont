@@ -4,3 +4,20 @@
     color: var(--font-color) !important;
     user-select: none;
 }
+
+
+.toast_col {
+    display: flex;
+    flex-direction: column;
+    gap: var(--flex-gap)
+}
+
+.toast_row {
+    display: flex;
+    gap: var(--flex-gap);
+    justify-content: center;
+}
+
+.toasts .pretty_outline {
+    cursor: pointer;
+}

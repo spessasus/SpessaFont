@@ -21,6 +21,7 @@ import {
 import { LinkedPresets } from "./linked_presets/linked_presets.tsx";
 import { GeneratorTable } from "../generator_table/generator_table.tsx";
 import { getZonesClickableKeys } from "../utils/get_instrument_clickable_keys.ts";
+import type { ModulatorListGlobals } from "../modulator_editing/modulator_list/modulator_list.tsx";
 
 type InstrumentEditorProps = {
     manager: SoundBankManager;
@@ -304,8 +305,11 @@ export function InstrumentEditor({
     setInstruments,
     instruments,
     setView,
-    setEnabledKeys
-}: InstrumentEditorProps) {
+    setEnabledKeys,
+    clipboardManager,
+    ccOptions,
+    destinationOptions
+}: InstrumentEditorProps & ModulatorListGlobals) {
     const update = () => {
         instrument.instrumentZones = [...instrument.instrumentZones];
         setInstruments([...instruments]);
@@ -350,6 +354,9 @@ export function InstrumentEditor({
                 global={global}
                 name={instrument.instrumentName}
                 setView={setView}
+                clipboardManager={clipboardManager}
+                ccOptions={ccOptions}
+                destinationOptions={destinationOptions}
             />
             <LinkedPresets
                 instrument={instrument}
