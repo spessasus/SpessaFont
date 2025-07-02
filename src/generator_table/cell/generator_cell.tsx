@@ -6,7 +6,7 @@ import {
     generatorTypes
 } from "spessasynth_core";
 import type { NumberGeneratorProps } from "../generator_row.tsx";
-import { type CSSProperties, useCallback } from "react";
+import { type CSSProperties, useCallback, useMemo } from "react";
 import { generatorLimits } from "../../core_backend/generator_limits.ts";
 import { SetGeneratorAction } from "./set_generator_action.ts";
 import { midiNoteToPitchClass } from "../../utils/note_name.ts";
@@ -60,6 +60,12 @@ export function NumberGeneratorCell<
             placeholder = "-";
         }
     }
+
+    const modulated = useMemo(
+        () =>
+            !!zone.modulators.find((m) => m.modulatorDestination === generator),
+        [generator, zone.modulators]
+    );
 
     const style: CSSProperties = {};
     if (generator === generatorTypes.exclusiveClass && value && value > 0) {
@@ -119,7 +125,7 @@ export function NumberGeneratorCell<
     // loop playback special case
     if (generator === generatorTypes.sampleModes) {
         return (
-            <td className={"generator_cell"} colSpan={colSpan}>
+            <td className={`generator_cell`} colSpan={colSpan}>
                 <select
                     value={value ?? "none"}
                     onChange={(e) =>
@@ -147,7 +153,10 @@ export function NumberGeneratorCell<
     }
 
     return (
-        <td className={"generator_cell"} colSpan={colSpan}>
+        <td
+            className={`generator_cell ${modulated ? "modulated" : ""}`}
+            colSpan={colSpan}
+        >
             <GeneratorCellInput
                 regex={/[^0-9-.]/g}
                 type={"text"}

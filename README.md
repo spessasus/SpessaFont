@@ -28,7 +28,7 @@ This is also my first TypeScript and React project. It's a bit messy, but it wor
   - Mobile DLS - *Apparently it's different from DLS... So I'm including it as well!*
 - **Built-in MIDI player:** *Test your bank with a MIDI file!*
 - **Real-time synthesizer:** 
-  - *Instant response to parameter changes!*
+  - *Instant response to parameter changes! (to new notes)*
   - *Full modulator support!*
   - *Full generator support!*
   - *GM, GM2, GS, XG support!*
@@ -45,6 +45,7 @@ This is also my first TypeScript and React project. It's a bit messy, but it wor
 - **Built-in MIDI Keyboard:**
   - *Clickable!*
   - *Shows the key number and velocity!*
+  - *Shows keys that don't have a match for a given preset or instrument!*
   - *Controller knobs and pedals are customizable!*
   - *Supports external MIDI devices!*
   - *Looks cool!*

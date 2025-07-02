@@ -32,11 +32,15 @@
     text-align: end;
     cursor: cell;
     transition: none;
+    border-radius: 2px;
+}
+
+.generator_cell.modulated input, .generator_cell.modulated select {
+    outline: outset var(--sample-item-color) 0.15rem;
 }
 
 .generator_cell input:focus, .generator_cell select:focus {
     outline: ridge var(--border-color) 0.3rem;
-    border-radius: 2px;
 }
 
 .generator_cell input::placeholder {
