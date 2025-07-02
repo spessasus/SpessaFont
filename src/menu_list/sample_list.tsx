@@ -1,4 +1,4 @@
-import { BasicSample, sampleTypes } from "spessasynth_core";
+import { BasicSample, CreatedSample, sampleTypes } from "spessasynth_core";
 import { DropdownHeader } from "./dropdown_header/dropdown_header.tsx";
 import * as React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -85,32 +85,22 @@ export function SampleList({
             }
             sampleName = sampleName.substring(0, 39); // keep spare space for "R" or "L"
 
-            const sample = new BasicSample(
+            const sample = new CreatedSample(
                 sampleName + (audioBuffer.numberOfChannels > 1 ? "L" : ""),
                 audioBuffer.sampleRate,
-                60,
-                0,
-                sampleTypes.monoSample,
-                0,
-                out.length - 1
+                out
             );
-            sample.setAudioData(out);
             const actions = [
                 new CreateSampleAction(sample, setSamples, setView)
             ];
             // add the stereo sample if more channels
             if (audioBuffer.numberOfChannels > 1) {
                 const otherOut = audioBuffer.getChannelData(1);
-                const sample2 = new BasicSample(
+                const sample2 = new CreatedSample(
                     sampleName + "R",
                     audioBuffer.sampleRate,
-                    60,
-                    0,
-                    sampleTypes.monoSample,
-                    0,
-                    out.length - 1
+                    otherOut
                 );
-                sample2.setAudioData(otherOut);
                 sample2.setLinkedSample(sample, sampleTypes.rightSample);
                 actions.push(
                     new CreateSampleAction(sample2, setSamples, setView)

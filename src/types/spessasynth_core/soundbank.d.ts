@@ -56,6 +56,10 @@ declare module "spessasynth_core" {
         setCompressedData(compressed: Uint8Array);
     }
 
+    export class CreatedSample extends BasicSample {
+        constructor(name: string, sampleRate: number, sampleData: Float32Array);
+    }
+
     export class BasicInstrument {
         instrumentName: string;
         instrumentZones: BasicInstrumentZone[];

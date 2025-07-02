@@ -14,7 +14,6 @@ const BLOCK_SIZE = 128;
 const MAX_CHUNKS_QUEUED = 16; // 16 * 128 = 2,048 // Windows does not like small buffer sizes
 
 type AudioChunk = [Float32Array, Float32Array];
-type AudioChunks = AudioChunk[];
 
 const dummy = BasicSoundBank.getDummySoundfontFile();
 
@@ -95,24 +94,26 @@ export class AudioEngine {
             return;
         }
 
-        const dry: AudioChunks = [];
-        const rev: AudioChunks = [];
-        const chr: AudioChunks = [];
+        const dry: AudioChunk[] = [];
+        const rev: AudioChunk[] = [];
+        const chr: AudioChunk[] = [];
+        const transferList: ArrayBuffer[] = [];
 
         for (let i = 0; i < MAX_CHUNKS_QUEUED - this.audioChunksQueued; i++) {
-            // clear data
-            const d: AudioChunk = [
-                new Float32Array(BLOCK_SIZE),
-                new Float32Array(BLOCK_SIZE)
-            ];
-            const r: AudioChunk = [
-                new Float32Array(BLOCK_SIZE),
-                new Float32Array(BLOCK_SIZE)
-            ];
-            const c: AudioChunk = [
-                new Float32Array(BLOCK_SIZE),
-                new Float32Array(BLOCK_SIZE)
-            ];
+            // dry
+            const dL = new Float32Array(BLOCK_SIZE);
+            const dR = new Float32Array(BLOCK_SIZE);
+            const d: AudioChunk = [dL, dR];
+
+            // reverb
+            const rL = new Float32Array(BLOCK_SIZE);
+            const rR = new Float32Array(BLOCK_SIZE);
+            const r: AudioChunk = [rL, rR];
+
+            // chorus
+            const cL = new Float32Array(BLOCK_SIZE);
+            const cR = new Float32Array();
+            const c: AudioChunk = [cL, cR];
 
             // render!
             this.sequencer.processTick();
@@ -121,11 +122,19 @@ export class AudioEngine {
             dry.push(d);
             chr.push(c);
             rev.push(r);
+            transferList.push(
+                dL.buffer,
+                dR.buffer,
+                rL.buffer,
+                rR.buffer,
+                cL.buffer,
+                cR.buffer
+            );
         }
 
         // send to worklet
         if (this.worklet) {
-            this.worklet.port.postMessage([dry, rev, chr]);
+            this.worklet.port.postMessage([dry, rev, chr], transferList);
         }
     }
 

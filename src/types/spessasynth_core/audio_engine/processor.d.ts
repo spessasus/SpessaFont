@@ -520,25 +520,16 @@ declare module "spessasynth_core" {
          * @param outputs {Float32Array[]} output stereo channels (L, R)
          * @param reverb {Float32Array[]} reverb stereo channels (L, R)
          * @param chorus {Float32Array[]} chorus stereo channels (L, R)
+         * @param startIndex {number} start offset of the passed arrays, rendering starts at this index, defaults to 0
+         * @param sampleCount {number} the length of the rendered buffer, defaults to float32array length - startOffset
          */
         renderAudio(
             outputs: Float32Array[],
             reverb: Float32Array[],
-            chorus: Float32Array[]
-        ): void;
-
-        /**
-         * Renders the float32 audio data of each channel; buffer size of 128 is recommended
-         * All float arrays must have the same length
-         * @param reverbChannels {Float32Array[]} reverb stereo channels (L, R)
-         * @param chorusChannels {Float32Array[]} chorus stereo channels (L, R)
-         * @param separateChannels {Float32Array[][]} a total of 16 stereo pairs (L, R) for each MIDI channel
-         */
-        renderAudioSplit(
-            reverbChannels: Float32Array[],
-            chorusChannels: Float32Array[],
-            separateChannels: Float32Array[][]
-        ): void;
+            chorus: Float32Array[],
+            startIndex: number = 0,
+            sampleCount: number = 0
+        );
 
         destroySynthProcessor(): void;
 
