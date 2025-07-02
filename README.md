@@ -7,11 +7,19 @@ No download needed!
 
 ## [Try it out!](https://spessasus.github.io/SpessaFont)
 
+**SpessaSynth Project index**
+
+- [spessasynth_core](https://github.com/spessasus/spessasynth_core) - SF2/DLS/MIDI library
+- [spessasynth_lib](https://github.com/spessasus/spessasynth_lib) - spessasynth_core wrapper optimized for browsers and WebAudioAPI
+- [SpessaSynth](https://github.com/spessasus/SpessaSynth) - online/local MIDI player/editor application
+- [SpessaFont](https://github.com/spessasus/SpessaFont) (you are here) - online SF2/DLS editor
+
 ## Description
 This is an online SoundFont/DLS editor based on [spessasynth_core](https://github.com/spessasus/spessasynth_core) and [spessasynth_lib](https://github.com/spessasus/spessasynth_lib),
 inspired by
 Davy7125's [polyphone](https://github.com/davy7125/polyphone).
 This is also my first TypeScript and React project. It's a bit messy, but it works! :-P
+
 ## Features
 - **Fully online:** *No download needed!*
 - **Multiple tabs:** *Copy between sound banks or edit multiple of them at once!*

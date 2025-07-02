@@ -70,20 +70,38 @@ export class ClipboardManager {
         const clonedSamples = [...m.samples];
         const clonedPresets = [...m.presets];
         const actions: HistoryAction[] = [];
+        const presetNumbers = new Set<string>();
+        m.presets.forEach((p) => {
+            presetNumbers.add(`${p.bank}-${p.program}`);
+        });
         this.presetClipboard.forEach((oldPreset) => {
-            if (
-                clonedPresets.find(
-                    (p) =>
-                        p.bank === oldPreset.bank &&
-                        p.program === oldPreset.program
-                )
-            ) {
-                return;
+            let bank = oldPreset.bank;
+            let program = oldPreset.program;
+            while (presetNumbers.has(`${bank}-${program}`)) {
+                if (bank === 128) {
+                    program++;
+                } else {
+                    bank++;
+                    if (bank >= 127) {
+                        bank = 0;
+                        program++;
+                        if (program > 127) {
+                            throw new Error(
+                                `No free space to paste ${oldPreset.program}`
+                            );
+                        }
+                    }
+                }
             }
             const newPreset = new BasicPreset(m);
             newPreset.presetName = oldPreset.presetName;
+            newPreset.program = program;
+            newPreset.bank = bank;
+
             newPreset.library = oldPreset.library;
             newPreset.morphology = oldPreset.morphology;
+            newPreset.genre = oldPreset.genre;
+
             newPreset.globalZone.copyFrom(oldPreset.globalZone);
             for (const zone of oldPreset.presetZones) {
                 const newZone = newPreset.createZone();
@@ -104,6 +122,7 @@ export class ClipboardManager {
                 new CreatePresetAction(newPreset, setPresets, setView)
             );
             clonedPresets.push(newPreset);
+            presetNumbers.add(`${bank}-${program}`);
         });
         m.modifyBank(actions);
     }

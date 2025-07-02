@@ -118,13 +118,15 @@ export const MenuList = React.memo(function ({
                         if (e.ctrlKey) {
                             if (selectedSamples.size > 0) {
                                 clipboard.copySamples(selectedSamples);
-                                setSamples([...manager.samples]);
+                                setSelectedSamples(new Set(selectedSamples));
                             }
                             if (selectedPresets.size > 0) {
                                 clipboard.copyPresets(selectedPresets);
+                                setSelectedPresets(new Set(selectedPresets));
                             }
                             if (selectedInstruments.size > 0) {
                                 clipboard.copyInstruments(selectedInstruments);
+                                setSelectedInstruments(selectedInstruments);
                             }
                         }
                     }
