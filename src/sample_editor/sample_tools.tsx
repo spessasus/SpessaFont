@@ -75,7 +75,7 @@ export function SampleTools({
 
         const buf = engine.context.createBuffer(
             1,
-            sample.getAudioData().length,
+            Math.max(sample.getAudioData().length, 2),
             bufferRate
         );
         buf.getChannelData(0).set(audioData);
