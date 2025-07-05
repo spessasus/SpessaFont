@@ -13,7 +13,7 @@ import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import { RangeGeneratorCell } from "./cell/range_cell.tsx";
 import type { LinkedZoneMap } from "./generator_table.tsx";
 import { OffsetGeneratorCell } from "./cell/offset_cell.tsx";
-import * as React from "react";
+import { typedMemo } from "../utils/typed_memo.ts";
 
 export type GeneratorProps = {
     generator: generatorTypes;
@@ -27,7 +27,7 @@ export type NumberGeneratorProps = GeneratorProps & {
     precision?: number;
 };
 
-export const NumberGeneratorRow = React.memo(function <
+export const NumberGeneratorRow = typedMemo(function <
     T extends BasicPresetZone | BasicInstrumentZone
 >({
     callback,
