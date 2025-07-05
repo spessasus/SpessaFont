@@ -134,17 +134,6 @@ export const MenuList = React.memo(function ({
 
                 case "v": {
                     if (e.ctrlKey) {
-                        clipboard.pasteSamples(manager, setSamples, setView);
-                        setSamples([
-                            ...manager.samples.toSorted((a, b) =>
-                                a.sampleName > b.sampleName
-                                    ? 1
-                                    : b.sampleName > a.sampleName
-                                      ? -1
-                                      : 0
-                            )
-                        ]);
-
                         clipboard.pastePresets(
                             manager,
                             setPresets,
@@ -173,6 +162,17 @@ export const MenuList = React.memo(function ({
                                 a.instrumentName > b.instrumentName
                                     ? 1
                                     : b.instrumentName > a.instrumentName
+                                      ? -1
+                                      : 0
+                            )
+                        ]);
+
+                        clipboard.pasteSamples(manager, setSamples, setView);
+                        setSamples([
+                            ...manager.samples.toSorted((a, b) =>
+                                a.sampleName > b.sampleName
+                                    ? 1
+                                    : b.sampleName > a.sampleName
                                       ? -1
                                       : 0
                             )
