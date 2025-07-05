@@ -7,8 +7,9 @@ import {
 import { GeneratorCellInput } from "./generator_cell_input.tsx";
 import type { GeneratorProps } from "../generator_row.tsx";
 import { SetRangeAction } from "./set_range_action.ts";
+import { typedMemo } from "../../utils/typed_memo.ts";
 
-export function RangeGeneratorCell({
+export const RangeGeneratorCell = typedMemo(function ({
     zone,
     keyRange,
     velRange,
@@ -113,4 +114,4 @@ export function RangeGeneratorCell({
             />
         </td>
     );
-}
+});

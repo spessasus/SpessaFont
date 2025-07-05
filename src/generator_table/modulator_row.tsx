@@ -7,8 +7,9 @@ import {
 import type { LinkedZoneMap } from "./generator_table.tsx";
 import { useTranslation } from "react-i18next";
 import { STEREO_REGEX } from "../utils/stereo_regex.ts";
+import { typedMemo } from "../utils/typed_memo.ts";
 
-export function GeneratorTableModulatorRow<
+export const GeneratorTableModulatorRow = typedMemo(function <
     ZoneType extends BasicPresetZone | BasicInstrumentZone,
     ElementType extends BasicInstrument | BasicPreset
 >({
@@ -68,4 +69,4 @@ export function GeneratorTableModulatorRow<
             })}
         </tr>
     );
-}
+});

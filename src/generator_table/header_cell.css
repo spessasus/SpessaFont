@@ -4,6 +4,7 @@
     max-width: 15ch;
     min-width: 10ch;
     position: relative;
+    outline: 1px solid var(--track-border-color);
 }
 
 .header_cell.instrument {

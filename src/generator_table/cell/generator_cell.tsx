@@ -12,6 +12,7 @@ import { SetGeneratorAction } from "./set_generator_action.ts";
 import { midiNoteToPitchClass } from "../../utils/note_name.ts";
 import { GeneratorCellInput } from "./generator_cell_input.tsx";
 import { useTranslation } from "react-i18next";
+import { typedMemo } from "../../utils/typed_memo.ts";
 
 function getDistinctColor(index: number, total = 10) {
     const hue = ((index - 1) * (360 / total)) % 360;
@@ -20,7 +21,7 @@ function getDistinctColor(index: number, total = 10) {
     return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 }
 
-export function NumberGeneratorCell<
+export const NumberGeneratorCell = typedMemo(function <
     T extends BasicPresetZone | BasicInstrumentZone
 >({
     zone,
@@ -53,7 +54,9 @@ export function NumberGeneratorCell<
         zone instanceof BasicInstrumentZone &&
         generator === generatorTypes.overridingRootKey
     ) {
-        placeholder = `${zone.sample.samplePitch} (${midiNoteToPitchClass(zone.sample.samplePitch)})`;
+        placeholder = `${zone.sample.samplePitch} (${midiNoteToPitchClass(
+            zone.sample.samplePitch
+        )})`;
     } else if (zone instanceof BasicGlobalZone) {
         placeholder = v2txt(limits.def);
         if (placeholder === "-1") {
@@ -168,4 +171,4 @@ export function NumberGeneratorCell<
             />
         </td>
     );
-}
+});

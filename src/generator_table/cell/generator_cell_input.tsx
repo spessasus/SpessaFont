@@ -1,7 +1,8 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
+import { typedMemo } from "../../utils/typed_memo.ts";
 
-export function GeneratorCellInput({
+export const GeneratorCellInput = typedMemo(function ({
     onBlur,
     value,
     regex,
@@ -48,4 +49,4 @@ export function GeneratorCellInput({
             }}
         />
     );
-}
+});

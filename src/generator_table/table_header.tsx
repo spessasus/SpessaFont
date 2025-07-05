@@ -11,8 +11,9 @@ import "./header_cell.css";
 import { DeleteZoneAction } from "./delete_zone_action.ts";
 import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import { STEREO_REGEX } from "../utils/stereo_regex.ts";
+import { typedMemo } from "../utils/typed_memo.ts";
 
-export function GeneratorTableHeader<
+export const GeneratorTableHeader = typedMemo(function <
     ZoneType extends BasicPresetZone | BasicInstrumentZone,
     ElementType extends BasicInstrument | BasicPreset
 >({
@@ -127,4 +128,4 @@ export function GeneratorTableHeader<
             })}
         </tr>
     );
-}
+});

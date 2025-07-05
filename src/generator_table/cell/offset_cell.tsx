@@ -7,8 +7,9 @@ import {
 import { GeneratorCellInput } from "./generator_cell_input.tsx";
 import { useCallback } from "react";
 import { SetGeneratorAction } from "./set_generator_action.ts";
+import { typedMemo } from "../../utils/typed_memo.ts";
 
-export function OffsetGeneratorCell({
+export const OffsetGeneratorCell = typedMemo(function ({
     zone,
     linkedZone,
     generatorType,
@@ -182,4 +183,4 @@ export function OffsetGeneratorCell({
             />
         </td>
     );
-}
+});

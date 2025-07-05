@@ -1,6 +1,7 @@
 .generator_cell_header {
     cursor: not-allowed;
     text-align: left;
+    outline: 1px solid var(--track-border-color);
 }
 
 .generator_cell_header > div {
@@ -41,7 +42,7 @@
 }
 
 .generator_cell input:focus, .generator_cell select:focus {
-    outline: ridge var(--border-color) 0.3rem;
+    outline: outset var(--border-color) 0.15rem;
 }
 
 .generator_cell input::placeholder {
@@ -73,4 +74,6 @@
     font-weight: bold;
     opacity: 1;
     font-style: unset;
+    box-sizing: border-box;
+    border: inset 1px var(--sample-item-color);
 }
