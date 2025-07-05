@@ -33,8 +33,8 @@ export const SampleLocale = {
         tooManyChannels: "Too Many Channels"
     },
 
-    notLinkedToInstrument: "Not Linked to Instrument Yet.",
-    linkedTo: "Linked to",
+    notLinkedToInstrument: "Not used by an Instrument yet.",
+    usedBy: "Used by",
     compressedSample: "Compressed Sample",
     deleteSample: "Delete Sample"
 };

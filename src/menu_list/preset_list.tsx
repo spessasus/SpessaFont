@@ -26,6 +26,7 @@ import {
 import { CreatePresetAction } from "./create_actions/create_preset_actions.ts";
 import type { HistoryAction } from "../core_backend/history.ts";
 import { CreateZoneAction } from "../generator_table/create_zone_action.ts";
+import toast from "react-hot-toast";
 
 export function PresetList({
     view,
@@ -175,9 +176,14 @@ export function PresetList({
                 onCopy={() => {
                     clipboard.copyPresets(selectedPresets);
                     setPresets([...manager.presets]);
+                    toast.success(
+                        t("clipboardLocale.copiedPresets", {
+                            count: selectedPresets.size
+                        })
+                    );
                 }}
                 onPaste={() => {
-                    clipboard.pastePresets(
+                    const count = clipboard.pastePresets(
                         manager,
                         setPresets,
                         setInstruments,
@@ -193,6 +199,11 @@ export function PresetList({
                                   : 0
                         )
                     ]);
+                    toast.success(
+                        t("clipboardLocale.pastedPresets", {
+                            count
+                        })
+                    );
                 }}
                 onAdd={createPreset}
                 onClick={() => setShowPresets(!showPresets)}

@@ -1,16 +1,12 @@
 export const ModulatorLocale = {
-    modulator: "Modulator",
-    actions: {
-        modulators: "Modulatory" // plural
-    },
-
-    delete: "Usuń",
+    modulators: "Modulatory", // plural
+    editingModulators: "Edytowanie modulatorów dla {{name}}",
     sources: {
         noController: "Brak kontrolera = 1",
-        velocity: "Siła nacisku",
+        velocity: "Siła Nacisku",
         midiNote: "Numer nuty MIDI",
-        polyPressure: "Ciśnienie polifoniczne",
-        channelPressure: "Ciśnienie kanału",
+        polyPressure: "Ekspresja polifoniczna",
+        channelPressure: "Aftertouch kanału",
         pitchWheel: "Koło wysokości dźwięku",
         pitchWheelRange: "Zakres koła wysokości dźwięku",
         midiController: "Kontroler MIDI"
@@ -19,5 +15,5 @@ export const ModulatorLocale = {
         noOperation: "Brak operacji",
         absoluteValue: "Wartość bezwzględna"
     },
-    amount: "Wartość"
+    amount: "Mnożnik"
 };

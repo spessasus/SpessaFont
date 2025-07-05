@@ -72,7 +72,7 @@ export function LinkedPresets({
             )}
             {instrument.linkedPresets.length > 0 && (
                 <>
-                    <div>{t("instrumentLocale.linkedTo")}:</div>
+                    <div>{t("instrumentLocale.usedBy")}:</div>
                     {Array.from(linked).map((preset, i) => (
                         <div
                             className={"monospaced"}

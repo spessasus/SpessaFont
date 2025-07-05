@@ -6,12 +6,11 @@
 }
 
 .zone_table {
-    border-spacing: 0;
+    border-spacing: 1px;
     border-radius: var(--primary-border-radius);
-    border: solid 1px var(--track-border-color);
     /*rounded corners hidden overflow*/
     overflow: hidden;
-    background: var(--top-color-start);
+    background: var(--track-border-color);
     --generator-table-font-size: 1rem;
 }
 
@@ -45,16 +44,4 @@
 
 .zone_table thead tr:first-child th:first-child {
     z-index: 2;
-}
-
-
-.zone_table th:not(:last-child),
-.zone_table td:not(:last-child) {
-    border-right: solid 1px var(--track-border-color);
-}
-
-.zone_table tr:not(:last-child) th,
-.zone_table tr:not(:last-child) td,
-.zone_table > thead > tr > th {
-    border-bottom: solid 1px var(--track-border-color);
 }

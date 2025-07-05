@@ -13,6 +13,7 @@ import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import type { SetViewType } from "../bank_editor/bank_editor.tsx";
 import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
 import { SampleDisplay } from "./sample_display/sample_display.tsx";
+import toast from "react-hot-toast";
 
 export function SampleList({
     samples,
@@ -76,7 +77,13 @@ export function SampleList({
                 return;
             }
             const buffer = await file.arrayBuffer();
-            const audioBuffer = await engine.context.decodeAudioData(buffer);
+            let audioBuffer: AudioBuffer;
+            try {
+                audioBuffer = await engine.context.decodeAudioData(buffer);
+            } catch {
+                toast.error(t("sampleLocale.tools.invalidAudioFile"));
+                return;
+            }
             const out = audioBuffer.getChannelData(0);
             let sampleName = file.name;
             const lastDotIndex = sampleName.lastIndexOf(".");
@@ -110,7 +117,7 @@ export function SampleList({
             setShowSamples(true);
         };
         input.click();
-    }, [engine.context, manager, setSamples, setView]);
+    }, [engine.context, manager, setSamples, setView, t]);
 
     const handleClick = (
         e: React.MouseEvent<HTMLDivElement, MouseEvent>,
@@ -146,10 +153,19 @@ export function SampleList({
                 onCopy={() => {
                     clipboard.copySamples(selectedSamples);
                     setSamples([...manager.samples]);
+                    toast.success(
+                        t("clipboardLocale.copiedSamples", {
+                            count: selectedSamples.size
+                        })
+                    );
                 }}
                 paste={clipboard.hasSamples()}
                 onPaste={() => {
-                    clipboard.pasteSamples(manager, setSamples, setView);
+                    const count = clipboard.pasteSamples(
+                        manager,
+                        setSamples,
+                        setView
+                    );
                     setSamples([
                         ...manager.samples.toSorted((a, b) =>
                             a.sampleName > b.sampleName
@@ -159,6 +175,11 @@ export function SampleList({
                                   : 0
                         )
                     ]);
+                    toast.success(
+                        t("clipboardLocale.pastedSamples", {
+                            count
+                        })
+                    );
                 }}
             />
             {showSamples && (

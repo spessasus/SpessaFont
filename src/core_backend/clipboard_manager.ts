@@ -52,18 +52,19 @@ export class ClipboardManager {
     }
 
     copyModulators(mods: Modulator[]) {
-        this.modulatorClipboard = mods;
+        this.modulatorClipboard = mods.map((m) => Modulator.copy(m));
     }
 
+    // returns the count of pasted elements
     pastePresets(
         m: SoundBankManager,
         setPresets: (p: BasicPreset[]) => unknown,
         setInstruments: (i: BasicInstrument[]) => unknown,
         setSamples: (s: BasicSample[]) => unknown,
         setView: SetViewType
-    ) {
+    ): number {
         if (this.presetClipboard.size < 1) {
-            return;
+            return 0;
         }
         // clone manually so it works with our history system
         const clonedInstruments = [...m.instruments];
@@ -114,7 +115,8 @@ export class ClipboardManager {
                         actions,
                         setInstruments,
                         setSamples,
-                        setView
+                        setView,
+                        false
                     )
                 );
             }
@@ -125,16 +127,18 @@ export class ClipboardManager {
             presetNumbers.add(`${bank}-${program}`);
         });
         m.modifyBank(actions);
+        return actions.length;
     }
 
+    // returns the count of pasted elements
     pasteInstruments(
         m: SoundBankManager,
         setSamples: (s: BasicSample[]) => unknown,
         setInstruments: (i: BasicInstrument[]) => unknown,
         setView: SetViewType
-    ) {
+    ): number {
         if (this.instrumentClipboard.size < 1) {
-            return;
+            return 0;
         }
         // clone manually so it works with our history system
         const clonedInstruments = [...m.instruments];
@@ -152,15 +156,17 @@ export class ClipboardManager {
             )
         );
         m.modifyBank(actions);
+        return actions.length;
     }
 
+    // returns the count of pasted elements
     pasteSamples(
         m: SoundBankManager,
         setSamples: (s: BasicSample[]) => unknown,
         setView: SetViewType
-    ) {
+    ): number {
         if (this.sampleClipboard.size < 1) {
-            return;
+            return 0;
         }
         // clone manually so it works with our history system
         const alreadyCloned = [...m.samples];
@@ -175,6 +181,7 @@ export class ClipboardManager {
             )
         );
         m.modifyBank(actions);
+        return actions.length;
     }
 
     /**
@@ -183,6 +190,7 @@ export class ClipboardManager {
      * @param {HistoryAction[]} actions
      * @param {(s: BasicSample[]) => unknown} setSamples
      * @param {SetViewType} setView
+     * @param {boolean} duplicate
      * @returns {BasicSample}
      * @private
      */
@@ -191,16 +199,33 @@ export class ClipboardManager {
         alreadyCloned: BasicSample[],
         actions: HistoryAction[],
         setSamples: (s: BasicSample[]) => unknown,
-        setView: SetViewType
+        setView: SetViewType,
+        duplicate: boolean = true
     ): BasicSample {
-        const exists = alreadyCloned.find(
-            (s) => s.sampleName === oldSample.sampleName
-        );
+        const names = new Set(alreadyCloned.map((s) => s.sampleName));
+        const exists = names.has(oldSample.sampleName);
+        const originalName = oldSample.sampleName.substring(0, 37);
+        let name = oldSample.sampleName;
         if (exists) {
-            return exists;
+            if (!duplicate) {
+                const r = alreadyCloned.find(
+                    (s) => s.sampleName === oldSample.sampleName
+                );
+                if (!r) {
+                    throw new Error(
+                        "This should never happen. If it did, then congrats!"
+                    );
+                }
+                return r;
+            }
+            let count = 1;
+            while (names.has(name)) {
+                name = `${originalName}-${count}`;
+                count++;
+            }
         }
         const newSample = new BasicSample(
-            oldSample.sampleName,
+            name,
             oldSample.sampleRate,
             oldSample.samplePitch,
             oldSample.samplePitchCorrection,
@@ -237,16 +262,33 @@ export class ClipboardManager {
         actions: HistoryAction[],
         setInstruments: (i: BasicInstrument[]) => unknown,
         setSamples: (s: BasicSample[]) => unknown,
-        setView: SetViewType
+        setView: SetViewType,
+        duplicate: boolean = true
     ): BasicInstrument {
-        const exists = alreadyCloned.find(
-            (i) => i.instrumentName === oldInst.instrumentName
-        );
+        const names = new Set(alreadyCloned.map((i) => i.instrumentName));
+        const exists = names.has(oldInst.instrumentName);
+        let name = oldInst.instrumentName;
+        const originalName = oldInst.instrumentName.substring(0, 37);
         if (exists) {
-            return exists;
+            if (!duplicate) {
+                const r = alreadyCloned.find(
+                    (i) => i.instrumentName === oldInst.instrumentName
+                );
+                if (!r) {
+                    throw new Error(
+                        "This should never happen. If it did, then congrats!"
+                    );
+                }
+                return r;
+            }
+            let count = 1;
+            while (names.has(name)) {
+                name = `${originalName}-${count}`;
+                count++;
+            }
         }
         const newInst = new BasicInstrument();
-        newInst.instrumentName = oldInst.instrumentName;
+        newInst.instrumentName = name;
         newInst.globalZone.copyFrom(oldInst.globalZone);
         for (const zone of oldInst.instrumentZones) {
             const copiedZone = newInst.createZone();
@@ -257,7 +299,8 @@ export class ClipboardManager {
                     clonedSamples,
                     actions,
                     setSamples,
-                    setView
+                    setView,
+                    false
                 )
             );
         }

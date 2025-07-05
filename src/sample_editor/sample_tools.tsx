@@ -9,6 +9,7 @@ import {
 } from "spessasynth_core";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import { audioBufferToWav } from "spessasynth_lib";
+import toast from "react-hot-toast";
 
 const DEFAULT_SAMPLE_GAIN = 0.4;
 
@@ -185,7 +186,6 @@ export function SampleTools({
         a.click();
     };
 
-    const [importError, setImportError] = useState("");
     const replaceData = () => {
         const input = document.createElement("input");
         input.type = "file";
@@ -196,7 +196,6 @@ export function SampleTools({
                 return;
             }
             stopSampleInternal();
-            setImportError("");
             setLoading(true);
             let audioBuffer: AudioBuffer;
             try {
@@ -204,7 +203,7 @@ export function SampleTools({
                     await file.arrayBuffer()
                 );
             } catch {
-                setImportError(t("sampleLocale.tools.invalidAudioFile"));
+                toast.error(t("sampleLocale.tools.invalidAudioFile"));
                 return;
             } finally {
                 setLoading(false);
@@ -249,7 +248,7 @@ export function SampleTools({
             } else if (audioBuffer.numberOfChannels === 1) {
                 audioBuffer.copyFromChannel(audioBuffer.getChannelData(0), 0);
             } else {
-                setImportError(t("sampleLocale.tools.tooManyChannels"));
+                toast.error(t("sampleLocale.tools.tooManyChannels"));
             }
         };
         input.click();
@@ -323,7 +322,7 @@ export function SampleTools({
             >
                 {loading
                     ? t("sampleLocale.tools.loading")
-                    : importError || t("sampleLocale.tools.replaceAudio")}
+                    : t("sampleLocale.tools.replaceAudio")}
             </div>
 
             <ControllerRange

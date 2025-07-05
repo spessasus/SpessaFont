@@ -11,7 +11,8 @@ import {
 } from "../curve_picker/curve_picker.tsx";
 import { ModulatorDiagram } from "../diagram.tsx";
 import { DestinationPicker } from "../destination_picker.tsx";
-import type { JSX } from "react";
+import * as React from "react";
+import { type JSX } from "react";
 
 type ModulatorProps = {
     mod: Modulator;
@@ -20,7 +21,7 @@ type ModulatorProps = {
     modulatorNumber: number;
     activeModPickerId: string | null;
     setActiveModPickerId: (i: string) => void;
-    setSelected: (s: boolean) => void;
+    onClick: (e: React.MouseEvent) => unknown;
     selected: boolean;
     destinationList: JSX.Element;
     ccList: JSX.Element;
@@ -28,14 +29,14 @@ type ModulatorProps = {
 
 const AMOUNT_PREFIX = "× ";
 
-export function ModulatorView({
+export const ModulatorView = React.memo(function ({
     mod,
     setModulator,
     deleteModulator,
     modulatorNumber,
     activeModPickerId,
     setActiveModPickerId,
-    setSelected,
+    onClick,
     selected,
     destinationList,
     ccList
@@ -91,7 +92,7 @@ export function ModulatorView({
         <div
             onClick={(e) => {
                 if (e.target === e.currentTarget) {
-                    setSelected(!selected);
+                    onClick(e);
                 }
             }}
             className={`modulator_main ${selected ? "selected" : ""}`}
@@ -199,4 +200,4 @@ export function ModulatorView({
             ></DestinationPicker>
         </div>
     );
-}
+});

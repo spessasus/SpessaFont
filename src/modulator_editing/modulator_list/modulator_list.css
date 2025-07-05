@@ -6,8 +6,6 @@
     align-self: stretch;
     align-items: center;
     flex-grow: 1;
-    padding-left: 1rem;
-    padding-right: 1rem;
     gap: var(--flex-gap);
 }
 

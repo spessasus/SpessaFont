@@ -23,6 +23,7 @@ import { STEREO_REGEX } from "../utils/stereo_regex.ts";
 import type { HistoryAction } from "../core_backend/history.ts";
 import { CreateZoneAction } from "../generator_table/create_zone_action.ts";
 import { addAndReorderStereoSamples } from "../utils/add_stereo_samples.ts";
+import toast from "react-hot-toast";
 
 export function InstrumentList({
     view,
@@ -194,9 +195,14 @@ export function InstrumentList({
                 onCopy={() => {
                     clipboard.copyInstruments(selectedInstruments);
                     setInstruments([...manager.instruments]);
+                    toast.success(
+                        t("clipboardLocale.copiedInstruments", {
+                            count: selectedInstruments.size
+                        })
+                    );
                 }}
                 onPaste={() => {
-                    clipboard.pasteInstruments(
+                    const count = clipboard.pasteInstruments(
                         manager,
                         setSamples,
                         setInstruments,
@@ -211,6 +217,11 @@ export function InstrumentList({
                                   : 0
                         )
                     ]);
+                    toast.success(
+                        t("clipboardLocale.pastedInstruments", {
+                            count
+                        })
+                    );
                 }}
                 paste={clipboard.hasInstruments()}
                 onAdd={createInstrument}

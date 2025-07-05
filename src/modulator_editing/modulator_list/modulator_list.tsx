@@ -7,8 +7,10 @@ import {
 import { ModulatorView } from "../modulator/modulator.tsx";
 import "./modulator_list.css";
 import { useTranslation } from "react-i18next";
-import { type JSX, useState } from "react";
+import * as React from "react";
+import { type JSX, useCallback, useState } from "react";
 import type { ClipboardManager } from "../../core_backend/clipboard_manager.ts";
+import toast from "react-hot-toast";
 
 export type ModulatorListGlobals = {
     clipboardManager: ClipboardManager;
@@ -32,6 +34,9 @@ export function ModulatorList({
     const [selectedMods, setSelectedMods] = useState(new Set<Modulator>());
     const [clipboard, setClipboard] = useState(
         clipboardManager.getModulators()
+    );
+    const [lastSelectedMod, setLastSelectedMod] = useState<Modulator | null>(
+        null
     );
 
     const newModulator = () => {
@@ -64,15 +69,57 @@ export function ModulatorList({
         const toCopy = Array.from(selectedMods);
         clipboardManager.copyModulators(toCopy);
         setClipboard(toCopy);
+        toast.success(
+            t("clipboardLocale.copiedModulators", { count: toCopy.length })
+        );
     };
 
     const pasteFromClipboard = () => {
-        const newList = [...clipboard, ...modulatorList];
+        const newList = [
+            ...clipboard.map((m) => Modulator.copy(m)),
+            ...modulatorList
+        ];
+        toast.success(
+            t("clipboardLocale.pastedModulators", { count: clipboard.length })
+        );
         setModulatorList(newList);
     };
 
     const [activeModPickerId, setActiveModPickerId] = useState<string | null>(
         null
+    );
+
+    const handleClick = useCallback(
+        (e: React.MouseEvent, clickedMod: Modulator) => {
+            if (!e.shiftKey || lastSelectedMod === null) {
+                setLastSelectedMod(clickedMod);
+                if (selectedMods.has(clickedMod)) {
+                    selectedMods.delete(clickedMod);
+                } else {
+                    selectedMods.add(clickedMod);
+                }
+                setSelectedMods(new Set([...selectedMods]));
+                return;
+            }
+            const index = modulatorList.indexOf(lastSelectedMod);
+            const selIndex = modulatorList.indexOf(clickedMod);
+            const start = Math.min(index, selIndex);
+            const end = Math.max(index, selIndex) + 1;
+            if (selectedMods.has(clickedMod)) {
+                for (let i = start; i < end; i++) {
+                    const m = modulatorList[i];
+                    selectedMods.delete(m);
+                }
+            } else {
+                for (let i = start; i < end; i++) {
+                    const m = modulatorList[i];
+                    selectedMods.add(m);
+                }
+            }
+            setLastSelectedMod(clickedMod);
+            setSelectedMods(new Set([...selectedMods]));
+        },
+        [lastSelectedMod, modulatorList, selectedMods]
     );
 
     const hasSelectedMods = selectedMods.size > 0;
@@ -138,15 +185,6 @@ export function ModulatorList({
                         setModulatorList(newList);
                     };
 
-                    const setSelected = (s: boolean) => {
-                        if (s) {
-                            selectedMods.add(mod);
-                        } else {
-                            selectedMods.delete(mod);
-                        }
-                        setSelectedMods(new Set<Modulator>(selectedMods));
-                    };
-
                     return (
                         <ModulatorView
                             destinationList={destinationOptions}
@@ -159,7 +197,7 @@ export function ModulatorList({
                             setActiveModPickerId={setActiveModPickerId}
                             activeModPickerId={activeModPickerId}
                             selected={selectedMods.has(mod)}
-                            setSelected={setSelected}
+                            onClick={(e) => handleClick(e, mod)}
                         ></ModulatorView>
                     );
                 })}

@@ -172,11 +172,21 @@ export function MenuBar({
             </MenuBarDropdown>
             <MenuBarDropdown main={eLoc + "edit"}>
                 <MenuBarItem
-                    click={() => manager.undo()}
+                    click={() => {
+                        if (manager.history.length < 1) {
+                            toast(t(eLoc + "nothingToUndo"));
+                        }
+                        manager.undo();
+                    }}
                     text={eLoc + "undo"}
                 />
                 <MenuBarItem
-                    click={() => manager.redo()}
+                    click={() => {
+                        if (manager.history.undoLength < 1) {
+                            toast(t(eLoc + "nothingToRedo"));
+                        }
+                        manager.redo();
+                    }}
                     text={eLoc + "redo"}
                 />
                 <MenuBarItem

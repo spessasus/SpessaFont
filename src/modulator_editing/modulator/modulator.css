@@ -12,6 +12,11 @@
     position: relative;
     padding-bottom: 0.5rem;
     padding-top: 0.5rem;
+    cursor: pointer;
+
+    /*scrollbars!*/
+    margin-left: 1rem;
+    margin-right: 1rem;
 }
 
 .modulator_main.selected {
@@ -22,6 +27,7 @@
 .modulator_main svg {
     color: var(--font-color);
     margin: -0.5rem;
+    cursor: auto;
 }
 
 .modulator_main * {

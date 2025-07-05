@@ -55,11 +55,11 @@
     text-overflow: ellipsis;
 }
 
-.generator_row_highlight .generator_cell_header {
-    background: var(--top-buttons-color-end);
+.generator_row {
+    background: var(--top-color-start);
 }
 
-.generator_row_highlight .generator_cell {
+.generator_row_highlight {
     background: var(--top-buttons-color-start);
 }
 

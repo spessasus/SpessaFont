@@ -10,6 +10,7 @@ import { KeyboardLocale } from "./keyboard.ts";
 import { SoundBankLocale } from "./sound_bank.ts";
 import { InstrumentLocale } from "./instrument.ts";
 import { PresetLocale } from "./preset.ts";
+import { ClipboardLocale } from "./clipboard.ts";
 
 /**
  *
@@ -53,6 +54,7 @@ export const localeEnglish = {
     githubPage: "Project page",
     keyboard: "Keyboard",
 
+    // generic stuff
     addNew: "Add New",
     copy: "Copy",
     paste: "Paste",
@@ -72,5 +74,6 @@ export const localeEnglish = {
     sampleLocale: SampleLocale,
     instrumentLocale: InstrumentLocale,
     presetLocale: PresetLocale,
-    soundBankLocale: SoundBankLocale
+    soundBankLocale: SoundBankLocale,
+    clipboardLocale: ClipboardLocale
 };

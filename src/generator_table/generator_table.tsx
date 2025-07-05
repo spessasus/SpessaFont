@@ -12,6 +12,7 @@ import { NumberGeneratorRow } from "./generator_row.tsx";
 import type { SetViewType } from "../bank_editor/bank_editor.tsx";
 import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import "./generator_table.css";
+import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { GeneratorTableModulatorRow } from "./modulator_row.tsx";
 import { type ModulatorListGlobals } from "../modulator_editing/modulator_list/modulator_list.tsx";
@@ -27,7 +28,7 @@ export type LinkedZoneMap<T extends BasicPresetZone | BasicInstrumentZone> = {
     linkedZone: T | undefined;
 }[];
 
-export function GeneratorTable<
+export const GeneratorTable = React.memo(function <
     ZoneType extends BasicPresetZone | BasicInstrumentZone,
     ElementType extends BasicPreset | BasicInstrument
 >({
@@ -233,4 +234,4 @@ export function GeneratorTable<
             </div>
         </>
     );
-}
+});

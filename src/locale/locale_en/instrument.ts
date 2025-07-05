@@ -1,6 +1,6 @@
 export const InstrumentLocale = {
-    notLinkedToPreset: "Not Linked to a Preset Yet.",
-    linkedTo: "Linked to",
+    notLinkedToPreset: "Not used by a Preset yet.",
+    usedBy: "Used by",
     linkSelectedSamples: "Link selected Samples",
     deleteInstrument: "Delete Instrument"
 };

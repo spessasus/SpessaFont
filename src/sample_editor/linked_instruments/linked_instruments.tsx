@@ -59,7 +59,7 @@ export function LinkedInstruments({
             )}
             {sample.linkedInstruments.length > 0 && (
                 <>
-                    <div>{t("sampleLocale.linkedTo")}:</div>
+                    <div>{t("sampleLocale.usedBy")}:</div>
                     {Array.from(linked).map((inst, i) => (
                         <div
                             className={"monospaced"}
