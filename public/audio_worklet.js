@@ -7,51 +7,37 @@
  * An AudioWorkletProcessor that plays back three separate streams of stereo audio: dry, reverb, and chorus.
  */
 class PlaybackProcessor extends AudioWorkletProcessor {
+    /**
+     * @type {Float32Array[]}
+     */
+    data = [];
+
     constructor() {
         super();
 
-        /** @type {AudioChunks} */
-        this.dryData = [];
-
-        /** @type {AudioChunks} */
-        this.revData = [];
-
-        /** @type {AudioChunks} */
-        this.chrData = [];
-
         this.port.onmessage = (e) => {
-            /** @type {[AudioChunks, AudioChunks, AudioChunks]} */
             const data = e.data;
-            this.dryData.push(...data[0]);
-            this.revData.push(...data[1]);
-            this.chrData.push(...data[2]);
+            this.data.push(...data);
         };
     }
 
     process(_inputs, outputs) {
-        const outDry = outputs[0];
-        const outRev = outputs[1];
-        const outChr = outputs[2];
+        const blockSize = outputs[0][0].length;
 
-        const dry = this.dryData.shift();
-        const rev = this.revData.shift();
-        const chr = this.chrData.shift();
-
-        if (dry) {
-            outDry[0].set(dry[0]);
-            outDry[1].set(dry[1]);
+        const data = this.data.shift();
+        if (!data) {
+            return true;
         }
 
-        if (rev) {
-            outRev[0].set(rev[0]);
-            outRev[1].set(rev[1]);
+        // decode the data
+        let offset = 0;
+        for (let i = 0; i < 3; i++) {
+            outputs[i][0].set(data.subarray(offset, offset + blockSize));
+            offset += blockSize;
+            outputs[i][1].set(data.subarray(offset, offset + blockSize));
+            offset += blockSize;
         }
-
-        if (chr) {
-            outChr[0].set(chr[0]);
-            outChr[1].set(chr[1]);
-        }
-        this.port.postMessage(this.dryData.length);
+        this.port.postMessage(this.data.length);
         return true;
     }
 }

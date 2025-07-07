@@ -90,51 +90,73 @@ export class AudioEngine {
     }
 
     audioLoop() {
-        if (this.audioChunksQueued > MAX_CHUNKS_QUEUED) {
+        if (this.audioChunksQueued >= MAX_CHUNKS_QUEUED) {
             return;
         }
-
-        const dry: AudioChunk[] = [];
-        const rev: AudioChunk[] = [];
-        const chr: AudioChunk[] = [];
+        const toRender = MAX_CHUNKS_QUEUED - this.audioChunksQueued;
+        const data: Float32Array[] = [];
         const transferList: ArrayBuffer[] = [];
 
-        for (let i = 0; i < MAX_CHUNKS_QUEUED - this.audioChunksQueued; i++) {
+        // encode the rendered data into a single f32array as it's faster
+        for (let i = 0; i < toRender; i++) {
+            const dataChunk = new Float32Array(BLOCK_SIZE * 6);
+            let byteOffset = 0;
             // dry
-            const dL = new Float32Array(BLOCK_SIZE);
-            const dR = new Float32Array(BLOCK_SIZE);
+            const dL = new Float32Array(
+                dataChunk.buffer,
+                byteOffset,
+                BLOCK_SIZE
+            );
+            byteOffset += Float32Array.BYTES_PER_ELEMENT * BLOCK_SIZE;
+            const dR = new Float32Array(
+                dataChunk.buffer,
+                byteOffset,
+                BLOCK_SIZE
+            );
+            byteOffset += Float32Array.BYTES_PER_ELEMENT * BLOCK_SIZE;
             const d: AudioChunk = [dL, dR];
 
             // reverb
-            const rL = new Float32Array(BLOCK_SIZE);
-            const rR = new Float32Array(BLOCK_SIZE);
+            const rL = new Float32Array(
+                dataChunk.buffer,
+                byteOffset,
+                BLOCK_SIZE
+            );
+            byteOffset += Float32Array.BYTES_PER_ELEMENT * BLOCK_SIZE;
+            const rR = new Float32Array(
+                dataChunk.buffer,
+                byteOffset,
+                BLOCK_SIZE
+            );
+            byteOffset += Float32Array.BYTES_PER_ELEMENT * BLOCK_SIZE;
             const r: AudioChunk = [rL, rR];
 
             // chorus
-            const cL = new Float32Array(BLOCK_SIZE);
-            const cR = new Float32Array();
+            const cL = new Float32Array(
+                dataChunk.buffer,
+                byteOffset,
+                BLOCK_SIZE
+            );
+            byteOffset += Float32Array.BYTES_PER_ELEMENT * BLOCK_SIZE;
+            const cR = new Float32Array(
+                dataChunk.buffer,
+                byteOffset,
+                BLOCK_SIZE
+            );
+            byteOffset += Float32Array.BYTES_PER_ELEMENT * BLOCK_SIZE;
             const c: AudioChunk = [cL, cR];
 
             // render!
             this.sequencer.processTick();
             this.processor.renderAudio(d, r, c);
             // copy out
-            dry.push(d);
-            chr.push(c);
-            rev.push(r);
-            transferList.push(
-                dL.buffer,
-                dR.buffer,
-                rL.buffer,
-                rR.buffer,
-                cL.buffer,
-                cR.buffer
-            );
+            data.push(dataChunk);
+            transferList.push(dataChunk.buffer);
         }
 
         // send to worklet
         if (this.worklet) {
-            this.worklet.port.postMessage([dry, rev, chr], transferList);
+            this.worklet.port.postMessage(data, transferList);
         }
     }
 
