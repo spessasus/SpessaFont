@@ -3,7 +3,7 @@ import "./keyboard_controller.css";
 import { Keyboard, type KeyboardRef } from "./keyboard/keyboard.tsx";
 import * as React from "react";
 import { type JSX, type RefObject, useEffect, useRef, useState } from "react";
-import { midiControllers } from "spessasynth_core";
+import { midiControllers, type SoundFontRange } from "spessasynth_core";
 import {
     Controller,
     type ControllerKnobRef
@@ -31,11 +31,11 @@ const INITIAL_CC_LIST: number[] = [
 export function KeyboardController({
     engine,
     ccOptions,
-    enabledKeys
+    splits
 }: {
     engine: AudioEngine;
     ccOptions: JSX.Element;
-    enabledKeys: boolean[];
+    splits: SoundFontRange[];
 }) {
     const { t } = useTranslation();
     const [controllers, setControllers] = useState(INITIAL_CC_LIST);
@@ -97,7 +97,7 @@ export function KeyboardController({
                 engine={engine}
                 keyDisplay={keyDisplayRef}
                 velocityDisplay={velocityDisplayRef}
-                enabledKeys={enabledKeys}
+                splits={splits}
             ></Keyboard>
             <div className={"controller_row_scroll"}>
                 <div className={"controller_row controller_row_main"}>

@@ -3,7 +3,8 @@ import {
     type BasicInstrument,
     type BasicInstrumentZone,
     BasicPreset,
-    generatorTypes
+    generatorTypes,
+    type SoundFontRange
 } from "spessasynth_core";
 import "./instrument_editor.css";
 import { useEffect } from "react";
@@ -20,7 +21,7 @@ import {
 } from "../utils/conversion_helpers.ts";
 import { LinkedPresets } from "./linked_presets/linked_presets.tsx";
 import { GeneratorTable } from "../generator_table/generator_table.tsx";
-import { getZonesClickableKeys } from "../utils/get_instrument_clickable_keys.ts";
+import { getZoneSplits } from "../utils/get_instrument_clickable_keys.ts";
 import type { ModulatorListGlobals } from "../modulator_editing/modulator_list/modulator_list.tsx";
 
 type InstrumentEditorProps = {
@@ -30,7 +31,7 @@ type InstrumentEditorProps = {
     setView: SetViewType;
     setInstruments: (s: BasicInstrument[]) => void;
     instruments: BasicInstrument[];
-    setEnabledKeys: (k: boolean[]) => unknown;
+    setSplits: (s: SoundFontRange[]) => unknown;
 };
 export type GeneratorRowType = {
     generator: generatorTypes;
@@ -305,7 +306,7 @@ export function InstrumentEditor({
     setInstruments,
     instruments,
     setView,
-    setEnabledKeys,
+    setSplits,
     clipboardManager,
     ccOptions,
     destinationOptions
@@ -339,9 +340,17 @@ export function InstrumentEditor({
         };
     }, [engine.processor, instrument, manager]);
 
+    // set up splits
     useEffect(() => {
-        setEnabledKeys(getZonesClickableKeys(zones, global.keyRange));
-    }, [zones, setEnabledKeys, global.keyRange]);
+        setSplits(getZoneSplits(zones, global.keyRange));
+    }, [zones, setSplits, global.keyRange]);
+
+    // cleanup, set no splits
+    useEffect(() => {
+        return () => {
+            setSplits([]);
+        };
+    }, [setSplits]);
 
     return (
         <div className={"instrument_editor"}>

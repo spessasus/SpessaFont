@@ -20,7 +20,8 @@ import {
     BasicPreset,
     BasicSample,
     sampleTypes,
-    type SampleTypeValue
+    type SampleTypeValue,
+    type SoundFontRange
 } from "spessasynth_core";
 import { PresetEditor } from "../preset_editor/preset_editor.tsx";
 import { InstrumentEditor } from "../instrument_editor/instrument_editor.tsx";
@@ -39,7 +40,7 @@ export type BankEditorProps = {
     ccOptions: JSX.Element;
     shown: boolean;
     ref: BankEditorRef;
-    setEnabledKeys: (k: boolean[]) => unknown;
+    setSplits: (s: SoundFontRange[]) => unknown;
 };
 
 export type SetViewType = (v: BankEditView) => unknown;
@@ -59,7 +60,7 @@ export function BankEditor({
     ccOptions,
     shown,
     ref,
-    setEnabledKeys
+    setSplits
 }: BankEditorProps) {
     const { t } = useTranslation();
     const [view, setViewLocal] = useState<BankEditView>(manager.currentView);
@@ -75,6 +76,7 @@ export function BankEditor({
         [manager]
     );
 
+    // update on manager update
     useEffect(() => {
         setSamples(manager.samples);
         setInstruments(manager.instruments);
@@ -87,15 +89,16 @@ export function BankEditor({
             (!(view instanceof BasicInstrument) &&
                 !(view instanceof BasicPreset))
         ) {
-            setEnabledKeys(Array(128).fill(true));
+            setSplits([]);
         }
-    }, [setEnabledKeys, shown, view]);
+    }, [setSplits, shown, view]);
 
+    // cleanup, set no splits
     useEffect(() => {
         return () => {
-            setEnabledKeys(Array(128).fill(true));
+            setSplits([]);
         };
-    }, [setEnabledKeys]);
+    }, [setSplits]);
 
     useImperativeHandle(ref, () => {
         return {
@@ -268,7 +271,7 @@ export function BankEditor({
                         setView={setView}
                         presets={presets}
                         setPresets={setPresets}
-                        setEnabledKeys={setEnabledKeys}
+                        setSplits={setSplits}
                         clipboardManager={clipboardManager}
                         ccOptions={ccOptions}
                         destinationOptions={destinationOptions}
@@ -282,7 +285,7 @@ export function BankEditor({
                         setView={setView}
                         setInstruments={setInstruments}
                         instruments={instruments}
-                        setEnabledKeys={setEnabledKeys}
+                        setSplits={setSplits}
                         clipboardManager={clipboardManager}
                         ccOptions={ccOptions}
                         destinationOptions={destinationOptions}

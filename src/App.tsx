@@ -28,7 +28,7 @@ import {
 } from "./bank_editor/bank_editor.tsx";
 import { ACCEPTED_FORMATS } from "./utils/accepted_formats.ts";
 import { loadSoundBank } from "./core_backend/load_sound_bank.ts";
-import type { BasicSoundBank } from "spessasynth_core";
+import type { BasicSoundBank, SoundFontRange } from "spessasynth_core";
 import toast, { Toaster } from "react-hot-toast";
 import "./toasts.css";
 
@@ -69,9 +69,7 @@ function App() {
     const [theme, setTheme] = useState(getSetting("theme", initialSettings));
     const [activeTab, setActiveTab] = useState<number>(0); // index in tabs[]
     const bankEditorRef: BankEditorRef = useRef(null);
-    const [enabledKeys, setEnabledKeys] = useState<boolean[]>(
-        Array(128).fill(true)
-    );
+    const [splits, setSplits] = useState<SoundFontRange[]>([]);
 
     const currentManager: SoundBankManager | undefined = useMemo(
         () => tabs[activeTab],
@@ -269,7 +267,7 @@ function App() {
                     manager={currentManager}
                     audioEngine={audioEngine}
                     clipboardManager={clipboardManager}
-                    setEnabledKeys={setEnabledKeys}
+                    setSplits={setSplits}
                 />
             )}
 
@@ -289,7 +287,7 @@ function App() {
 
             {showKeyboard && (
                 <KeyboardController
-                    enabledKeys={enabledKeys}
+                    splits={splits}
                     ccOptions={ccOptions}
                     engine={audioEngine}
                 ></KeyboardController>

@@ -35,6 +35,7 @@
     /* theme colors */
     --primary-color: #510087;
     --border-color: #6e00b7;
+    --light-primary-color: #d3a3ff;
     --track-color: #333;
     --track-border-color: #494949;
 
@@ -74,6 +75,7 @@
 
     --primary-color: #5f93ff;
     --border-color: #0023c9;
+    --light-primary-color: #c5d9ff;
 
     --track-color: #fff;
     --track-border-color: #444;

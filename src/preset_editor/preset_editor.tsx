@@ -1,7 +1,8 @@
 import {
     type BasicPreset,
     type BasicPresetZone,
-    generatorTypes
+    generatorTypes,
+    type SoundFontRange
 } from "spessasynth_core";
 import "./preset_editor.css";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
@@ -13,7 +14,7 @@ import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import type { GeneratorRowType } from "../instrument_editor/instrument_editor.tsx";
 import { GeneratorTable } from "../generator_table/generator_table.tsx";
 import { KEYBOARD_TARGET_CHANNEL } from "../keyboard/target_channel.ts";
-import { getZonesClickableKeys } from "../utils/get_instrument_clickable_keys.ts";
+import { getZoneSplits } from "../utils/get_instrument_clickable_keys.ts";
 import type { ModulatorListGlobals } from "../modulator_editing/modulator_list/modulator_list.tsx";
 
 const presetRows: GeneratorRowType[] = [
@@ -209,7 +210,7 @@ export function PresetEditor({
     setPresets,
     setView,
     manager,
-    setEnabledKeys,
+    setSplits,
     destinationOptions,
     ccOptions,
     clipboardManager
@@ -220,7 +221,7 @@ export function PresetEditor({
     setPresets: (p: BasicPreset[]) => unknown;
     setView: SetViewType;
     manager: SoundBankManager;
-    setEnabledKeys: (k: boolean[]) => unknown;
+    setSplits: (s: SoundFontRange[]) => unknown;
 } & ModulatorListGlobals) {
     const update = () => {
         preset.presetZones = [...preset.presetZones];
@@ -238,28 +239,39 @@ export function PresetEditor({
     }, [engine.processor, preset]);
 
     useEffect(() => {
-        const clickableBool = Array(128).fill(false);
+        const splits: SoundFontRange[] = [];
+        const glob = global.keyRange;
         zones.forEach(
             ({
                 keyRange: { min, max },
                 instrument: { instrumentZones, globalZone }
             }) => {
-                if (min === -1) {
-                    min = global.keyRange.min;
-                    max = global.keyRange.max;
-                }
-                const clickableInst = getZonesClickableKeys(
-                    instrumentZones,
-                    globalZone.keyRange
+                const range = { ...globalZone.keyRange };
+                range.min = Math.max(range.min, min);
+                range.max = Math.min(range.max, max);
+                getZoneSplits(instrumentZones, range).forEach(
+                    ({ min, max }) => {
+                        // don't add out of range
+                        if (max < glob.min || min > glob.max) {
+                            return;
+                        }
+                        // clamp in range
+                        max = Math.min(glob.max, max);
+                        min = Math.max(glob.min, min);
+                        splits.push({ min, max });
+                    }
                 );
-                for (let i = Math.max(min, 0); i <= max; i++) {
-                    clickableBool[i] ||= clickableInst[i];
-                }
             }
         );
 
-        setEnabledKeys(clickableBool);
-    }, [global.keyRange.max, global.keyRange.min, setEnabledKeys, zones]);
+        setSplits(splits);
+    }, [
+        global.keyRange,
+        global.keyRange.max,
+        global.keyRange.min,
+        setSplits,
+        zones
+    ]);
 
     return (
         <div className={"preset_editor"}>

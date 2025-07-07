@@ -35,8 +35,19 @@
     outline: solid 1px black;
 }
 
-.keyboard .key.pressed {
+
+.keyboard .sharp_key.zone_highlight {
     background: var(--border-color);
+    filter: brightness(0.5);
+}
+
+.keyboard .flat_key.zone_highlight {
+    background: var(--light-primary-color);
+}
+
+.keyboard .key.pressed {
+    background: var(--border-color) !important;
+    filter: none !important;
 }
 
 .keyboard .key.disabled {
@@ -46,7 +57,7 @@
 
 .keyboard .flat_key {
     background: linear-gradient(90deg, #bbb, white);
-    z-index: 1;
+    z-index: 0;
 }
 
 .keyboard .flat_dark_key {
@@ -55,7 +66,7 @@
 
 .keyboard .sharp_key {
     transform: var(--sharp-transform);
-    z-index: 10;
+    z-index: 1;
     background: linear-gradient(140deg, #222, black);
 }
 

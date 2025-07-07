@@ -1,7 +1,14 @@
-import { type RefObject, useEffect, useImperativeHandle, useRef } from "react";
+import {
+    type RefObject,
+    useEffect,
+    useImperativeHandle,
+    useMemo,
+    useRef
+} from "react";
 import "./keyboard.css";
 import type { AudioEngine } from "../../core_backend/audio_engine.ts";
 import { KEYBOARD_TARGET_CHANNEL } from "../target_channel.ts";
+import type { SoundFontRange } from "spessasynth_core";
 
 function isBlackNoteNumber(midiNote: number) {
     const pitchClass = midiNote % 12;
@@ -23,16 +30,32 @@ export function Keyboard({
     ref,
     keyDisplay,
     velocityDisplay,
-    enabledKeys
+    splits
 }: {
     engine: AudioEngine;
     ref: RefObject<KeyboardRef | null>;
     keyDisplay: RefObject<HTMLSpanElement | null>;
     velocityDisplay: RefObject<HTMLSpanElement | null>;
-    enabledKeys: boolean[];
+    splits: SoundFontRange[];
 }) {
     const keysRef = useRef<HTMLDivElement[]>([]);
     const keyboardRef = useRef<HTMLDivElement | null>(null);
+
+    const matchingSplits = useMemo(() => {
+        const map: SoundFontRange[][] = [];
+        for (let midiNote = 0; midiNote < 128; midiNote++) {
+            // find all splits tha this key belongs to
+            map.push(
+                splits.reduce((matched: SoundFontRange[], split) => {
+                    if (split.min <= midiNote && split.max >= midiNote) {
+                        matched.push(split);
+                    }
+                    return matched;
+                }, [])
+            );
+        }
+        return map;
+    }, [splits]);
 
     useImperativeHandle(ref, () => ({
         clearAll() {
@@ -57,16 +80,28 @@ export function Keyboard({
         const userNoteOff = (note: number) => {
             // processor callback will trigger the note release
             engine.processor.noteOff(KEYBOARD_TARGET_CHANNEL, note);
+            // find all splits tha this key belongs to
+            matchingSplits[note].forEach((split) => {
+                for (let i = split.min; i <= split.max; i++) {
+                    keysRef?.current?.[i]?.classList?.remove("zone_highlight");
+                }
+            });
         };
 
         const userNoteOn = (note: number, velocity: number) => {
             engine.processor.noteOn(KEYBOARD_TARGET_CHANNEL, note, velocity);
+            matchingSplits[note].forEach((split) => {
+                for (let i = split.min; i <= split.max; i++) {
+                    keysRef?.current?.[i]?.classList?.add("zone_highlight");
+                }
+            });
         };
 
         const moveHandler = (e: MouseEvent) => {
             const touches = [e];
 
             const newTouchedKeys = new Set<number>();
+            const toUserOn: { k: number; v: number }[] = [];
 
             touches.forEach((touch) => {
                 const target = document.elementFromPoint(
@@ -116,7 +151,7 @@ export function Keyboard({
                 newTouchedKeys.add(midiNote);
 
                 if (!pressedKeys.has(midiNote)) {
-                    userNoteOn(midiNote, velocity);
+                    toUserOn.push({ k: midiNote, v: velocity });
                 }
             });
 
@@ -125,10 +160,15 @@ export function Keyboard({
             }
 
             // only release keys that are no longer being touched
-            [...pressedKeys].forEach((note) => {
+            pressedKeys.forEach((note) => {
                 if (!newTouchedKeys.has(note)) {
                     userNoteOff(note);
                 }
+            });
+
+            // press the keys after
+            toUserOn.forEach((n) => {
+                userNoteOn(n.k, n.v);
             });
         };
 
@@ -167,9 +207,23 @@ export function Keyboard({
             kb.removeEventListener("mousemove", onMouseMove);
             kb.removeEventListener("mouseleave", onMouseLeave);
         };
-    }, [engine.processor, keyDisplay, velocityDisplay]);
+    }, [engine.processor, keyDisplay, matchingSplits, velocityDisplay]);
 
     const keys: number[] = Array.from({ length: 128 }, (_, i) => i);
+
+    const enabledKeys: boolean[] = useMemo(() => {
+        if (splits.length === 0) {
+            return Array(128).fill(true);
+        }
+        const e: boolean[] = Array(128).fill(false);
+
+        splits.forEach((s) => {
+            for (let i = s.min; i <= s.max; i++) {
+                e[i] ||= true;
+            }
+        });
+        return e;
+    }, [splits]);
 
     return (
         <div className="keyboard" ref={keyboardRef}>
