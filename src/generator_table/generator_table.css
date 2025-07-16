@@ -22,7 +22,7 @@
 .zone_table th {
     font-weight: normal;
     user-select: none;
-    background: var(--top-buttons-color-end);
+    background: var(--lighter-color-end);
 }
 
 .zone_table td {
@@ -36,7 +36,7 @@
     z-index: 1;
 }
 
-.zone_table tr:first-child .header_cell {
+.zone_table thead tr:first-child {
     position: sticky;
     top: 0;
     z-index: 1;

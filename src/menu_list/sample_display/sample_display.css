@@ -27,5 +27,5 @@
 }
 
 .sample_display:hover, .sample_display.selected {
-    background: var(--top-buttons-color-end);
+    background: var(--lighter-color-end);
 }

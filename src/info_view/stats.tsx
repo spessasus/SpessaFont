@@ -35,15 +35,15 @@ export function BankInfoStats({
     return (
         <div className={"stats"}>
             <h1>{t("bankInfo.stats")}</h1>
-            <span>
+            <span className={"single_stat"}>
                 <label>{t("bankInfo.version")}</label>
                 <pre className={"monospaced"}>{manager.getInfo("ifil")}</pre>
             </span>
-            <span>
+            <span className={"single_stat"}>
                 <label>{t("bankInfo.engine")}</label>
                 <pre className={"monospaced"}>{manager.getInfo("isng")}</pre>
             </span>
-            <span>
+            <span className={"single_stat"}>
                 <label>{t("bankInfo.software")}</label>
                 <pre className={"monospaced"}>{manager.getInfo("ISFT")}</pre>
             </span>
@@ -51,7 +51,7 @@ export function BankInfoStats({
             <span
                 onClick={toggleDefaultModulators}
                 className={
-                    "default_modulators_button responsive_button hover_brightness"
+                    "default_modulators_button responsive_button hover_brightness single_stat"
                 }
             >
                 <label>{t("bankInfo.defaultModulators")}</label>
@@ -60,7 +60,7 @@ export function BankInfoStats({
                 </pre>
             </span>
 
-            <div className={"stat_group"}>
+            <div className={"stat_group single_stat"}>
                 <label>{t("bankInfo.instruments")}</label>
                 <span>
                     <label>{t("bankInfo.count")}</label>
@@ -78,7 +78,7 @@ export function BankInfoStats({
                 </span>
             </div>
 
-            <div className={"stat_group"}>
+            <div className={"stat_group single_stat"}>
                 <label>{t("bankInfo.presets")}</label>
                 <span>
                     <label>{t("bankInfo.count")}</label>
@@ -94,7 +94,7 @@ export function BankInfoStats({
                 </span>
             </div>
 
-            <div className={"stat_group"}>
+            <div className={"stat_group single_stat"}>
                 <label>{t("bankInfo.samples")}</label>
                 <span>
                     <label>{t("bankInfo.count")}</label>
@@ -110,9 +110,14 @@ export function BankInfoStats({
                 </span>
             </div>
 
-            <span style={{ marginTop: "auto", border: "none" }}>
+            <span className={"powered_by"}>
                 <label>{t("poweredBy")}</label>
-                <pre className={"monospaced"}>spessasynth_core</pre>
+                <a
+                    href="https://github.com/spessasus/spessasynth_core"
+                    target={"_blank"}
+                >
+                    <pre className={"monospaced"}>spessasynth_core</pre>
+                </a>
             </span>
         </div>
     );

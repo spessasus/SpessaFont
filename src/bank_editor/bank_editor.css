@@ -1,6 +1,5 @@
 .main_content {
     width: 100%;
-    background: var(--top-color);
     display: flex;
     min-height: 0;
     min-width: 0;

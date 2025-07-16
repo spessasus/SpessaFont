@@ -82,47 +82,45 @@ export const GeneratorTableHeader = typedMemo(function <
                             )
                         }
                     >
-                        <div className={"header_flex"}>
-                            <span>{name}</span>
-                            <span
-                                className={"delete_zone"}
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    const actions = [
-                                        new DeleteZoneAction<ElementType>(
-                                            element,
-                                            i,
-                                            callback
-                                        )
-                                    ];
-                                    if (
-                                        z instanceof BasicInstrumentZone &&
-                                        z.sample.linkedSample
-                                    ) {
-                                        const link = z.sample.linkedSample;
-                                        const linkedIndex = zones.findIndex(
-                                            (zon) =>
-                                                zon instanceof
-                                                    BasicInstrumentZone &&
-                                                zon.sample === link
+                        <span>{name}</span>
+                        <span
+                            className={"delete_zone"}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                const actions = [
+                                    new DeleteZoneAction<ElementType>(
+                                        element,
+                                        i,
+                                        callback
+                                    )
+                                ];
+                                if (
+                                    z instanceof BasicInstrumentZone &&
+                                    z.sample.linkedSample
+                                ) {
+                                    const link = z.sample.linkedSample;
+                                    const linkedIndex = zones.findIndex(
+                                        (zon) =>
+                                            zon instanceof
+                                                BasicInstrumentZone &&
+                                            zon.sample === link
+                                    );
+                                    if (linkedIndex >= 0) {
+                                        actions.push(
+                                            new DeleteZoneAction<ElementType>(
+                                                element,
+                                                linkedIndex,
+                                                callback
+                                            )
                                         );
-                                        if (linkedIndex >= 0) {
-                                            actions.push(
-                                                new DeleteZoneAction<ElementType>(
-                                                    element,
-                                                    linkedIndex,
-                                                    callback
-                                                )
-                                            );
-                                        }
                                     }
-                                    manager.modifyBank(actions);
-                                }}
-                            >
-                                ✖
-                            </span>
-                        </div>
+                                }
+                                manager.modifyBank(actions);
+                            }}
+                        >
+                            ✖
+                        </span>
                     </th>
                 );
             })}

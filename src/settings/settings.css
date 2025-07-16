@@ -24,7 +24,7 @@
 }
 
 .settings .settings_group {
-    background: var(--top-buttons-color);
+    background: var(--lighter-color-start);
     border: solid 1px var(--track-border-color);
     border-radius: var(--primary-border-radius);
     width: max-content;
@@ -42,10 +42,14 @@
     align-items: center;
     margin: 0.5rem;
     padding: 0.5rem;
-    background: var(--top-buttons-color);
+    background: var(--lighter-color-end);
     border: solid 1px var(--track-border-color);
     border-radius: var(--primary-border-radius);
     width: 100%;
+}
+
+.setting:hover {
+    filter: brightness(1.2);
 }
 
 .setting input, .setting select {

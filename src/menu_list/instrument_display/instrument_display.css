@@ -39,7 +39,7 @@
 }
 
 .instrument_item:hover, .instrument_item.selected {
-    background: var(--top-buttons-color-end);
+    background: var(--lighter-color-end);
 }
 
 .instrument_item_name {

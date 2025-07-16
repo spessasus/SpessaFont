@@ -1,5 +1,5 @@
 .wave_view {
-    background: var(--top-color-start);
+    background: var(--darker-color-start);
     min-height: 0;
     min-width: 0;
     flex-grow: 1;

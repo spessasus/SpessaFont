@@ -91,7 +91,7 @@ export const WaveView = React.memo(function ({
 
         // draw scale lines
         ctx.lineWidth = 1.5;
-        ctx.strokeStyle = getStyle("--top-buttons-color-start");
+        ctx.strokeStyle = getStyle("--lighter-color-end");
         const step = height / SCALE_LINES_COUNT;
         for (let i = 1; i < SCALE_LINES_COUNT; i++) {
             ctx.beginPath();

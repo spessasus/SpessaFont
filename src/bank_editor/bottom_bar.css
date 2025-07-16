@@ -16,7 +16,7 @@
 }
 
 .bottom_bar div:hover {
-    background: var(--top-buttons-color);
+    background: var(--lighter-color);
 }
 
 .bottom_bar input {

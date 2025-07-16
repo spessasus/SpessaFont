@@ -17,27 +17,27 @@
 .spessafont_main *, .spessafont_main {
     scrollbar-gutter: stable;
     /*global variables*/
-    --top-buttons-color-start: #222;
-    --top-buttons-color-end: #333;
-    --top-buttons-color: linear-gradient(201deg, var(--top-buttons-color-start), var(--top-buttons-color-end));
+    --lighter-color-start: oklch(16% 0 0);
+    --lighter-color-end: oklch(20.5% 0 0);
+    --lighter-color: linear-gradient(201deg, var(--lighter-color-start), var(--lighter-color-end));
 
-    --font-color: #eee;
+    --font-color: oklch(95% 0 0);
     --top-index: 100;
 
-    --top-color-start: #101010;
-    --top-color-end: #212121;
-    --top-color: linear-gradient(31deg, var(--top-color-start), var(--top-color-end));
+    --darker-color-start: #000;
+    --darker-color-end: #111;
+    --darker-color: linear-gradient(31deg, var(--darker-color-start), var(--darker-color-end));
 
     --primary-border-radius: 0.5rem;
     --active-scale: 0.9;
     --menu-bar-height: 2rem;
 
     /* theme colors */
-    --primary-color: #510087;
-    --border-color: #6e00b7;
+    --primary-color: #320056FF;
+    --border-color: #4c037a;
     --light-primary-color: #d3a3ff;
     --track-color: #333;
-    --track-border-color: #494949;
+    --track-border-color: oklch(30% 0 0);
 
     --preset-item-color: darkred;
     --instrument-item-color: dodgerblue;
@@ -59,17 +59,17 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: var(--top-color);
+    background: var(--darker-color-start);
     scrollbar-width: thin;
     gap: var(--flex-gap);
 }
 
 .spessafont_main.light_mode, .spessafont_main.light_mode * {
-    --top-buttons-color-start: #eee;
-    --top-buttons-color-end: #aaa;
+    --lighter-color-start: #efefef;
+    --lighter-color-end: #eee;
 
-    --top-color-start: #ddd;
-    --top-color-end: #eee;
+    --darker-color-start: #fff;
+    --darker-color-end: #eee;
 
     --font-color: #111;
 
@@ -78,7 +78,7 @@
     --light-primary-color: #c5d9ff;
 
     --track-color: #fff;
-    --track-border-color: #444;
+    --track-border-color: #aaa;
 
     --preset-item-color: red;
     --instrument-item-color: deepskyblue;
@@ -86,7 +86,7 @@
 }
 
 select option {
-    background: var(--top-color-start);
+    background: var(--darker-color-start);
     color: var(--font-color);
 }
 
@@ -110,26 +110,26 @@ input[type=number] {
 }
 
 .pretty_input {
-    background: var(--top-color-start);
+    background: var(--lighter-color-end);
     border-radius: var(--primary-border-radius);
     color: var(--font-color);
-    border: 0.2rem solid var(--top-buttons-color-end);
+    border: 1px solid var(--track-border-color);
     transition: all 0.2s ease;
     text-align: start;
     padding: 0.3rem;
 }
 
 .pretty_input:focus {
-    border: 0.2rem solid var(--border-color);
+    border-color: var(--border-color);
     outline: none;
 }
 
 .pretty_button {
     user-select: none;
-    background: var(--top-color-start);
+    background: var(--lighter-color-end);
     border-radius: var(--primary-border-radius);
     color: var(--font-color);
-    border: 0.2rem solid var(--top-buttons-color-end);
+    border: 1px solid var(--track-border-color);
     transition: all 0.2s ease;
     text-align: start;
     padding: 0.3rem;
@@ -150,7 +150,7 @@ input[type=number] {
 }
 
 .pretty_outline {
-    background: var(--top-buttons-color-end);
+    background: var(--lighter-color-end);
     border-radius: var(--primary-border-radius);
     border: solid var(--track-border-color) 1px;
     font-size: 1rem;
@@ -166,7 +166,7 @@ input[type=number] {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: var(--top-color);
+    background: var(--darker-color);
     position: relative;
 }
 

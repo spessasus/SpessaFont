@@ -12,7 +12,7 @@
 }
 
 .preset_item:hover, .preset_item.selected {
-    background: var(--top-buttons-color-end);
+    background: var(--lighter-color-end);
 }
 
 .preset_item span {

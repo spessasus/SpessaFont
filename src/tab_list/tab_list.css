@@ -34,7 +34,7 @@
 }
 
 .tab button:hover {
-    background: var(--top-buttons-color);
+    background: var(--lighter-color);
 }
 
 .tab.active {

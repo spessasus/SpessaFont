@@ -4,7 +4,7 @@
     height: 100%;
     position: absolute;
     z-index: calc(var(--top-index) * 2);
-    background: var(--top-color);
+    background: var(--darker-color);
     display: flex;
     align-items: center;
     justify-content: center;

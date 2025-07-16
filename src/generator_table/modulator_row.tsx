@@ -39,7 +39,7 @@ export const GeneratorTableModulatorRow = typedMemo(function <
                     )
                 }
             >
-                {element.globalZone.modulators.length}
+                <span>{element.globalZone.modulators.length}</span>
             </th>
             {zones.map((z, i) => {
                 const linked = linkedZoneMap[i];
@@ -63,7 +63,7 @@ export const GeneratorTableModulatorRow = typedMemo(function <
                         className={`modulator_cell ${modLength > 0 ? "modulated" : ""}`}
                         onClick={() => editModulators(z, name)}
                     >
-                        {modLength}
+                        <span>{modLength}</span>
                     </th>
                 );
             })}

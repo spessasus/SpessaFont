@@ -1,10 +1,22 @@
+.header_row {
+    background: var(--track-border-color);
+}
+
 .header_cell {
     padding: 0.5rem;
     cursor: pointer;
     max-width: 15ch;
     min-width: 10ch;
     position: relative;
-    outline: 1px solid var(--track-border-color);
+    text-align: start;
+}
+
+.header_cell:first-child {
+    border-radius: var(--primary-border-radius) 0 0 0;
+}
+
+.header_cell:last-child {
+    border-radius: 0 var(--primary-border-radius) 0 0;
 }
 
 .header_cell.instrument {
@@ -20,7 +32,7 @@
 .header_cell span {
     word-break: break-word;
     white-space: break-spaces;
-    text-align: start;
+    margin-right: 1rem;
 }
 
 .header_cell.stereo span:first-child {
@@ -28,15 +40,12 @@
     cursor: help;
 }
 
-.header_cell .header_flex {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
 .header_cell .delete_zone {
     cursor: pointer;
     filter: brightness(0.8);
+    position: absolute;
+    right: -0.8rem;
+    top: 0;
 }
 
 .header_cell .delete_zone:hover {

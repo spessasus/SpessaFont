@@ -10,37 +10,59 @@
 }
 
 .sound_bank_info .stats h1 {
-    background: var(--primary-color);
     width: 100%;
     padding: 0.3rem;
     font-size: 2rem;
-    border: solid 0.2rem var(--primary-color);
+    background: var(--lighter-color-end);
+    border: solid 1px var(--track-border-color);
     border-radius: var(--primary-border-radius);
+}
+
+.sound_bank_info .stats h1:hover {
+    filter: brightness(1.2);
 }
 
 
 .sound_bank_info .stats span {
     display: flex;
     justify-content: space-between;
-    margin-top: 1.5rem;
     gap: var(--flex-gap);
-    padding-bottom: var(--flex-gap);
-    border-bottom: solid 0.2rem var(--border-color);
+
+}
+
+.sound_bank_info .single_stat {
+    padding: 0.3rem;
+    background: var(--lighter-color-end);
+    border: solid 1px var(--track-border-color);
+    border-radius: var(--primary-border-radius);
+}
+
+.sound_bank_info .single_stat:hover {
+    filter: brightness(1.2);
+}
+
+.sound_bank_info .monospaced {
+    user-select: text;
 }
 
 .sound_bank_info .stats .stat_group {
-    border: solid 0.2rem var(--border-color);
-    border-radius: var(--primary-border-radius);
-    padding: 0.5rem;
-    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: var(--flex-gap);
+    padding: 0;
+}
+
+.sound_bank_info .stats .stat_group > label {
+    border-bottom: 1px solid var(--track-border-color);
+    padding: 0.3rem;
+}
+
+.sound_bank_info .stats .stat_group > span {
+    padding: 0.3rem;
 }
 
 .sound_bank_info .stats .default_modulators_button {
-    background: var(--primary-color);
     width: 100%;
-    padding: 0.4rem;
-    border-radius: var(--primary-border-radius);
-    border: none;
     cursor: pointer;
 }
 
@@ -60,4 +82,12 @@
 
 .sound_bank_info .stats pre {
     font-weight: bold;
+}
+
+.sound_bank_info .stats a {
+    text-decoration: none;
+}
+
+.sound_bank_info .powered_by {
+    margin-top: auto;
 }

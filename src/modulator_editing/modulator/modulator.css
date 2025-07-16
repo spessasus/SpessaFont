@@ -1,5 +1,5 @@
 .modulator_main {
-    background: var(--top-buttons-color);
+    background: var(--lighter-color);
     border-radius: var(--primary-border-radius);
     border: solid var(--track-border-color) 1px;
     display: flex;
@@ -19,9 +19,8 @@
     margin-right: 1rem;
 }
 
-.modulator_main.selected {
+.modulator_main.selected *, .modulator_main.selected {
     border-color: var(--border-color);
-    filter: brightness(1.5);
 }
 
 .modulator_main svg {
@@ -69,6 +68,7 @@
 .amount_input {
     text-align: end;
     width: 8ch;
+    border-radius: var(--primary-border-radius);
 }
 
 .modulator_main .pretty_input {

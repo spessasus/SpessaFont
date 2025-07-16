@@ -5,7 +5,7 @@
     width: var(--controller-size);
     margin-top: 0.5rem;
     border-radius: 50%;
-    background: var(--top-buttons-color);
+    background: var(--lighter-color-end);
     border: solid 1px var(--track-border-color);
     display: flex;
     align-items: end;
@@ -35,5 +35,4 @@
     height: calc(var(--controller-size) / 3);
     width: calc(var(--controller-size) / 3);
     background: var(--track-border-color);
-    border: solid 1px var(--top-color-start)
 }
