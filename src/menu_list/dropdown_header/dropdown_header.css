@@ -45,7 +45,9 @@
 }
 
 .dropdown_triangle {
+    /*I love fonts*/
     font-size: 1rem !important;
+    width: 1.5rem !important;
 }
 
 .item_group_header .left_buttons > * {
@@ -64,7 +66,7 @@
     cursor: copy;
 }
 
-.item_group_header:active .left_buttons > *, .item_group_header:active .right_buttons > * {
+.item_group_header:active .left_buttons > *, .item_group_header:active .right_buttons > *, .item_group_header.opened .right_buttons > * {
     border-color: var(--border-color);
 }
 

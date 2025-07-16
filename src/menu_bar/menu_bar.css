@@ -31,22 +31,55 @@
 
 .menu_bar_contents {
     transition: all 0.2s ease;
-    transform: translateY(-0.1rem);
     transform-origin: top center;
     z-index: 100;
     position: absolute;
     opacity: 0;
     visibility: hidden;
     max-width: 20ch;
+    background: var(--primary-color);
+    display: flex;
+    flex-direction: column;
+    gap: var(--flex-gap);
+    border-radius: 0 0 var(--primary-border-radius) var(--primary-border-radius);
+    overflow: hidden;
+    border: solid 1px var(--border-color);
 }
 
-.menu_bar_contents .menu_bar_item {
-    white-space: break-spaces;
+.menu_bar_icon {
     border-bottom: var(--border-color) 1px solid;
+    border-top: var(--border-color) 1px solid;
+    display: flex;
+    background: var(--primary-color);
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.menu_bar_icon:first-child {
+    border-top: none;
+}
+
+.menu_bar_icon:last-child {
+    border-bottom: none;
+}
+
+.menu_bar_icon svg {
+    font-size: 1.5em;
+    height: 100%;
+    width: 1em;
+    padding: 0.2rem;
+}
+
+.menu_bar_icon span {
+    padding: 0.2rem;
+    white-space: break-spaces;
+    border-left: solid 1px var(--border-color);
+    flex: 1;
+    height: 100%;
 }
 
 .menu_bar:hover .menu_bar_contents {
-    transform: translateY(-0.1rem);
     opacity: 1;
     visibility: visible;
 }
@@ -72,7 +105,13 @@
     align-items: center;
 }
 
-.menu_bar_button, .menu_bar_item {
+
+.menu_bar_contents .menu_bar_button {
+    white-space: break-spaces;
+    border-bottom: var(--border-color) 1px solid;
+}
+
+.menu_bar_button {
     display: flex;
     justify-content: center;
     background: var(--primary-color);
@@ -81,8 +120,8 @@
     cursor: pointer;
 }
 
-.menu_bar_button:hover, .menu_bar_item:hover, .flex_menu_bar div:hover {
-    filter: brightness(1.8);
+.menu_bar_icon:hover, .flex_menu_bar div:hover {
+    filter: brightness(1.2);
 }
 
 .settings_button {

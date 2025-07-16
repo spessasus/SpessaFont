@@ -1,32 +1,35 @@
-import { useTranslation } from "react-i18next";
 import * as React from "react";
+import { typedMemo } from "../utils/typed_memo.ts";
 
 type MenuBarProps = {
     main: string;
     children?: React.ReactNode;
 };
 
-export function MenuBarItem({
-    text,
-    click
-}: {
-    text: string;
-    click?: () => void;
-}) {
-    const { t } = useTranslation();
-    return (
-        <div onClick={click} className={"menu_bar_item"}>
-            {t(text)}
-        </div>
-    );
-}
+export const MenuBarIcon = typedMemo(
+    ({
+        text,
+        click,
+        children
+    }: {
+        text: string;
+        click?: () => void;
+        children?: React.ReactNode;
+    }) => {
+        return (
+            <div onClick={click} className={"menu_bar_icon"}>
+                {children}
+                <span>{text}</span>
+            </div>
+        );
+    }
+);
 
 export function MenuBarDropdown({ main, children }: MenuBarProps) {
-    const { t } = useTranslation();
     return (
         <div className={"menu_bar"}>
-            <div className={"menu_bar_button"} title={t(main)}>
-                {t(main)}
+            <div className={"menu_bar_button"} title={main}>
+                {main}
             </div>
             <div className={"menu_bar_contents"}>{children}</div>
         </div>

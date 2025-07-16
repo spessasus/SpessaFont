@@ -1,7 +1,82 @@
 import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
-import { MIDI, RMIDINFOChunks } from "spessasynth_core";
+import { useCallback, useEffect, useState } from "react";
+import {
+    MIDI,
+    RMIDINFOChunks,
+    type SpessaSynthSequencer
+} from "spessasynth_core";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
+import { MenuBarDropdown, MenuBarIcon } from "./dropdown.tsx";
+import {
+    MIDINameIcon,
+    PauseIcon,
+    PlayIcon,
+    PlayMIDIIcon,
+    TimeIcon
+} from "../utils/icons.tsx";
+import { typedMemo } from "../utils/typed_memo.ts";
+
+const TimeDisplay = typedMemo(({ seq }: { seq: SpessaSynthSequencer }) => {
+    const [currentTime, setCurrentTime] = useState(seq.currentTime);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentTime(seq.currentTime);
+        }, 800);
+
+        return () => clearInterval(interval);
+    }, [seq.currentTime]);
+
+    const duration = seq.midiData?.duration ?? 0;
+
+    function formatTime(seconds: number): string {
+        const min = Math.floor(seconds / 60);
+        const sec = Math.floor(seconds % 60);
+        return `${min}:${sec.toString().padStart(2, "0")}`;
+    }
+
+    return (
+        <MenuBarIcon
+            click={() => (seq.currentTime -= 0.1)}
+            text={`${formatTime(currentTime)} / ${formatTime(duration)}`}
+        >
+            <TimeIcon />
+        </MenuBarIcon>
+    );
+});
+
+const PauseComponent = typedMemo(
+    ({ audioEngine }: { audioEngine: AudioEngine }) => {
+        // doing not here fixes things??
+        const [paused, setPaused] = useState(!audioEngine.MIDIPaused);
+        const { t } = useTranslation();
+        if (paused) {
+            return (
+                <MenuBarIcon
+                    text={t("menuBarLocale.midi.resume")}
+                    click={() => {
+                        audioEngine.toggleMIDI();
+                        setPaused(audioEngine.MIDIPaused);
+                    }}
+                >
+                    <PlayIcon />
+                </MenuBarIcon>
+            );
+        } else {
+            return (
+                <MenuBarIcon
+                    text={t("menuBarLocale.midi.pause")}
+                    click={() => {
+                        audioEngine.toggleMIDI();
+                        setPaused(audioEngine.MIDIPaused);
+                    }}
+                >
+                    <PauseIcon />
+                </MenuBarIcon>
+            );
+        }
+    }
+);
 
 export function MIDIPlayer({ audioEngine }: { audioEngine: AudioEngine }) {
     const { t } = useTranslation();
@@ -13,7 +88,7 @@ export function MIDIPlayer({ audioEngine }: { audioEngine: AudioEngine }) {
         }
     }, [midi, audioEngine]);
 
-    function playMIDI() {
+    const playMIDI = useCallback(() => {
         const input = document.createElement("input");
         input.type = "file";
         input.accept = ".mid,.midi,.rmi,.xmf,.mxmf,.smf,.kar";
@@ -27,77 +102,18 @@ export function MIDIPlayer({ audioEngine }: { audioEngine: AudioEngine }) {
             setMidi(mid);
         };
         input.click();
-    }
-
-    function PauseComponent() {
-        const [paused, setPaused] = useState(audioEngine.MIDIPaused);
-        if (paused) {
-            return (
-                <div
-                    className={"menu_bar_item"}
-                    onClick={() => {
-                        audioEngine.toggleMIDI();
-                        setPaused(audioEngine.MIDIPaused);
-                    }}
-                >
-                    {t("menuBarLocale.midi.resume")}
-                </div>
-            );
-        } else {
-            return (
-                <div
-                    className={"menu_bar_item"}
-                    onClick={() => {
-                        audioEngine.toggleMIDI();
-                        setPaused(audioEngine.MIDIPaused);
-                    }}
-                >
-                    {t("menuBarLocale.midi.pause")}
-                </div>
-            );
-        }
-    }
-
-    function TimeDisplay() {
-        const [currentTime, setCurrentTime] = useState(
-            audioEngine.sequencer.currentTime
-        );
-
-        useEffect(() => {
-            const interval = setInterval(() => {
-                setCurrentTime(audioEngine.sequencer.currentTime);
-            }, 800);
-
-            return () => clearInterval(interval);
-        }, []);
-
-        const duration = audioEngine.sequencer.midiData?.duration ?? 0;
-
-        function formatTime(seconds: number): string {
-            const min = Math.floor(seconds / 60);
-            const sec = Math.floor(seconds % 60);
-            return `${min}:${sec.toString().padStart(2, "0")}`;
-        }
-
-        return (
-            <div className="midi_time_display menu_bar_item">
-                {formatTime(currentTime)} / {formatTime(duration)}
-            </div>
-        );
-    }
+    }, []);
 
     if (midi === undefined) {
         return (
-            <div className={"menu_bar"}>
-                <div className={"menu_bar_button"}>
-                    {t("menuBarLocale.midi.player")}
-                </div>
-                <div className={"menu_bar_contents"}>
-                    <div className={"menu_bar_item"} onClick={playMIDI}>
-                        {t("menuBarLocale.midi.play")}
-                    </div>
-                </div>
-            </div>
+            <MenuBarDropdown main={t("menuBarLocale.midi.player")}>
+                <MenuBarIcon
+                    text={t("menuBarLocale.midi.play")}
+                    click={playMIDI}
+                >
+                    <PlayMIDIIcon />
+                </MenuBarIcon>
+            </MenuBarDropdown>
         );
     } else {
         let name: string;
@@ -109,18 +125,13 @@ export function MIDIPlayer({ audioEngine }: { audioEngine: AudioEngine }) {
         name = name || midi.fileName;
         name = name.length > 10 ? name.substring(0, 10) + "..." : name;
         return (
-            <div className={"menu_bar"}>
-                <div className={"menu_bar_button"}>
-                    {t("menuBarLocale.midi.player")}
-                </div>
-                <div className={"menu_bar_contents"}>
-                    <div onClick={playMIDI} className={"menu_bar_item"}>
-                        <i>{name}</i>
-                    </div>
-                    <PauseComponent />
-                    <TimeDisplay />
-                </div>
-            </div>
+            <MenuBarDropdown main={t("menuBarLocale.midi.player")}>
+                <MenuBarIcon text={name} click={playMIDI}>
+                    <MIDINameIcon />
+                </MenuBarIcon>
+                <PauseComponent audioEngine={audioEngine} />
+                <TimeDisplay seq={audioEngine.sequencer} />
+            </MenuBarDropdown>
         );
     }
 }

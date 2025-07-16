@@ -1,15 +1,27 @@
-import { MenuBarDropdown, MenuBarItem } from "./dropdown.tsx";
+import { MenuBarDropdown, MenuBarIcon } from "./dropdown.tsx";
 import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import { MIDIPlayer } from "./midi_player.tsx";
 import { VoiceDisplay } from "./voice_display.tsx";
 import "./menu_bar.css";
 import { useTranslation } from "react-i18next";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
-import { Gear } from "./gear.tsx";
 import { useCallback, useEffect } from "react";
 import type { BankEditorRef } from "../bank_editor/bank_editor.tsx";
 import { ACCEPTED_FORMATS } from "../utils/accepted_formats.ts";
 import toast from "react-hot-toast";
+import {
+    CloseFileIcon,
+    DeleteIcon,
+    FullscreenIcon,
+    Gear,
+    InfoIcon,
+    LinkIcon,
+    NewFileIcon,
+    OpenFileIcon,
+    RedoIcon,
+    SaveFileIcon,
+    UndoIcon
+} from "../utils/icons.tsx";
 
 // @ts-expect-error chromium check is here
 const isChrome: boolean = window["chrome"] !== undefined;
@@ -142,61 +154,79 @@ export function MenuBar({
 
     return (
         <div className={"menu_bar_main"}>
-            <MenuBarDropdown main={fLoc + "file"}>
-                <MenuBarItem click={newFile} text={fLoc + "new"}></MenuBarItem>
-                <MenuBarItem
-                    click={openFile}
-                    text={fLoc + "open"}
-                ></MenuBarItem>
-                <MenuBarItem
-                    click={closeTab}
-                    text={fLoc + "close"}
-                ></MenuBarItem>
-                <MenuBarItem
+            <MenuBarDropdown main={t(fLoc + "file")}>
+                <MenuBarIcon click={newFile} text={t(fLoc + "new")}>
+                    <NewFileIcon />
+                </MenuBarIcon>
+                <MenuBarIcon click={openFile} text={t(fLoc + "open")}>
+                    <OpenFileIcon />
+                </MenuBarIcon>
+                <MenuBarIcon click={closeTab} text={t(fLoc + "close")}>
+                    <CloseFileIcon />
+                </MenuBarIcon>
+                <MenuBarIcon
                     click={() => saveWithToasts("sf2")}
-                    text={fLoc + "saveSF2"}
-                />
-                <MenuBarItem
+                    text={t(fLoc + "saveSF2")}
+                >
+                    <SaveFileIcon />
+                </MenuBarIcon>
+                <MenuBarIcon
                     click={() => saveWithToasts("dls")}
-                    text={fLoc + "saveDLS"}
-                />
-                <MenuBarItem
+                    text={t(fLoc + "saveDLS")}
+                >
+                    <SaveFileIcon format={"DLS"} />
+                </MenuBarIcon>
+                <MenuBarIcon
                     click={() => saveWithToasts("sf3")}
-                    text={fLoc + "saveSF3"}
-                />
-                <MenuBarItem
+                    text={t(fLoc + "saveSF3")}
+                >
+                    <SaveFileIcon format={"SF3"} />
+                </MenuBarIcon>
+                <MenuBarIcon
                     click={() => document.body.requestFullscreen()}
-                    text={fLoc + "fullscreen"}
-                />
-                <MenuBarItem click={about} text={fLoc + "about"} />
+                    text={t(fLoc + "fullscreen")}
+                >
+                    <FullscreenIcon />
+                </MenuBarIcon>
+                <MenuBarIcon click={about} text={t(fLoc + "about")}>
+                    <InfoIcon />
+                </MenuBarIcon>
             </MenuBarDropdown>
-            <MenuBarDropdown main={eLoc + "edit"}>
-                <MenuBarItem
+            <MenuBarDropdown main={t(eLoc + "edit")}>
+                <MenuBarIcon
                     click={() => {
                         if (manager.history.length < 1) {
                             toast(t(eLoc + "nothingToUndo"));
                         }
                         manager.undo();
                     }}
-                    text={eLoc + "undo"}
-                />
-                <MenuBarItem
+                    text={t(eLoc + "undo")}
+                >
+                    <UndoIcon />
+                </MenuBarIcon>
+                <MenuBarIcon
                     click={() => {
                         if (manager.history.undoLength < 1) {
                             toast(t(eLoc + "nothingToRedo"));
                         }
                         manager.redo();
                     }}
-                    text={eLoc + "redo"}
-                />
-                <MenuBarItem
+                    text={t(eLoc + "redo")}
+                >
+                    <RedoIcon />
+                </MenuBarIcon>
+                <MenuBarIcon
                     click={() => bankEditorRef?.current?.removeUnusedElements()}
-                    text={eLoc + "removeUnusedElements"}
-                />
-                <MenuBarItem
-                    text={eLoc + "autoLinkSamples"}
+                    text={t(eLoc + "removeUnusedElements")}
+                >
+                    <DeleteIcon />
+                </MenuBarIcon>
+                <MenuBarIcon
+                    text={t(eLoc + "autoLinkSamples")}
                     click={() => bankEditorRef?.current?.autoLinkSamples()}
-                />
+                >
+                    <LinkIcon />
+                </MenuBarIcon>
             </MenuBarDropdown>
             {showMidiPlayer && (
                 <MIDIPlayer audioEngine={audioEngine}></MIDIPlayer>

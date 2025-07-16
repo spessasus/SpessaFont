@@ -31,6 +31,7 @@ import { loadSoundBank } from "./core_backend/load_sound_bank.ts";
 import type { BasicSoundBank, SoundFontRange } from "spessasynth_core";
 import toast, { Toaster } from "react-hot-toast";
 import "./toasts.css";
+import { Welcome } from "./welcome/welcome.tsx";
 
 // apply locale
 const initialSettings = loadSettings();
@@ -113,9 +114,8 @@ function App() {
     const openNewBankTab = useCallback(
         async (bankFile?: File) => {
             const id = toast.loading(t("loadingAndSaving.loadingFileFromDisk"));
-
             let bank: BasicSoundBank | undefined = undefined;
-            if (bankFile) {
+            if (bankFile instanceof File) {
                 // @ts-expect-error chrome property
                 if (bankFile.size > 2_147_483_648 && window["chrome"]) {
                     toast.dismiss(id);
@@ -272,17 +272,7 @@ function App() {
             )}
 
             {showWelcome && (
-                <div className="welcome">
-                    <h1>{t("welcome.main")}</h1>
-                    <h2 onClick={openFile}>{t("welcome.openPrompt")}</h2>
-                    <h2 onClick={() => openNewBankTab()}>
-                        {t("welcome.newPrompt")}
-                    </h2>
-                    <div className={"welcome_copyright"}>
-                        <h3>{t("welcome.copyright")}</h3>
-                        <h3>{t("welcome.copyrightTwo")}</h3>
-                    </div>
-                </div>
+                <Welcome openFile={openFile} openNewBankTab={openNewBankTab} />
             )}
 
             {showKeyboard && (
