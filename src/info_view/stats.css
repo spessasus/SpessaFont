@@ -23,11 +23,10 @@
 }
 
 
-.sound_bank_info .stats span {
+.sound_bank_info .stat_span {
     display: flex;
     justify-content: space-between;
     gap: var(--flex-gap);
-
 }
 
 .sound_bank_info .single_stat {
@@ -39,6 +38,28 @@
 
 .sound_bank_info .single_stat:hover {
     filter: brightness(1.2);
+}
+
+
+.sound_bank_info .default_modulators_button {
+    display: flex;
+    padding: 0;
+}
+
+.sound_bank_info .default_modulators_button, .sound_bank_info .default_modulators_button * {
+    cursor: pointer;
+}
+
+.sound_bank_info .default_modulators_button span:first-child {
+    border-right: solid 1px var(--track-border-color);
+    height: 100%;
+    padding: 0.3rem;
+}
+
+.sound_bank_info .default_modulators_button svg {
+    margin-right: 0.5rem;
+    height: 60%;
+    width: auto;
 }
 
 .sound_bank_info .monospaced {
@@ -59,15 +80,6 @@
 
 .sound_bank_info .stats .stat_group > span {
     padding: 0.3rem;
-}
-
-.sound_bank_info .stats .default_modulators_button {
-    width: 100%;
-    cursor: pointer;
-}
-
-.default_modulators_button * {
-    cursor: pointer;
 }
 
 
