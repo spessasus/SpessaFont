@@ -55,7 +55,7 @@ export const RangeGeneratorCell = typedMemo(function ({
         } else {
             const [min, max] = v.split("-").map(Number);
             newRange.min = Math.min(127, Math.max(0, min));
-            newRange.max = Math.max(min, Math.min(127, max));
+            newRange.max = Math.max(newRange.min, Math.min(127, max));
         }
 
         const callbackReal = () => {
