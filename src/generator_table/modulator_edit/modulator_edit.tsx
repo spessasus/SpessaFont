@@ -18,7 +18,8 @@ export function ModulatorEditor({
     onClose,
     callback,
     manager,
-    linkedZone
+    linkedZone,
+    defaultModulators
 }: {
     name: string;
     zone: BasicZone;
@@ -26,6 +27,7 @@ export function ModulatorEditor({
     onClose: () => unknown;
     callback: () => unknown;
     manager: SoundBankManager;
+    defaultModulators: Modulator[];
 } & ModulatorListGlobals) {
     const { t } = useTranslation();
 
@@ -59,6 +61,7 @@ export function ModulatorEditor({
                 clipboardManager={clipboardManager}
                 ccOptions={ccOptions}
                 destinationOptions={destinationOptions}
+                defaultModulators={defaultModulators}
             />
         </div>
     );

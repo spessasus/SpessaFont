@@ -55,6 +55,12 @@
     font-weight: bolder;
 }
 
+.overriding_modulator {
+    color: var(--sample-item-color);
+    font-weight: bolder;
+    text-decoration: underline;
+}
+
 .modulator_main .source_pair {
     display: flex;
     flex-direction: column;

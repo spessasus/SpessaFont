@@ -122,6 +122,11 @@ export const GeneratorTable = typedMemo(function <
                 onClose={() => setEditedModulatorsZone(null)}
                 callback={callback}
                 manager={manager}
+                defaultModulators={
+                    element instanceof BasicInstrument
+                        ? manager.defaultModulators
+                        : []
+                }
             />
         );
     }

@@ -1,6 +1,7 @@
 export const ModulatorLocale = {
     modulators: "Modulatory", // plural
     editingModulators: "Edytowanie modulatorów dla {{name}}",
+    overriding: "Nadpisywanie domyślnego modulatora",
     sources: {
         noController: "Brak kontrolera = 1",
         velocity: "Siła Nacisku",

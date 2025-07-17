@@ -21,6 +21,7 @@ export type ModulatorListGlobals = {
 type ModulatorListProps = ModulatorListGlobals & {
     modulatorList: Modulator[];
     setModulatorList: (l: Modulator[]) => void;
+    defaultModulators: Modulator[];
 };
 
 export function ModulatorList({
@@ -28,7 +29,8 @@ export function ModulatorList({
     setModulatorList,
     clipboardManager,
     ccOptions,
-    destinationOptions
+    destinationOptions,
+    defaultModulators
 }: ModulatorListProps) {
     const { t } = useTranslation();
     const [selectedMods, setSelectedMods] = useState(new Set<Modulator>());
@@ -198,6 +200,9 @@ export function ModulatorList({
                             activeModPickerId={activeModPickerId}
                             selected={selectedMods.has(mod)}
                             onClick={(e) => handleClick(e, mod)}
+                            overridingDefaultModulator={defaultModulators.some(
+                                (m) => Modulator.isIdentical(m, mod)
+                            )}
                         ></ModulatorView>
                     );
                 })}

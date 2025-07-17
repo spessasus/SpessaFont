@@ -25,6 +25,7 @@ type ModulatorProps = {
     selected: boolean;
     destinationList: JSX.Element;
     ccList: JSX.Element;
+    overridingDefaultModulator: boolean;
 };
 
 const AMOUNT_PREFIX = "× ";
@@ -39,7 +40,8 @@ export const ModulatorView = React.memo(function ({
     onClick,
     selected,
     destinationList,
-    ccList
+    ccList,
+    overridingDefaultModulator
 }: ModulatorProps) {
     const { t } = useTranslation();
 
@@ -96,8 +98,17 @@ export const ModulatorView = React.memo(function ({
                 }
             }}
             className={`modulator_main ${selected ? "selected" : ""}`}
+            title={
+                overridingDefaultModulator
+                    ? t("modulatorLocale.overriding")
+                    : ""
+            }
         >
-            <h4 className={"modulator_title_left"}>#{modulatorNumber}</h4>
+            <h4
+                className={`modulator_title_left ${overridingDefaultModulator ? "overriding_modulator" : ""}`}
+            >
+                #{modulatorNumber}
+            </h4>
             <h2 className={"modulator_title_right"} onClick={deleteModulator}>
                 &times;
             </h2>

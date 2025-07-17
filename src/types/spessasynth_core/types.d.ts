@@ -88,6 +88,12 @@ declare module "spessasynth_core" {
 
         static copy(m: Modulator): Modulator;
 
+        static isIdentical(
+            mod1: Modulator,
+            mod2: Modulator,
+            checkAmount = false
+        ): boolean;
+
         /**
          * Sum transform and create a NEW modulator
          * @param modulator {Modulator}

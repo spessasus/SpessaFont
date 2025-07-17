@@ -34,14 +34,19 @@
     position: sticky;
     left: 0;
     z-index: 1;
+    /*prevent modulated outlines from showing between the cells*/
+    outline: solid 1px var(--track-border-color);
 }
 
-.zone_table thead tr:first-child {
+/*do not use tr itself as it breaks the top left cell*/
+.zone_table thead tr:first-child th {
     position: sticky;
     top: 0;
     z-index: 1;
+    outline: solid 1px var(--track-border-color);
 }
 
 .zone_table thead tr:first-child th:first-child {
     z-index: 2;
+    outline: solid 1px var(--track-border-color);
 }

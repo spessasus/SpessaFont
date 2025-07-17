@@ -53,6 +53,7 @@ export function DefaultModulatorList({
                 clipboardManager={clipboard}
                 modulatorList={dmods}
                 setModulatorList={setDefaultModulators}
+                defaultModulators={[]} // can't override default modulators when editing default modulators
             ></ModulatorList>
         </div>
     );
