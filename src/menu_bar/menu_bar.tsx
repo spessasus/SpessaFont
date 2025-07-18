@@ -245,7 +245,9 @@ export function MenuBar({
             >
                 {"SpessaSynth"}
             </a>
-            {isChrome && <MenuBarDropdown main={"firefox"}></MenuBarDropdown>}
+            {isChrome && (
+                <MenuBarDropdown main={t("firefox")}></MenuBarDropdown>
+            )}
             <div style={{ flex: 1 }}></div>
             <div className={"menu_bar_button"} onClick={toggleKeyboard}>
                 {t("keyboard")}
