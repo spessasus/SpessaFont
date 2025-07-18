@@ -118,6 +118,9 @@ function App() {
             if (bankFile instanceof File) {
                 // @ts-expect-error chrome property
                 if (bankFile.size > 2_147_483_648 && window["chrome"]) {
+                    // this not anti-chrome code,
+                    // loading 4GB sound banks throws NotReadable error,
+                    // uncomment this code and try it for yourself
                     toast.dismiss(id);
                     toast.error(t("loadingAndSaving.chromeError"));
                     return;

@@ -28,7 +28,7 @@ export const localePolish = {
         copyrightTwo: "Copyright © Spessasus 2025, Na licencji Apache-2.0."
     },
     poweredBy: "Napędzane przez",
-    firefox: "Rozważ użycie Firefox dla najlepszej wydajności",
+    firefox: "Rozważ użycie Firefox aby móc wczytywać duże pliki.",
     getUserInput: "Kliknij gdziekolwiek, aby uruchomić aplikację",
 
     unsavedChanges: "Ten plik ma niezapisane zmiany.",

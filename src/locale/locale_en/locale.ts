@@ -29,7 +29,7 @@ export const localeEnglish = {
             "Copyright © Spessasus 2025, Licensed under the Apache-2.0 License."
     },
     poweredBy: "Powered by",
-    firefox: "Consider using Firefox for the best performance",
+    firefox: "Consider using Firefox to load large files.",
     getUserInput: "Press anywhere to start the app",
 
     unsavedChanges: "This file has unsaved changes.",

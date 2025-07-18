@@ -1,0 +1,12 @@
+name: Question
+description: Something is unclear? Not sure how to use the program? Ask a question!
+labels: [ "question" ]
+
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: Ask your question!
+    validations:
+      required: true
