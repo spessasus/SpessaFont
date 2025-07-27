@@ -17,7 +17,7 @@ export function BankInfoStats({
     let instrumentGens = 0;
     let instrumentMods = 0;
     for (const instrument of bank.instruments) {
-        instrument.instrumentZones.forEach((z) => {
+        instrument.zones.forEach((z) => {
             instrumentGens += z.generators.length;
             instrumentMods += z.modulators.length;
         });
@@ -25,7 +25,7 @@ export function BankInfoStats({
     let presetGens = 0;
     let presetMods = 0;
     for (const preset of bank.presets) {
-        preset.presetZones.forEach((z) => {
+        preset.zones.forEach((z) => {
             presetMods += z.modulators.length;
             presetGens += z.generators.length;
         });

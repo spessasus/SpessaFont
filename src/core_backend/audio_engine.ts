@@ -15,7 +15,7 @@ const MAX_CHUNKS_QUEUED = 16; // 16 * 128 = 2,048 // Windows does not like small
 
 type AudioChunk = [Float32Array, Float32Array];
 
-const dummy = BasicSoundBank.getDummySoundfontFile();
+const dummy = BasicSoundBank.getSampleSoundBankFile();
 
 export class AudioEngine {
     context: AudioContext;
@@ -40,7 +40,7 @@ export class AudioEngine {
             initialTime: context.currentTime
         });
         dummy.then((d) =>
-            this.processor.soundfontManager.reloadManager(
+            this.processor.soundBankManager.reloadManager(
                 loadSoundFont(d.slice())
             )
         );
@@ -61,7 +61,7 @@ export class AudioEngine {
         if (isDev) {
             logInfo("Dev mode on");
         }
-        SpessaSynthLogging(isDev, isDev, isDev, isDev);
+        SpessaSynthLogging(isDev, isDev, isDev);
     }
 
     get MIDIPaused() {

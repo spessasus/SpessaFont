@@ -1,12 +1,12 @@
-import type { midiControllers } from "spessasynth_core";
+import type { ModulatorSource } from "spessasynth_core";
 import { modulatorSources } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import type { ChangeEvent, JSX } from "react";
 import "./source_picker.css";
 
-export type ModulatorSource = {
+export type SpessaFontModulatorSource = {
     usesCC: boolean;
-    sourceIndex: modulatorSources | midiControllers;
+    sourceIndex: ModulatorSource;
 };
 
 export function ModulatorSourcePicker({
@@ -14,8 +14,8 @@ export function ModulatorSourcePicker({
     setSource,
     ccOptions
 }: {
-    source: ModulatorSource;
-    setSource: (s: ModulatorSource) => void;
+    source: SpessaFontModulatorSource;
+    setSource: (s: SpessaFontModulatorSource) => void;
     ccOptions: JSX.Element;
 }) {
     const { t } = useTranslation();
@@ -25,14 +25,14 @@ export function ModulatorSourcePicker({
         : (-source.sourceIndex).toString();
 
     const handleSelectChange = (e: ChangeEvent<HTMLSelectElement>) => {
-        const num = parseInt(e.target.value);
+        const num = parseInt(e.target.value) as ModulatorSource;
 
         if (num >= 0) {
             setSource({ usesCC: true, sourceIndex: num });
         } else {
             setSource({
                 usesCC: false,
-                sourceIndex: -num
+                sourceIndex: -num as ModulatorSource
             });
         }
     };

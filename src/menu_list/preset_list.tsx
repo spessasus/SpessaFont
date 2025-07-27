@@ -124,10 +124,9 @@ export function PresetList({
 
     const createPreset = useCallback(() => {
         const preset = new BasicPreset(manager);
-        preset.presetName = [...selectedInstruments][0].instrumentName;
+        preset.name = [...selectedInstruments][0].name;
         selectedInstruments.forEach((i) => {
-            const zone = preset.createZone();
-            zone.setInstrument(i);
+            preset.createZone(i);
         });
         let found = !!presets.find(
             (p) =>
@@ -192,11 +191,7 @@ export function PresetList({
                     );
                     setPresets([
                         ...manager.presets.toSorted((a, b) =>
-                            a.presetName > b.presetName
-                                ? 1
-                                : b.presetName > a.presetName
-                                  ? -1
-                                  : 0
+                            a.name > b.name ? 1 : b.name > a.name ? -1 : 0
                         )
                     ]);
                     toast.success(

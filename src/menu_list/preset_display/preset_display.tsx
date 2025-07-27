@@ -43,7 +43,7 @@ export function PresetDisplay({
         <div className={"preset_item_wrapper"} ref={elementRef}>
             <div
                 className={`preset_item ${selected ? "selected" : ""}`}
-                title={p.preset.presetName}
+                title={p.preset.name}
             >
                 <div className={"left_group"}>
                     <span
@@ -81,24 +81,20 @@ export function PresetDisplay({
                     className={"monospaced preset_item_name"}
                     onClick={onClick}
                 >
-                    {p.preset.presetName}
+                    {p.preset.name}
                 </span>
             </div>
             <div className={"preset_instruments"}>
                 {open &&
-                    p.preset.presetZones.map((z, i) => (
+                    p.preset.zones.map((z, i) => (
                         <InstrumentDisplay
-                            open={
-                                openedInstruments[
-                                    z.instrument.instrumentName
-                                ] ?? false
-                            }
+                            open={openedInstruments[z.instrument.name] ?? false}
                             setOpen={(isOpen) =>
                                 setOpenedData({
                                     ...openedData,
                                     openInstruments: {
                                         ...openedInstruments,
-                                        [z.instrument.instrumentName]: isOpen
+                                        [z.instrument.name]: isOpen
                                     }
                                 })
                             }

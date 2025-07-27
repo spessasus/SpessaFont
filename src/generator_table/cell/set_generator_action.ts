@@ -1,9 +1,9 @@
 import type { HistoryAction } from "../../core_backend/history.ts";
-import type { BasicZone, generatorTypes } from "spessasynth_core";
+import type { BasicZone, GeneratorType } from "spessasynth_core";
 
 export class SetGeneratorAction implements HistoryAction {
     private readonly zone: BasicZone;
-    private readonly generator: generatorTypes;
+    private readonly generator: GeneratorType;
     private readonly previousValue: number | null;
     private readonly newValue: number | null;
     private readonly callback: () => unknown;
@@ -11,7 +11,7 @@ export class SetGeneratorAction implements HistoryAction {
     // null means "unset" (no generator)
     constructor(
         zone: BasicZone,
-        generator: generatorTypes,
+        generator: GeneratorType,
         previousValue: number | null,
         newValue: number | null,
         callback: () => unknown

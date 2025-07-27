@@ -1,4 +1,4 @@
-import type { SoundFontInfoType } from "spessasynth_core";
+import type { SoundBankInfoFourCC } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
@@ -8,13 +8,13 @@ class SetBankInfo implements HistoryAction {
     callback: (s: string) => void;
     private readonly oldVal: string;
     private readonly newVal: string;
-    private readonly fourCC: SoundFontInfoType;
+    private readonly fourCC: SoundBankInfoFourCC;
 
     constructor(
         callback: { (s: string): void },
         oldVal: string,
         newVal: string,
-        fourCC: SoundFontInfoType
+        fourCC: SoundBankInfoFourCC
     ) {
         this.callback = callback;
         this.oldVal = oldVal;
@@ -23,12 +23,12 @@ class SetBankInfo implements HistoryAction {
     }
 
     do(b: SoundBankManager) {
-        b.soundFontInfo[this.fourCC] = this.newVal;
+        b.soundBankInfo[this.fourCC] = this.newVal;
         this.callback(this.newVal);
     }
 
     undo(b: SoundBankManager) {
-        b.soundFontInfo[this.fourCC] = this.oldVal;
+        b.soundBankInfo[this.fourCC] = this.oldVal;
         this.callback(this.oldVal);
     }
 }

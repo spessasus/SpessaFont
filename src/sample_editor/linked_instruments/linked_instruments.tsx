@@ -66,7 +66,7 @@ export function LinkedInstruments({
                             onClick={() => setView(inst)}
                             key={i}
                         >
-                            {inst.instrumentName}
+                            {inst.name}
                         </div>
                     ))}
                 </>

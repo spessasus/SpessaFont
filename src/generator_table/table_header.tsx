@@ -55,8 +55,8 @@ export const GeneratorTableHeader = typedMemo(function <
                 let span = 1;
                 let name =
                     z instanceof BasicInstrumentZone
-                        ? z.sample.sampleName
-                        : z.instrument.instrumentName;
+                        ? z.sample.name
+                        : z.instrument.name;
                 let stereo = false;
                 if (linked.index === 2) {
                     span = 2;

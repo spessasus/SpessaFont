@@ -32,12 +32,12 @@ export function BottomPresetBar({
             <div>
                 <WaitingInput
                     type={"text"}
-                    value={preset.presetName}
+                    value={preset.name}
                     setValue={(v) => {
                         const action = new EditPresetAction(
                             presets.indexOf(preset),
-                            "presetName",
-                            preset.presetName,
+                            "name",
+                            preset.name,
                             v,
                             () => setPresets([...presets])
                         );

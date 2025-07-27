@@ -8,7 +8,7 @@ import {
 import "./keyboard.css";
 import type { AudioEngine } from "../../core_backend/audio_engine.ts";
 import { KEYBOARD_TARGET_CHANNEL } from "../target_channel.ts";
-import type { SoundFontRange } from "spessasynth_core";
+import type { KeyRange } from "spessasynth_core";
 
 function isBlackNoteNumber(midiNote: number) {
     const pitchClass = midiNote % 12;
@@ -36,17 +36,17 @@ export function Keyboard({
     ref: RefObject<KeyboardRef | null>;
     keyDisplay: RefObject<HTMLSpanElement | null>;
     velocityDisplay: RefObject<HTMLSpanElement | null>;
-    splits: SoundFontRange[];
+    splits: KeyRange[];
 }) {
     const keysRef = useRef<HTMLDivElement[]>([]);
     const keyboardRef = useRef<HTMLDivElement | null>(null);
 
     const matchingSplits = useMemo(() => {
-        const map: SoundFontRange[][] = [];
+        const map: KeyRange[][] = [];
         for (let midiNote = 0; midiNote < 128; midiNote++) {
             // find all splits tha this key belongs to
             map.push(
-                splits.reduce((matched: SoundFontRange[], split) => {
+                splits.reduce((matched: KeyRange[], split) => {
                     if (split.min <= midiNote && split.max >= midiNote) {
                         matched.push(split);
                     }

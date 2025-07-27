@@ -20,10 +20,10 @@ export const SampleDisplay = React.memo(function ({
             ref={elementRef}
             className={`sample_display  ${selected ? "selected" : ""}`}
             onClick={onClick}
-            title={sample.sampleName}
+            title={sample.name}
         >
             <SpeakerIcon />
-            <span className={"monospaced"}>{sample.sampleName}</span>
+            <span className={"monospaced"}>{sample.name}</span>
         </div>
     );
 });

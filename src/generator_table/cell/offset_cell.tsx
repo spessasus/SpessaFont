@@ -9,6 +9,18 @@ import { useCallback } from "react";
 import { SetGeneratorAction } from "./set_generator_action.ts";
 import { typedMemo } from "../../utils/typed_memo.ts";
 
+export type OffsetGenerator =
+    | typeof generatorTypes.startAddrsOffset
+    | typeof generatorTypes.endAddrOffset
+    | typeof generatorTypes.startloopAddrsOffset
+    | typeof generatorTypes.endloopAddrsOffset;
+
+export type CoarseOffsetGenerator =
+    | typeof generatorTypes.startAddrsCoarseOffset
+    | typeof generatorTypes.endAddrsCoarseOffset
+    | typeof generatorTypes.startloopAddrsCoarseOffset
+    | typeof generatorTypes.endloopAddrsCoarseOffset;
+
 export const OffsetGeneratorCell = typedMemo(function ({
     zone,
     linkedZone,
@@ -19,14 +31,10 @@ export const OffsetGeneratorCell = typedMemo(function ({
 }: Omit<GeneratorProps, "generator"> & {
     zone: BasicZone;
     linkedZone?: BasicZone;
-    generatorType:
-        | generatorTypes.startAddrsOffset
-        | generatorTypes.endAddrOffset
-        | generatorTypes.startloopAddrsOffset
-        | generatorTypes.endloopAddrsOffset;
+    generatorType: OffsetGenerator;
     colSpan: number;
 }) {
-    let coarseGeneratorType: generatorTypes;
+    let coarseGeneratorType: CoarseOffsetGenerator;
     switch (generatorType) {
         case generatorTypes.startAddrsOffset:
             coarseGeneratorType = generatorTypes.startAddrsCoarseOffset;

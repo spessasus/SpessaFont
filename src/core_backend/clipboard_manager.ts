@@ -95,7 +95,7 @@ export class ClipboardManager {
                 }
             }
             const newPreset = new BasicPreset(m);
-            newPreset.presetName = oldPreset.presetName;
+            newPreset.name = oldPreset.name;
             newPreset.program = program;
             newPreset.bank = bank;
 
@@ -104,10 +104,8 @@ export class ClipboardManager {
             newPreset.genre = oldPreset.genre;
 
             newPreset.globalZone.copyFrom(oldPreset.globalZone);
-            for (const zone of oldPreset.presetZones) {
-                const newZone = newPreset.createZone();
-                newZone.copyFrom(zone);
-                newZone.setInstrument(
+            for (const zone of oldPreset.zones) {
+                const newZone = newPreset.createZone(
                     this.addInstrument(
                         zone.instrument,
                         clonedInstruments,
@@ -119,6 +117,7 @@ export class ClipboardManager {
                         false
                     )
                 );
+                newZone.copyFrom(zone);
             }
             actions.push(
                 new CreatePresetAction(newPreset, setPresets, setView)
@@ -202,15 +201,13 @@ export class ClipboardManager {
         setView: SetViewType,
         duplicate: boolean = true
     ): BasicSample {
-        const names = new Set(alreadyCloned.map((s) => s.sampleName));
-        const exists = names.has(oldSample.sampleName);
-        const originalName = oldSample.sampleName.substring(0, 37);
-        let name = oldSample.sampleName;
+        const names = new Set(alreadyCloned.map((s) => s.name));
+        const exists = names.has(oldSample.name);
+        const originalName = oldSample.name.substring(0, 37);
+        let name = oldSample.name;
         if (exists) {
             if (!duplicate) {
-                const r = alreadyCloned.find(
-                    (s) => s.sampleName === oldSample.sampleName
-                );
+                const r = alreadyCloned.find((s) => s.name === oldSample.name);
                 if (!r) {
                     throw new Error(
                         "This should never happen. If it did, then congrats!"
@@ -227,16 +224,19 @@ export class ClipboardManager {
         const newSample = new BasicSample(
             name,
             oldSample.sampleRate,
-            oldSample.samplePitch,
-            oldSample.samplePitchCorrection,
+            oldSample.originalKey,
+            oldSample.pitchCorrection,
             oldSample.sampleType,
-            oldSample.sampleLoopStartIndex,
-            oldSample.sampleLoopEndIndex
+            oldSample.loopStart,
+            oldSample.loopEnd
         );
         if (oldSample.isCompressed && oldSample.compressedData) {
             newSample.setCompressedData(oldSample.compressedData.slice());
         } else {
-            newSample.setAudioData(oldSample.getAudioData());
+            newSample.setAudioData(
+                oldSample.getAudioData(),
+                oldSample.sampleRate
+            );
         }
         actions.push(new CreateSampleAction(newSample, setSamples, setView));
         alreadyCloned.push(newSample);
@@ -266,15 +266,13 @@ export class ClipboardManager {
         setView: SetViewType,
         duplicate: boolean = true
     ): BasicInstrument {
-        const names = new Set(alreadyCloned.map((i) => i.instrumentName));
-        const exists = names.has(oldInst.instrumentName);
-        let name = oldInst.instrumentName;
-        const originalName = oldInst.instrumentName.substring(0, 37);
+        const names = new Set(alreadyCloned.map((i) => i.name));
+        const exists = names.has(oldInst.name);
+        let name = oldInst.name;
+        const originalName = oldInst.name.substring(0, 37);
         if (exists) {
             if (!duplicate) {
-                const r = alreadyCloned.find(
-                    (i) => i.instrumentName === oldInst.instrumentName
-                );
+                const r = alreadyCloned.find((i) => i.name === oldInst.name);
                 if (!r) {
                     throw new Error(
                         "This should never happen. If it did, then congrats!"
@@ -289,12 +287,10 @@ export class ClipboardManager {
             }
         }
         const newInst = new BasicInstrument();
-        newInst.instrumentName = name;
+        newInst.name = name;
         newInst.globalZone.copyFrom(oldInst.globalZone);
-        for (const zone of oldInst.instrumentZones) {
-            const copiedZone = newInst.createZone();
-            copiedZone.copyFrom(zone);
-            copiedZone.setSample(
+        for (const zone of oldInst.zones) {
+            const copiedZone = newInst.createZone(
                 this.addSample(
                     zone.sample,
                     clonedSamples,
@@ -304,6 +300,7 @@ export class ClipboardManager {
                     false
                 )
             );
+            copiedZone.copyFrom(zone);
         }
         actions.push(
             new CreateInstrumentAction(newInst, setInstruments, setView)

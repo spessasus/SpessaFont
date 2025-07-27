@@ -1,4 +1,4 @@
-import { interpolationTypes, masterParameterType } from "spessasynth_core";
+import { type InterpolationType, interpolationTypes } from "spessasynth_core";
 import type { AudioEngine } from "../../core_backend/audio_engine.ts";
 
 export type ThemeType = "dark" | "light";
@@ -7,7 +7,7 @@ export type SavedSettingsType = {
     lang: string;
     volume: number;
     theme: ThemeType;
-    interpolation: interpolationTypes;
+    interpolation: InterpolationType;
     reverbLevel: number;
     chorusLevel: number;
 };
@@ -37,9 +37,15 @@ export function applyAudioSettings(
     const processor = engine.processor;
     engine.setVolume(getSetting("volume", settings));
     processor.setMasterParameter(
-        masterParameterType.interpolationType,
+        "interpolationType",
         getSetting("interpolation", settings)
     );
-    processor.reverbGain = getSetting("reverbLevel", settings);
-    processor.chorusGain = getSetting("chorusLevel", settings);
+    processor.setMasterParameter(
+        "reverbGain",
+        getSetting("reverbLevel", settings)
+    );
+    processor.setMasterParameter(
+        "chorusGain",
+        getSetting("chorusLevel", settings)
+    );
 }

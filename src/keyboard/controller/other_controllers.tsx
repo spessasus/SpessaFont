@@ -18,12 +18,14 @@ export function OtherControllers({
     ref: Ref<OtherCCRef>;
 }) {
     const [pitchValue, sp] = useState(
-        engine.processor.midiAudioChannels[KEYBOARD_TARGET_CHANNEL]
-            .midiControllers[128 + modulatorSources.pitchWheel]
+        engine.processor.midiChannels[KEYBOARD_TARGET_CHANNEL].midiControllers[
+            128 + modulatorSources.pitchWheel
+        ]
     );
     const [pressure, spres] = useState(
-        engine.processor.midiAudioChannels[KEYBOARD_TARGET_CHANNEL]
-            .midiControllers[128 + modulatorSources.channelPressure] >> 7
+        engine.processor.midiChannels[KEYBOARD_TARGET_CHANNEL].midiControllers[
+            128 + modulatorSources.channelPressure
+        ] >> 7
     );
     const { t } = useTranslation();
 

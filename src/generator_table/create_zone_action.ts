@@ -36,13 +36,9 @@ export class CreateZoneAction<
     do() {
         const isInst = this.el instanceof BasicInstrument;
         if (isInst && this.child instanceof BasicSample) {
-            const zone = this.el.createZone();
-            zone.setSample(this.child);
-            this.clonedZone = zone;
+            this.clonedZone = this.el.createZone(this.child);
         } else if (!isInst && this.child instanceof BasicInstrument) {
-            const zone = this.el.createZone();
-            zone.setInstrument(this.child);
-            this.clonedZone = zone;
+            this.clonedZone = this.el.createZone(this.child);
         } else {
             throw new Error("Parent and child types do not match.");
         }
@@ -54,10 +50,7 @@ export class CreateZoneAction<
         if (!this.clonedZone) {
             throw new Error("Undoing zone creation before doing it.");
         }
-        const zones: BasicZone[] =
-            this.el instanceof BasicInstrument
-                ? this.el.instrumentZones
-                : this.el.presetZones;
+        const zones: BasicZone[] = this.el.zones;
         const index = zones.indexOf(this.clonedZone);
         if (index < 0) {
             throw new Error("Invalid index for undoing zone creation.");
@@ -68,13 +61,9 @@ export class CreateZoneAction<
 
     private applyChanges() {
         if (this.el instanceof BasicInstrument) {
-            this.el.instrumentZones = reorderInstrumentZones(
-                this.el.instrumentZones
-            );
+            this.el.zones = reorderInstrumentZones(this.el.zones);
         } else {
-            this.el.presetZones = this.el.presetZones.toSorted(
-                ZONE_SORTING_FUNCTION
-            );
+            this.el.zones = this.el.zones.toSorted(ZONE_SORTING_FUNCTION);
         }
         this.callback();
     }

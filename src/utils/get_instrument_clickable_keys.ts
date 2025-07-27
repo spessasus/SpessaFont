@@ -1,10 +1,10 @@
-import type { BasicZone, SoundFontRange } from "spessasynth_core";
+import type { BasicZone, KeyRange } from "spessasynth_core";
 
 export function getZoneSplits(
     zones: BasicZone[],
-    global: SoundFontRange
-): SoundFontRange[] {
-    const splits: SoundFontRange[] = [];
+    global: KeyRange
+): KeyRange[] {
+    const splits: KeyRange[] = [];
     zones.forEach(({ keyRange: { min, max } }) => {
         if (min === -1) {
             min = global.min;

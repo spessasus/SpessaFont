@@ -40,12 +40,12 @@ export function LinkedPresets({
                 <WaitingInput
                     className={"monospaced"}
                     type={"text"}
-                    value={instrument.instrumentName}
+                    value={instrument.name}
                     setValue={(v) => {
                         const action = new EditInstrumentAction(
                             instruments.indexOf(instrument),
-                            "instrumentName",
-                            instrument.instrumentName,
+                            "name",
+                            instrument.name,
                             v,
                             () => setInstruments([...instruments])
                         );
@@ -79,7 +79,7 @@ export function LinkedPresets({
                             onClick={() => setView(preset)}
                             key={i}
                         >
-                            {preset.presetName}
+                            {preset.name}
                         </div>
                     ))}
                 </>

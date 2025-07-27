@@ -3,8 +3,9 @@ import {
     type BasicInstrument,
     type BasicInstrumentZone,
     BasicPreset,
+    type GeneratorType,
     generatorTypes,
-    type SoundFontRange
+    type KeyRange
 } from "spessasynth_core";
 import "./instrument_editor.css";
 import { useEffect } from "react";
@@ -31,10 +32,10 @@ type InstrumentEditorProps = {
     setView: SetViewType;
     setInstruments: (s: BasicInstrument[]) => void;
     instruments: BasicInstrument[];
-    setSplits: (s: SoundFontRange[]) => unknown;
+    setSplits: (s: KeyRange[]) => unknown;
 };
 export type GeneratorRowType = {
-    generator: generatorTypes;
+    generator: GeneratorType;
     fromGenerator?: (v: number) => number;
     toGenerator?: (v: number) => number;
     highlight?: boolean;
@@ -312,23 +313,25 @@ export function InstrumentEditor({
     destinationOptions
 }: InstrumentEditorProps & ModulatorListGlobals) {
     const update = () => {
-        instrument.instrumentZones = [...instrument.instrumentZones];
+        instrument.zones = [...instrument.zones];
         setInstruments([...instruments]);
         engine.processor.clearCache();
     };
 
-    const zones = instrument.instrumentZones;
+    const zones = instrument.zones;
 
     const global = instrument.globalZone;
     useEffect(() => {
         // do some hacky stuff to get the zones to play
         const preset = new BasicPreset(manager);
         // screaming name so it's easier to spot errors
-        preset.presetName = "INSTRUMENT PLAYBACK PRESET";
-        // note: do not use setInstrument as we don't want the instrument to be aware of the preset
+        preset.name = "INSTRUMENT PLAYBACK PRESET";
+
+        preset.createZone(instrument);
+        // note: unlink it we don't want the instrument to be aware of the preset
         // (it won't allow us to delete it)
-        preset.createZone().instrument = instrument;
-        engine.processor.midiAudioChannels[KEYBOARD_TARGET_CHANNEL].setPreset(
+        instrument.unlinkFrom(preset);
+        engine.processor.midiChannels[KEYBOARD_TARGET_CHANNEL].setPreset(
             preset
         );
         engine.processor.clearCache();
@@ -361,7 +364,7 @@ export function InstrumentEditor({
                 element={instrument}
                 zones={zones}
                 global={global}
-                name={instrument.instrumentName}
+                name={instrument.name}
                 setView={setView}
                 clipboardManager={clipboardManager}
                 ccOptions={ccOptions}

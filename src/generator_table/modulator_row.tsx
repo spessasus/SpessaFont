@@ -49,8 +49,8 @@ export const GeneratorTableModulatorRow = typedMemo(function <
                 let span = 1;
                 let name =
                     z instanceof BasicInstrumentZone
-                        ? z.sample.sampleName
-                        : z.instrument.instrumentName;
+                        ? z.sample.name
+                        : z.instrument.name;
                 if (linked.index === 2) {
                     span = 2;
                     name = name.replace(STEREO_REGEX, "").trim();

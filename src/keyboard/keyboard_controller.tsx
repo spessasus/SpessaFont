@@ -3,7 +3,16 @@ import "./keyboard_controller.css";
 import { Keyboard, type KeyboardRef } from "./keyboard/keyboard.tsx";
 import * as React from "react";
 import { type JSX, type RefObject, useEffect, useRef, useState } from "react";
-import { midiControllers, type SoundFontRange } from "spessasynth_core";
+import {
+    type ChannelPressureCallback,
+    type ControllerChangeCallback,
+    type KeyRange,
+    type MIDIController,
+    midiControllers,
+    type NoteOffCallback,
+    type NoteOnCallback,
+    type PitchWheelCallback
+} from "spessasynth_core";
 import {
     Controller,
     type ControllerKnobRef
@@ -15,7 +24,7 @@ import {
 } from "./controller/other_controllers.tsx";
 import { useTranslation } from "react-i18next";
 
-const INITIAL_CC_LIST: number[] = [
+const INITIAL_CC_LIST: MIDIController[] = [
     midiControllers.modulationWheel,
     midiControllers.mainVolume,
     midiControllers.pan,
@@ -35,10 +44,11 @@ export function KeyboardController({
 }: {
     engine: AudioEngine;
     ccOptions: JSX.Element;
-    splits: SoundFontRange[];
+    splits: KeyRange[];
 }) {
     const { t } = useTranslation();
-    const [controllers, setControllers] = useState(INITIAL_CC_LIST);
+    const [controllers, setControllers] =
+        useState<MIDIController[]>(INITIAL_CC_LIST);
     const knobRefs = useRef<RefObject<ControllerKnobRef | null>[]>([]);
     INITIAL_CC_LIST.map(() => {
         const reference = React.createRef<ControllerKnobRef>();
@@ -52,38 +62,45 @@ export function KeyboardController({
 
     useEffect(() => {
         engine.processor.onEventCall = (e, d) => {
-            if (d?.channel === KEYBOARD_TARGET_CHANNEL) {
+            if (d && "channel" in d && d?.channel === KEYBOARD_TARGET_CHANNEL) {
                 switch (e) {
-                    case "controllerchange": {
-                        const ccV = d.controllerValue;
-                        const cc = d.controllerNumber;
+                    case "controllerChange": {
+                        const data = d as ControllerChangeCallback;
+                        const ccV = data.controllerValue;
+                        const cc = data.controllerNumber;
                         knobRefs.current.forEach((r) => {
                             r?.current?.ccUpdate(cc, ccV);
                         });
                         break;
                     }
 
-                    case "stopall":
+                    case "stopAll":
                         keyboardRef?.current?.clearAll();
                         break;
 
-                    case "noteon":
-                        keyboardRef?.current?.pressNote(d?.midiNote || 60);
+                    case "noteOn": {
+                        const data = d as NoteOnCallback;
+                        keyboardRef?.current?.pressNote(data.midiNote || 60);
                         break;
+                    }
 
-                    case "noteoff":
-                        keyboardRef?.current?.releaseNote(d?.midiNote || 60);
+                    case "noteOff": {
+                        const data = d as NoteOffCallback;
+                        keyboardRef?.current?.releaseNote(data.midiNote || 60);
                         break;
+                    }
 
-                    case "pitchwheel":
+                    case "pitchWheel":
                         {
-                            const pitch = (d.MSB << 7) | d.LSB;
+                            const data = d as PitchWheelCallback;
+                            const pitch = (data.MSB << 7) | data.LSB;
                             pitchRef?.current?.setPitch(pitch);
                         }
                         break;
 
-                    case "channelpressure": {
-                        pitchRef?.current?.setPressure(d.pressure);
+                    case "channelPressure": {
+                        const data = d as ChannelPressureCallback;
+                        pitchRef?.current?.setPressure(data.pressure);
                     }
                 }
             }
@@ -108,7 +125,7 @@ export function KeyboardController({
 
                     <div className={"controller_row"}>
                         {controllers.map((cc, i) => {
-                            const setCC = (cc: number) => {
+                            const setCC = (cc: MIDIController) => {
                                 const newControllers = [...controllers];
                                 newControllers[i] = cc;
                                 setControllers(newControllers);
