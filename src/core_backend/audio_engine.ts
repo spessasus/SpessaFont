@@ -46,7 +46,6 @@ export class AudioEngine {
         );
 
         this.sequencer = new SpessaSynthSequencer(this.processor);
-        this.sequencer.preservePlaybackState = true;
         // analyser
         this.analyser = new AnalyserNode(this.context);
         this.analyser.connect(this.context.destination);
@@ -175,6 +174,7 @@ export class AudioEngine {
 
     playMIDI(mid: BasicMIDI) {
         this.sequencer.loadNewSongList([mid]);
+        this.sequencer.play();
     }
 
     pauseMIDI() {
