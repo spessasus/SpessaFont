@@ -16,11 +16,11 @@ import type { LinkedZoneMap } from "./generator_table.tsx";
 import { OffsetGeneratorCell } from "./cell/offset_cell.tsx";
 import { typedMemo } from "../utils/typed_memo.ts";
 
-export type GeneratorProps = {
+export interface GeneratorProps {
     generator: GeneratorType;
     manager: SoundBankManager;
     callback: () => unknown;
-};
+}
 
 export type NumberGeneratorProps = GeneratorProps & {
     fromGenerator?: (v: number) => number;

@@ -29,6 +29,7 @@ export default class SoundBankManager extends BasicSoundBank {
 
     // unsaved changes
     dirty = false;
+    changeCallback?: () => void;
 
     constructor(
         processor: SpessaSynthProcessor,
@@ -42,9 +43,9 @@ export default class SoundBankManager extends BasicSoundBank {
             bank ?? SoundBankLoader.fromArrayBuffer(dummy.slice());
         Object.assign(this, actualBank);
         if (bank === undefined) {
-            this.soundBankInfo["ifil"] = "2.4";
-            this.soundBankInfo["INAM"] = "";
-            this.soundBankInfo["ICRD"] = new Date().toISOString().split("T")[0];
+            this.soundBankInfo.ifil = "2.4";
+            this.soundBankInfo.INAM = "";
+            this.soundBankInfo.ICRD = new Date().toISOString().split("T")[0];
         }
         // fix preset references
         // @ts-expect-error hacky way to make this work
@@ -84,7 +85,7 @@ export default class SoundBankManager extends BasicSoundBank {
     }
 
     getInfo(fourCC: SoundBankInfoFourCC) {
-        return this.soundBankInfo?.[fourCC]?.toString() || "";
+        return this.soundBankInfo?.[fourCC]?.toString() ?? "";
     }
 
     getTabName(unnamed: string) {
@@ -133,7 +134,7 @@ export default class SoundBankManager extends BasicSoundBank {
                     progressFunction
                 });
         }
-        if (this.soundBankInfo["ifil"] === "3.0") {
+        if (this.soundBankInfo.ifil === "3.0") {
             format = "sf3";
         }
         const buffer = binary.buffer;
@@ -147,9 +148,7 @@ export default class SoundBankManager extends BasicSoundBank {
             while (toWrite < binary.length) {
                 // 50MB chunks (browsers don't like 4GB array buffers)
                 const size = Math.min(52428800, binary.length - toWrite);
-                chunks.push(
-                    buffer.slice(toWrite, toWrite + size) as ArrayBuffer
-                );
+                chunks.push(buffer.slice(toWrite, toWrite + size));
                 toWrite += size;
             }
 
@@ -163,7 +162,7 @@ export default class SoundBankManager extends BasicSoundBank {
         a.download = `${this.getBankName("Unnamed")}.${format}`;
         a.click();
         this.dirty = false;
-        this.changeCallback();
+        this.changeCallback?.();
 
         // clean up the object URL after a short delay
         setTimeout(() => {
@@ -184,7 +183,7 @@ export default class SoundBankManager extends BasicSoundBank {
         }
         this.history.do(this, actions);
         this.dirty = true;
-        this.changeCallback();
+        this.changeCallback?.();
     }
 
     undo() {
@@ -192,14 +191,12 @@ export default class SoundBankManager extends BasicSoundBank {
         if (this.history.length < 1) {
             this.dirty = false;
         }
-        this.changeCallback();
+        this.changeCallback?.();
     }
 
     redo() {
         this.history.redo(this);
         this.dirty = true;
-        this.changeCallback();
+        this.changeCallback?.();
     }
-
-    changeCallback: () => void = () => {};
 }

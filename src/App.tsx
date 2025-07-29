@@ -40,14 +40,11 @@ if (targetLocale === UNSET_LANGUAGE) {
     targetLocale = getUserLocale();
 }
 
-i18next
-    .use(initReactI18next)
-    .init({
-        resources: LocaleList,
-        lng: targetLocale,
-        fallbackLng: DEFAULT_LOCALE
-    })
-    .then();
+void i18next.use(initReactI18next).init({
+    resources: LocaleList,
+    lng: targetLocale,
+    fallbackLng: DEFAULT_LOCALE
+});
 
 const context = new AudioContext({
     sampleRate: 48000,
@@ -117,7 +114,7 @@ function App() {
             let bank: BasicSoundBank | undefined = undefined;
             if (bankFile instanceof File) {
                 // @ts-expect-error chrome property
-                if (bankFile.size > 2_147_483_648 && window["chrome"]) {
+                if (bankFile.size > 2_147_483_648 && window.chrome) {
                     // this not anti-chrome code,
                     // loading 4GB sound banks throws NotReadable error,
                     // uncomment this code and try it for yourself
@@ -136,7 +133,7 @@ function App() {
                     console.error(e);
                     toast.dismiss(id);
                     // make so the error appears at the bottom
-                    toast.error(`${e}`);
+                    toast.error(`${e as string}`);
                     toast.error(t("loadingAndSaving.errorLoadingSoundBank"));
                     return;
                 }
@@ -243,7 +240,7 @@ function App() {
                 showMidiPlayer={tabs.length > 0}
                 toggleSettings={toggleSettings}
                 audioEngine={audioEngine}
-                openTab={openNewBankTab}
+                openTab={openNewBankTab as () => void}
                 closeTab={() => closeTab(activeTab)}
                 manager={currentManager}
                 toggleKeyboard={() => setShowKeyboard(!showKeyboard)}

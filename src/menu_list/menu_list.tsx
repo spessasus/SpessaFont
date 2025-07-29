@@ -20,9 +20,9 @@ import { DeletePresetAction } from "../preset_editor/bottom_bar/delete_preset_ac
 export const ESTIMATED_ROW_HEIGHT = 30;
 export const OVERSCAN = 5;
 
-export type MappedPresetType = { searchString: string; preset: BasicPreset };
+export interface MappedPresetType { searchString: string; preset: BasicPreset }
 
-type MenuListProps = {
+interface MenuListProps {
     manager: SoundBankManager;
     view: BankEditView;
     sv: SetViewType;
@@ -34,7 +34,7 @@ type MenuListProps = {
     presets: BasicPreset[];
     setPresets: (p: BasicPreset[]) => unknown;
     clipboard: ClipboardManager;
-};
+}
 
 export const MenuList = React.memo(function ({
     view,

@@ -61,7 +61,7 @@ export function TypeSelector({
         (availableSamples.length < 2 && linkedSample);
 
     const setType = (t: SampleType) => {
-        const linked: BasicSample = linkedSample || samples[0];
+        const linked: BasicSample = linkedSample ?? samples[0];
         switch (t) {
             case sampleTypes.rightSample:
             case sampleTypes.leftSample:

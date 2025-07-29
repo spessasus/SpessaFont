@@ -11,7 +11,7 @@ class SetBankInfo implements HistoryAction {
     private readonly fourCC: SoundBankInfoFourCC;
 
     constructor(
-        callback: { (s: string): void },
+        callback: (s: string) => void,
         oldVal: string,
         newVal: string,
         fourCC: SoundBankInfoFourCC
@@ -23,12 +23,12 @@ class SetBankInfo implements HistoryAction {
     }
 
     do(b: SoundBankManager) {
-        b.soundBankInfo[this.fourCC] = this.newVal;
+        (b.soundBankInfo[this.fourCC] as string) = this.newVal;
         this.callback(this.newVal);
     }
 
     undo(b: SoundBankManager) {
-        b.soundBankInfo[this.fourCC] = this.oldVal;
+        (b.soundBankInfo[this.fourCC] as string) = this.oldVal;
         this.callback(this.oldVal);
     }
 }

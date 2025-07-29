@@ -21,7 +21,7 @@ export type KeyboardRef = {
     releaseNote: (midiNote: number) => void;
 } | null;
 
-const pressedKeys: Set<number> = new Set();
+const pressedKeys = new Set<number>();
 let mouseHeld = false;
 
 // most of this code is ported over from spessasynth web app
@@ -109,7 +109,7 @@ export function Keyboard({
                     touch.clientY
                 );
 
-                if (!target || !target.id.startsWith("note")) {
+                if (!target?.id.startsWith("note")) {
                     return;
                 }
 
@@ -211,11 +211,11 @@ export function Keyboard({
 
     const keys: number[] = Array.from({ length: 128 }, (_, i) => i);
 
-    const enabledKeys: boolean[] = useMemo(() => {
+    const enabledKeys: boolean[] = useMemo((): boolean[] => {
         if (splits.length === 0) {
-            return Array(128).fill(true);
+            return Array(128).fill(true) as boolean[];
         }
-        const e: boolean[] = Array(128).fill(false);
+        const e: boolean[] = Array(128).fill(false) as boolean[];
 
         splits.forEach((s) => {
             for (let i = s.min; i <= s.max; i++) {

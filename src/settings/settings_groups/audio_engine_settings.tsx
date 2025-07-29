@@ -7,10 +7,10 @@ import {
 import { type InterpolationType, interpolationTypes } from "spessasynth_core";
 import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
 
-export type GroupSettingsProps = {
+export interface GroupSettingsProps {
     settings: SavedSettingsType;
     updateSettings: (s: SavedSettingsType) => void;
-};
+}
 
 export function AudioEngineSettings({
     updateSettings,

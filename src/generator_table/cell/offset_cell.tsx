@@ -165,7 +165,7 @@ export const OffsetGeneratorCell = typedMemo(function ({
                 }
             }
             manager.modifyBank(actions);
-            return newOffset?.toString() || "";
+            return newOffset?.toString() ?? "";
         },
         [
             textValue,

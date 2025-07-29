@@ -28,7 +28,7 @@ export function InterfaceSettings({
 
     function setLanguage(code: string) {
         logInfo(`Changing language to: ${code}`);
-        i18n.changeLanguage(code).then(() => {
+        void i18n.changeLanguage(code).then(() => {
             updateSettings({
                 ...settings,
                 lang: code

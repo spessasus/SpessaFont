@@ -5,10 +5,10 @@ import { useTranslation } from "react-i18next";
 import { KEYBOARD_TARGET_CHANNEL } from "../target_channel.ts";
 import { modulatorSources } from "spessasynth_core";
 
-export type OtherCCRef = {
+export interface OtherCCRef {
     setPitch: (pitch: number) => void;
     setPressure: (pressure: number) => void;
-};
+}
 
 export function OtherControllers({
     engine,

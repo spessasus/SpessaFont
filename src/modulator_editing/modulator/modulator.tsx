@@ -14,7 +14,7 @@ import { DestinationPicker } from "../destination_picker.tsx";
 import * as React from "react";
 import { type JSX } from "react";
 
-type ModulatorProps = {
+interface ModulatorProps {
     mod: Modulator;
     setModulator: (m: Modulator) => void;
     deleteModulator: () => void;
@@ -26,7 +26,7 @@ type ModulatorProps = {
     destinationList: JSX.Element;
     ccList: JSX.Element;
     overridingDefaultModulator: boolean;
-};
+}
 
 const AMOUNT_PREFIX = "× ";
 

@@ -1,10 +1,10 @@
 import * as React from "react";
 import { typedMemo } from "../utils/typed_memo.ts";
 
-type MenuBarProps = {
+interface MenuBarProps {
     main: string;
     children?: React.ReactNode;
-};
+}
 
 export const MenuBarIcon = typedMemo(
     ({

@@ -1,7 +1,7 @@
 import {
+    type BasicMIDI,
     BasicSoundBank,
-    loadSoundFont,
-    type MIDI,
+    SoundBankLoader,
     SpessaSynthLogging,
     SpessaSynthProcessor,
     SpessaSynthSequencer
@@ -29,7 +29,7 @@ export class AudioEngine {
 
     targetNode: GainNode;
 
-    audioChunksQueued: number = 0;
+    audioChunksQueued = 0;
 
     private worklet: AudioWorkletNode | undefined;
 
@@ -39,9 +39,9 @@ export class AudioEngine {
             effectsEnabled: true,
             initialTime: context.currentTime
         });
-        dummy.then((d) =>
+        void dummy.then((d) =>
             this.processor.soundBankManager.reloadManager(
-                loadSoundFont(d.slice())
+                SoundBankLoader.fromArrayBuffer(d.slice())
             )
         );
 
@@ -84,7 +84,8 @@ export class AudioEngine {
         this.worklet.connect(this.targetNode, 0);
         this.worklet.connect(this.reverb, 1);
         this.worklet.connect(this.chorus.input, 2);
-        this.worklet.port.onmessage = (e) => (this.audioChunksQueued = e.data);
+        this.worklet.port.onmessage = (e: MessageEvent<number>) =>
+            (this.audioChunksQueued = e.data);
 
         this.intervalID = setInterval(this.audioLoop.bind(this));
     }
@@ -172,7 +173,7 @@ export class AudioEngine {
         }
     }
 
-    playMIDI(mid: MIDI) {
+    playMIDI(mid: BasicMIDI) {
         this.sequencer.loadNewSongList([mid]);
     }
 

@@ -23,7 +23,7 @@ export class DeleteInstrumentAction implements HistoryAction {
         this.index = b.instruments.indexOf(this.instrument);
         if (this.index < 0) {
             throw new Error(
-                `${this.instrument.name} does not exist in ${b.soundBankInfo["INAM"]}`
+                `${this.instrument.name} does not exist in ${b.soundBankInfo.INAM!}`
             );
         }
         b.deleteInstrument(this.instrument);

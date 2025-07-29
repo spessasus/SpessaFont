@@ -10,7 +10,7 @@ export function loadSettings(): SavedSettingsType {
     );
     let settings: SavedSettingsType;
     if (data) {
-        settings = JSON.parse(data);
+        settings = JSON.parse(data) as SavedSettingsType;
     } else {
         settings = DEFAULT_SETTINGS;
     }

@@ -3,14 +3,14 @@ import type { AudioEngine } from "../../core_backend/audio_engine.ts";
 
 export type ThemeType = "dark" | "light";
 
-export type SavedSettingsType = {
+export interface SavedSettingsType {
     lang: string;
     volume: number;
     theme: ThemeType;
     interpolation: InterpolationType;
     reverbLevel: number;
     chorusLevel: number;
-};
+}
 export const UNSET_LANGUAGE = "UNSET";
 export const SPESSAFONT_SETTINGS_KEY = "SPESSAFONT-USER-SETTINGS";
 

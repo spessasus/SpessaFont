@@ -58,11 +58,11 @@ export function MidiSettings({ engine }: { engine: AudioEngine }) {
                 setMidiAccess(access);
             } catch (error) {
                 console.error("Failed to get MIDI access:", error);
-                setMidiError(error?.toString() || "ERROR");
+                setMidiError(error?.toString() ?? "ERROR");
             }
         };
 
-        getMidiAccess().then();
+        void getMidiAccess();
         return (
             <div className="settings_group">
                 <h2>{t("settingsLocale.midi.title")}</h2>
@@ -72,7 +72,7 @@ export function MidiSettings({ engine }: { engine: AudioEngine }) {
     }
 
     const setDevice = (id: string) => {
-        const input = midiDevices.find((i) => i.id === id) || null;
+        const input = midiDevices.find((i) => i.id === id) ?? null;
         selectedDevicePersistent = input;
         setSelectedDevice(input);
     };
@@ -83,7 +83,7 @@ export function MidiSettings({ engine }: { engine: AudioEngine }) {
             <Setting locale={"settingsLocale.midi.midiInput"}>
                 <select
                     className={"pretty_input monospaced"}
-                    value={selectedDevice?.id || NO_DEVICE}
+                    value={selectedDevice?.id ?? NO_DEVICE}
                     onChange={(e) => setDevice(e.target.value)}
                 >
                     <option value={NO_DEVICE}>

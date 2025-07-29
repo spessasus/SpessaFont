@@ -4,10 +4,10 @@ import { useTranslation } from "react-i18next";
 import type { ChangeEvent, JSX } from "react";
 import "./source_picker.css";
 
-export type SpessaFontModulatorSource = {
+export interface SpessaFontModulatorSource {
     usesCC: boolean;
     sourceIndex: ModulatorSource;
-};
+}
 
 export function ModulatorSourcePicker({
     source,

@@ -8,10 +8,10 @@ import type { SetViewType } from "../../bank_editor/bank_editor.tsx";
 import { useTranslation } from "react-i18next";
 import { LinkIcon } from "../../utils/icons.tsx";
 
-export type OpenPresetDisplayType = {
+export interface OpenPresetDisplayType {
     open: boolean;
     openInstruments: Record<string, boolean>;
-};
+}
 
 export function PresetDisplay({
     p,

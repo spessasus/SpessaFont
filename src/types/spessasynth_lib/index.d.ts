@@ -1,5 +1,5 @@
 declare module "spessasynth_lib" {
-    type ChorusConfig = {
+    interface ChorusConfig {
         /** the number of delay nodes (for each channel) and the corresponding oscillators */
         nodesAmount?: number;
 
@@ -20,7 +20,7 @@ declare module "spessasynth_lib" {
 
         /** specifies how much will oscillator alter the delay in delay nodes, in seconds */
         oscillatorGain?: number;
-    };
+    }
 
     const NODES_AMOUNT = 4;
     const DEFAULT_DELAY = 0.03;

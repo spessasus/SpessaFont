@@ -13,9 +13,9 @@ import type { AudioEngine } from "../../core_backend/audio_engine.ts";
 import { KEYBOARD_TARGET_CHANNEL } from "../target_channel.ts";
 import { ControllerSwitch } from "../../fancy_inputs/controller_switch/controller_switch.tsx";
 
-export type ControllerKnobRef = {
+export interface ControllerKnobRef {
     ccUpdate(c: number, value: number): void;
-};
+}
 
 function ControllerWrapper({
     engine,

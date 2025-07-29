@@ -199,7 +199,7 @@ export class ClipboardManager {
         actions: HistoryAction[],
         setSamples: (s: BasicSample[]) => unknown,
         setView: SetViewType,
-        duplicate: boolean = true
+        duplicate = true
     ): BasicSample {
         const names = new Set(alreadyCloned.map((s) => s.name));
         const exists = names.has(oldSample.name);
@@ -264,7 +264,7 @@ export class ClipboardManager {
         setInstruments: (i: BasicInstrument[]) => unknown,
         setSamples: (s: BasicSample[]) => unknown,
         setView: SetViewType,
-        duplicate: boolean = true
+        duplicate = true
     ): BasicInstrument {
         const names = new Set(alreadyCloned.map((i) => i.name));
         const exists = names.has(oldInst.name);

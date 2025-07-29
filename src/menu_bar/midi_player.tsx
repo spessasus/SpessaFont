@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useState } from "react";
 import {
-    MIDI,
-    RMIDINFOChunks,
+    BasicMIDI,
+    rmidInfoChunks,
     type SpessaSynthSequencer
 } from "spessasynth_core";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
@@ -80,7 +80,7 @@ const PauseComponent = typedMemo(
 
 export function MIDIPlayer({ audioEngine }: { audioEngine: AudioEngine }) {
     const { t } = useTranslation();
-    const [midi, setMidi] = useState<MIDI>();
+    const [midi, setMidi] = useState<BasicMIDI>();
 
     useEffect(() => {
         if (midi !== undefined) {
@@ -98,7 +98,7 @@ export function MIDIPlayer({ audioEngine }: { audioEngine: AudioEngine }) {
             }
             const file = input.files[0];
             const buf = await file.arrayBuffer();
-            const mid = new MIDI(buf, file.name);
+            const mid = BasicMIDI.fromArrayBuffer(buf, file.name);
             setMidi(mid);
         };
         input.click();
@@ -117,7 +117,7 @@ export function MIDIPlayer({ audioEngine }: { audioEngine: AudioEngine }) {
         );
     } else {
         let name: string;
-        if (midi.RMIDInfo[RMIDINFOChunks.name] !== undefined) {
+        if (midi.rmidiInfo[rmidInfoChunks.name] !== undefined) {
             name = midi.midiName;
         } else {
             name = new TextDecoder("Shift_JIS").decode(midi.rawMidiName);

@@ -49,7 +49,7 @@ export const NumberGeneratorCell = typedMemo(function <
     const textValue = v2txt(value);
 
     const limits = generatorLimits[generator];
-    let placeholder: string = "";
+    let placeholder = "";
     if (
         zone instanceof BasicInstrumentZone &&
         generator === generatorTypes.overridingRootKey

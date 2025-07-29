@@ -12,11 +12,11 @@ import { type JSX, useCallback, useState } from "react";
 import type { ClipboardManager } from "../../core_backend/clipboard_manager.ts";
 import toast from "react-hot-toast";
 
-export type ModulatorListGlobals = {
+export interface ModulatorListGlobals {
     clipboardManager: ClipboardManager;
     ccOptions: JSX.Element;
     destinationOptions: JSX.Element;
-};
+}
 
 type ModulatorListProps = ModulatorListGlobals & {
     modulatorList: Modulator[];

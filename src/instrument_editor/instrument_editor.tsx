@@ -25,7 +25,7 @@ import { GeneratorTable } from "../generator_table/generator_table.tsx";
 import { getZoneSplits } from "../utils/get_instrument_clickable_keys.ts";
 import type { ModulatorListGlobals } from "../modulator_editing/modulator_list/modulator_list.tsx";
 
-type InstrumentEditorProps = {
+interface InstrumentEditorProps {
     manager: SoundBankManager;
     instrument: BasicInstrument;
     engine: AudioEngine;
@@ -33,15 +33,15 @@ type InstrumentEditorProps = {
     setInstruments: (s: BasicInstrument[]) => void;
     instruments: BasicInstrument[];
     setSplits: (s: KeyRange[]) => unknown;
-};
-export type GeneratorRowType = {
+}
+export interface GeneratorRowType {
     generator: GeneratorType;
     fromGenerator?: (v: number) => number;
     toGenerator?: (v: number) => number;
     highlight?: boolean;
     unit?: string;
     precision?: number;
-};
+}
 const instrumentRows: GeneratorRowType[] = [
     {
         generator: generatorTypes.keyRange

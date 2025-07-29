@@ -2,11 +2,11 @@ import { type ModulatorCurveType, modulatorCurveTypes } from "spessasynth_core";
 import "./curve_picker.css";
 import { ModulatorCurvePicture } from "./curve_picture.tsx";
 
-export type SpessaFontModulatorCurveType = {
+export interface SpessaFontModulatorCurveType {
     curveType: ModulatorCurveType;
     bipolar: boolean;
     positive: boolean;
-};
+}
 
 const allCurveTypes: SpessaFontModulatorCurveType[] = [];
 

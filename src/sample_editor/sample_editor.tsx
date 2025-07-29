@@ -28,14 +28,14 @@ const MAX_SAMPLE_RATE = 192000;
 
 export type SamplePlayerState = "stopped" | "playing" | "playing_loop";
 
-type SampleEditorProps = {
+interface SampleEditorProps {
     manager: SoundBankManager;
     sample: BasicSample;
     engine: AudioEngine;
     setView: SetViewType;
     setSamples: (s: BasicSample[]) => void;
     samples: BasicSample[];
-};
+}
 
 export const SampleEditor = React.memo(function ({
     engine,
@@ -93,7 +93,7 @@ export const SampleEditor = React.memo(function ({
         };
     }, [engine.processor, engine.processor.midiChannels, manager, sample]);
 
-    const sampleType = sample.sampleType as SampleType;
+    const sampleType = sample.sampleType;
     const linkedSample = sample.linkedSample;
     const linkedIndex = useMemo(
         () => (linkedSample ? samples.indexOf(linkedSample) : -1),
@@ -176,7 +176,7 @@ export const SampleEditor = React.memo(function ({
             return n;
         }
         n = n.substring(0, 39); // keep spare space for "R" or "L"
-        if (n[n.length - 1] === "R" || n[n.length - 1] === "L") {
+        if (n.endsWith("R") || n.endsWith("L")) {
             n = n.substring(0, n.length - 1);
         }
         let newName = n;

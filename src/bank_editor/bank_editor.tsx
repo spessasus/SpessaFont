@@ -32,7 +32,7 @@ import { SetSampleTypeAction } from "../sample_editor/set_sample_type_action.ts"
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 
-export type BankEditorProps = {
+export interface BankEditorProps {
     manager: SoundBankManager;
     audioEngine: AudioEngine;
     clipboardManager: ClipboardManager;
@@ -41,7 +41,7 @@ export type BankEditorProps = {
     shown: boolean;
     ref: BankEditorRef;
     setSplits: (s: KeyRange[]) => unknown;
-};
+}
 
 export type SetViewType = (v: BankEditView) => unknown;
 
@@ -164,9 +164,7 @@ export function BankEditor({
                         return;
                     }
 
-                    const match = sample.name.match(
-                        /[a-zA-Z!](?=\s*$|\)|$)/
-                    )?.[0];
+                    const match = (/[a-zA-Z!](?=\s*$|\)|$)/.exec(sample.name))?.[0];
                     if (
                         match?.toLowerCase() !== "l" &&
                         match?.toLowerCase() !== "r"
