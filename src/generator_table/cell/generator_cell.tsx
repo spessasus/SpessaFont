@@ -49,13 +49,13 @@ export const NumberGeneratorCell = typedMemo(function <
     const textValue = v2txt(value);
 
     const limits = generatorLimits[generator];
-    let placeholder: string = "";
+    let placeholder = "";
     if (
         zone instanceof BasicInstrumentZone &&
         generator === generatorTypes.overridingRootKey
     ) {
-        placeholder = `${zone.sample.samplePitch} (${midiNoteToPitchClass(
-            zone.sample.samplePitch
+        placeholder = `${zone.sample.originalKey} (${midiNoteToPitchClass(
+            zone.sample.originalKey
         )})`;
     } else if (zone instanceof BasicGlobalZone) {
         placeholder = v2txt(limits.def);
@@ -65,8 +65,7 @@ export const NumberGeneratorCell = typedMemo(function <
     }
 
     const modulated = useMemo(
-        () =>
-            !!zone.modulators.find((m) => m.modulatorDestination === generator),
+        () => !!zone.modulators.find((m) => m.destination === generator),
         [generator, zone.modulators]
     );
 

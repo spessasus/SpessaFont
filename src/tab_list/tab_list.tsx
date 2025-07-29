@@ -3,12 +3,12 @@ import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 
-export type TabListProps = {
+export interface TabListProps {
     tabs: SoundBankManager[];
     closeTab: (t: number) => void;
     activeTab: number;
     setActiveTab: (t: number) => void;
-};
+}
 
 export function TabList({
     tabs,

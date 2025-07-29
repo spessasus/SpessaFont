@@ -4,19 +4,19 @@ import {
     getSetting,
     type SavedSettingsType
 } from "../save_load/settings_typedef.ts";
-import { interpolationTypes } from "spessasynth_core";
+import { type InterpolationType, interpolationTypes } from "spessasynth_core";
 import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
 
-export type GroupSettingsProps = {
+export interface GroupSettingsProps {
     settings: SavedSettingsType;
     updateSettings: (s: SavedSettingsType) => void;
-};
+}
 
 export function AudioEngineSettings({
     updateSettings,
     settings
 }: GroupSettingsProps) {
-    function setInterpolation(t: interpolationTypes) {
+    function setInterpolation(t: InterpolationType) {
         updateSettings({
             ...settings,
             interpolation: t
@@ -70,7 +70,7 @@ export function AudioEngineSettings({
                 <select
                     onChange={(e) =>
                         setInterpolation(
-                            parseInt(e.target.value) as interpolationTypes
+                            parseInt(e.target.value) as InterpolationType
                         )
                     }
                     className={"pretty_input monospaced"}

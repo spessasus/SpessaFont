@@ -22,9 +22,10 @@ import {
     SaveFileIcon,
     UndoIcon
 } from "../utils/icons.tsx";
+import type { ProgressFunction } from "spessasynth_core";
 
 // @ts-expect-error chromium check is here
-const isChrome: boolean = window["chrome"] !== undefined;
+const isChrome: boolean = window.chrome !== undefined;
 
 const waitForRefresh = () => new Promise((r) => setTimeout(r, 200));
 
@@ -73,23 +74,22 @@ export function MenuBar({
         async (format: "sf2" | "dls" | "sf3") => {
             const id = toast.loading(t("loadingAndSaving.savingSoundBank"));
             await waitForRefresh();
-            await manager.save(
-                format,
-                async (_sampleName, writtenCount, totalSampleCount) => {
-                    toast.loading(
-                        `${t("loadingAndSaving.writingSamples")} (${
-                            Math.floor(
-                                (writtenCount / totalSampleCount) * 100_00
-                            ) /
-                                100 +
-                            "%"
-                        })`,
-                        {
-                            id
-                        }
-                    );
-                }
-            );
+            await manager.save(format, ((
+                _sampleName,
+                writtenCount,
+                totalSampleCount
+            ) => {
+                toast.loading(
+                    `${t("loadingAndSaving.writingSamples")} (${
+                        Math.floor((writtenCount / totalSampleCount) * 100_00) /
+                            100 +
+                        "%"
+                    })`,
+                    {
+                        id
+                    }
+                );
+            }) as ProgressFunction);
             toast.success(t("loadingAndSaving.savedSuccessfully"), { id });
         },
         [manager, t]
@@ -114,7 +114,7 @@ export function MenuBar({
                         break;
                     case "s":
                         e.preventDefault();
-                        saveWithToasts("sf2").then();
+                        void saveWithToasts("sf2");
                         break;
                     default:
                         return;
@@ -165,25 +165,25 @@ export function MenuBar({
                     <CloseFileIcon />
                 </MenuBarIcon>
                 <MenuBarIcon
-                    click={() => saveWithToasts("sf2")}
+                    click={() => void saveWithToasts("sf2")}
                     text={t(fLoc + "saveSF2")}
                 >
                     <SaveFileIcon />
                 </MenuBarIcon>
                 <MenuBarIcon
-                    click={() => saveWithToasts("dls")}
+                    click={() => void saveWithToasts("dls")}
                     text={t(fLoc + "saveDLS")}
                 >
                     <SaveFileIcon format={"DLS"} />
                 </MenuBarIcon>
                 <MenuBarIcon
-                    click={() => saveWithToasts("sf3")}
+                    click={() => void saveWithToasts("sf3")}
                     text={t(fLoc + "saveSF3")}
                 >
                     <SaveFileIcon format={"SF3"} />
                 </MenuBarIcon>
                 <MenuBarIcon
-                    click={() => document.body.requestFullscreen()}
+                    click={() => void document.body.requestFullscreen()}
                     text={t(fLoc + "fullscreen")}
                 >
                     <FullscreenIcon />

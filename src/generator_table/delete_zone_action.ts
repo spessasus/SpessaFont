@@ -23,10 +23,7 @@ export class DeleteZoneAction<T extends BasicInstrument | BasicPreset>
         this.el = element;
         this.callback = callback;
         this.index = index;
-        this.zone =
-            element instanceof BasicInstrument
-                ? element.instrumentZones[index]
-                : element.presetZones[index];
+        this.zone = element.zones[index];
     }
 
     do() {
@@ -36,26 +33,24 @@ export class DeleteZoneAction<T extends BasicInstrument | BasicPreset>
 
     undo() {
         if (this.el instanceof BasicInstrument) {
-            const z = this.el.createZone();
+            const z = this.el.createZone(
+                (this.zone as BasicInstrumentZone).sample
+            );
             z.copyFrom(this.zone);
-            z.setSample((this.zone as BasicInstrumentZone).sample);
         } else {
-            const z = this.el.createZone();
+            const z = this.el.createZone(
+                (this.zone as BasicPresetZone).instrument
+            );
             z.copyFrom(this.zone);
-            z.setInstrument((this.zone as BasicPresetZone).instrument);
         }
         this.applyChanges();
     }
 
     private applyChanges() {
         if (this.el instanceof BasicInstrument) {
-            this.el.instrumentZones = reorderInstrumentZones(
-                this.el.instrumentZones
-            );
+            this.el.zones = reorderInstrumentZones(this.el.zones);
         } else {
-            this.el.presetZones = this.el.presetZones.toSorted(
-                ZONE_SORTING_FUNCTION
-            );
+            this.el.zones = this.el.zones.toSorted(ZONE_SORTING_FUNCTION);
         }
         this.callback();
     }

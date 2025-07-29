@@ -4,6 +4,7 @@ import {
     type BasicInstrument,
     BasicInstrumentZone,
     type BasicPresetZone,
+    type GeneratorType,
     generatorTypes
 } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
@@ -15,11 +16,11 @@ import type { LinkedZoneMap } from "./generator_table.tsx";
 import { OffsetGeneratorCell } from "./cell/offset_cell.tsx";
 import { typedMemo } from "../utils/typed_memo.ts";
 
-export type GeneratorProps = {
-    generator: generatorTypes;
+export interface GeneratorProps {
+    generator: GeneratorType;
     manager: SoundBankManager;
     callback: () => unknown;
-};
+}
 
 export type NumberGeneratorProps = GeneratorProps & {
     fromGenerator?: (v: number) => number;

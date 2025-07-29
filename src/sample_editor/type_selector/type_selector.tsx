@@ -1,7 +1,7 @@
 import {
     type BasicSample,
-    sampleTypes,
-    type SampleTypeValue
+    type SampleType,
+    sampleTypes
 } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import { useMemo } from "react";
@@ -13,9 +13,9 @@ export function TypeSelector({
     samples,
     sample
 }: {
-    sampleType: SampleTypeValue;
+    sampleType: SampleType;
     linkedSample: BasicSample | undefined;
-    setLinkedSample: (type: SampleTypeValue, s?: BasicSample) => void;
+    setLinkedSample: (type: SampleType, s?: BasicSample) => void;
     samples: BasicSample[];
     sample: BasicSample;
 }) {
@@ -48,7 +48,7 @@ export function TypeSelector({
                 <option value={-1}>-</option>
                 {availableSamples.map((sam, i) => (
                     <option value={sam.i} key={i}>
-                        {sam.s.sampleName}
+                        {sam.s.name}
                     </option>
                 ))}
             </>
@@ -60,8 +60,8 @@ export function TypeSelector({
         availableSamples.length < 1 ||
         (availableSamples.length < 2 && linkedSample);
 
-    const setType = (t: SampleTypeValue) => {
-        const linked: BasicSample = linkedSample || samples[0];
+    const setType = (t: SampleType) => {
+        const linked: BasicSample = linkedSample ?? samples[0];
         switch (t) {
             case sampleTypes.rightSample:
             case sampleTypes.leftSample:
@@ -82,7 +82,7 @@ export function TypeSelector({
                     className={"pretty_input monospaced"}
                     value={sampleType}
                     onChange={(e) =>
-                        setType(parseInt(e.target.value) as SampleTypeValue)
+                        setType(parseInt(e.target.value) as SampleType)
                     }
                 >
                     <option disabled={true} value={0}>

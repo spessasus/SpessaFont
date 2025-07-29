@@ -47,8 +47,6 @@ export function VoiceDisplay({
         };
 
         draw();
-
-        return () => {};
     }, [analyser]);
 
     function VoiceDisplay() {

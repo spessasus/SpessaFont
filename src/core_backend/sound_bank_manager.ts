@@ -1,10 +1,11 @@
 import {
     type BasicInstrument,
+    type BasicPreset,
+    type BasicSample,
     BasicSoundBank,
-    loadSoundFont,
     type ProgressFunction,
-    type SoundBankElement,
-    type SoundFontInfoType,
+    type SoundBankInfoFourCC,
+    SoundBankLoader,
     SpessaSynthProcessor,
     type SpessaSynthSequencer
 } from "spessasynth_core";
@@ -15,9 +16,9 @@ import {
     ZONE_SORTING_FUNCTION
 } from "../utils/reorder_zones.ts";
 
-export type BankEditView = "info" | SoundBankElement;
+export type BankEditView = "info" | BasicInstrument | BasicSample | BasicPreset;
 
-const dummy = await BasicSoundBank.getDummySoundfontFile();
+const dummy = await BasicSoundBank.getSampleSoundBankFile();
 
 export default class SoundBankManager extends BasicSoundBank {
     processor: SpessaSynthProcessor;
@@ -28,6 +29,7 @@ export default class SoundBankManager extends BasicSoundBank {
 
     // unsaved changes
     dirty = false;
+    changeCallback?: () => void;
 
     constructor(
         processor: SpessaSynthProcessor,
@@ -37,14 +39,17 @@ export default class SoundBankManager extends BasicSoundBank {
         super();
         this.processor = processor;
         this.sequencer = sequencer;
-        const actualBank: BasicSoundBank = bank ?? loadSoundFont(dummy.slice());
+        const actualBank: BasicSoundBank =
+            bank ?? SoundBankLoader.fromArrayBuffer(dummy.slice());
         Object.assign(this, actualBank);
         if (bank === undefined) {
-            this.soundFontInfo["ifil"] = "2.4";
-            this.soundFontInfo["INAM"] = "";
-            this.soundFontInfo["ICRD"] = new Date().toISOString().split("T")[0];
+            this.soundBankInfo.ifil = "2.4";
+            this.soundBankInfo.INAM = "";
+            this.soundBankInfo.ICRD = new Date().toISOString().split("T")[0];
         }
         // fix preset references
+        // @ts-expect-error hacky way to make this work
+        // noinspection JSConstantReassignment
         this.presets.forEach((p) => (p.parentSoundBank = this));
         this.sortElements();
         this.sendBankToSynth();
@@ -58,37 +63,29 @@ export default class SoundBankManager extends BasicSoundBank {
             return a.program - b.program;
         });
         this.samples.sort((a, b) =>
-            a.sampleName > b.sampleName
-                ? 1
-                : b.sampleName > a.sampleName
-                  ? -1
-                  : 0
+            a.name > b.name ? 1 : b.name > a.name ? -1 : 0
         );
         this.instruments.sort((a, b) =>
-            a.instrumentName > b.instrumentName
-                ? 1
-                : b.instrumentName > a.instrumentName
-                  ? -1
-                  : 0
+            a.name > b.name ? 1 : b.name > a.name ? -1 : 0
         );
 
         // sort stereo zones
         this.instruments.forEach((i) => this.sortInstrumentZones(i));
 
         // sort preset zones
-        this.presets.forEach((p) => p.presetZones.sort(ZONE_SORTING_FUNCTION));
+        this.presets.forEach((p) => p.zones.sort(ZONE_SORTING_FUNCTION));
     }
 
     sortInstrumentZones(i: BasicInstrument) {
-        i.instrumentZones = reorderInstrumentZones(i.instrumentZones);
+        i.zones = reorderInstrumentZones(i.zones);
     }
 
     getBankName(unnamed: string) {
         return this.getInfo("INAM") || unnamed;
     }
 
-    getInfo(fourCC: SoundFontInfoType) {
-        return this.soundFontInfo?.[fourCC]?.toString() || "";
+    getInfo(fourCC: SoundBankInfoFourCC) {
+        return this.soundBankInfo?.[fourCC]?.toString() ?? "";
     }
 
     getTabName(unnamed: string) {
@@ -101,10 +98,10 @@ export default class SoundBankManager extends BasicSoundBank {
 
     close() {
         if (
-            this.processor.soundfontManager.soundfontList[0].soundfont === this
+            this.processor.soundBankManager.soundBankList[0].soundBank === this
         ) {
-            this.processor.soundfontManager.reloadManager(
-                loadSoundFont(dummy.slice())
+            this.processor.soundBankManager.reloadManager(
+                SoundBankLoader.fromArrayBuffer(dummy.slice())
             );
         }
         this.clearCache();
@@ -137,7 +134,7 @@ export default class SoundBankManager extends BasicSoundBank {
                     progressFunction
                 });
         }
-        if (this.soundFontInfo["ifil"] === "3.0") {
+        if (this.soundBankInfo.ifil === "3.0") {
             format = "sf3";
         }
         const buffer = binary.buffer;
@@ -151,9 +148,7 @@ export default class SoundBankManager extends BasicSoundBank {
             while (toWrite < binary.length) {
                 // 50MB chunks (browsers don't like 4GB array buffers)
                 const size = Math.min(52428800, binary.length - toWrite);
-                chunks.push(
-                    buffer.slice(toWrite, toWrite + size) as ArrayBuffer
-                );
+                chunks.push(buffer.slice(toWrite, toWrite + size));
                 toWrite += size;
             }
 
@@ -167,7 +162,7 @@ export default class SoundBankManager extends BasicSoundBank {
         a.download = `${this.getBankName("Unnamed")}.${format}`;
         a.click();
         this.dirty = false;
-        this.changeCallback();
+        this.changeCallback?.();
 
         // clean up the object URL after a short delay
         setTimeout(() => {
@@ -177,7 +172,7 @@ export default class SoundBankManager extends BasicSoundBank {
     }
 
     sendBankToSynth() {
-        this.processor.soundfontManager.reloadManager(this);
+        this.processor.soundBankManager.reloadManager(this);
         this.processor.clearCache();
         this.sequencer.currentTime -= 0.1;
     }
@@ -188,7 +183,7 @@ export default class SoundBankManager extends BasicSoundBank {
         }
         this.history.do(this, actions);
         this.dirty = true;
-        this.changeCallback();
+        this.changeCallback?.();
     }
 
     undo() {
@@ -196,14 +191,12 @@ export default class SoundBankManager extends BasicSoundBank {
         if (this.history.length < 1) {
             this.dirty = false;
         }
-        this.changeCallback();
+        this.changeCallback?.();
     }
 
     redo() {
         this.history.redo(this);
         this.dirty = true;
-        this.changeCallback();
+        this.changeCallback?.();
     }
-
-    changeCallback: () => void = () => {};
 }

@@ -1,8 +1,8 @@
 import {
+    BasicMIDI,
     type BasicSoundBank,
     IndexedByteArray,
-    loadSoundFont,
-    MIDI,
+    SoundBankLoader,
     SpessaSynthCoreUtils
 } from "spessasynth_core";
 
@@ -14,11 +14,11 @@ export function loadSoundBank(buf: ArrayBuffer): BasicSoundBank {
         4
     );
     if (text === "RMID") {
-        const mid = new MIDI(buf);
-        if (!mid.embeddedSoundFont) {
+        const mid = BasicMIDI.fromArrayBuffer(buf);
+        if (!mid.embeddedSoundBank) {
             throw new Error("No embedded sound bank.");
         }
-        return loadSoundFont(mid.embeddedSoundFont);
+        return SoundBankLoader.fromArrayBuffer(mid.embeddedSoundBank);
     }
-    return loadSoundFont(buf);
+    return SoundBankLoader.fromArrayBuffer(buf);
 }

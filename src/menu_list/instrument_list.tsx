@@ -131,18 +131,14 @@ export function InstrumentList({
         const instrument = new BasicInstrument();
         const firstSample = samplesToAdd[0];
         if (firstSample.linkedSample) {
-            instrument.instrumentName = firstSample.sampleName.replace(
-                STEREO_REGEX,
-                ""
-            );
+            instrument.name = firstSample.name.replace(STEREO_REGEX, "");
         } else {
-            instrument.instrumentName = firstSample.sampleName;
+            instrument.name = firstSample.name;
         }
         // add loop for convenience
         instrument.globalZone.setGenerator(generatorTypes.sampleModes, 1);
         samplesToAdd.forEach((s) => {
-            const zone = instrument.createZone();
-            zone.setSample(s);
+            const zone = instrument.createZone(s);
             // sample types!
             if (s.sampleType === sampleTypes.leftSample) {
                 zone.setGenerator(generatorTypes.pan, -500);
@@ -210,11 +206,7 @@ export function InstrumentList({
                     );
                     setInstruments([
                         ...manager.instruments.toSorted((a, b) =>
-                            a.instrumentName > b.instrumentName
-                                ? 1
-                                : b.instrumentName > a.instrumentName
-                                  ? -1
-                                  : 0
+                            a.name > b.name ? 1 : b.name > a.name ? -1 : 0
                         )
                     ]);
                     toast.success(
@@ -254,14 +246,12 @@ export function InstrumentList({
                                 >
                                     <InstrumentDisplay
                                         open={
-                                            openInstruments[
-                                                inst.instrumentName
-                                            ] ?? false
+                                            openInstruments[inst.name] ?? false
                                         }
                                         setOpen={(o) =>
                                             setOpenInstruments((prev) => ({
                                                 ...prev,
-                                                [inst.instrumentName]: o
+                                                [inst.name]: o
                                             }))
                                         }
                                         selected={selectedInstruments.has(inst)}

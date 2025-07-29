@@ -1,4 +1,4 @@
-import { midiControllers } from "spessasynth_core";
+import { type MIDIController, midiControllers } from "spessasynth_core";
 import "./controller.css";
 import { CC_TOGGLES } from "../../utils/midi_constants.ts";
 import {
@@ -13,9 +13,9 @@ import type { AudioEngine } from "../../core_backend/audio_engine.ts";
 import { KEYBOARD_TARGET_CHANNEL } from "../target_channel.ts";
 import { ControllerSwitch } from "../../fancy_inputs/controller_switch/controller_switch.tsx";
 
-export type ControllerKnobRef = {
+export interface ControllerKnobRef {
     ccUpdate(c: number, value: number): void;
-};
+}
 
 function ControllerWrapper({
     engine,
@@ -23,12 +23,13 @@ function ControllerWrapper({
     ref
 }: {
     engine: AudioEngine;
-    cc: midiControllers;
+    cc: MIDIController;
     ref: Ref<ControllerKnobRef>;
 }) {
     const [ccValue, sv] = useState(
-        engine.processor.midiAudioChannels[KEYBOARD_TARGET_CHANNEL]
-            .midiControllers[cc] >> 7
+        engine.processor.midiChannels[KEYBOARD_TARGET_CHANNEL].midiControllers[
+            cc
+        ] >> 7
     );
     const isToggle = useMemo(() => CC_TOGGLES.includes(cc), [cc]);
 
@@ -89,8 +90,8 @@ export function Controller({
     ccOptions,
     ref
 }: {
-    cc: midiControllers;
-    setCC: (cc: midiControllers) => void;
+    cc: MIDIController;
+    setCC: (cc: MIDIController) => void;
     engine: AudioEngine;
     ref: Ref<ControllerKnobRef>;
     ccOptions: JSX.Element;
@@ -106,7 +107,7 @@ export function Controller({
                 value={cc}
                 onChange={(e) =>
                     setCC(
-                        parseInt(e.target.value) ||
+                        (parseInt(e.target.value) as MIDIController) ||
                             midiControllers.modulationWheel
                     )
                 }

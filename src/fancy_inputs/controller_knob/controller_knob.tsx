@@ -5,12 +5,12 @@ import "./controller_knob.css";
 const MIN_DEG = 40;
 const MAX_DEG = 320;
 
-export type ControllerProps = {
+export interface ControllerProps {
     min: number;
     max: number;
     value: number;
     onChange: (v: number) => unknown;
-};
+}
 
 export function ControllerKnob({ min, max, onChange, value }: ControllerProps) {
     const isMouseDownRef = useRef(false);

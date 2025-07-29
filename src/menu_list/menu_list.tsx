@@ -20,9 +20,9 @@ import { DeletePresetAction } from "../preset_editor/bottom_bar/delete_preset_ac
 export const ESTIMATED_ROW_HEIGHT = 30;
 export const OVERSCAN = 5;
 
-export type MappedPresetType = { searchString: string; preset: BasicPreset };
+export interface MappedPresetType { searchString: string; preset: BasicPreset }
 
-type MenuListProps = {
+interface MenuListProps {
     manager: SoundBankManager;
     view: BankEditView;
     sv: SetViewType;
@@ -34,7 +34,7 @@ type MenuListProps = {
     presets: BasicPreset[];
     setPresets: (p: BasicPreset[]) => unknown;
     clipboard: ClipboardManager;
-};
+}
 
 export const MenuList = React.memo(function ({
     view,
@@ -143,11 +143,7 @@ export const MenuList = React.memo(function ({
                         );
                         setPresets([
                             ...manager.presets.toSorted((a, b) =>
-                                a.presetName > b.presetName
-                                    ? 1
-                                    : b.presetName > a.presetName
-                                      ? -1
-                                      : 0
+                                a.name > b.name ? 1 : b.name > a.name ? -1 : 0
                             )
                         ]);
 
@@ -159,22 +155,14 @@ export const MenuList = React.memo(function ({
                         );
                         setInstruments([
                             ...manager.instruments.toSorted((a, b) =>
-                                a.instrumentName > b.instrumentName
-                                    ? 1
-                                    : b.instrumentName > a.instrumentName
-                                      ? -1
-                                      : 0
+                                a.name > b.name ? 1 : b.name > a.name ? -1 : 0
                             )
                         ]);
 
                         clipboard.pasteSamples(manager, setSamples, setView);
                         setSamples([
                             ...manager.samples.toSorted((a, b) =>
-                                a.sampleName > b.sampleName
-                                    ? 1
-                                    : b.sampleName > a.sampleName
-                                      ? -1
-                                      : 0
+                                a.name > b.name ? 1 : b.name > a.name ? -1 : 0
                             )
                         ]);
                     }
@@ -205,7 +193,7 @@ export const MenuList = React.memo(function ({
             return {
                 searchString: `${p.bank.toString().padStart(3, "0")}:${p.program
                     .toString()
-                    .padStart(3, "0")} ${p.presetName}`.toLowerCase(),
+                    .padStart(3, "0")} ${p.name}`.toLowerCase(),
                 preset: p
             };
         });
@@ -238,28 +226,28 @@ export const MenuList = React.memo(function ({
 
             // match instruments directly
             instruments.forEach((i) => {
-                if (i.instrumentName.toLowerCase().includes(searchQueryLower)) {
+                if (i.name.toLowerCase().includes(searchQueryLower)) {
                     matchedInstrumentSet.add(i);
                 }
             });
 
             // match samples directly
             samples.forEach((s) => {
-                if (s.sampleName.toLowerCase().includes(searchQueryLower)) {
+                if (s.name.toLowerCase().includes(searchQueryLower)) {
                     matchedSampleSet.add(s);
                 }
             });
 
             // backfill the presets' instruments
             matchedPresetSet.forEach((p) =>
-                p.preset.presetZones.forEach((z) =>
+                p.preset.zones.forEach((z) =>
                     matchedInstrumentSet.add(z.instrument)
                 )
             );
 
             // backfill the instruments' samples
             matchedInstrumentSet.forEach((i) =>
-                i.instrumentZones.forEach((z) => matchedSampleSet.add(z.sample))
+                i.zones.forEach((z) => matchedSampleSet.add(z.sample))
             );
 
             return {

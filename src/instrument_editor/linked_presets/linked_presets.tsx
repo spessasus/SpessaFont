@@ -25,7 +25,7 @@ export function LinkedPresets({
     const { t } = useTranslation();
     const linked = useMemo(() => {
         const l = new Set<BasicPreset>();
-        instrument.linkedPresets.forEach((p) => l.add(p));
+        instrument.linkedTo.forEach((p) => l.add(p));
         return l;
     }, [instrument]);
 
@@ -40,12 +40,12 @@ export function LinkedPresets({
                 <WaitingInput
                     className={"monospaced"}
                     type={"text"}
-                    value={instrument.instrumentName}
+                    value={instrument.name}
                     setValue={(v) => {
                         const action = new EditInstrumentAction(
                             instruments.indexOf(instrument),
-                            "instrumentName",
-                            instrument.instrumentName,
+                            "name",
+                            instrument.name,
                             v,
                             () => setInstruments([...instruments])
                         );
@@ -56,7 +56,7 @@ export function LinkedPresets({
                 />
             </div>
 
-            {instrument.linkedPresets.length === 0 && (
+            {instrument.linkedTo.length === 0 && (
                 <>
                     <div>
                         <strong>
@@ -70,7 +70,7 @@ export function LinkedPresets({
                     </div>
                 </>
             )}
-            {instrument.linkedPresets.length > 0 && (
+            {instrument.linkedTo.length > 0 && (
                 <>
                     <div>{t("instrumentLocale.usedBy")}:</div>
                     {Array.from(linked).map((preset, i) => (
@@ -79,7 +79,7 @@ export function LinkedPresets({
                             onClick={() => setView(preset)}
                             key={i}
                         >
-                            {preset.presetName}
+                            {preset.name}
                         </div>
                     ))}
                 </>

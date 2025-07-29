@@ -1,7 +1,7 @@
 import {
+    type BasicMIDI,
     BasicSoundBank,
-    loadSoundFont,
-    type MIDI,
+    SoundBankLoader,
     SpessaSynthLogging,
     SpessaSynthProcessor,
     SpessaSynthSequencer
@@ -15,7 +15,7 @@ const MAX_CHUNKS_QUEUED = 16; // 16 * 128 = 2,048 // Windows does not like small
 
 type AudioChunk = [Float32Array, Float32Array];
 
-const dummy = BasicSoundBank.getDummySoundfontFile();
+const dummy = BasicSoundBank.getSampleSoundBankFile();
 
 export class AudioEngine {
     context: AudioContext;
@@ -29,7 +29,7 @@ export class AudioEngine {
 
     targetNode: GainNode;
 
-    audioChunksQueued: number = 0;
+    audioChunksQueued = 0;
 
     private worklet: AudioWorkletNode | undefined;
 
@@ -39,14 +39,13 @@ export class AudioEngine {
             effectsEnabled: true,
             initialTime: context.currentTime
         });
-        dummy.then((d) =>
-            this.processor.soundfontManager.reloadManager(
-                loadSoundFont(d.slice())
+        void dummy.then((d) =>
+            this.processor.soundBankManager.reloadManager(
+                SoundBankLoader.fromArrayBuffer(d.slice())
             )
         );
 
         this.sequencer = new SpessaSynthSequencer(this.processor);
-        this.sequencer.preservePlaybackState = true;
         // analyser
         this.analyser = new AnalyserNode(this.context);
         this.analyser.connect(this.context.destination);
@@ -61,7 +60,7 @@ export class AudioEngine {
         if (isDev) {
             logInfo("Dev mode on");
         }
-        SpessaSynthLogging(isDev, isDev, isDev, isDev);
+        SpessaSynthLogging(isDev, isDev, isDev);
     }
 
     get MIDIPaused() {
@@ -84,7 +83,8 @@ export class AudioEngine {
         this.worklet.connect(this.targetNode, 0);
         this.worklet.connect(this.reverb, 1);
         this.worklet.connect(this.chorus.input, 2);
-        this.worklet.port.onmessage = (e) => (this.audioChunksQueued = e.data);
+        this.worklet.port.onmessage = (e: MessageEvent<number>) =>
+            (this.audioChunksQueued = e.data);
 
         this.intervalID = setInterval(this.audioLoop.bind(this));
     }
@@ -172,8 +172,9 @@ export class AudioEngine {
         }
     }
 
-    playMIDI(mid: MIDI) {
+    playMIDI(mid: BasicMIDI) {
         this.sequencer.loadNewSongList([mid]);
+        this.sequencer.play();
     }
 
     pauseMIDI() {

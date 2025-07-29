@@ -9,7 +9,7 @@ export function GetUserInput({ audioEngine }: { audioEngine: AudioEngine }) {
     const { t } = useTranslation();
 
     function onClicked() {
-        audioEngine.resumeContext().then(() => {
+        void audioEngine.resumeContext().then(() => {
             setHidden(true);
         });
     }

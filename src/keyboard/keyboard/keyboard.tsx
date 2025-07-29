@@ -8,7 +8,7 @@ import {
 import "./keyboard.css";
 import type { AudioEngine } from "../../core_backend/audio_engine.ts";
 import { KEYBOARD_TARGET_CHANNEL } from "../target_channel.ts";
-import type { SoundFontRange } from "spessasynth_core";
+import type { KeyRange } from "spessasynth_core";
 
 function isBlackNoteNumber(midiNote: number) {
     const pitchClass = midiNote % 12;
@@ -21,7 +21,7 @@ export type KeyboardRef = {
     releaseNote: (midiNote: number) => void;
 } | null;
 
-const pressedKeys: Set<number> = new Set();
+const pressedKeys = new Set<number>();
 let mouseHeld = false;
 
 // most of this code is ported over from spessasynth web app
@@ -36,17 +36,17 @@ export function Keyboard({
     ref: RefObject<KeyboardRef | null>;
     keyDisplay: RefObject<HTMLSpanElement | null>;
     velocityDisplay: RefObject<HTMLSpanElement | null>;
-    splits: SoundFontRange[];
+    splits: KeyRange[];
 }) {
     const keysRef = useRef<HTMLDivElement[]>([]);
     const keyboardRef = useRef<HTMLDivElement | null>(null);
 
     const matchingSplits = useMemo(() => {
-        const map: SoundFontRange[][] = [];
+        const map: KeyRange[][] = [];
         for (let midiNote = 0; midiNote < 128; midiNote++) {
             // find all splits tha this key belongs to
             map.push(
-                splits.reduce((matched: SoundFontRange[], split) => {
+                splits.reduce((matched: KeyRange[], split) => {
                     if (split.min <= midiNote && split.max >= midiNote) {
                         matched.push(split);
                     }
@@ -109,7 +109,7 @@ export function Keyboard({
                     touch.clientY
                 );
 
-                if (!target || !target.id.startsWith("note")) {
+                if (!target?.id.startsWith("note")) {
                     return;
                 }
 
@@ -211,11 +211,11 @@ export function Keyboard({
 
     const keys: number[] = Array.from({ length: 128 }, (_, i) => i);
 
-    const enabledKeys: boolean[] = useMemo(() => {
+    const enabledKeys: boolean[] = useMemo((): boolean[] => {
         if (splits.length === 0) {
-            return Array(128).fill(true);
+            return Array(128).fill(true) as boolean[];
         }
-        const e: boolean[] = Array(128).fill(false);
+        const e: boolean[] = Array(128).fill(false) as boolean[];
 
         splits.forEach((s) => {
             for (let i = s.min; i <= s.max; i++) {

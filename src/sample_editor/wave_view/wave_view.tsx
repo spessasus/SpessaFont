@@ -8,7 +8,7 @@ const MIN_WAVE_THICKNESS = 1;
 const MAX_LINE_THICKNESS = 10;
 const LINE_WIDTH_CONSTANT = 0.9;
 
-type WaveViewProps = {
+interface WaveViewProps {
     data: Float32Array;
     loopStart: number;
     loopEnd: number;
@@ -21,7 +21,7 @@ type WaveViewProps = {
     zoom: number;
     disabled: boolean;
     centCorrection: number;
-};
+}
 
 export const WaveView = React.memo(function ({
     data,
