@@ -230,8 +230,8 @@ export class ClipboardManager {
             oldSample.loopStart,
             oldSample.loopEnd
         );
-        if (oldSample.isCompressed && oldSample.compressedData) {
-            newSample.setCompressedData(oldSample.compressedData.slice());
+        if (oldSample.isCompressed) {
+            newSample.setCompressedData(oldSample.getRawData(true));
         } else {
             newSample.setAudioData(
                 oldSample.getAudioData(),

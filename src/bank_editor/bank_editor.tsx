@@ -128,7 +128,7 @@ export function BankEditor({
                         (actions: DeleteSampleAction[], sample) => {
                             // determine the use count
                             let useCount = sample.useCount;
-                            sample.linkedInstruments.forEach((i) => {
+                            sample.linkedTo.forEach((i) => {
                                 if (deletedInstruments.has(i)) {
                                     useCount--;
                                 }
