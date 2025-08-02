@@ -40,8 +40,9 @@ export class AudioEngine {
             initialTime: context.currentTime
         });
         void dummy.then((d) =>
-            this.processor.soundBankManager.reloadManager(
-                SoundBankLoader.fromArrayBuffer(d.slice())
+            this.processor.soundBankManager.addSoundBank(
+                SoundBankLoader.fromArrayBuffer(d.slice()),
+                "main"
             )
         );
 

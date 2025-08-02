@@ -4,14 +4,9 @@ import { Keyboard, type KeyboardRef } from "./keyboard/keyboard.tsx";
 import * as React from "react";
 import { type JSX, type RefObject, useEffect, useRef, useState } from "react";
 import {
-    type ChannelPressureCallback,
-    type ControllerChangeCallback,
     type KeyRange,
     type MIDIController,
-    midiControllers,
-    type NoteOffCallback,
-    type NoteOnCallback,
-    type PitchWheelCallback
+    midiControllers
 } from "spessasynth_core";
 import {
     Controller,
@@ -61,13 +56,16 @@ export function KeyboardController({
     const keyboardRef = useRef<KeyboardRef>(null);
 
     useEffect(() => {
-        engine.processor.onEventCall = (e, d) => {
-            if (d && "channel" in d && d?.channel === KEYBOARD_TARGET_CHANNEL) {
-                switch (e) {
+        engine.processor.onEventCall = (e) => {
+            if (
+                e.data &&
+                "channel" in e.data &&
+                e.data?.channel === KEYBOARD_TARGET_CHANNEL
+            ) {
+                switch (e.type) {
                     case "controllerChange": {
-                        const data = d as ControllerChangeCallback;
-                        const ccV = data.controllerValue;
-                        const cc = data.controllerNumber;
+                        const ccV = e.data.controllerValue;
+                        const cc = e.data.controllerNumber;
                         knobRefs.current.forEach((r) => {
                             r?.current?.ccUpdate(cc, ccV);
                         });
@@ -78,29 +76,25 @@ export function KeyboardController({
                         keyboardRef?.current?.clearAll();
                         break;
 
-                    case "noteOn": {
-                        const data = d as NoteOnCallback;
-                        keyboardRef?.current?.pressNote(data.midiNote || 60);
+                    case "noteOn":
+                        keyboardRef?.current?.pressNote(e.data.midiNote || 60);
                         break;
-                    }
 
-                    case "noteOff": {
-                        const data = d as NoteOffCallback;
-                        keyboardRef?.current?.releaseNote(data.midiNote || 60);
+                    case "noteOff":
+                        keyboardRef?.current?.releaseNote(
+                            e.data.midiNote || 60
+                        );
                         break;
-                    }
 
                     case "pitchWheel":
                         {
-                            const data = d as PitchWheelCallback;
-                            const pitch = (data.MSB << 7) | data.LSB;
+                            const pitch = (e.data.MSB << 7) | e.data.LSB;
                             pitchRef?.current?.setPitch(pitch);
                         }
                         break;
 
                     case "channelPressure": {
-                        const data = d as ChannelPressureCallback;
-                        pitchRef?.current?.setPressure(data.pressure);
+                        pitchRef?.current?.setPressure(e.data.pressure);
                     }
                 }
             }

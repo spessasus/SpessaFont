@@ -100,8 +100,9 @@ export default class SoundBankManager extends BasicSoundBank {
         if (
             this.processor.soundBankManager.soundBankList[0].soundBank === this
         ) {
-            this.processor.soundBankManager.reloadManager(
-                SoundBankLoader.fromArrayBuffer(dummy.slice())
+            this.processor.soundBankManager.addSoundBank(
+                SoundBankLoader.fromArrayBuffer(dummy.slice()),
+                "main"
             );
         }
         this.clearCache();
@@ -172,7 +173,7 @@ export default class SoundBankManager extends BasicSoundBank {
     }
 
     sendBankToSynth() {
-        this.processor.soundBankManager.reloadManager(this);
+        this.processor.soundBankManager.addSoundBank(this, "main");
         this.processor.clearCache();
         this.sequencer.currentTime -= 0.1;
     }

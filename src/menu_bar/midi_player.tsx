@@ -1,10 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useState } from "react";
-import {
-    BasicMIDI,
-    rmidInfoChunks,
-    type SpessaSynthSequencer
-} from "spessasynth_core";
+import { BasicMIDI, type SpessaSynthSequencer } from "spessasynth_core";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import { MenuBarDropdown, MenuBarIcon } from "./dropdown.tsx";
 import {
@@ -116,13 +112,7 @@ export function MIDIPlayer({ audioEngine }: { audioEngine: AudioEngine }) {
             </MenuBarDropdown>
         );
     } else {
-        let name: string;
-        if (midi.rmidiInfo[rmidInfoChunks.name] !== undefined) {
-            name = midi.midiName;
-        } else {
-            name = new TextDecoder("Shift_JIS").decode(midi.rawMidiName);
-        }
-        name = name || midi.fileName;
+        let name = midi.getName();
         name = name.length > 10 ? name.substring(0, 10) + "..." : name;
         return (
             <MenuBarDropdown main={t("menuBarLocale.midi.player")}>
