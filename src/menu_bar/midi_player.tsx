@@ -112,7 +112,7 @@ export function MIDIPlayer({ audioEngine }: { audioEngine: AudioEngine }) {
             </MenuBarDropdown>
         );
     } else {
-        let name = midi.getName();
+        let name = midi.getName() ?? "No name";
         name = name.length > 10 ? name.substring(0, 10) + "..." : name;
         return (
             <MenuBarDropdown main={t("menuBarLocale.midi.player")}>
