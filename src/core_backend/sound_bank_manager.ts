@@ -113,11 +113,11 @@ export default class SoundBankManager extends BasicSoundBank {
         format: "sf2" | "dls" | "sf3",
         progressFunction?: ProgressFunction
     ) {
-        let binary: Uint8Array;
+        let binary: ArrayBuffer;
         switch (format) {
             default:
             case "sf2":
-                binary = await this.write({
+                binary = await this.writeSF2({
                     progressFunction
                 });
                 break;
@@ -129,7 +129,7 @@ export default class SoundBankManager extends BasicSoundBank {
                 break;
 
             case "sf3":
-                binary = await this.write({
+                binary = await this.writeSF2({
                     compress: true,
                     compressionFunction: encodeVorbis,
                     progressFunction
@@ -138,17 +138,14 @@ export default class SoundBankManager extends BasicSoundBank {
         if (this.soundBankInfo.ifil === "3.0") {
             format = "sf3";
         }
-        const buffer = binary.buffer;
-        if (!(buffer instanceof ArrayBuffer)) {
-            return;
-        }
+        const buffer = binary;
         let blob: Blob;
         if (buffer.byteLength > 2147483648) {
             const chunks: ArrayBuffer[] = [];
             let toWrite = 0;
-            while (toWrite < binary.length) {
+            while (toWrite < binary.byteLength) {
                 // 50MB chunks (browsers don't like 4GB array buffers)
-                const size = Math.min(52428800, binary.length - toWrite);
+                const size = Math.min(52428800, binary.byteLength - toWrite);
                 chunks.push(buffer.slice(toWrite, toWrite + size));
                 toWrite += size;
             }
