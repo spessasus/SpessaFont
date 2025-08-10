@@ -87,10 +87,7 @@ export function KeyboardController({
                         break;
 
                     case "pitchWheel":
-                        {
-                            const pitch = (e.data.MSB << 7) | e.data.LSB;
-                            pitchRef?.current?.setPitch(pitch);
-                        }
+                        pitchRef?.current?.setPitch(e.data.pitch);
                         break;
 
                     case "channelPressure": {

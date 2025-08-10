@@ -82,7 +82,7 @@ export function AudioEngineSettings({
                     <option value={interpolationTypes.linear}>
                         {t(`${engineT}interpolation.linear`)}
                     </option>
-                    <option value={interpolationTypes.fourthOrder}>
+                    <option value={interpolationTypes.hermite}>
                         {t(`${engineT}interpolation.cubic`)}
                     </option>
                 </select>

@@ -11,6 +11,7 @@ export interface SavedSettingsType {
     reverbLevel: number;
     chorusLevel: number;
 }
+
 export const UNSET_LANGUAGE = "UNSET";
 export const SPESSAFONT_SETTINGS_KEY = "SPESSAFONT-USER-SETTINGS";
 
@@ -18,7 +19,7 @@ export const DEFAULT_SETTINGS: SavedSettingsType = {
     lang: UNSET_LANGUAGE,
     volume: 2,
     theme: "dark",
-    interpolation: interpolationTypes.fourthOrder,
+    interpolation: interpolationTypes.hermite,
     reverbLevel: 1,
     chorusLevel: 1
 };

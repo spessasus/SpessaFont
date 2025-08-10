@@ -32,7 +32,7 @@ export function OtherControllers({
     const setPitchValue = (v: number) => {
         v = Math.floor(v);
         // event callback will update the range
-        engine.processor.pitchWheel(KEYBOARD_TARGET_CHANNEL, v >> 7, v & 0x7f);
+        engine.processor.pitchWheel(KEYBOARD_TARGET_CHANNEL, v);
     };
 
     const setPressureValue = (v: number) => {
