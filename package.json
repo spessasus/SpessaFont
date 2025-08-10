@@ -19,7 +19,7 @@
     "react-hot-toast": "^2.5.2",
     "react-i18next": "^15.5.2",
     "spessasynth_core": "file:../spessasynth_core/spessasynth_core-4.0.0.tgz",
-    "spessasynth_lib": "latest"
+    "spessasynth_lib": "file:../spessasynth_lib/spessasynth_lib-4.0.0.tgz"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

@@ -6,7 +6,7 @@ import {
     SpessaSynthProcessor,
     SpessaSynthSequencer
 } from "spessasynth_core";
-import { FancyChorus, getReverbProcessor } from "spessasynth_lib";
+import { ChorusProcessor, ReverbProcessor } from "spessasynth_lib";
 import { logInfo } from "../utils/core_utils.ts";
 
 // audio worklet processor operates at that
@@ -23,8 +23,8 @@ export class AudioEngine {
     processor: SpessaSynthProcessor;
     sequencer: SpessaSynthSequencer;
     analyser: AnalyserNode;
-    chorus: FancyChorus;
-    reverb: ConvolverNode;
+    chorus: ChorusProcessor;
+    reverb: ReverbProcessor;
     intervalID = 0;
 
     targetNode: GainNode;
@@ -47,15 +47,17 @@ export class AudioEngine {
         );
 
         this.sequencer = new SpessaSynthSequencer(this.processor);
+        this.sequencer.loopCount = Infinity;
         // analyser
         this.analyser = new AnalyserNode(this.context);
         this.analyser.connect(this.context.destination);
         this.targetNode = new GainNode(context);
         this.targetNode.connect(this.analyser);
 
-        this.chorus = new FancyChorus(this.targetNode);
+        this.chorus = new ChorusProcessor(this.context);
+        this.chorus.connect(this.targetNode);
 
-        this.reverb = getReverbProcessor(context).conv;
+        this.reverb = new ReverbProcessor(this.context);
         this.reverb.connect(this.targetNode);
         const isDev = import.meta.env.MODE === "development";
         if (isDev) {
@@ -82,7 +84,7 @@ export class AudioEngine {
             }
         );
         this.worklet.connect(this.targetNode, 0);
-        this.worklet.connect(this.reverb, 1);
+        this.worklet.connect(this.reverb.input, 1);
         this.worklet.connect(this.chorus.input, 2);
         this.worklet.port.onmessage = (e: MessageEvent<number>) =>
             (this.audioChunksQueued = e.data);
