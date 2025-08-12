@@ -48,6 +48,7 @@ export function EditableBankInfo({
     const [engineer, setEngineer] = useState("");
     const [prod, setProd] = useState("");
     const [copy, setCopy] = useState("");
+    const [subject, setSubject] = useState("");
     const [cmt, setCmt] = useState("");
     useEffect(() => {
         document.title = `SpessaFont - ${manager.getBankName(t("bankInfo.unnamed"))}`;
@@ -62,6 +63,7 @@ export function EditableBankInfo({
             setEngineer(manager.getInfo("engineer") ?? "");
             setProd(manager.getInfo("product") ?? "");
             setCopy(manager.getInfo("copyright") ?? "");
+            setSubject(manager.getInfo("subject") ?? "");
             setCmt(manager.getInfo("comment") ?? "");
         }
     }, [bank, manager, setName]);
@@ -165,6 +167,26 @@ export function EditableBankInfo({
                         }}
                         value={copy}
                         placeholder={t("bankInfo.copyright")}
+                    />
+                </span>
+
+                <span>
+                    <label htmlFor={"ISBJ"}>{t("bankInfo.subject")}</label>
+                    <input
+                        className={"pretty_input"}
+                        id={"ISBJ"}
+                        onChange={(e) => {
+                            manager.modifyBank([
+                                new SetBankInfo(
+                                    setSubject,
+                                    manager.getInfo("subject") ?? "",
+                                    e.target.value,
+                                    "subject"
+                                )
+                            ]);
+                        }}
+                        value={subject}
+                        placeholder={t("bankInfo.subject")}
                     />
                 </span>
             </div>
