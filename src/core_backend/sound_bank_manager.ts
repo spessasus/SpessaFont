@@ -4,7 +4,7 @@ import {
     type BasicSample,
     BasicSoundBank,
     type ProgressFunction,
-    type SoundBankInfoFourCC,
+    type SoundBankInfoData,
     SoundBankLoader,
     SpessaSynthProcessor,
     type SpessaSynthSequencer
@@ -43,9 +43,7 @@ export default class SoundBankManager extends BasicSoundBank {
             bank ?? SoundBankLoader.fromArrayBuffer(dummy.slice());
         Object.assign(this, actualBank);
         if (bank === undefined) {
-            this.soundBankInfo.ifil = "2.4";
-            this.soundBankInfo.INAM = "";
-            this.soundBankInfo.ICRD = new Date().toISOString().split("T")[0];
+            this.soundBankInfo.name = "";
         }
         // fix preset references
         // @ts-expect-error hacky way to make this work
@@ -81,11 +79,13 @@ export default class SoundBankManager extends BasicSoundBank {
     }
 
     getBankName(unnamed: string) {
-        return this.getInfo("INAM") || unnamed;
+        return this.getInfo("name") || unnamed;
     }
 
-    getInfo(fourCC: SoundBankInfoFourCC) {
-        return this.soundBankInfo?.[fourCC]?.toString() ?? "";
+    getInfo<K extends keyof SoundBankInfoData>(
+        fourCC: K
+    ): SoundBankInfoData[K] {
+        return this.soundBankInfo?.[fourCC];
     }
 
     getTabName(unnamed: string) {
@@ -135,7 +135,7 @@ export default class SoundBankManager extends BasicSoundBank {
                     progressFunction
                 });
         }
-        if (this.soundBankInfo.ifil === "3.0") {
+        if (this.soundBankInfo.version.major === 3) {
             format = "sf3";
         }
         const buffer = binary;

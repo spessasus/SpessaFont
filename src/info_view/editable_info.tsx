@@ -1,20 +1,20 @@
-import type { SoundBankInfoFourCC } from "spessasynth_core";
+import type { SoundBankInfoData } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import type { HistoryAction } from "../core_backend/history.ts";
 
-class SetBankInfo implements HistoryAction {
-    callback: (s: string) => void;
-    private readonly oldVal: string;
-    private readonly newVal: string;
-    private readonly fourCC: SoundBankInfoFourCC;
+class SetBankInfo<K extends keyof SoundBankInfoData> implements HistoryAction {
+    callback: (s: NonNullable<SoundBankInfoData[K]>) => void;
+    private readonly oldVal: NonNullable<SoundBankInfoData[K]>;
+    private readonly newVal: NonNullable<SoundBankInfoData[K]>;
+    private readonly fourCC: K;
 
     constructor(
-        callback: (s: string) => void,
-        oldVal: string,
-        newVal: string,
-        fourCC: SoundBankInfoFourCC
+        callback: (s: NonNullable<SoundBankInfoData[K]>) => void,
+        oldVal: NonNullable<SoundBankInfoData[K]>,
+        newVal: NonNullable<SoundBankInfoData[K]>,
+        fourCC: K
     ) {
         this.callback = callback;
         this.oldVal = oldVal;
@@ -23,12 +23,12 @@ class SetBankInfo implements HistoryAction {
     }
 
     do(b: SoundBankManager) {
-        (b.soundBankInfo[this.fourCC] as string) = this.newVal;
+        b.soundBankInfo[this.fourCC] = this.newVal;
         this.callback(this.newVal);
     }
 
     undo(b: SoundBankManager) {
-        (b.soundBankInfo[this.fourCC] as string) = this.oldVal;
+        b.soundBankInfo[this.fourCC] = this.oldVal;
         this.callback(this.oldVal);
     }
 }
@@ -44,7 +44,7 @@ export function EditableBankInfo({
 }) {
     const { t } = useTranslation();
 
-    const [date, setDate] = useState("");
+    const [date, setDate] = useState(new Date());
     const [engineer, setEngineer] = useState("");
     const [prod, setProd] = useState("");
     const [copy, setCopy] = useState("");
@@ -57,12 +57,12 @@ export function EditableBankInfo({
 
     useEffect(() => {
         if (bank !== undefined) {
-            setName(manager.getInfo("INAM"));
-            setDate(manager.getInfo("ICRD"));
-            setEngineer(manager.getInfo("IENG"));
-            setProd(manager.getInfo("IPRD"));
-            setCopy(manager.getInfo("ICOP"));
-            setCmt(manager.getInfo("ICMT"));
+            setName(manager.getInfo("name"));
+            setDate(manager.getInfo("creationDate"));
+            setEngineer(manager.getInfo("engineer") ?? "");
+            setProd(manager.getInfo("product") ?? "");
+            setCopy(manager.getInfo("copyright") ?? "");
+            setCmt(manager.getInfo("comment") ?? "");
         }
     }, [bank, manager, setName]);
 
@@ -75,9 +75,9 @@ export function EditableBankInfo({
                     manager.modifyBank([
                         new SetBankInfo(
                             setName,
-                            manager.getInfo("INAM"),
+                            manager.getInfo("name"),
                             e.target.value,
-                            "INAM"
+                            "name"
                         )
                     ]);
                 }}
@@ -95,9 +95,9 @@ export function EditableBankInfo({
                             manager.modifyBank([
                                 new SetBankInfo(
                                     setEngineer,
-                                    manager.getInfo("IENG"),
+                                    manager.getInfo("engineer") ?? "",
                                     e.target.value,
-                                    "IENG"
+                                    "engineer"
                                 )
                             ]);
                         }}
@@ -109,19 +109,21 @@ export function EditableBankInfo({
                 <span>
                     <label htmlFor={"ICRD"}>{t("bankInfo.creationDate")}</label>
                     <input
+                        type={"datetime-local"}
                         className={"pretty_input"}
                         id={"ICRD"}
                         onChange={(e) => {
                             manager.modifyBank([
                                 new SetBankInfo(
                                     setDate,
-                                    manager.getInfo("ICRD"),
-                                    e.target.value,
-                                    "ICRD"
+                                    manager.getInfo("creationDate") ??
+                                        new Date(),
+                                    e.target.valueAsDate ?? new Date(),
+                                    "creationDate"
                                 )
                             ]);
                         }}
-                        value={date}
+                        value={date.toISOString().slice(0, 16)} // Format to 'YYYY-MM-DDTHH:MM' so input is happy
                         placeholder={t("bankInfo.creationDate")}
                     />
                 </span>
@@ -135,9 +137,9 @@ export function EditableBankInfo({
                             manager.modifyBank([
                                 new SetBankInfo(
                                     setProd,
-                                    manager.getInfo("IPRD"),
+                                    manager.getInfo("product") ?? "",
                                     e.target.value,
-                                    "IPRD"
+                                    "product"
                                 )
                             ]);
                         }}
@@ -155,9 +157,9 @@ export function EditableBankInfo({
                             manager.modifyBank([
                                 new SetBankInfo(
                                     setCopy,
-                                    manager.getInfo("ICOP"),
+                                    manager.getInfo("copyright") ?? "",
                                     e.target.value,
-                                    "ICOP"
+                                    "copyright"
                                 )
                             ]);
                         }}
@@ -174,9 +176,9 @@ export function EditableBankInfo({
                         manager.modifyBank([
                             new SetBankInfo(
                                 setCmt,
-                                manager.getInfo("ICMT"),
+                                manager.getInfo("comment") ?? "",
                                 e.target.value,
-                                "ICMT"
+                                "comment"
                             )
                         ]);
                     }}
