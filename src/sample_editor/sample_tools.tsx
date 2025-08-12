@@ -174,7 +174,9 @@ export function SampleTools({
     }, [playSample, playerState, stopPlayer]);
 
     const exportWav = () => {
-        const blob = audioBufferToWav(buffer, false);
+        const blob = audioBufferToWav(buffer, {
+            normalizeAudio: false
+        });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
         a.download = `${sampleName}.wav`;
