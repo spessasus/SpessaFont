@@ -94,6 +94,10 @@ This is also my first TypeScript and React project. It's a bit messy, but it wor
 5. `npm run build`
 6. The `dist` directory contains the built HTML and other files
 
+## Credits
+
+- [sl-web-ogg](https://github.com/erikh2000/sl-web-ogg) - for the Ogg Vorbis encoder
+- [Bootstrap Icons](https://icons.getbootstrap.com/) - for the icons
 
 
 _Editing sound banks has never been easier!_
