@@ -24,7 +24,7 @@
     --font-color: oklch(95% 0 0);
     --top-index: 100;
 
-    --darker-color-start: oklch(12.5% 0 0);
+    --darker-color-start: #000;
     --darker-color-end: oklch(14.5% 0 0);
     --darker-color: linear-gradient(31deg, var(--darker-color-start), var(--darker-color-end));
 
