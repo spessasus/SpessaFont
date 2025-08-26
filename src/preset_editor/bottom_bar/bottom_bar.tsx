@@ -6,6 +6,8 @@ import { DeletePresetAction } from "./delete_preset_action.ts";
 import type { SetViewType } from "../../bank_editor/bank_editor.tsx";
 import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
 import { EditPresetAction } from "./edit_preset_action.ts";
+import { ControllerSwitch } from "../../fancy_inputs/controller_switch/controller_switch.tsx";
+import toast from "react-hot-toast";
 
 export function BottomPresetBar({
     manager,
@@ -48,6 +50,79 @@ export function BottomPresetBar({
                 />
             </div>
 
+            {!preset.isGMGSDrum && (
+                <>
+                    <div>
+                        <span>{t("presetLocale.bankLSB")}</span>
+                        <WaitingInput
+                            type={"number"}
+                            min={0}
+                            max={128}
+                            value={preset.bankLSB}
+                            setValue={(v) => {
+                                const checker = {
+                                    ...preset,
+                                    bankLSB: v
+                                };
+                                // no duplicates
+                                const duplicate = presets.find((p) =>
+                                    p.matches(checker)
+                                );
+                                if (duplicate) {
+                                    toast.error(
+                                        `${t("presetLocale.presetWithTheParametersExists")} (${duplicate.name}) `
+                                    );
+                                    return preset.bankLSB;
+                                }
+                                const action = new EditPresetAction(
+                                    presets.indexOf(preset),
+                                    "bankLSB",
+                                    preset.bankLSB,
+                                    v,
+                                    () => setPresets([...presets])
+                                );
+                                manager.modifyBank([action]);
+                                return v;
+                            }}
+                        />
+                    </div>
+                    <div>
+                        <span>{t("presetLocale.bankMSB")}</span>
+                        <WaitingInput
+                            type={"number"}
+                            min={0}
+                            max={128}
+                            value={preset.bankMSB}
+                            setValue={(v) => {
+                                const checker = {
+                                    ...preset,
+                                    bankMSB: v
+                                };
+                                // no duplicates
+                                const duplicate = presets.find((p) =>
+                                    p.matches(checker)
+                                );
+                                if (duplicate) {
+                                    toast.error(
+                                        `${t("presetLocale.presetWithTheParametersExists")} (${duplicate.name}) `
+                                    );
+                                    return preset.bankMSB;
+                                }
+                                const action = new EditPresetAction(
+                                    presets.indexOf(preset),
+                                    "bankMSB",
+                                    preset.bankMSB,
+                                    v,
+                                    () => setPresets([...presets])
+                                );
+                                manager.modifyBank([action]);
+                                return v;
+                            }}
+                        />
+                    </div>
+                </>
+            )}
+
             <div>
                 <span>{t("presetLocale.programNumber")}</span>
                 <WaitingInput
@@ -56,12 +131,18 @@ export function BottomPresetBar({
                     max={127}
                     value={preset.program}
                     setValue={(v) => {
+                        const checker = {
+                            ...preset,
+                            program: v
+                        };
                         // no duplicates
-                        if (
-                            presets.find(
-                                (p) => p.program === v && p.bank === preset.bank
-                            )
-                        ) {
+                        const duplicate = presets.find((p) =>
+                            p.matches(checker)
+                        );
+                        if (duplicate) {
+                            toast.error(
+                                `${t("presetLocale.presetWithTheParametersExists")} (${duplicate.name}) `
+                            );
                             return preset.program;
                         }
                         const action = new EditPresetAction(
@@ -76,32 +157,50 @@ export function BottomPresetBar({
                     }}
                 />
             </div>
-            <div>
-                <span>{t("presetLocale.bankNumber")}</span>
-                <WaitingInput
-                    type={"number"}
-                    min={0}
-                    max={128}
-                    value={preset.bank}
-                    setValue={(v) => {
+            <div className={"drums_toggle"}>
+                <span>{t("presetLocale.drums")}</span>
+                <ControllerSwitch
+                    value={preset.isGMGSDrum}
+                    onChange={(v) => {
+                        const checker = {
+                            ...preset,
+                            isGMGSDrum: v
+                        };
                         // no duplicates
-                        if (
-                            presets.find(
-                                (p) =>
-                                    p.program === preset.program && p.bank === v
-                            )
-                        ) {
-                            return preset.bank;
-                        }
-                        const action = new EditPresetAction(
-                            presets.indexOf(preset),
-                            "bank",
-                            preset.bank,
-                            v,
-                            () => setPresets([...presets])
+                        const duplicate = presets.find((p) =>
+                            p.matches(checker)
                         );
-                        manager.modifyBank([action]);
-                        return v;
+                        if (duplicate) {
+                            toast.error(
+                                `${t("presetLocale.presetWithTheParametersExists")} (${duplicate.name}) `
+                            );
+                            return;
+                        }
+                        // Set banks to 0
+                        const actions = [
+                            new EditPresetAction(
+                                presets.indexOf(preset),
+                                "isGMGSDrum",
+                                preset.isGMGSDrum,
+                                v,
+                                () => void 0
+                            ),
+                            new EditPresetAction(
+                                presets.indexOf(preset),
+                                "bankLSB",
+                                preset.bankLSB,
+                                0,
+                                () => void 0
+                            ),
+                            new EditPresetAction(
+                                presets.indexOf(preset),
+                                "bankMSB",
+                                preset.bankMSB,
+                                0,
+                                () => setPresets([...presets])
+                            )
+                        ];
+                        manager.modifyBank(actions);
                     }}
                 />
             </div>

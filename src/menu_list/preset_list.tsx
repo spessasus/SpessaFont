@@ -128,18 +128,13 @@ export function PresetList({
         selectedInstruments.forEach((i) => {
             preset.createZone(i);
         });
-        let found = !!presets.find(
-            (p) =>
-                p.preset.program === preset.program &&
-                p.preset.bank === preset.bank
-        );
+        let found = !!presets.find((p) => p.preset.matches(preset));
+        let i = 0;
         while (found) {
-            preset.bank++;
-            found = !!presets.find(
-                (p) =>
-                    p.preset.program === preset.program &&
-                    p.preset.bank === preset.bank
-            );
+            i++;
+            preset.bankMSB = i & 0x7f;
+            preset.bankLSB = Math.max(i >> 7, 0);
+            found = !!presets.find((p) => p.preset.matches(preset));
         }
         const action = new CreatePresetAction(preset, setPresets, setView);
         manager.modifyBank([action]);

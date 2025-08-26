@@ -45,7 +45,7 @@ export function InterfaceSettings({
     }
 
     return (
-        <div className={"settings_group"}>
+        <div className={"settings_group hover_brightness"}>
             <h2>{t("settingsLocale.interface.title")}</h2>
             <Setting locale={"settingsLocale.interface.language"}>
                 <select

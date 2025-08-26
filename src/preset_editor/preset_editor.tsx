@@ -232,9 +232,7 @@ export function PresetEditor({
     const global = preset.globalZone;
 
     useEffect(() => {
-        engine.processor.midiChannels[KEYBOARD_TARGET_CHANNEL].setPreset(
-            preset
-        );
+        engine.processor.midiChannels[KEYBOARD_TARGET_CHANNEL].preset = preset;
         engine.processor.clearCache();
     }, [engine.processor, preset]);
 
