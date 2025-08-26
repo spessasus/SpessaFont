@@ -7,11 +7,23 @@ import type { BankEditView } from "../../core_backend/sound_bank_manager.ts";
 import type { SetViewType } from "../../bank_editor/bank_editor.tsx";
 import { useTranslation } from "react-i18next";
 import { LinkIcon } from "../../utils/icons.tsx";
+import { typedMemo } from "../../utils/typed_memo.ts";
 
 export interface OpenPresetDisplayType {
     open: boolean;
     openInstruments: Record<string, boolean>;
 }
+
+const PresetString = typedMemo(({ n }: { n: number }) => {
+    return (
+        <span
+            className={"monospaced"}
+            style={{ display: "inline-block", opacity: n === 0 ? 0.5 : 1 }}
+        >
+            {n.toString().padStart(3, "0")}
+        </span>
+    );
+});
 
 export function PresetDisplay({
     p,
@@ -66,7 +78,14 @@ export function PresetDisplay({
                             })
                         }
                     >
-                        {p.searchString.substring(0, 7)}
+                        {p.preset.isGMGSDrum && `DRUMS:${p.preset.program}`}
+                        {!p.preset.isGMGSDrum && (
+                            <>
+                                <PresetString n={p.preset.bankLSB} />:
+                                <PresetString n={p.preset.bankMSB} />:
+                                <PresetString n={p.preset.program} />
+                            </>
+                        )}
                     </span>
                     {link && (
                         <span

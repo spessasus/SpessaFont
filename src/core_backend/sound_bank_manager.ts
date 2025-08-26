@@ -3,6 +3,7 @@ import {
     type BasicPreset,
     type BasicSample,
     BasicSoundBank,
+    MIDIPatchTools,
     type ProgressFunction,
     type SoundBankInfoData,
     SoundBankLoader,
@@ -54,12 +55,7 @@ export default class SoundBankManager extends BasicSoundBank {
     }
 
     sortElements() {
-        this.presets.sort((a, b) => {
-            if (a.bank !== b.bank) {
-                return a.bank - b.bank;
-            }
-            return a.program - b.program;
-        });
+        this.presets.sort(MIDIPatchTools.sorter.bind(MIDIPatchTools));
         this.samples.sort((a, b) =>
             a.name > b.name ? 1 : b.name > a.name ? -1 : 0
         );

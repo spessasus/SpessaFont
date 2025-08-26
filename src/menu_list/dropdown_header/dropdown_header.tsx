@@ -25,7 +25,7 @@ export function DropdownHeader({
 }) {
     const { t } = useTranslation();
     return (
-        <div onClick={onClick} className={`item_group_header`}>
+        <div onClick={onClick} className={`item_group_header hover_brightness`}>
             <div className={"left_buttons"}>
                 {add && (
                     <div

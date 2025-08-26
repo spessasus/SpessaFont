@@ -81,9 +81,8 @@ export const SampleEditor = React.memo(function ({
         // unlink here as we don't want to mark it as linked
         sample.unlinkFrom(instrument);
         instZone.setGenerator(generatorTypes.sampleModes, 1);
-        engine.processor.midiChannels[KEYBOARD_TARGET_CHANNEL].setPreset(
-            preset
-        );
+        engine.processor.midiChannels[KEYBOARD_TARGET_CHANNEL].preset = preset;
+
         engine.processor.clearCache();
         return () => {
             engine.processor.clearCache();

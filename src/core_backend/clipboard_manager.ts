@@ -73,23 +73,28 @@ export class ClipboardManager {
         const actions: HistoryAction[] = [];
         const presetNumbers = new Set<string>();
         m.presets.forEach((p) => {
-            presetNumbers.add(`${p.bank}-${p.program}`);
+            presetNumbers.add(p.toMIDIString());
         });
         this.presetClipboard.forEach((oldPreset) => {
-            let bank = oldPreset.bank;
+            let bankMSB = oldPreset.bankMSB;
+            let bankLSB = oldPreset.bankLSB;
             let program = oldPreset.program;
-            while (presetNumbers.has(`${bank}-${program}`)) {
-                if (bank === 128) {
+            while (presetNumbers.has(oldPreset.toMIDIString())) {
+                if (bankMSB === 128) {
                     program++;
                 } else {
-                    bank++;
-                    if (bank >= 127) {
-                        bank = 0;
-                        program++;
-                        if (program > 127) {
-                            throw new Error(
-                                `No free space to paste ${oldPreset.program}`
-                            );
+                    bankMSB++;
+                    if (bankMSB >= 127) {
+                        bankMSB = 0;
+                        bankLSB++;
+                        if (bankLSB >= 127) {
+                            bankLSB = 0;
+                            program++;
+                            if (program > 127) {
+                                throw new Error(
+                                    `No free space to paste ${oldPreset.program}`
+                                );
+                            }
                         }
                     }
                 }
@@ -97,7 +102,9 @@ export class ClipboardManager {
             const newPreset = new BasicPreset(m);
             newPreset.name = oldPreset.name;
             newPreset.program = program;
-            newPreset.bank = bank;
+            newPreset.bankMSB = bankMSB;
+            newPreset.bankLSB = bankLSB;
+            newPreset.isGMGSDrum = oldPreset.isGMGSDrum;
 
             newPreset.library = oldPreset.library;
             newPreset.morphology = oldPreset.morphology;
@@ -123,7 +130,7 @@ export class ClipboardManager {
                 new CreatePresetAction(newPreset, setPresets, setView)
             );
             clonedPresets.push(newPreset);
-            presetNumbers.add(`${bank}-${program}`);
+            presetNumbers.add(newPreset.toMIDIString());
         });
         m.modifyBank(actions);
         return actions.length;
@@ -184,13 +191,13 @@ export class ClipboardManager {
     }
 
     /**
-     * @param {BasicSample} oldSample
-     * @param {Set<string>} alreadyCloned sample names
-     * @param {HistoryAction[]} actions
-     * @param {(s: BasicSample[]) => unknown} setSamples
-     * @param {SetViewType} setView
-     * @param {boolean} duplicate
-     * @returns {BasicSample}
+     * @param oldSample
+     * @param alreadyCloned sample names
+     * @param actions
+     * @param setSamples
+     * @param setView
+     * @param duplicate
+     * @returns
      * @private
      */
     private addSample(

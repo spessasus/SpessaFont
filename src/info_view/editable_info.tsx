@@ -71,7 +71,7 @@ export function EditableBankInfo({
     return (
         <div className={"editable"}>
             <input
-                className={"pretty_input"}
+                className={"pretty_input hover_brightness"}
                 id={"INAM"}
                 onChange={(e) => {
                     manager.modifyBank([
@@ -112,7 +112,7 @@ export function EditableBankInfo({
                     <label htmlFor={"ICRD"}>{t("bankInfo.creationDate")}</label>
                     <input
                         type={"datetime-local"}
-                        className={"pretty_input"}
+                        className={"pretty_input hover_brightness"}
                         id={"ICRD"}
                         onChange={(e) => {
                             manager.modifyBank([
@@ -133,7 +133,7 @@ export function EditableBankInfo({
                 <span>
                     <label htmlFor={"IPRD"}>{t("bankInfo.product")}</label>
                     <input
-                        className={"pretty_input"}
+                        className={"pretty_input hover_brightness"}
                         id={"IPRD"}
                         onChange={(e) => {
                             manager.modifyBank([
@@ -153,7 +153,7 @@ export function EditableBankInfo({
                 <span>
                     <label htmlFor={"ICOP"}>{t("bankInfo.copyright")}</label>
                     <input
-                        className={"pretty_input"}
+                        className={"pretty_input hover_brightness"}
                         id={"ICOP"}
                         onChange={(e) => {
                             manager.modifyBank([
@@ -173,7 +173,7 @@ export function EditableBankInfo({
                 <span>
                     <label htmlFor={"ISBJ"}>{t("bankInfo.subject")}</label>
                     <input
-                        className={"pretty_input"}
+                        className={"pretty_input hover_brightness"}
                         id={"ISBJ"}
                         onChange={(e) => {
                             manager.modifyBank([
@@ -192,7 +192,7 @@ export function EditableBankInfo({
             </div>
             <div className={"comment"}>
                 <textarea
-                    className={"pretty_input"}
+                    className={"pretty_input hover_brightness"}
                     id={"ICMT"}
                     onChange={(e) => {
                         manager.modifyBank([

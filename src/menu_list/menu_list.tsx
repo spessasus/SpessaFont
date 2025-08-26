@@ -20,7 +20,10 @@ import { DeletePresetAction } from "../preset_editor/bottom_bar/delete_preset_ac
 export const ESTIMATED_ROW_HEIGHT = 30;
 export const OVERSCAN = 5;
 
-export interface MappedPresetType { searchString: string; preset: BasicPreset }
+export interface MappedPresetType {
+    searchString: string;
+    preset: BasicPreset;
+}
 
 interface MenuListProps {
     manager: SoundBankManager;
@@ -191,9 +194,7 @@ export const MenuList = React.memo(function ({
     const presetNameMap: MappedPresetType[] = useMemo(() => {
         return presets.map((p) => {
             return {
-                searchString: `${p.bank.toString().padStart(3, "0")}:${p.program
-                    .toString()
-                    .padStart(3, "0")} ${p.name}`.toLowerCase(),
+                searchString: p.toString().toLowerCase(),
                 preset: p
             };
         });
@@ -273,7 +274,7 @@ export const MenuList = React.memo(function ({
             <div className={`menu_list_main`}>
                 <div
                     onClick={() => setView("info")}
-                    className={`item_group_header ${view === "info" ? "opened" : ""}`}
+                    className={`item_group_header hover_brightness ${view === "info" ? "opened" : ""}`}
                 >
                     <h2>{t("presetList.overview")}</h2>
                     <div className={"right_buttons"}>

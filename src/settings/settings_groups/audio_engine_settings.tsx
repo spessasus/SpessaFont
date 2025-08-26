@@ -53,7 +53,7 @@ export function AudioEngineSettings({
     const { t } = useTranslation();
     const engineT = "settingsLocale.audioEngine.";
     return (
-        <div className={"settings_group"}>
+        <div className={"settings_group hover_brightness"}>
             <h2>{t(`${engineT}title`)}</h2>
             <Setting locale={`${engineT}volume`}>
                 <WaitingInput

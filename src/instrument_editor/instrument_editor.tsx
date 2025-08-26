@@ -331,9 +331,7 @@ export function InstrumentEditor({
         // note: unlink it we don't want the instrument to be aware of the preset
         // (it won't allow us to delete it)
         instrument.unlinkFrom(preset);
-        engine.processor.midiChannels[KEYBOARD_TARGET_CHANNEL].setPreset(
-            preset
-        );
+        engine.processor.midiChannels[KEYBOARD_TARGET_CHANNEL].preset = preset;
         engine.processor.clearCache();
         return () => {
             // manually clear the preset to not trigger any warnings
