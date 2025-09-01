@@ -1,10 +1,4 @@
-import {
-    type RefObject,
-    useEffect,
-    useImperativeHandle,
-    useMemo,
-    useRef
-} from "react";
+import { type RefObject, useEffect, useImperativeHandle, useMemo, useRef } from "react";
 import "./keyboard.css";
 import type { AudioEngine } from "../../core_backend/audio_engine.ts";
 import { KEYBOARD_TARGET_CHANNEL } from "../target_channel.ts";
@@ -90,6 +84,7 @@ export function Keyboard({
 
         const userNoteOn = (note: number, velocity: number) => {
             engine.processor.noteOn(KEYBOARD_TARGET_CHANNEL, note, velocity);
+
             matchingSplits[note].forEach((split) => {
                 for (let i = split.min; i <= split.max; i++) {
                     keysRef?.current?.[i]?.classList?.add("zone_highlight");
@@ -104,26 +99,19 @@ export function Keyboard({
                 return;
             }
 
-            const keyElement = keysRef.current[0]; // All keys same top
-            if (!keyElement) {
-                return;
-            }
-
-            const rect = keyElement.getBoundingClientRect();
-
-            const newTouchedKeys = new Set<number>();
-            const toUserOn: { k: number; v: number }[] = [];
+            const newPressedKeys = new Set<number>();
 
             const target = document.elementFromPoint(
                 mouseEvent.clientX,
                 mouseEvent.clientY
-            ) as HTMLDivElement | null;
+            ) as HTMLDivElement;
             if (!target) {
                 return;
             }
+            const rect = target.getBoundingClientRect();
 
             const midiNote = keysRef?.current?.indexOf(target) || 0;
-            if (isNaN(midiNote) || midiNote < 0) {
+            if (isNaN(midiNote) || midiNote < 0 || pressedKeys.has(midiNote)) {
                 return;
             }
 
@@ -146,23 +134,19 @@ export function Keyboard({
                     .padStart(3, " ");
             }
 
-            newTouchedKeys.add(midiNote);
+            newPressedKeys.add(midiNote);
 
-            if (!pressedKeys.has(midiNote)) {
-                toUserOn.push({ k: midiNote, v: velocity });
-            }
-
-            // only release keys that are no longer being touched
+            // only release keys that are no longer being pressed
             pressedKeys.forEach((note) => {
-                if (!newTouchedKeys.has(note)) {
+                if (!newPressedKeys.has(note)) {
                     userNoteOff(note);
                 }
             });
 
-            // press the keys after
-            toUserOn.forEach((n) => {
-                userNoteOn(n.k, n.v);
-            });
+            if (!pressedKeys.has(midiNote)) {
+                userNoteOn(midiNote, velocity);
+                pressedKeys.add(midiNote);
+            }
         };
 
         const onMouseDown = (e: MouseEvent) => {
@@ -179,6 +163,12 @@ export function Keyboard({
             pressedKeys.forEach((note) => userNoteOff(note));
         };
 
+        const onMouseMove = (e: MouseEvent) => {
+            if (mouseHeld) {
+                moveHandler(e);
+            }
+        };
+
         const kb = keyboardRef.current;
         if (!kb) {
             return;
@@ -186,14 +176,14 @@ export function Keyboard({
 
         document.addEventListener("mousedown", onMouseDown);
         document.addEventListener("mouseup", onMouseUp);
-        kb.addEventListener("mousemove", moveHandler);
+        kb.addEventListener("mousemove", onMouseMove);
         kb.addEventListener("mouseleave", onMouseLeave);
 
         // cleanup
         return () => {
             document.removeEventListener("mousedown", onMouseDown);
             document.removeEventListener("mouseup", onMouseUp);
-            kb.removeEventListener("mousemove", moveHandler);
+            kb.removeEventListener("mousemove", onMouseMove);
             kb.removeEventListener("mouseleave", onMouseLeave);
         };
     }, [engine.processor, keyDisplay, matchingSplits, velocityDisplay]);
