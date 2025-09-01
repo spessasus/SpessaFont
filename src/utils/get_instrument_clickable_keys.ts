@@ -1,10 +1,10 @@
-import type { BasicZone, KeyRange } from "spessasynth_core";
+import type { BasicZone, GenericRange } from "spessasynth_core";
 
 export function getZoneSplits(
     zones: BasicZone[],
-    global: KeyRange
-): KeyRange[] {
-    const splits: KeyRange[] = [];
+    global: GenericRange
+): GenericRange[] {
+    const splits: GenericRange[] = [];
     zones.forEach(({ keyRange: { min, max } }) => {
         if (min === -1) {
             min = global.min;

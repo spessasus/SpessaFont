@@ -50,11 +50,8 @@ export const OffsetGeneratorCell = typedMemo(function ({
         case generatorTypes.endloopAddrsOffset:
             coarseGeneratorType = generatorTypes.endloopAddrsCoarseOffset;
     }
-    const currentFineOffset = zone.getGeneratorValue(generatorType, null);
-    const currentCoarseOffset = zone.getGeneratorValue(
-        coarseGeneratorType,
-        null
-    );
+    const currentFineOffset = zone.getGenerator(generatorType, null);
+    const currentCoarseOffset = zone.getGenerator(coarseGeneratorType, null);
     let textValue = "";
     if (currentFineOffset !== null) {
         let offsetNum = currentFineOffset;
@@ -105,17 +102,14 @@ export const OffsetGeneratorCell = typedMemo(function ({
                         new SetGeneratorAction(
                             linkedZone,
                             generatorType,
-                            linkedZone.getGeneratorValue(generatorType, null),
+                            linkedZone.getGenerator(generatorType, null),
                             null,
                             callback
                         ),
                         new SetGeneratorAction(
                             linkedZone,
                             coarseGeneratorType,
-                            linkedZone.getGeneratorValue(
-                                coarseGeneratorType,
-                                null
-                            ),
+                            linkedZone.getGenerator(coarseGeneratorType, null),
                             null,
                             callback
                         )
@@ -148,7 +142,7 @@ export const OffsetGeneratorCell = typedMemo(function ({
                         new SetGeneratorAction(
                             linkedZone,
                             generatorType,
-                            linkedZone.getGeneratorValue(generatorType, null),
+                            linkedZone.getGenerator(generatorType, null),
                             fine,
                             callback
                         )
@@ -157,7 +151,7 @@ export const OffsetGeneratorCell = typedMemo(function ({
                         new SetGeneratorAction(
                             linkedZone,
                             coarseGeneratorType,
-                            linkedZone.getGeneratorValue(generatorType, null),
+                            linkedZone.getGenerator(generatorType, null),
                             coarseTarget,
                             callback
                         )

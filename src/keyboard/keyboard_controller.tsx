@@ -4,7 +4,7 @@ import { Keyboard, type KeyboardRef } from "./keyboard/keyboard.tsx";
 import * as React from "react";
 import { type JSX, type RefObject, useEffect, useRef, useState } from "react";
 import {
-    type KeyRange,
+    type GenericRange,
     type MIDIController,
     midiControllers
 } from "spessasynth_core";
@@ -39,7 +39,7 @@ export function KeyboardController({
 }: {
     engine: AudioEngine;
     ccOptions: JSX.Element;
-    splits: KeyRange[];
+    splits: GenericRange[];
 }) {
     const { t } = useTranslation();
     const [controllers, setControllers] =
@@ -77,13 +77,11 @@ export function KeyboardController({
                         break;
 
                     case "noteOn":
-                        keyboardRef?.current?.pressNote(e.data.midiNote || 60);
+                        keyboardRef?.current?.pressNote(e.data.midiNote);
                         break;
 
                     case "noteOff":
-                        keyboardRef?.current?.releaseNote(
-                            e.data.midiNote || 60
-                        );
+                        keyboardRef?.current?.releaseNote(e.data.midiNote);
                         break;
 
                     case "pitchWheel":

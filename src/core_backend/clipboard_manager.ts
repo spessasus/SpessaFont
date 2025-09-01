@@ -18,7 +18,7 @@ export class ClipboardManager {
     private presetClipboard = new Set<BasicPreset>();
 
     getModulators() {
-        return this.modulatorClipboard.map((m) => Modulator.copy(m));
+        return this.modulatorClipboard.map((m) => m.copy());
     }
 
     hasSamples() {
@@ -52,7 +52,7 @@ export class ClipboardManager {
     }
 
     copyModulators(mods: Modulator[]) {
-        this.modulatorClipboard = mods.map((m) => Modulator.copy(m));
+        this.modulatorClipboard = mods.map((m) => m.copy());
     }
 
     // returns the count of pasted elements

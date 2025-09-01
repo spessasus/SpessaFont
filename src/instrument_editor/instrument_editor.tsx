@@ -5,7 +5,7 @@ import {
     BasicPreset,
     type GeneratorType,
     generatorTypes,
-    type KeyRange
+    type GenericRange
 } from "spessasynth_core";
 import "./instrument_editor.css";
 import { useEffect } from "react";
@@ -32,7 +32,7 @@ interface InstrumentEditorProps {
     setView: SetViewType;
     setInstruments: (s: BasicInstrument[]) => void;
     instruments: BasicInstrument[];
-    setSplits: (s: KeyRange[]) => unknown;
+    setSplits: (s: GenericRange[]) => unknown;
 }
 export interface GeneratorRowType {
     generator: GeneratorType;

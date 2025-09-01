@@ -2,7 +2,7 @@ import {
     type BasicPreset,
     type BasicPresetZone,
     generatorTypes,
-    type KeyRange
+    type GenericRange
 } from "spessasynth_core";
 import "./preset_editor.css";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
@@ -221,7 +221,7 @@ export function PresetEditor({
     setPresets: (p: BasicPreset[]) => unknown;
     setView: SetViewType;
     manager: SoundBankManager;
-    setSplits: (s: KeyRange[]) => unknown;
+    setSplits: (s: GenericRange[]) => unknown;
 } & ModulatorListGlobals) {
     const update = () => {
         preset.zones = [...preset.zones];
@@ -237,7 +237,7 @@ export function PresetEditor({
     }, [engine.processor, preset]);
 
     useEffect(() => {
-        const splits: KeyRange[] = [];
+        const splits: GenericRange[] = [];
         const glob = global.keyRange;
         zones.forEach(
             ({ keyRange: { min, max }, instrument: { zones, globalZone } }) => {

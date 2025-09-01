@@ -3,21 +3,21 @@ import {
     type BasicZone,
     type GeneratorType,
     generatorTypes,
-    type KeyRange
+    type GenericRange
 } from "spessasynth_core";
 
 export class SetRangeAction implements HistoryAction {
     private readonly zone: BasicZone;
     private readonly generator: GeneratorType;
-    private readonly previousValue: KeyRange;
-    private readonly newValue: KeyRange;
+    private readonly previousValue: GenericRange;
+    private readonly newValue: GenericRange;
     private readonly callback: () => unknown;
 
     constructor(
         zone: BasicZone,
         generator: GeneratorType,
-        previousValue: KeyRange,
-        newValue: KeyRange,
+        previousValue: GenericRange,
+        newValue: GenericRange,
         callback: () => unknown
     ) {
         this.zone = zone;

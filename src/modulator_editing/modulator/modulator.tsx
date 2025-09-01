@@ -65,28 +65,28 @@ export const ModulatorView = React.memo(function ({
     }
 
     function setSource(s: SpessaFontModulatorSource) {
-        mod.sourceIndex = s.sourceIndex;
-        mod.sourceUsesCC = s.usesCC ? 1 : 0;
+        mod.primarySource.index = s.sourceIndex;
+        mod.primarySource.isCC = s.usesCC;
         setModulator(mod);
     }
 
     function setSecSource(s: SpessaFontModulatorSource) {
-        mod.secSrcIndex = s.sourceIndex;
-        mod.secSrcUsesCC = s.usesCC ? 1 : 0;
+        mod.secondarySource.index = s.sourceIndex;
+        mod.secondarySource.isCC = s.usesCC;
         setModulator(mod);
     }
 
     function setCurveType(c: SpessaFontModulatorCurveType) {
-        mod.sourceCurveType = c.curveType;
-        mod.sourcePolarity = c.bipolar ? 1 : 0;
-        mod.sourceDirection = c.positive ? 0 : 1;
+        mod.primarySource.curveType = c.curveType;
+        mod.primarySource.isBipolar = c.bipolar;
+        mod.primarySource.isNegative = !c.positive;
         setModulator(mod);
     }
 
     function setSecCurveType(c: SpessaFontModulatorCurveType) {
-        mod.secSrcCurveType = c.curveType;
-        mod.secSrcPolarity = c.bipolar ? 1 : 0;
-        mod.secSrcDirection = c.positive ? 0 : 1;
+        mod.secondarySource.curveType = c.curveType;
+        mod.secondarySource.isBipolar = c.bipolar;
+        mod.secondarySource.isNegative = !c.positive;
         setModulator(mod);
     }
 
@@ -117,16 +117,16 @@ export const ModulatorView = React.memo(function ({
                     ccOptions={ccList}
                     setSource={setSource}
                     source={{
-                        usesCC: mod.sourceUsesCC > 0,
-                        sourceIndex: mod.sourceIndex
+                        usesCC: mod.primarySource.isCC,
+                        sourceIndex: mod.primarySource.index
                     }}
                 ></ModulatorSourcePicker>
                 <ModulatorSourcePicker
                     ccOptions={ccList}
                     setSource={setSecSource}
                     source={{
-                        usesCC: mod.secSrcUsesCC > 0,
-                        sourceIndex: mod.secSrcIndex
+                        usesCC: mod.secondarySource.isCC,
+                        sourceIndex: mod.secondarySource.index
                     }}
                 ></ModulatorSourcePicker>
             </div>
@@ -139,9 +139,9 @@ export const ModulatorView = React.memo(function ({
                     }
                     setNotActive={() => setActiveModPickerId("")}
                     curveType={{
-                        curveType: mod.sourceCurveType,
-                        bipolar: mod.sourcePolarity === 1,
-                        positive: mod.sourceDirection === 0
+                        curveType: mod.primarySource.curveType,
+                        bipolar: mod.primarySource.isBipolar,
+                        positive: !mod.primarySource.isNegative
                     }}
                     setCurveType={setCurveType}
                 ></ModulatorCurvePicker>
@@ -153,9 +153,9 @@ export const ModulatorView = React.memo(function ({
                         setActiveModPickerId(`${modulatorNumber}-2`)
                     }
                     curveType={{
-                        curveType: mod.secSrcCurveType,
-                        bipolar: mod.secSrcPolarity === 1,
-                        positive: mod.secSrcDirection === 0
+                        curveType: mod.secondarySource.curveType,
+                        bipolar: mod.secondarySource.isBipolar,
+                        positive: !mod.secondarySource.isNegative
                     }}
                     setCurveType={setSecCurveType}
                 ></ModulatorCurvePicker>
@@ -181,8 +181,8 @@ export const ModulatorView = React.memo(function ({
                         const parsed = parseInt(numericPart, 10);
                         if (
                             !isNaN(parsed) &&
-                            parsed >= -12700 &&
-                            parsed <= 12700
+                            parsed >= -32767 &&
+                            parsed <= 32767
                         ) {
                             setAmount(parsed);
                         }

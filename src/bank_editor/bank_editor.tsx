@@ -19,7 +19,7 @@ import {
     BasicInstrument,
     BasicPreset,
     BasicSample,
-    type KeyRange,
+    type GenericRange,
     type SampleType,
     sampleTypes
 } from "spessasynth_core";
@@ -40,7 +40,7 @@ export interface BankEditorProps {
     ccOptions: JSX.Element;
     shown: boolean;
     ref: BankEditorRef;
-    setSplits: (s: KeyRange[]) => unknown;
+    setSplits: (s: GenericRange[]) => unknown;
 }
 
 export type SetViewType = (v: BankEditView) => unknown;
@@ -164,7 +164,9 @@ export function BankEditor({
                         return;
                     }
 
-                    const match = (/[a-zA-Z!](?=\s*$|\)|$)/.exec(sample.name))?.[0];
+                    const match = /[a-zA-Z!](?=\s*$|\)|$)/.exec(
+                        sample.name
+                    )?.[0];
                     if (
                         match?.toLowerCase() !== "l" &&
                         match?.toLowerCase() !== "r"

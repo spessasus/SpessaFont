@@ -8,7 +8,7 @@ import {
 import "./keyboard.css";
 import type { AudioEngine } from "../../core_backend/audio_engine.ts";
 import { KEYBOARD_TARGET_CHANNEL } from "../target_channel.ts";
-import type { KeyRange } from "spessasynth_core";
+import type { GenericRange } from "spessasynth_core";
 
 function isBlackNoteNumber(midiNote: number) {
     const pitchClass = midiNote % 12;
@@ -36,17 +36,17 @@ export function Keyboard({
     ref: RefObject<KeyboardRef | null>;
     keyDisplay: RefObject<HTMLSpanElement | null>;
     velocityDisplay: RefObject<HTMLSpanElement | null>;
-    splits: KeyRange[];
+    splits: GenericRange[];
 }) {
     const keysRef = useRef<HTMLDivElement[]>([]);
     const keyboardRef = useRef<HTMLDivElement | null>(null);
 
     const matchingSplits = useMemo(() => {
-        const map: KeyRange[][] = [];
+        const map: GenericRange[][] = [];
         for (let midiNote = 0; midiNote < 128; midiNote++) {
             // find all splits tha this key belongs to
             map.push(
-                splits.reduce((matched: KeyRange[], split) => {
+                splits.reduce((matched: GenericRange[], split) => {
                     if (split.min <= midiNote && split.max >= midiNote) {
                         matched.push(split);
                     }
@@ -98,65 +98,58 @@ export function Keyboard({
         };
 
         const moveHandler = (e: MouseEvent) => {
-            const touches = [e];
+            const mouseEvent = e;
+
+            if (!mouseHeld) {
+                return;
+            }
+
+            const keyElement = keysRef.current[0]; // All keys same top
+            if (!keyElement) {
+                return;
+            }
+
+            const rect = keyElement.getBoundingClientRect();
 
             const newTouchedKeys = new Set<number>();
             const toUserOn: { k: number; v: number }[] = [];
 
-            touches.forEach((touch) => {
-                const target = document.elementFromPoint(
-                    touch.clientX,
-                    touch.clientY
-                );
-
-                if (!target?.id.startsWith("note")) {
-                    return;
-                }
-
-                const midiNote = parseInt(target.id.replace("note", ""));
-                if (isNaN(midiNote) || midiNote < 0) {
-                    return;
-                }
-
-                const keyElement = keysRef.current[0]; // All keys same top
-                if (!keyElement) {
-                    return;
-                }
-
-                const rect = keyElement.getBoundingClientRect();
-
-                const relativeMouseY = touch.clientY - rect.top;
-                const keyHeight = isBlackNoteNumber(midiNote)
-                    ? rect.height * 0.7
-                    : rect.height;
-                const velocity = Math.min(
-                    127,
-                    Math.floor((relativeMouseY / keyHeight) * 128)
-                );
-                if (keyDisplay.current) {
-                    keyDisplay.current.textContent = midiNote
-                        .toString()
-                        .padStart(3, " ");
-                }
-                if (velocityDisplay.current) {
-                    velocityDisplay.current.textContent = velocity
-                        .toString()
-                        .padStart(3, " ");
-                }
-
-                if (!mouseHeld) {
-                    return;
-                }
-
-                newTouchedKeys.add(midiNote);
-
-                if (!pressedKeys.has(midiNote)) {
-                    toUserOn.push({ k: midiNote, v: velocity });
-                }
-            });
-
-            if (!mouseHeld) {
+            const target = document.elementFromPoint(
+                mouseEvent.clientX,
+                mouseEvent.clientY
+            ) as HTMLDivElement | null;
+            if (!target) {
                 return;
+            }
+
+            const midiNote = keysRef?.current?.indexOf(target) || 0;
+            if (isNaN(midiNote) || midiNote < 0) {
+                return;
+            }
+
+            const relativeMouseY = mouseEvent.clientY - rect.top;
+            const keyHeight = isBlackNoteNumber(midiNote)
+                ? rect.height * 0.7
+                : rect.height;
+            const velocity = Math.min(
+                127,
+                Math.floor((relativeMouseY / keyHeight) * 128)
+            );
+            if (keyDisplay.current) {
+                keyDisplay.current.textContent = midiNote
+                    .toString()
+                    .padStart(3, " ");
+            }
+            if (velocityDisplay.current) {
+                velocityDisplay.current.textContent = velocity
+                    .toString()
+                    .padStart(3, " ");
+            }
+
+            newTouchedKeys.add(midiNote);
+
+            if (!pressedKeys.has(midiNote)) {
+                toUserOn.push({ k: midiNote, v: velocity });
             }
 
             // only release keys that are no longer being touched
@@ -182,10 +175,6 @@ export function Keyboard({
             pressedKeys.forEach((note) => userNoteOff(note));
         };
 
-        const onMouseMove = (e: MouseEvent) => {
-            moveHandler(e);
-        };
-
         const onMouseLeave = () => {
             pressedKeys.forEach((note) => userNoteOff(note));
         };
@@ -197,14 +186,14 @@ export function Keyboard({
 
         document.addEventListener("mousedown", onMouseDown);
         document.addEventListener("mouseup", onMouseUp);
-        kb.addEventListener("mousemove", onMouseMove);
+        kb.addEventListener("mousemove", moveHandler);
         kb.addEventListener("mouseleave", onMouseLeave);
 
         // cleanup
         return () => {
             document.removeEventListener("mousedown", onMouseDown);
             document.removeEventListener("mouseup", onMouseUp);
-            kb.removeEventListener("mousemove", onMouseMove);
+            kb.removeEventListener("mousemove", moveHandler);
             kb.removeEventListener("mouseleave", onMouseLeave);
         };
     }, [engine.processor, keyDisplay, matchingSplits, velocityDisplay]);
@@ -256,7 +245,6 @@ export function Keyboard({
                 return (
                     <div
                         className={className}
-                        id={`note${midiNote}`}
                         key={midiNote}
                         ref={(el) => {
                             if (el) {

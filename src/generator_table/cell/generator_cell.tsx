@@ -39,7 +39,7 @@ export const NumberGeneratorCell = typedMemo(function <
     colSpan: number;
 }) {
     const { t } = useTranslation();
-    const value = zone.getGeneratorValue(generator, null);
+    const value = zone.getGenerator(generator, null);
     const v2txt = useCallback(
         (v: number | null) =>
             v !== null ? fromGenerator(v).toFixed(precision) : "",

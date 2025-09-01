@@ -1,9 +1,4 @@
-import {
-    generatorTypes,
-    Modulator,
-    modulatorCurveTypes,
-    modulatorSources
-} from "spessasynth_core";
+import { generatorTypes, Modulator, ModulatorSource } from "spessasynth_core";
 import { ModulatorView } from "../modulator/modulator.tsx";
 import "./modulator_list.css";
 import { useTranslation } from "react-i18next";
@@ -43,16 +38,8 @@ export function ModulatorList({
 
     const newModulator = () => {
         const mod = new Modulator(
-            modulatorSources.noController,
-            modulatorCurveTypes.linear,
-            0,
-            0,
-            0,
-            modulatorSources.noController,
-            modulatorCurveTypes.linear,
-            0,
-            0,
-            0,
+            new ModulatorSource(),
+            new ModulatorSource(),
             generatorTypes.initialAttenuation,
             0,
             0
@@ -77,10 +64,7 @@ export function ModulatorList({
     };
 
     const pasteFromClipboard = () => {
-        const newList = [
-            ...clipboard.map((m) => Modulator.copy(m)),
-            ...modulatorList
-        ];
+        const newList = [...clipboard.map((m) => m.copy()), ...modulatorList];
         toast.success(
             t("clipboardLocale.pastedModulators", { count: clipboard.length })
         );
@@ -178,7 +162,7 @@ export function ModulatorList({
                 {modulatorList.map((mod, i) => {
                     const setMod = (m: Modulator) => {
                         const newList = [...modulatorList];
-                        newList[i] = Modulator.copy(m);
+                        newList[i] = m.copy();
                         setModulatorList(newList);
                     };
 
@@ -193,7 +177,7 @@ export function ModulatorList({
                             ccList={ccOptions}
                             key={i}
                             modulatorNumber={i + 1}
-                            mod={Modulator.copy(mod)}
+                            mod={mod.copy()}
                             setModulator={setMod}
                             deleteModulator={deleteMod}
                             setActiveModPickerId={setActiveModPickerId}
