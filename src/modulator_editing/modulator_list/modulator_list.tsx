@@ -64,7 +64,10 @@ export function ModulatorList({
     };
 
     const pasteFromClipboard = () => {
-        const newList = [...clipboard.map((m) => m.copy()), ...modulatorList];
+        const newList = [
+            ...clipboard.map(Modulator.copyFrom.bind(Modulator)),
+            ...modulatorList
+        ];
         toast.success(
             t("clipboardLocale.pastedModulators", { count: clipboard.length })
         );
@@ -162,7 +165,7 @@ export function ModulatorList({
                 {modulatorList.map((mod, i) => {
                     const setMod = (m: Modulator) => {
                         const newList = [...modulatorList];
-                        newList[i] = m.copy();
+                        newList[i] = Modulator.copyFrom(m);
                         setModulatorList(newList);
                     };
 
@@ -177,7 +180,7 @@ export function ModulatorList({
                             ccList={ccOptions}
                             key={i}
                             modulatorNumber={i + 1}
-                            mod={mod.copy()}
+                            mod={Modulator.copyFrom(mod)}
                             setModulator={setMod}
                             deleteModulator={deleteMod}
                             setActiveModPickerId={setActiveModPickerId}

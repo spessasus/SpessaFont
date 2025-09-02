@@ -36,7 +36,7 @@ export class AudioEngine {
     constructor(context: AudioContext) {
         this.context = context;
         this.processor = new SpessaSynthProcessor(context.sampleRate, {
-            effectsEnabled: true,
+            enableEffects: true,
             initialTime: context.currentTime
         });
         void dummy.then((d) =>

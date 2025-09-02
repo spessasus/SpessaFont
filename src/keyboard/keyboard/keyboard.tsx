@@ -1,4 +1,10 @@
-import { type RefObject, useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import {
+    type RefObject,
+    useEffect,
+    useImperativeHandle,
+    useMemo,
+    useRef
+} from "react";
 import "./keyboard.css";
 import type { AudioEngine } from "../../core_backend/audio_engine.ts";
 import { KEYBOARD_TARGET_CHANNEL } from "../target_channel.ts";
