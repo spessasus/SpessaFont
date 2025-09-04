@@ -35,7 +35,7 @@ export function InstrumentDisplay({
         <div className={"instrument_item_wrapper"} ref={elementRef}>
             <div
                 className={`instrument_item ${selected ? "selected" : ""}`}
-                title={instrument.instrumentName}
+                title={instrument.name}
             >
                 <div className={"left_buttons"}>
                     <span className={"triangle"} onClick={() => setOpen(!open)}>
@@ -54,12 +54,12 @@ export function InstrumentDisplay({
                     className={"monospaced instrument_item_name"}
                     onClick={onClick}
                 >
-                    {instrument.instrumentName}
+                    {instrument.name}
                 </span>
             </div>
             <div className={"instrument_samples"}>
                 {open &&
-                    instrument.instrumentZones.map((z, i) => (
+                    instrument.zones.map((z, i) => (
                         <SampleDisplay
                             selected={view === z.sample}
                             key={i}

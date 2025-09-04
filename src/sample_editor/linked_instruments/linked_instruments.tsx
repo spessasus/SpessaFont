@@ -21,9 +21,9 @@ export function LinkedInstruments({
     const { t } = useTranslation();
     const linked = useMemo(() => {
         const l = new Set<BasicInstrument>();
-        sample.linkedInstruments.forEach((i) => l.add(i));
+        sample.linkedTo.forEach((i) => l.add(i));
         return l;
-    }, [sample.linkedInstruments]);
+    }, [sample.linkedTo]);
 
     const deleteSample = () => {
         const actions = [new DeleteSampleAction(sample, setSamples, setView)];
@@ -45,7 +45,7 @@ export function LinkedInstruments({
                     </strong>
                 </div>
             )}
-            {sample.linkedInstruments.length === 0 && (
+            {sample.linkedTo.length === 0 && (
                 <>
                     <div>
                         <strong>
@@ -57,7 +57,7 @@ export function LinkedInstruments({
                     </div>
                 </>
             )}
-            {sample.linkedInstruments.length > 0 && (
+            {sample.linkedTo.length > 0 && (
                 <>
                     <div>{t("sampleLocale.usedBy")}:</div>
                     {Array.from(linked).map((inst, i) => (
@@ -66,7 +66,7 @@ export function LinkedInstruments({
                             onClick={() => setView(inst)}
                             key={i}
                         >
-                            {inst.instrumentName}
+                            {inst.name}
                         </div>
                     ))}
                 </>

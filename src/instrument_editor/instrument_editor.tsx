@@ -3,8 +3,9 @@ import {
     type BasicInstrument,
     type BasicInstrumentZone,
     BasicPreset,
+    type GeneratorType,
     generatorTypes,
-    type SoundFontRange
+    type GenericRange
 } from "spessasynth_core";
 import "./instrument_editor.css";
 import { useEffect } from "react";
@@ -24,23 +25,23 @@ import { GeneratorTable } from "../generator_table/generator_table.tsx";
 import { getZoneSplits } from "../utils/get_instrument_clickable_keys.ts";
 import type { ModulatorListGlobals } from "../modulator_editing/modulator_list/modulator_list.tsx";
 
-type InstrumentEditorProps = {
+interface InstrumentEditorProps {
     manager: SoundBankManager;
     instrument: BasicInstrument;
     engine: AudioEngine;
     setView: SetViewType;
     setInstruments: (s: BasicInstrument[]) => void;
     instruments: BasicInstrument[];
-    setSplits: (s: SoundFontRange[]) => unknown;
-};
-export type GeneratorRowType = {
-    generator: generatorTypes;
+    setSplits: (s: GenericRange[]) => unknown;
+}
+export interface GeneratorRowType {
+    generator: GeneratorType;
     fromGenerator?: (v: number) => number;
     toGenerator?: (v: number) => number;
     highlight?: boolean;
     unit?: string;
     precision?: number;
-};
+}
 const instrumentRows: GeneratorRowType[] = [
     {
         generator: generatorTypes.keyRange
@@ -312,25 +313,25 @@ export function InstrumentEditor({
     destinationOptions
 }: InstrumentEditorProps & ModulatorListGlobals) {
     const update = () => {
-        instrument.instrumentZones = [...instrument.instrumentZones];
+        instrument.zones = [...instrument.zones];
         setInstruments([...instruments]);
         engine.processor.clearCache();
     };
 
-    const zones = instrument.instrumentZones;
+    const zones = instrument.zones;
 
     const global = instrument.globalZone;
     useEffect(() => {
         // do some hacky stuff to get the zones to play
         const preset = new BasicPreset(manager);
         // screaming name so it's easier to spot errors
-        preset.presetName = "INSTRUMENT PLAYBACK PRESET";
-        // note: do not use setInstrument as we don't want the instrument to be aware of the preset
+        preset.name = "INSTRUMENT PLAYBACK PRESET";
+
+        preset.createZone(instrument);
+        // note: unlink it we don't want the instrument to be aware of the preset
         // (it won't allow us to delete it)
-        preset.createZone().instrument = instrument;
-        engine.processor.midiAudioChannels[KEYBOARD_TARGET_CHANNEL].setPreset(
-            preset
-        );
+        instrument.unlinkFrom(preset);
+        engine.processor.midiChannels[KEYBOARD_TARGET_CHANNEL].preset = preset;
         engine.processor.clearCache();
         return () => {
             // manually clear the preset to not trigger any warnings
@@ -361,7 +362,7 @@ export function InstrumentEditor({
                 element={instrument}
                 zones={zones}
                 global={global}
-                name={instrument.instrumentName}
+                name={instrument.name}
                 setView={setView}
                 clipboardManager={clipboardManager}
                 ccOptions={ccOptions}

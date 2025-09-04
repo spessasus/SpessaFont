@@ -2,12 +2,16 @@ import {
     type BasicInstrument,
     type BasicZone,
     generatorTypes,
-    type SoundFontRange
+    type GenericRange
 } from "spessasynth_core";
 import { GeneratorCellInput } from "./generator_cell_input.tsx";
 import type { GeneratorProps } from "../generator_row.tsx";
 import { SetRangeAction } from "./set_range_action.ts";
 import { typedMemo } from "../../utils/typed_memo.ts";
+
+export type RangeGenerator =
+    | typeof generatorTypes.keyRange
+    | typeof generatorTypes.velRange;
 
 export const RangeGeneratorCell = typedMemo(function ({
     zone,
@@ -21,10 +25,10 @@ export const RangeGeneratorCell = typedMemo(function ({
     colSpan
 }: Omit<GeneratorProps, "generator"> & {
     zone: BasicZone;
-    keyRange: SoundFontRange;
-    velRange: SoundFontRange;
+    keyRange: GenericRange;
+    velRange: GenericRange;
     linkedZone?: BasicZone;
-    generator: generatorTypes.keyRange | generatorTypes.velRange;
+    generator: RangeGenerator;
     colSpan: number;
     instrument?: BasicInstrument;
 }) {
@@ -45,7 +49,7 @@ export const RangeGeneratorCell = typedMemo(function ({
         if (typedText === rangeText) {
             return typedText;
         }
-        const newRange: SoundFontRange = { min: 0, max: 127 };
+        const newRange: GenericRange = { min: 0, max: 127 };
         if (v.length < 1) {
             newRange.min = -1;
             newRange.max = 127;

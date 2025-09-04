@@ -23,7 +23,7 @@ export class DeleteSampleAction implements HistoryAction {
         this.sampleIndex = b.samples.indexOf(this.sample);
         if (this.sampleIndex < 0) {
             throw new Error(
-                `${this.sample.sampleName} does not exist in ${b.soundFontInfo["INAM"]}`
+                `${this.sample.name} does not exist in ${b.soundBankInfo.name!}`
             );
         }
         // do not use deleteSample as it unlinks the other sample!

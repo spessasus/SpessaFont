@@ -19,9 +19,9 @@ import {
     BasicInstrument,
     BasicPreset,
     BasicSample,
-    sampleTypes,
-    type SampleTypeValue,
-    type SoundFontRange
+    type GenericRange,
+    type SampleType,
+    sampleTypes
 } from "spessasynth_core";
 import { PresetEditor } from "../preset_editor/preset_editor.tsx";
 import { InstrumentEditor } from "../instrument_editor/instrument_editor.tsx";
@@ -32,7 +32,7 @@ import { SetSampleTypeAction } from "../sample_editor/set_sample_type_action.ts"
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 
-export type BankEditorProps = {
+export interface BankEditorProps {
     manager: SoundBankManager;
     audioEngine: AudioEngine;
     clipboardManager: ClipboardManager;
@@ -40,8 +40,8 @@ export type BankEditorProps = {
     ccOptions: JSX.Element;
     shown: boolean;
     ref: BankEditorRef;
-    setSplits: (s: SoundFontRange[]) => unknown;
-};
+    setSplits: (s: GenericRange[]) => unknown;
+}
 
 export type SetViewType = (v: BankEditView) => unknown;
 
@@ -128,7 +128,7 @@ export function BankEditor({
                         (actions: DeleteSampleAction[], sample) => {
                             // determine the use count
                             let useCount = sample.useCount;
-                            sample.linkedInstruments.forEach((i) => {
+                            sample.linkedTo.forEach((i) => {
                                 if (deletedInstruments.has(i)) {
                                     useCount--;
                                 }
@@ -164,8 +164,8 @@ export function BankEditor({
                         return;
                     }
 
-                    const match = sample.sampleName.match(
-                        /[a-zA-Z!](?=\s*$|\)|$)/
+                    const match = /[a-zA-Z!](?=\s*$|\)|$)/.exec(
+                        sample.name
                     )?.[0];
                     if (
                         match?.toLowerCase() !== "l" &&
@@ -174,7 +174,7 @@ export function BankEditor({
                         return;
                     }
                     let replacement: string;
-                    let type: SampleTypeValue;
+                    let type: SampleType;
                     switch (match) {
                         default:
                         case "l":
@@ -197,13 +197,13 @@ export function BankEditor({
                             type = sampleTypes.rightSample;
                             break;
                     }
-                    const linkedName = sample.sampleName.replace(
+                    const linkedName = sample.name.replace(
                         /([a-zA-Z!])(?!.*[a-zA-Z!])/,
                         replacement
                     );
                     const linkedSample = samples.find(
                         (s) =>
-                            s.sampleName === linkedName &&
+                            s.name === linkedName &&
                             !linkedSamples.has(s) &&
                             !s.linkedSample
                     );

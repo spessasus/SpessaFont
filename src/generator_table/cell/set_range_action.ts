@@ -1,24 +1,23 @@
 import type { HistoryAction } from "../../core_backend/history.ts";
 import {
     type BasicZone,
+    type GeneratorType,
     generatorTypes,
-    type SoundFontRange
+    type GenericRange
 } from "spessasynth_core";
 
 export class SetRangeAction implements HistoryAction {
     private readonly zone: BasicZone;
-    private readonly generator:
-        | generatorTypes.keyRange
-        | generatorTypes.velRange;
-    private readonly previousValue: SoundFontRange;
-    private readonly newValue: SoundFontRange;
+    private readonly generator: GeneratorType;
+    private readonly previousValue: GenericRange;
+    private readonly newValue: GenericRange;
     private readonly callback: () => unknown;
 
     constructor(
         zone: BasicZone,
-        generator: generatorTypes.keyRange | generatorTypes.velRange,
-        previousValue: SoundFontRange,
-        newValue: SoundFontRange,
+        generator: GeneratorType,
+        previousValue: GenericRange,
+        newValue: GenericRange,
         callback: () => unknown
     ) {
         this.zone = zone;

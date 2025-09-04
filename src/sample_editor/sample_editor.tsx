@@ -3,8 +3,8 @@ import {
     BasicPreset,
     type BasicSample,
     generatorTypes,
-    sampleTypes,
-    type SampleTypeValue
+    type SampleType,
+    sampleTypes
 } from "spessasynth_core";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import "./sample_editor.css";
@@ -28,14 +28,14 @@ const MAX_SAMPLE_RATE = 192000;
 
 export type SamplePlayerState = "stopped" | "playing" | "playing_loop";
 
-type SampleEditorProps = {
+interface SampleEditorProps {
     manager: SoundBankManager;
     sample: BasicSample;
     engine: AudioEngine;
     setView: SetViewType;
     setSamples: (s: BasicSample[]) => void;
     samples: BasicSample[];
-};
+}
 
 export const SampleEditor = React.memo(function ({
     engine,
@@ -58,7 +58,7 @@ export const SampleEditor = React.memo(function ({
 
     const setSampleData = (data: Float32Array, rate: number) => {
         setSampleRate(rate);
-        sample.setAudioData(data);
+        sample.setAudioData(data, rate);
         setSampleDataLocal(data);
     };
 
@@ -70,18 +70,19 @@ export const SampleEditor = React.memo(function ({
     // make the sample playable
     useEffect(() => {
         const preset = new BasicPreset(manager);
-        preset.presetName = "Sample Dummy Preset";
+        preset.name = "Sample Dummy Preset";
         const instrument = new BasicInstrument();
-        instrument.instrumentName = "Sample Dummy Instrument";
-        // do not use setInstrument() here as we don't want to mark it as linked
-        preset.createZone().instrument = instrument;
-        const instZone = instrument.createZone();
+        instrument.name = "Sample Dummy Instrument";
+        preset.createZone(instrument);
+        // unlink here as we don't want to mark it as linked
+        // hacky, but works
+        instrument.unlinkFrom(preset);
+        const instZone = instrument.createZone(sample);
+        // unlink here as we don't want to mark it as linked
+        sample.unlinkFrom(instrument);
         instZone.setGenerator(generatorTypes.sampleModes, 1);
-        // do not use setSample() here as we don't want to mark it as linked
-        instZone.sample = sample;
-        engine.processor.midiAudioChannels[KEYBOARD_TARGET_CHANNEL].setPreset(
-            preset
-        );
+        engine.processor.midiChannels[KEYBOARD_TARGET_CHANNEL].preset = preset;
+
         engine.processor.clearCache();
         return () => {
             engine.processor.clearCache();
@@ -89,15 +90,15 @@ export const SampleEditor = React.memo(function ({
                 engine.processor.programChange(KEYBOARD_TARGET_CHANNEL, 0);
             }
         };
-    }, [engine.processor, engine.processor.midiAudioChannels, manager, sample]);
+    }, [engine.processor, engine.processor.midiChannels, manager, sample]);
 
-    const sampleType = sample.sampleType as SampleTypeValue;
+    const sampleType = sample.sampleType;
     const linkedSample = sample.linkedSample;
     const linkedIndex = useMemo(
         () => (linkedSample ? samples.indexOf(linkedSample) : -1),
         [samples, linkedSample]
     );
-    const setLinkedSample = (type: SampleTypeValue, s?: BasicSample) => {
+    const setLinkedSample = (type: SampleType, s?: BasicSample) => {
         // no need to use two actions a setSampleType automatically adjusts the second sample
         const action = [
             new SetSampleTypeAction(
@@ -143,7 +144,7 @@ export const SampleEditor = React.memo(function ({
         [linkedIndex, linkedSample, manager, sampleIndex, updateSamples]
     );
 
-    const loopStart = sample.sampleLoopStartIndex;
+    const loopStart = sample.loopStart;
     const setLoopStart = (newStart: number) => {
         newStart = Math.max(
             Math.min(newStart, loopEnd, sampleData.length - 1),
@@ -152,11 +153,11 @@ export const SampleEditor = React.memo(function ({
         if (newStart === loopStart) {
             return newStart;
         }
-        changeSampleProp("sampleLoopStartIndex", loopStart, newStart);
+        changeSampleProp("loopStart", loopStart, newStart);
         return newStart;
     };
 
-    const loopEnd = sample.sampleLoopEndIndex;
+    const loopEnd = sample.loopEnd;
     const setLoopEnd = (newEnd: number) => {
         newEnd = Math.min(
             Math.max(newEnd, loopStart, 0),
@@ -165,16 +166,16 @@ export const SampleEditor = React.memo(function ({
         if (newEnd === loopEnd) {
             return newEnd;
         }
-        changeSampleProp("sampleLoopEndIndex", loopEnd, newEnd);
+        changeSampleProp("loopEnd", loopEnd, newEnd);
         return newEnd;
     };
-    const sampleName = sample.sampleName;
+    const sampleName = sample.name;
     const setName = (n: string) => {
         if (n === sampleName) {
             return n;
         }
         n = n.substring(0, 39); // keep spare space for "R" or "L"
-        if (n[n.length - 1] === "R" || n[n.length - 1] === "L") {
+        if (n.endsWith("R") || n.endsWith("L")) {
             n = n.substring(0, n.length - 1);
         }
         let newName = n;
@@ -191,7 +192,7 @@ export const SampleEditor = React.memo(function ({
         const actions = [
             new EditSampleAction(
                 sampleIndex,
-                "sampleName",
+                "name",
                 sampleName,
                 newName,
                 updateSamples
@@ -207,8 +208,8 @@ export const SampleEditor = React.memo(function ({
             actions.push(
                 new EditSampleAction(
                     linkedIndex,
-                    "sampleName",
-                    linkedSample.sampleName,
+                    "name",
+                    linkedSample.name,
                     secondNewName,
                     updateSamples
                 )
@@ -229,23 +230,23 @@ export const SampleEditor = React.memo(function ({
         return newRate;
     };
 
-    const originalKey = sample.samplePitch;
+    const originalKey = sample.originalKey;
     const setOriginalKey = (newKey: number) => {
         newKey = Math.min(127, Math.max(0, Math.floor(newKey)));
         if (newKey === originalKey) {
             return newKey;
         }
-        changeSampleProp("samplePitch", originalKey, newKey);
+        changeSampleProp("originalKey", originalKey, newKey);
         return newKey;
     };
 
-    const centCorrection = sample.samplePitchCorrection;
+    const centCorrection = sample.pitchCorrection;
     const setCentCorrection = (newTune: number) => {
         newTune = Math.min(99, Math.max(-99, Math.floor(newTune)));
         if (newTune === centCorrection) {
             return newTune;
         }
-        changeSampleProp("samplePitchCorrection", centCorrection, newTune);
+        changeSampleProp("pitchCorrection", centCorrection, newTune);
         return newTune;
     };
 
@@ -277,7 +278,7 @@ export const SampleEditor = React.memo(function ({
                     value={sampleName}
                     maxLength={40}
                     className={"pretty_input sample_name monospaced"}
-                    placeholder={t("sampleLocale.sampleName")}
+                    placeholder={t("sampleLocale.name")}
                 />
                 <div className={"info_split"}>
                     <div className={"info_column"}>

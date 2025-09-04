@@ -8,7 +8,7 @@ import {
 import "./keyboard.css";
 import type { AudioEngine } from "../../core_backend/audio_engine.ts";
 import { KEYBOARD_TARGET_CHANNEL } from "../target_channel.ts";
-import type { SoundFontRange } from "spessasynth_core";
+import type { GenericRange } from "spessasynth_core";
 
 function isBlackNoteNumber(midiNote: number) {
     const pitchClass = midiNote % 12;
@@ -21,7 +21,7 @@ export type KeyboardRef = {
     releaseNote: (midiNote: number) => void;
 } | null;
 
-const pressedKeys: Set<number> = new Set();
+const pressedKeys = new Set<number>();
 let mouseHeld = false;
 
 // most of this code is ported over from spessasynth web app
@@ -36,17 +36,17 @@ export function Keyboard({
     ref: RefObject<KeyboardRef | null>;
     keyDisplay: RefObject<HTMLSpanElement | null>;
     velocityDisplay: RefObject<HTMLSpanElement | null>;
-    splits: SoundFontRange[];
+    splits: GenericRange[];
 }) {
     const keysRef = useRef<HTMLDivElement[]>([]);
     const keyboardRef = useRef<HTMLDivElement | null>(null);
 
     const matchingSplits = useMemo(() => {
-        const map: SoundFontRange[][] = [];
+        const map: GenericRange[][] = [];
         for (let midiNote = 0; midiNote < 128; midiNote++) {
             // find all splits tha this key belongs to
             map.push(
-                splits.reduce((matched: SoundFontRange[], split) => {
+                splits.reduce((matched: GenericRange[], split) => {
                     if (split.min <= midiNote && split.max >= midiNote) {
                         matched.push(split);
                     }
@@ -90,6 +90,7 @@ export function Keyboard({
 
         const userNoteOn = (note: number, velocity: number) => {
             engine.processor.noteOn(KEYBOARD_TARGET_CHANNEL, note, velocity);
+
             matchingSplits[note].forEach((split) => {
                 for (let i = split.min; i <= split.max; i++) {
                     keysRef?.current?.[i]?.classList?.add("zone_highlight");
@@ -98,78 +99,60 @@ export function Keyboard({
         };
 
         const moveHandler = (e: MouseEvent) => {
-            const touches = [e];
-
-            const newTouchedKeys = new Set<number>();
-            const toUserOn: { k: number; v: number }[] = [];
-
-            touches.forEach((touch) => {
-                const target = document.elementFromPoint(
-                    touch.clientX,
-                    touch.clientY
-                );
-
-                if (!target || !target.id.startsWith("note")) {
-                    return;
-                }
-
-                const midiNote = parseInt(target.id.replace("note", ""));
-                if (isNaN(midiNote) || midiNote < 0) {
-                    return;
-                }
-
-                const keyElement = keysRef.current[0]; // All keys same top
-                if (!keyElement) {
-                    return;
-                }
-
-                const rect = keyElement.getBoundingClientRect();
-
-                const relativeMouseY = touch.clientY - rect.top;
-                const keyHeight = isBlackNoteNumber(midiNote)
-                    ? rect.height * 0.7
-                    : rect.height;
-                const velocity = Math.min(
-                    127,
-                    Math.floor((relativeMouseY / keyHeight) * 128)
-                );
-                if (keyDisplay.current) {
-                    keyDisplay.current.textContent = midiNote
-                        .toString()
-                        .padStart(3, " ");
-                }
-                if (velocityDisplay.current) {
-                    velocityDisplay.current.textContent = velocity
-                        .toString()
-                        .padStart(3, " ");
-                }
-
-                if (!mouseHeld) {
-                    return;
-                }
-
-                newTouchedKeys.add(midiNote);
-
-                if (!pressedKeys.has(midiNote)) {
-                    toUserOn.push({ k: midiNote, v: velocity });
-                }
-            });
+            const mouseEvent = e;
 
             if (!mouseHeld) {
                 return;
             }
 
-            // only release keys that are no longer being touched
+            const newPressedKeys = new Set<number>();
+
+            const target = document.elementFromPoint(
+                mouseEvent.clientX,
+                mouseEvent.clientY
+            ) as HTMLDivElement;
+            if (!target) {
+                return;
+            }
+            const rect = target.getBoundingClientRect();
+
+            const midiNote = keysRef?.current?.indexOf(target) || 0;
+            if (isNaN(midiNote) || midiNote < 0 || pressedKeys.has(midiNote)) {
+                return;
+            }
+
+            const relativeMouseY = mouseEvent.clientY - rect.top;
+            const keyHeight = isBlackNoteNumber(midiNote)
+                ? rect.height * 0.7
+                : rect.height;
+            const velocity = Math.min(
+                127,
+                Math.floor((relativeMouseY / keyHeight) * 128)
+            );
+            if (keyDisplay.current) {
+                keyDisplay.current.textContent = midiNote
+                    .toString()
+                    .padStart(3, " ");
+            }
+            if (velocityDisplay.current) {
+                velocityDisplay.current.textContent = velocity
+                    .toString()
+                    .padStart(3, " ");
+            }
+
+            newPressedKeys.add(midiNote);
+
+            // only release keys that are no longer being pressed
             pressedKeys.forEach((note) => {
-                if (!newTouchedKeys.has(note)) {
+                if (!newPressedKeys.has(note)) {
                     userNoteOff(note);
                 }
             });
 
-            // press the keys after
-            toUserOn.forEach((n) => {
-                userNoteOn(n.k, n.v);
-            });
+            if (!pressedKeys.has(midiNote)) {
+                userNoteOn(midiNote, velocity);
+                pressedKeys.add(midiNote);
+            }
         };
 
         const onMouseDown = (e: MouseEvent) => {
@@ -182,12 +165,14 @@ export function Keyboard({
             pressedKeys.forEach((note) => userNoteOff(note));
         };
 
-        const onMouseMove = (e: MouseEvent) => {
-            moveHandler(e);
-        };
-
         const onMouseLeave = () => {
             pressedKeys.forEach((note) => userNoteOff(note));
+        };
+
+        const onMouseMove = (e: MouseEvent) => {
+            if (mouseHeld) {
+                moveHandler(e);
+            }
         };
 
         const kb = keyboardRef.current;
@@ -211,11 +196,11 @@ export function Keyboard({
 
     const keys: number[] = Array.from({ length: 128 }, (_, i) => i);
 
-    const enabledKeys: boolean[] = useMemo(() => {
+    const enabledKeys: boolean[] = useMemo((): boolean[] => {
         if (splits.length === 0) {
-            return Array(128).fill(true);
+            return Array(128).fill(true) as boolean[];
         }
-        const e: boolean[] = Array(128).fill(false);
+        const e: boolean[] = Array(128).fill(false) as boolean[];
 
         splits.forEach((s) => {
             for (let i = s.min; i <= s.max; i++) {
@@ -256,7 +241,6 @@ export function Keyboard({
                 return (
                     <div
                         className={className}
-                        id={`note${midiNote}`}
                         key={midiNote}
                         ref={(el) => {
                             if (el) {

@@ -1,10 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useState } from "react";
-import {
-    MIDI,
-    RMIDINFOChunks,
-    type SpessaSynthSequencer
-} from "spessasynth_core";
+import { BasicMIDI, type SpessaSynthSequencer } from "spessasynth_core";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import { MenuBarDropdown, MenuBarIcon } from "./dropdown.tsx";
 import {
@@ -80,7 +76,7 @@ const PauseComponent = typedMemo(
 
 export function MIDIPlayer({ audioEngine }: { audioEngine: AudioEngine }) {
     const { t } = useTranslation();
-    const [midi, setMidi] = useState<MIDI>();
+    const [midi, setMidi] = useState<BasicMIDI>();
 
     useEffect(() => {
         if (midi !== undefined) {
@@ -98,7 +94,7 @@ export function MIDIPlayer({ audioEngine }: { audioEngine: AudioEngine }) {
             }
             const file = input.files[0];
             const buf = await file.arrayBuffer();
-            const mid = new MIDI(buf, file.name);
+            const mid = BasicMIDI.fromArrayBuffer(buf, file.name);
             setMidi(mid);
         };
         input.click();
@@ -116,13 +112,7 @@ export function MIDIPlayer({ audioEngine }: { audioEngine: AudioEngine }) {
             </MenuBarDropdown>
         );
     } else {
-        let name: string;
-        if (midi.RMIDInfo[RMIDINFOChunks.name] !== undefined) {
-            name = midi.midiName;
-        } else {
-            name = new TextDecoder("Shift_JIS").decode(midi.rawMidiName);
-        }
-        name = name || midi.fileName;
+        let name = midi.getName() ?? "No name";
         name = name.length > 10 ? name.substring(0, 10) + "..." : name;
         return (
             <MenuBarDropdown main={t("menuBarLocale.midi.player")}>

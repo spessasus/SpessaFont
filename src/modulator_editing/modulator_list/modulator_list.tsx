@@ -1,9 +1,4 @@
-import {
-    generatorTypes,
-    Modulator,
-    modulatorCurveTypes,
-    modulatorSources
-} from "spessasynth_core";
+import { generatorTypes, Modulator, ModulatorSource } from "spessasynth_core";
 import { ModulatorView } from "../modulator/modulator.tsx";
 import "./modulator_list.css";
 import { useTranslation } from "react-i18next";
@@ -12,11 +7,11 @@ import { type JSX, useCallback, useState } from "react";
 import type { ClipboardManager } from "../../core_backend/clipboard_manager.ts";
 import toast from "react-hot-toast";
 
-export type ModulatorListGlobals = {
+export interface ModulatorListGlobals {
     clipboardManager: ClipboardManager;
     ccOptions: JSX.Element;
     destinationOptions: JSX.Element;
-};
+}
 
 type ModulatorListProps = ModulatorListGlobals & {
     modulatorList: Modulator[];
@@ -43,16 +38,8 @@ export function ModulatorList({
 
     const newModulator = () => {
         const mod = new Modulator(
-            modulatorSources.noController,
-            modulatorCurveTypes.linear,
-            0,
-            0,
-            0,
-            modulatorSources.noController,
-            modulatorCurveTypes.linear,
-            0,
-            0,
-            0,
+            new ModulatorSource(),
+            new ModulatorSource(),
             generatorTypes.initialAttenuation,
             0,
             0
@@ -78,7 +65,7 @@ export function ModulatorList({
 
     const pasteFromClipboard = () => {
         const newList = [
-            ...clipboard.map((m) => Modulator.copy(m)),
+            ...clipboard.map(Modulator.copyFrom.bind(Modulator)),
             ...modulatorList
         ];
         toast.success(
@@ -178,7 +165,7 @@ export function ModulatorList({
                 {modulatorList.map((mod, i) => {
                     const setMod = (m: Modulator) => {
                         const newList = [...modulatorList];
-                        newList[i] = Modulator.copy(m);
+                        newList[i] = Modulator.copyFrom(m);
                         setModulatorList(newList);
                     };
 
@@ -193,7 +180,7 @@ export function ModulatorList({
                             ccList={ccOptions}
                             key={i}
                             modulatorNumber={i + 1}
-                            mod={Modulator.copy(mod)}
+                            mod={Modulator.copyFrom(mod)}
                             setModulator={setMod}
                             deleteModulator={deleteMod}
                             setActiveModPickerId={setActiveModPickerId}

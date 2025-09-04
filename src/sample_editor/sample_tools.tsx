@@ -2,11 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SamplePlayerState } from "./sample_editor.tsx";
 import { ControllerRange } from "../fancy_inputs/controller_range/controller_range.tsx";
 import { useTranslation } from "react-i18next";
-import {
-    type BasicSample,
-    sampleTypes,
-    type SampleTypeValue
-} from "spessasynth_core";
+import { type BasicSample, sampleTypes } from "spessasynth_core";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import { audioBufferToWav } from "spessasynth_lib";
 import toast from "react-hot-toast";
@@ -45,12 +41,12 @@ export function SampleTools({
     setLoopEnd: (e: number) => unknown;
 }) {
     const { t } = useTranslation();
-    const sampleName = sample.sampleName;
+    const sampleName = sample.name;
     const sampleRate = sample.sampleRate;
-    const centCorrection = sample.samplePitchCorrection;
-    const loopStart = sample.sampleLoopStartIndex;
-    const loopEnd = sample.sampleLoopEndIndex;
-    const sampleType = sample.sampleType as SampleTypeValue;
+    const centCorrection = sample.originalKey;
+    const loopStart = sample.loopStart;
+    const loopEnd = sample.loopEnd;
+    const sampleType = sample.sampleType;
     const linkedSample = sample.linkedSample;
 
     const [inputZoom, setInputZoom] = useState(100);
@@ -178,7 +174,9 @@ export function SampleTools({
     }, [playSample, playerState, stopPlayer]);
 
     const exportWav = () => {
-        const blob = audioBufferToWav(buffer, false);
+        const blob = audioBufferToWav(buffer, {
+            normalizeAudio: false
+        });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
         a.download = `${sampleName}.wav`;
@@ -221,17 +219,15 @@ export function SampleTools({
                     const linked = linkedSample;
 
                     if (sampleType === sampleTypes.leftSample) {
-                        linked.setAudioData(right);
-                        linked.sampleRate = audioBuffer.sampleRate;
-                        linked.sampleLoopStartIndex = 0;
-                        linked.sampleLoopEndIndex = right.length - 1;
+                        linked.setAudioData(right, audioBuffer.sampleRate);
+                        linked.loopStart = 0;
+                        linked.loopEnd = right.length - 1;
 
                         setSampleData(left, audioBuffer.sampleRate);
                     } else {
-                        linked.setAudioData(left);
-                        linked.sampleRate = audioBuffer.sampleRate;
-                        linked.sampleLoopStartIndex = 0;
-                        linked.sampleLoopEndIndex = left.length - 1;
+                        linked.setAudioData(left, audioBuffer.sampleRate);
+                        linked.loopStart = 0;
+                        linked.loopEnd = left.length - 1;
 
                         setSampleData(right, audioBuffer.sampleRate);
                     }

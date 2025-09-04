@@ -1,12 +1,12 @@
 {
   "name": "spessafont",
   "private": true,
-  "version": "1.1.7",
+  "version": "1.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint spessafont",
+    "build": "npm run lint && tsc -b && vite build",
+    "lint": "eslint",
     "preview": "vite preview",
     "debug": "debug_scripts/local_core.sh",
     "release": "debug_scripts/npm_core.sh"

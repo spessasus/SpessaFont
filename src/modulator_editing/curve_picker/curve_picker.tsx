@@ -1,14 +1,14 @@
-import { modulatorCurveTypes } from "spessasynth_core";
+import { type ModulatorCurveType, modulatorCurveTypes } from "spessasynth_core";
 import "./curve_picker.css";
 import { ModulatorCurvePicture } from "./curve_picture.tsx";
 
-export type ModulatorCurveType = {
-    curveType: modulatorCurveTypes;
+export interface SpessaFontModulatorCurveType {
+    curveType: ModulatorCurveType;
     bipolar: boolean;
     positive: boolean;
-};
+}
 
-const allCurveTypes: ModulatorCurveType[] = [];
+const allCurveTypes: SpessaFontModulatorCurveType[] = [];
 
 for (const key in modulatorCurveTypes) {
     const value = modulatorCurveTypes[key as keyof typeof modulatorCurveTypes];
@@ -27,8 +27,8 @@ export function ModulatorCurvePicker({
     setActive,
     setNotActive
 }: {
-    curveType: ModulatorCurveType;
-    setCurveType: (c: ModulatorCurveType) => void;
+    curveType: SpessaFontModulatorCurveType;
+    setCurveType: (c: SpessaFontModulatorCurveType) => void;
     id: string;
     isActive: boolean;
     setActive: () => void;
@@ -41,7 +41,7 @@ export function ModulatorCurvePicker({
             setActive();
         }
     };
-    const setCurve = (c: ModulatorCurveType) => {
+    const setCurve = (c: SpessaFontModulatorCurveType) => {
         setNotActive();
         setCurveType(c);
     };

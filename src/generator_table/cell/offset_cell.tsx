@@ -9,6 +9,18 @@ import { useCallback } from "react";
 import { SetGeneratorAction } from "./set_generator_action.ts";
 import { typedMemo } from "../../utils/typed_memo.ts";
 
+export type OffsetGenerator =
+    | typeof generatorTypes.startAddrsOffset
+    | typeof generatorTypes.endAddrOffset
+    | typeof generatorTypes.startloopAddrsOffset
+    | typeof generatorTypes.endloopAddrsOffset;
+
+export type CoarseOffsetGenerator =
+    | typeof generatorTypes.startAddrsCoarseOffset
+    | typeof generatorTypes.endAddrsCoarseOffset
+    | typeof generatorTypes.startloopAddrsCoarseOffset
+    | typeof generatorTypes.endloopAddrsCoarseOffset;
+
 export const OffsetGeneratorCell = typedMemo(function ({
     zone,
     linkedZone,
@@ -19,14 +31,10 @@ export const OffsetGeneratorCell = typedMemo(function ({
 }: Omit<GeneratorProps, "generator"> & {
     zone: BasicZone;
     linkedZone?: BasicZone;
-    generatorType:
-        | generatorTypes.startAddrsOffset
-        | generatorTypes.endAddrOffset
-        | generatorTypes.startloopAddrsOffset
-        | generatorTypes.endloopAddrsOffset;
+    generatorType: OffsetGenerator;
     colSpan: number;
 }) {
-    let coarseGeneratorType: generatorTypes;
+    let coarseGeneratorType: CoarseOffsetGenerator;
     switch (generatorType) {
         case generatorTypes.startAddrsOffset:
             coarseGeneratorType = generatorTypes.startAddrsCoarseOffset;
@@ -42,11 +50,8 @@ export const OffsetGeneratorCell = typedMemo(function ({
         case generatorTypes.endloopAddrsOffset:
             coarseGeneratorType = generatorTypes.endloopAddrsCoarseOffset;
     }
-    const currentFineOffset = zone.getGeneratorValue(generatorType, null);
-    const currentCoarseOffset = zone.getGeneratorValue(
-        coarseGeneratorType,
-        null
-    );
+    const currentFineOffset = zone.getGenerator(generatorType, null);
+    const currentCoarseOffset = zone.getGenerator(coarseGeneratorType, null);
     let textValue = "";
     if (currentFineOffset !== null) {
         let offsetNum = currentFineOffset;
@@ -97,17 +102,14 @@ export const OffsetGeneratorCell = typedMemo(function ({
                         new SetGeneratorAction(
                             linkedZone,
                             generatorType,
-                            linkedZone.getGeneratorValue(generatorType, null),
+                            linkedZone.getGenerator(generatorType, null),
                             null,
                             callback
                         ),
                         new SetGeneratorAction(
                             linkedZone,
                             coarseGeneratorType,
-                            linkedZone.getGeneratorValue(
-                                coarseGeneratorType,
-                                null
-                            ),
+                            linkedZone.getGenerator(coarseGeneratorType, null),
                             null,
                             callback
                         )
@@ -140,7 +142,7 @@ export const OffsetGeneratorCell = typedMemo(function ({
                         new SetGeneratorAction(
                             linkedZone,
                             generatorType,
-                            linkedZone.getGeneratorValue(generatorType, null),
+                            linkedZone.getGenerator(generatorType, null),
                             fine,
                             callback
                         )
@@ -149,7 +151,7 @@ export const OffsetGeneratorCell = typedMemo(function ({
                         new SetGeneratorAction(
                             linkedZone,
                             coarseGeneratorType,
-                            linkedZone.getGeneratorValue(generatorType, null),
+                            linkedZone.getGenerator(generatorType, null),
                             coarseTarget,
                             callback
                         )
@@ -157,7 +159,7 @@ export const OffsetGeneratorCell = typedMemo(function ({
                 }
             }
             manager.modifyBank(actions);
-            return newOffset?.toString() || "";
+            return newOffset?.toString() ?? "";
         },
         [
             textValue,

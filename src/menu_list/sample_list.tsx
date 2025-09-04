@@ -1,4 +1,4 @@
-import { BasicSample, CreatedSample, sampleTypes } from "spessasynth_core";
+import { BasicSample, EmptySample, sampleTypes } from "spessasynth_core";
 import { DropdownHeader } from "./dropdown_header/dropdown_header.tsx";
 import * as React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -92,22 +92,19 @@ export function SampleList({
             }
             sampleName = sampleName.substring(0, 39); // keep spare space for "R" or "L"
 
-            const sample = new CreatedSample(
-                sampleName + (audioBuffer.numberOfChannels > 1 ? "L" : ""),
-                audioBuffer.sampleRate,
-                out
-            );
+            const sample = new EmptySample();
+            sample.name =
+                sampleName + (audioBuffer.numberOfChannels > 1 ? "L" : "");
+            sample.setAudioData(out, audioBuffer.sampleRate);
             const actions = [
                 new CreateSampleAction(sample, setSamples, setView)
             ];
             // add the stereo sample if more channels
             if (audioBuffer.numberOfChannels > 1) {
                 const otherOut = audioBuffer.getChannelData(1);
-                const sample2 = new CreatedSample(
-                    sampleName + "R",
-                    audioBuffer.sampleRate,
-                    otherOut
-                );
+                const sample2 = new EmptySample();
+                sample2.name = sampleName + "R";
+                sample2.setAudioData(otherOut, audioBuffer.sampleRate);
                 sample2.setLinkedSample(sample, sampleTypes.rightSample);
                 actions.push(
                     new CreateSampleAction(sample2, setSamples, setView)
@@ -168,11 +165,7 @@ export function SampleList({
                     );
                     setSamples([
                         ...manager.samples.toSorted((a, b) =>
-                            a.sampleName > b.sampleName
-                                ? 1
-                                : b.sampleName > a.sampleName
-                                  ? -1
-                                  : 0
+                            a.name > b.name ? 1 : b.name > a.name ? -1 : 0
                         )
                     ]);
                     toast.success(

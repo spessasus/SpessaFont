@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { modulatorCurveTypes } from "spessasynth_core";
-import type { ModulatorCurveType } from "./curve_picker.tsx";
+import type { SpessaFontModulatorCurveType } from "./curve_picker.tsx";
 
 const MARGIN = 10;
 const ARROW_HEAD_SIZE = 3;
@@ -8,13 +8,16 @@ const CURVE_MARGIN = 15;
 const WIDTH = 100;
 const HEIGHT = 100;
 
-const curveKey = (c: ModulatorCurveType) =>
+const curveKey = (c: SpessaFontModulatorCurveType) =>
     `${c.curveType}-${c.bipolar}-${c.positive}`;
 
 // Cache map
 const curveCanvasCache: Record<string, HTMLCanvasElement> = {};
 
-function getCurveValue(curve: ModulatorCurveType, value: number): number {
+function getCurveValue(
+    curve: SpessaFontModulatorCurveType,
+    value: number
+): number {
     const polarity = curve.bipolar;
     if (!curve.positive) {
         value = 1 - value;
@@ -22,6 +25,7 @@ function getCurveValue(curve: ModulatorCurveType, value: number): number {
     const concave = (v: number) => 1 - Math.sqrt(1 - v * v);
     const convex = (v: number) => Math.sqrt(1 - (1 - v) * (1 - v));
     switch (curve.curveType) {
+        default:
         case modulatorCurveTypes.linear:
             return polarity ? value * 2 - 1 : value;
         case modulatorCurveTypes.switch:
@@ -37,7 +41,9 @@ function getCurveValue(curve: ModulatorCurveType, value: number): number {
 }
 
 // Renders and caches an offscreen canvas
-function getOrCreateCurveCanvas(curve: ModulatorCurveType): HTMLCanvasElement {
+function getOrCreateCurveCanvas(
+    curve: SpessaFontModulatorCurveType
+): HTMLCanvasElement {
     if (curveCanvasCache[curveKey(curve)]) {
         return curveCanvasCache[curveKey(curve)];
     }
@@ -134,7 +140,7 @@ function getOrCreateCurveCanvas(curve: ModulatorCurveType): HTMLCanvasElement {
 export function ModulatorCurvePicture({
     curve
 }: {
-    curve: ModulatorCurveType;
+    curve: SpessaFontModulatorCurveType;
 }) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 

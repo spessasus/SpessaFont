@@ -1,20 +1,20 @@
-import { type generatorTypes, Modulator } from "spessasynth_core";
+import { type GeneratorType, Modulator } from "spessasynth_core";
 import "./modulator.css";
 import { useTranslation } from "react-i18next";
 import {
-    type ModulatorSource,
-    ModulatorSourcePicker
+    ModulatorSourcePicker,
+    type SpessaFontModulatorSource
 } from "../source_picker/source_picker.tsx";
 import {
     ModulatorCurvePicker,
-    type ModulatorCurveType
+    type SpessaFontModulatorCurveType
 } from "../curve_picker/curve_picker.tsx";
 import { ModulatorDiagram } from "../diagram.tsx";
 import { DestinationPicker } from "../destination_picker.tsx";
 import * as React from "react";
 import { type JSX } from "react";
 
-type ModulatorProps = {
+interface ModulatorProps {
     mod: Modulator;
     setModulator: (m: Modulator) => void;
     deleteModulator: () => void;
@@ -26,7 +26,7 @@ type ModulatorProps = {
     destinationList: JSX.Element;
     ccList: JSX.Element;
     overridingDefaultModulator: boolean;
-};
+}
 
 const AMOUNT_PREFIX = "× ";
 
@@ -45,8 +45,8 @@ export const ModulatorView = React.memo(function ({
 }: ModulatorProps) {
     const { t } = useTranslation();
 
-    function setDestination(dest: generatorTypes) {
-        mod.modulatorDestination = dest;
+    function setDestination(dest: GeneratorType) {
+        mod.destination = dest;
         setModulator(mod);
     }
 
@@ -64,29 +64,29 @@ export const ModulatorView = React.memo(function ({
         setModulator(mod);
     }
 
-    function setSource(s: ModulatorSource) {
-        mod.sourceIndex = s.sourceIndex;
-        mod.sourceUsesCC = s.usesCC ? 1 : 0;
+    function setSource(s: SpessaFontModulatorSource) {
+        mod.primarySource.index = s.sourceIndex;
+        mod.primarySource.isCC = s.usesCC;
         setModulator(mod);
     }
 
-    function setSecSource(s: ModulatorSource) {
-        mod.secSrcIndex = s.sourceIndex;
-        mod.secSrcUsesCC = s.usesCC ? 1 : 0;
+    function setSecSource(s: SpessaFontModulatorSource) {
+        mod.secondarySource.index = s.sourceIndex;
+        mod.secondarySource.isCC = s.usesCC;
         setModulator(mod);
     }
 
-    function setCurveType(c: ModulatorCurveType) {
-        mod.sourceCurveType = c.curveType;
-        mod.sourcePolarity = c.bipolar ? 1 : 0;
-        mod.sourceDirection = c.positive ? 0 : 1;
+    function setCurveType(c: SpessaFontModulatorCurveType) {
+        mod.primarySource.curveType = c.curveType;
+        mod.primarySource.isBipolar = c.bipolar;
+        mod.primarySource.isNegative = !c.positive;
         setModulator(mod);
     }
 
-    function setSecCurveType(c: ModulatorCurveType) {
-        mod.secSrcCurveType = c.curveType;
-        mod.secSrcPolarity = c.bipolar ? 1 : 0;
-        mod.secSrcDirection = c.positive ? 0 : 1;
+    function setSecCurveType(c: SpessaFontModulatorCurveType) {
+        mod.secondarySource.curveType = c.curveType;
+        mod.secondarySource.isBipolar = c.bipolar;
+        mod.secondarySource.isNegative = !c.positive;
         setModulator(mod);
     }
 
@@ -117,16 +117,16 @@ export const ModulatorView = React.memo(function ({
                     ccOptions={ccList}
                     setSource={setSource}
                     source={{
-                        usesCC: mod.sourceUsesCC > 0,
-                        sourceIndex: mod.sourceIndex
+                        usesCC: mod.primarySource.isCC,
+                        sourceIndex: mod.primarySource.index
                     }}
                 ></ModulatorSourcePicker>
                 <ModulatorSourcePicker
                     ccOptions={ccList}
                     setSource={setSecSource}
                     source={{
-                        usesCC: mod.secSrcUsesCC > 0,
-                        sourceIndex: mod.secSrcIndex
+                        usesCC: mod.secondarySource.isCC,
+                        sourceIndex: mod.secondarySource.index
                     }}
                 ></ModulatorSourcePicker>
             </div>
@@ -139,9 +139,9 @@ export const ModulatorView = React.memo(function ({
                     }
                     setNotActive={() => setActiveModPickerId("")}
                     curveType={{
-                        curveType: mod.sourceCurveType,
-                        bipolar: mod.sourcePolarity === 1,
-                        positive: mod.sourceDirection === 0
+                        curveType: mod.primarySource.curveType,
+                        bipolar: mod.primarySource.isBipolar,
+                        positive: !mod.primarySource.isNegative
                     }}
                     setCurveType={setCurveType}
                 ></ModulatorCurvePicker>
@@ -153,9 +153,9 @@ export const ModulatorView = React.memo(function ({
                         setActiveModPickerId(`${modulatorNumber}-2`)
                     }
                     curveType={{
-                        curveType: mod.secSrcCurveType,
-                        bipolar: mod.secSrcPolarity === 1,
-                        positive: mod.secSrcDirection === 0
+                        curveType: mod.secondarySource.curveType,
+                        bipolar: mod.secondarySource.isBipolar,
+                        positive: !mod.secondarySource.isNegative
                     }}
                     setCurveType={setSecCurveType}
                 ></ModulatorCurvePicker>
@@ -181,8 +181,8 @@ export const ModulatorView = React.memo(function ({
                         const parsed = parseInt(numericPart, 10);
                         if (
                             !isNaN(parsed) &&
-                            parsed >= -12700 &&
-                            parsed <= 12700
+                            parsed >= -32767 &&
+                            parsed <= 32767
                         ) {
                             setAmount(parsed);
                         }
@@ -206,7 +206,7 @@ export const ModulatorView = React.memo(function ({
 
             <DestinationPicker
                 destinationList={destinationList}
-                destination={mod.modulatorDestination}
+                destination={mod.destination}
                 setDestination={setDestination}
             ></DestinationPicker>
         </div>

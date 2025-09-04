@@ -1,10 +1,10 @@
 export type P32 = number | null;
 export type P = number | null;
-export type EncodeTag = {
+export interface EncodeTag {
     name: string;
     value: string;
-};
-export type EncodeOptions = {
+}
+export interface EncodeOptions {
     quality: number;
     tags: EncodeTag[];
-};
+}

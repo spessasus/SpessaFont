@@ -17,7 +17,7 @@ export function BankInfoStats({
     let instrumentGens = 0;
     let instrumentMods = 0;
     for (const instrument of bank.instruments) {
-        instrument.instrumentZones.forEach((z) => {
+        instrument.zones.forEach((z) => {
             instrumentGens += z.generators.length;
             instrumentMods += z.modulators.length;
         });
@@ -25,7 +25,7 @@ export function BankInfoStats({
     let presetGens = 0;
     let presetMods = 0;
     for (const preset of bank.presets) {
-        preset.presetZones.forEach((z) => {
+        preset.zones.forEach((z) => {
             presetMods += z.modulators.length;
             presetGens += z.generators.length;
         });
@@ -33,20 +33,26 @@ export function BankInfoStats({
 
     // count compressed samples
     const compressed = bank.samples.filter((s) => s.isCompressed).length;
+    const version = manager.getInfo("version");
+    const versionString = `${version.major}.${version.minor}`;
     return (
         <div className={"stats"}>
             <h1>{t("bankInfo.stats")}</h1>
             <span className={"single_stat stat_span"}>
                 <label>{t("bankInfo.version")}</label>
-                <pre className={"monospaced"}>{manager.getInfo("ifil")}</pre>
+                <pre className={"monospaced"}>{versionString}</pre>
             </span>
             <span className={"single_stat stat_span"}>
                 <label>{t("bankInfo.engine")}</label>
-                <pre className={"monospaced"}>{manager.getInfo("isng")}</pre>
+                <pre className={"monospaced"}>
+                    {manager.getInfo("soundEngine")}
+                </pre>
             </span>
             <span className={"single_stat stat_span"}>
                 <label>{t("bankInfo.software")}</label>
-                <pre className={"monospaced"}>{manager.getInfo("ISFT")}</pre>
+                <pre className={"monospaced"}>
+                    {manager.getInfo("software")}
+                </pre>
             </span>
 
             <span

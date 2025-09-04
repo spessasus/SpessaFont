@@ -23,7 +23,7 @@ export class DeletePresetAction implements HistoryAction {
         this.index = b.presets.indexOf(this.preset);
         if (this.index < 0) {
             throw new Error(
-                `${this.preset.presetName} does not exist in ${b.soundFontInfo["INAM"]}`
+                `${this.preset.name} does not exist in ${b.soundBankInfo.name!}`
             );
         }
         b.deletePreset(this.preset);

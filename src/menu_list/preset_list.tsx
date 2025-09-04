@@ -124,23 +124,17 @@ export function PresetList({
 
     const createPreset = useCallback(() => {
         const preset = new BasicPreset(manager);
-        preset.presetName = [...selectedInstruments][0].instrumentName;
+        preset.name = [...selectedInstruments][0].name;
         selectedInstruments.forEach((i) => {
-            const zone = preset.createZone();
-            zone.setInstrument(i);
+            preset.createZone(i);
         });
-        let found = !!presets.find(
-            (p) =>
-                p.preset.program === preset.program &&
-                p.preset.bank === preset.bank
-        );
+        let found = !!presets.find((p) => p.preset.matches(preset));
+        let i = 0;
         while (found) {
-            preset.bank++;
-            found = !!presets.find(
-                (p) =>
-                    p.preset.program === preset.program &&
-                    p.preset.bank === preset.bank
-            );
+            i++;
+            preset.bankMSB = i & 0x7f;
+            preset.bankLSB = Math.max(i >> 7, 0);
+            found = !!presets.find((p) => p.preset.matches(preset));
         }
         const action = new CreatePresetAction(preset, setPresets, setView);
         manager.modifyBank([action]);
@@ -192,11 +186,7 @@ export function PresetList({
                     );
                     setPresets([
                         ...manager.presets.toSorted((a, b) =>
-                            a.presetName > b.presetName
-                                ? 1
-                                : b.presetName > a.presetName
-                                  ? -1
-                                  : 0
+                            a.name > b.name ? 1 : b.name > a.name ? -1 : 0
                         )
                     ]);
                     toast.success(

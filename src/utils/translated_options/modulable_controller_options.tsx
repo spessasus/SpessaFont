@@ -4,9 +4,9 @@ import { midiControllers } from "spessasynth_core";
 
 function getCCLocale(cc: number, t: TFunction) {
     const name: string =
-        (
-            Object.keys(midiControllers) as Array<keyof typeof midiControllers>
-        ).find((key) => midiControllers[key] === cc) || "notDefined";
+        (Object.keys(midiControllers) as (keyof typeof midiControllers)[]).find(
+            (key) => midiControllers[key] === cc
+        ) ?? "notDefined";
     return t(`midiControllersLocale.${name}`);
 }
 

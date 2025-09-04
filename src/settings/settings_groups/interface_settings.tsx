@@ -28,7 +28,7 @@ export function InterfaceSettings({
 
     function setLanguage(code: string) {
         logInfo(`Changing language to: ${code}`);
-        i18n.changeLanguage(code).then(() => {
+        void i18n.changeLanguage(code).then(() => {
             updateSettings({
                 ...settings,
                 lang: code
@@ -45,7 +45,7 @@ export function InterfaceSettings({
     }
 
     return (
-        <div className={"settings_group"}>
+        <div className={"settings_group hover_brightness"}>
             <h2>{t("settingsLocale.interface.title")}</h2>
             <Setting locale={"settingsLocale.interface.language"}>
                 <select

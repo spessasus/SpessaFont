@@ -36,7 +36,7 @@ export function MidiSettings({ engine }: { engine: AudioEngine }) {
 
     if (midiError) {
         return (
-            <div className="settings_group">
+            <div className="settings_group hover_brightness">
                 <h2>{t("settingsLocale.midi.title")}</h2>
                 <p className={"warning"}>{midiError}</p>
             </div>
@@ -58,13 +58,13 @@ export function MidiSettings({ engine }: { engine: AudioEngine }) {
                 setMidiAccess(access);
             } catch (error) {
                 console.error("Failed to get MIDI access:", error);
-                setMidiError(error?.toString() || "ERROR");
+                setMidiError(error?.toString() ?? "ERROR");
             }
         };
 
-        getMidiAccess().then();
+        void getMidiAccess();
         return (
-            <div className="settings_group">
+            <div className="settings_group hover_brightness">
                 <h2>{t("settingsLocale.midi.title")}</h2>
                 <p>{t("settingsLocale.midi.waitingForAccess")}</p>
             </div>
@@ -72,18 +72,18 @@ export function MidiSettings({ engine }: { engine: AudioEngine }) {
     }
 
     const setDevice = (id: string) => {
-        const input = midiDevices.find((i) => i.id === id) || null;
+        const input = midiDevices.find((i) => i.id === id) ?? null;
         selectedDevicePersistent = input;
         setSelectedDevice(input);
     };
 
     return (
-        <div className="settings_group">
+        <div className="settings_group hover_brightness">
             <h2>{t("settingsLocale.midi.title")}</h2>
             <Setting locale={"settingsLocale.midi.midiInput"}>
                 <select
                     className={"pretty_input monospaced"}
-                    value={selectedDevice?.id || NO_DEVICE}
+                    value={selectedDevice?.id ?? NO_DEVICE}
                     onChange={(e) => setDevice(e.target.value)}
                 >
                     <option value={NO_DEVICE}>
