@@ -1,9 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Setting } from "../setting.tsx";
-import {
-    getSetting,
-    type SavedSettingsType
-} from "../save_load/settings_typedef.ts";
+import { getSetting, type SavedSettingsType } from "../save_load/settings_typedef.ts";
 import { type InterpolationType, interpolationTypes } from "spessasynth_core";
 import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
 
@@ -11,6 +8,10 @@ export interface GroupSettingsProps {
     settings: SavedSettingsType;
     updateSettings: (s: SavedSettingsType) => void;
 }
+
+const MAX_GAIN = 10;
+const MAX_REVERB = 10;
+const MAX_CHORUS = 10;
 
 export function AudioEngineSettings({
     updateSettings,
@@ -24,7 +25,7 @@ export function AudioEngineSettings({
     }
 
     function setVolume(v: number) {
-        const vol = Math.max(0, Math.min(6, v / 100));
+        const vol = Math.max(0, Math.min(MAX_GAIN, v / 100));
         updateSettings({
             ...settings,
             volume: vol
@@ -33,7 +34,7 @@ export function AudioEngineSettings({
     }
 
     function setReverb(v: number) {
-        const vReal = Math.max(0, Math.min(3, v / 100));
+        const vReal = Math.max(0, Math.min(MAX_REVERB, v / 100));
         updateSettings({
             ...settings,
             reverbLevel: vReal
@@ -42,7 +43,7 @@ export function AudioEngineSettings({
     }
 
     function setChorus(v: number) {
-        const vReal = Math.max(0, Math.min(3, v / 100));
+        const vReal = Math.max(0, Math.min(MAX_CHORUS, v / 100));
         updateSettings({
             ...settings,
             chorusLevel: vReal
@@ -59,7 +60,7 @@ export function AudioEngineSettings({
                 <WaitingInput
                     setValue={setVolume}
                     type={"text"}
-                    maxLength={4}
+                    maxLength={5}
                     className={"pretty_input monospaced"}
                     suffix={"%"}
                     value={Math.floor(getSetting("volume", settings) * 100)}
@@ -92,7 +93,7 @@ export function AudioEngineSettings({
                 <WaitingInput
                     setValue={setReverb}
                     type={"text"}
-                    maxLength={4}
+                    maxLength={5}
                     className={"pretty_input monospaced"}
                     value={Math.floor(
                         getSetting("reverbLevel", settings) * 100
@@ -108,7 +109,7 @@ export function AudioEngineSettings({
                         getSetting("chorusLevel", settings) * 100
                     )}
                     type={"text"}
-                    maxLength={4}
+                    maxLength={5}
                     className={"pretty_input monospaced"}
                     suffix={`%`}
                 />
