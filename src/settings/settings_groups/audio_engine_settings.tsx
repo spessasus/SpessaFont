@@ -1,6 +1,9 @@
 import { useTranslation } from "react-i18next";
 import { Setting } from "../setting.tsx";
-import { getSetting, type SavedSettingsType } from "../save_load/settings_typedef.ts";
+import {
+    getSetting,
+    type SavedSettingsType
+} from "../save_load/settings_typedef.ts";
 import { type InterpolationType, interpolationTypes } from "spessasynth_core";
 import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
 

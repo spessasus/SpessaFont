@@ -3,10 +3,13 @@ import { type TFunction } from "i18next";
 import { midiControllers } from "spessasynth_core";
 
 function getCCLocale(cc: number, t: TFunction) {
-    const name: string =
+    let name: string =
         (Object.keys(midiControllers) as (keyof typeof midiControllers)[]).find(
             (key) => midiControllers[key] === cc
         ) ?? "notDefined";
+    if (name.startsWith("undefined")) {
+        name = "notDefined";
+    }
     return t(`midiControllersLocale.${name}`);
 }
 

@@ -24,24 +24,19 @@ export class SetGeneratorAction implements HistoryAction {
     }
 
     do() {
-        if (this.newValue === null) {
-            this.zone.generators = this.zone.generators.filter(
-                (g) => g.generatorType !== this.generator
-            );
-        } else {
-            this.zone.setGenerator(this.generator, this.newValue);
-        }
+        console.log("set", this.generator, "to", this.newValue);
+        this.zone.setGenerator(this.generator, this.newValue);
+        console.log(
+            "new value",
+            this.zone.getGenerator(this.generator, undefined),
+            this.zone.generators
+        );
         this.callback();
     }
 
     undo() {
-        if (this.previousValue === null) {
-            this.zone.generators = this.zone.generators.filter(
-                (g) => g.generatorType !== this.generator
-            );
-        } else {
-            this.zone.setGenerator(this.generator, this.previousValue);
-        }
+        console.log("set", this.generator, "to", this.previousValue);
+        this.zone.setGenerator(this.generator, this.previousValue);
         this.callback();
     }
 }
