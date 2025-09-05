@@ -9,7 +9,7 @@ import {
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import "./sample_editor.css";
 import * as React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { WaveView } from "./wave_view/wave_view.tsx";
 import SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import { useTranslation } from "react-i18next";
@@ -47,10 +47,6 @@ export const SampleEditor = React.memo(function ({
 }: SampleEditorProps) {
     const { t } = useTranslation();
     const [sampleData, setSampleDataLocal] = useState(sample.getAudioData());
-    const sampleIndex = useMemo(
-        () => samples.indexOf(sample),
-        [samples, sample]
-    );
 
     useEffect(() => {
         setSampleDataLocal(sample.getAudioData());
@@ -94,10 +90,7 @@ export const SampleEditor = React.memo(function ({
 
     const sampleType = sample.sampleType;
     const linkedSample = sample.linkedSample;
-    const linkedIndex = useMemo(
-        () => (linkedSample ? samples.indexOf(linkedSample) : -1),
-        [samples, linkedSample]
-    );
+
     const setLinkedSample = (type: SampleType, s?: BasicSample) => {
         // no need to use two actions a setSampleType automatically adjusts the second sample
         const action = [
@@ -121,7 +114,7 @@ export const SampleEditor = React.memo(function ({
         ) {
             const actions = [
                 new EditSampleAction(
-                    sampleIndex,
+                    sample,
                     prop,
                     oldValue,
                     newValue,
@@ -131,7 +124,7 @@ export const SampleEditor = React.memo(function ({
             if (linkedSample) {
                 actions.push(
                     new EditSampleAction(
-                        linkedIndex,
+                        linkedSample,
                         prop,
                         linkedSample[prop],
                         newValue,
@@ -141,7 +134,7 @@ export const SampleEditor = React.memo(function ({
             }
             manager.modifyBank(actions);
         },
-        [linkedIndex, linkedSample, manager, sampleIndex, updateSamples]
+        [linkedSample, manager, sample, updateSamples]
     );
 
     const loopStart = sample.loopStart;
@@ -191,7 +184,7 @@ export const SampleEditor = React.memo(function ({
 
         const actions = [
             new EditSampleAction(
-                sampleIndex,
+                sample,
                 "name",
                 sampleName,
                 newName,
@@ -207,7 +200,7 @@ export const SampleEditor = React.memo(function ({
             }
             actions.push(
                 new EditSampleAction(
-                    linkedIndex,
+                    linkedSample,
                     "name",
                     linkedSample.name,
                     secondNewName,

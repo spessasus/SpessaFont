@@ -37,7 +37,7 @@ export function BottomPresetBar({
                     value={preset.name}
                     setValue={(v) => {
                         const action = new EditPresetAction(
-                            presets.indexOf(preset),
+                            preset,
                             "name",
                             preset.name,
                             v,
@@ -75,7 +75,7 @@ export function BottomPresetBar({
                                     return preset.bankLSB;
                                 }
                                 const action = new EditPresetAction(
-                                    presets.indexOf(preset),
+                                    preset,
                                     "bankLSB",
                                     preset.bankLSB,
                                     v,
@@ -109,7 +109,7 @@ export function BottomPresetBar({
                                     return preset.bankMSB;
                                 }
                                 const action = new EditPresetAction(
-                                    presets.indexOf(preset),
+                                    preset,
                                     "bankMSB",
                                     preset.bankMSB,
                                     v,
@@ -146,7 +146,7 @@ export function BottomPresetBar({
                             return preset.program;
                         }
                         const action = new EditPresetAction(
-                            presets.indexOf(preset),
+                            preset,
                             "program",
                             preset.program,
                             v,
@@ -179,21 +179,21 @@ export function BottomPresetBar({
                         // Set banks to 0
                         const actions = [
                             new EditPresetAction(
-                                presets.indexOf(preset),
+                                preset,
                                 "isGMGSDrum",
                                 preset.isGMGSDrum,
                                 v,
                                 () => void 0
                             ),
                             new EditPresetAction(
-                                presets.indexOf(preset),
+                                preset,
                                 "bankLSB",
                                 preset.bankLSB,
                                 0,
                                 () => void 0
                             ),
                             new EditPresetAction(
-                                presets.indexOf(preset),
+                                preset,
                                 "bankMSB",
                                 preset.bankMSB,
                                 0,

@@ -2,6 +2,8 @@ import {
     BasicInstrument,
     BasicPreset,
     BasicSample,
+    type MIDIPatch,
+    MIDIPatchTools,
     Modulator
 } from "spessasynth_core";
 import type SoundBankManager from "./sound_bank_manager.ts";
@@ -76,34 +78,29 @@ export class ClipboardManager {
             presetNumbers.add(p.toMIDIString());
         });
         this.presetClipboard.forEach((oldPreset) => {
-            let bankMSB = oldPreset.bankMSB;
-            let bankLSB = oldPreset.bankLSB;
-            let program = oldPreset.program;
-            while (presetNumbers.has(oldPreset.toMIDIString())) {
-                if (bankMSB === 128) {
-                    program++;
-                } else {
-                    bankMSB++;
-                    if (bankMSB >= 127) {
-                        bankMSB = 0;
-                        bankLSB++;
-                        if (bankLSB >= 127) {
-                            bankLSB = 0;
-                            program++;
-                            if (program > 127) {
-                                throw new Error(
-                                    `No free space to paste ${oldPreset.program}`
-                                );
-                            }
-                        }
-                    }
+            const patch: MIDIPatch = {
+                bankMSB: oldPreset.bankMSB,
+                bankLSB: oldPreset.bankLSB,
+                program: oldPreset.program,
+                isGMGSDrum: oldPreset.isGMGSDrum
+            };
+            let num = 0;
+            while (presetNumbers.has(MIDIPatchTools.toMIDIString(patch))) {
+                num++;
+                patch.program = num % 128;
+                patch.bankMSB = Math.max(0, num - 128) % 128;
+                patch.bankLSB = Math.max(0, num - 256) % 128;
+                if (num > 3 * 128) {
+                    throw new Error(
+                        `No free space to paste ${oldPreset.toMIDIString()}`
+                    );
                 }
             }
             const newPreset = new BasicPreset(m);
             newPreset.name = oldPreset.name;
-            newPreset.program = program;
-            newPreset.bankMSB = bankMSB;
-            newPreset.bankLSB = bankLSB;
+            newPreset.program = patch.program;
+            newPreset.bankMSB = patch.bankMSB;
+            newPreset.bankLSB = patch.bankLSB;
             newPreset.isGMGSDrum = oldPreset.isGMGSDrum;
 
             newPreset.library = oldPreset.library;

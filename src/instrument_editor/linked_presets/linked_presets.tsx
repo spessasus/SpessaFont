@@ -43,7 +43,7 @@ export function LinkedPresets({
                     value={instrument.name}
                     setValue={(v) => {
                         const action = new EditInstrumentAction(
-                            instruments.indexOf(instrument),
+                            instrument,
                             "name",
                             instrument.name,
                             v,
