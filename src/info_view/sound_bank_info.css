@@ -48,6 +48,7 @@
 
 .sound_bank_info .comment textarea {
     flex: 1;
+    resize: none;
 }
 
 .sound_bank_info #INAM {

@@ -4,6 +4,8 @@
     width: fit-content;
     min-width: 35ch;
     transition: none;
+    resize: horizontal;
+    overflow: auto;
 }
 
 .menu_list_main * {
@@ -55,6 +57,7 @@
     border-radius: 0 var(--primary-border-radius) var(--primary-border-radius) 0;
     border: solid 0.2rem var(--track-border-color);
     cursor: pointer;
+    max-width: fit-content;
 }
 
 .menu_list_closed:active {
