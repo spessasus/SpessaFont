@@ -19,6 +19,18 @@ export class ClipboardManager {
     private instrumentClipboard = new Set<BasicInstrument>();
     private presetClipboard = new Set<BasicPreset>();
 
+    get presetCount() {
+        return this.presetClipboard.size;
+    }
+
+    get instrumentCount() {
+        return this.instrumentClipboard.size;
+    }
+
+    get sampleCount() {
+        return this.sampleClipboard.size;
+    }
+
     getModulators() {
         return this.modulatorClipboard.map(Modulator.copyFrom.bind(Modulator));
     }

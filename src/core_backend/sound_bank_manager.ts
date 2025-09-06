@@ -75,7 +75,8 @@ export default class SoundBankManager extends BasicSoundBank {
     }
 
     getBankName(unnamed: string) {
-        return this.getInfo("name") || unnamed;
+        const info = this.getInfo("name");
+        return info.length > 0 ? info : unnamed;
     }
 
     getInfo<K extends keyof SoundBankInfoData>(

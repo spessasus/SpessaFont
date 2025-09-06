@@ -198,7 +198,7 @@ export function InstrumentList({
                     );
                 }}
                 onPaste={() => {
-                    const count = clipboard.pasteInstruments(
+                    clipboard.pasteInstruments(
                         manager,
                         setSamples,
                         setInstruments,
@@ -211,7 +211,7 @@ export function InstrumentList({
                     ]);
                     toast.success(
                         t("clipboardLocale.pastedInstruments", {
-                            count
+                            count: clipboard.instrumentCount
                         })
                     );
                 }}

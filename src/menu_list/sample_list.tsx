@@ -158,11 +158,7 @@ export function SampleList({
                 }}
                 paste={clipboard.hasSamples()}
                 onPaste={() => {
-                    const count = clipboard.pasteSamples(
-                        manager,
-                        setSamples,
-                        setView
-                    );
+                    clipboard.pasteSamples(manager, setSamples, setView);
                     setSamples([
                         ...manager.samples.toSorted((a, b) =>
                             a.name > b.name ? 1 : b.name > a.name ? -1 : 0
@@ -170,7 +166,7 @@ export function SampleList({
                     ]);
                     toast.success(
                         t("clipboardLocale.pastedSamples", {
-                            count
+                            count: clipboard.sampleCount
                         })
                     );
                 }}

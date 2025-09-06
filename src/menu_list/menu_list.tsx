@@ -1,4 +1,9 @@
-import { BasicInstrument, BasicPreset, BasicSample } from "spessasynth_core";
+import {
+    BasicInstrument,
+    BasicPreset,
+    BasicSample,
+    MIDIPatchTools
+} from "spessasynth_core";
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -16,6 +21,7 @@ import type { HistoryAction } from "../core_backend/history.ts";
 import { DeleteInstrumentAction } from "../instrument_editor/linked_presets/delete_instrument_action.ts";
 import { DeleteSampleAction } from "../sample_editor/linked_instruments/delete_sample_action.ts";
 import { DeletePresetAction } from "../preset_editor/bottom_bar/delete_preset_action.ts";
+import toast from "react-hot-toast";
 
 export const ESTIMATED_ROW_HEIGHT = 30;
 export const OVERSCAN = 5;
@@ -52,6 +58,7 @@ export const MenuList = React.memo(function ({
     setPresets,
     clipboard
 }: MenuListProps) {
+    const { t } = useTranslation();
     const [open, setOpen] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedSamples, setSelectedSamples] = useState(
@@ -137,37 +144,71 @@ export const MenuList = React.memo(function ({
 
                 case "v": {
                     if (e.ctrlKey) {
-                        clipboard.pastePresets(
-                            manager,
-                            setPresets,
-                            setInstruments,
-                            setSamples,
-                            setView
-                        );
-                        setPresets([
-                            ...manager.presets.toSorted((a, b) =>
-                                a.name > b.name ? 1 : b.name > a.name ? -1 : 0
-                            )
-                        ]);
+                        if (clipboard.hasPresets()) {
+                            clipboard.pastePresets(
+                                manager,
+                                setPresets,
+                                setInstruments,
+                                setSamples,
+                                setView
+                            );
+                            setPresets([
+                                ...manager.presets.toSorted(
+                                    MIDIPatchTools.sorter.bind(MIDIPatchTools)
+                                )
+                            ]);
 
-                        clipboard.pasteInstruments(
-                            manager,
-                            setSamples,
-                            setInstruments,
-                            setView
-                        );
-                        setInstruments([
-                            ...manager.instruments.toSorted((a, b) =>
-                                a.name > b.name ? 1 : b.name > a.name ? -1 : 0
-                            )
-                        ]);
+                            toast.success(
+                                t("clipboardLocale.pastedPresets", {
+                                    count: clipboard.presetCount
+                                })
+                            );
+                        }
 
-                        clipboard.pasteSamples(manager, setSamples, setView);
-                        setSamples([
-                            ...manager.samples.toSorted((a, b) =>
-                                a.name > b.name ? 1 : b.name > a.name ? -1 : 0
-                            )
-                        ]);
+                        if (clipboard.hasInstruments()) {
+                            clipboard.pasteInstruments(
+                                manager,
+                                setSamples,
+                                setInstruments,
+                                setView
+                            );
+                            setInstruments([
+                                ...manager.instruments.toSorted((a, b) =>
+                                    a.name > b.name
+                                        ? 1
+                                        : b.name > a.name
+                                          ? -1
+                                          : 0
+                                )
+                            ]);
+                            toast.success(
+                                t("clipboardLocale.pastedInstruments", {
+                                    count: clipboard.instrumentCount
+                                })
+                            );
+                        }
+
+                        if (clipboard.hasSamples()) {
+                            clipboard.pasteSamples(
+                                manager,
+                                setSamples,
+                                setView
+                            );
+                            setSamples([
+                                ...manager.samples.toSorted((a, b) =>
+                                    a.name > b.name
+                                        ? 1
+                                        : b.name > a.name
+                                          ? -1
+                                          : 0
+                                )
+                            ]);
+                            toast.success(
+                                t("clipboardLocale.pastedSamples", {
+                                    count: clipboard.sampleCount
+                                })
+                            );
+                        }
                     }
                 }
             }
@@ -186,10 +227,9 @@ export const MenuList = React.memo(function ({
         setPresets,
         setSamples,
         setView,
+        t,
         view
     ]);
-
-    const { t } = useTranslation();
 
     const presetNameMap: MappedPresetType[] = useMemo(() => {
         return presets.map((p) => {

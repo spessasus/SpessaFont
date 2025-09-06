@@ -74,22 +74,31 @@ export function MenuBar({
         async (format: "sf2" | "dls" | "sf3") => {
             const id = toast.loading(t("loadingAndSaving.savingSoundBank"));
             await waitForRefresh();
-            await manager.save(format, ((
-                _sampleName,
-                writtenCount,
-                totalSampleCount
-            ) => {
-                toast.loading(
-                    `${t("loadingAndSaving.writingSamples")} (${
-                        Math.floor((writtenCount / totalSampleCount) * 100_00) /
-                            100 +
-                        "%"
-                    })`,
-                    {
-                        id
-                    }
-                );
-            }) as ProgressFunction);
+            try {
+                await manager.save(format, ((
+                    _sampleName,
+                    writtenCount,
+                    totalSampleCount
+                ) => {
+                    toast.loading(
+                        `${t("loadingAndSaving.writingSamples")} (${
+                            Math.floor(
+                                (writtenCount / totalSampleCount) * 100_00
+                            ) /
+                                100 +
+                            "%"
+                        })`,
+                        {
+                            id
+                        }
+                    );
+                }) as ProgressFunction);
+            } catch (e) {
+                // make so the error appears at the bottom
+                toast.error(`${e as string}`);
+                toast.error(t("loadingAndSaving.writingFailed"), { id });
+                return;
+            }
             toast.success(t("loadingAndSaving.savedSuccessfully"), { id });
         },
         [manager, t]

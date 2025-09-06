@@ -44,7 +44,8 @@ export const localeEnglish = {
 
         savingSoundBank: "Saving sound bank...",
         savedSuccessfully: "Saved successfully!",
-        writingSamples: "Writing Samples..."
+        writingSamples: "Writing Samples...",
+        writingFailed: "Error writing the sound bank!"
     },
 
     error: "Error",

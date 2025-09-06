@@ -7,7 +7,8 @@ import {
     type BasicInstrument,
     BasicPreset,
     BasicSample,
-    BasicZone
+    BasicZone,
+    MIDIPatchTools
 } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import * as React from "react";
@@ -177,7 +178,7 @@ export function PresetList({
                     );
                 }}
                 onPaste={() => {
-                    const count = clipboard.pastePresets(
+                    clipboard.pastePresets(
                         manager,
                         setPresets,
                         setInstruments,
@@ -185,13 +186,13 @@ export function PresetList({
                         setView
                     );
                     setPresets([
-                        ...manager.presets.toSorted((a, b) =>
-                            a.name > b.name ? 1 : b.name > a.name ? -1 : 0
+                        ...manager.presets.toSorted(
+                            MIDIPatchTools.sorter.bind(MIDIPatchTools)
                         )
                     ]);
                     toast.success(
                         t("clipboardLocale.pastedPresets", {
-                            count
+                            count: clipboard.presetCount
                         })
                     );
                 }}

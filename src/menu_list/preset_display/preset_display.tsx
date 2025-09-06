@@ -16,10 +16,7 @@ export interface OpenPresetDisplayType {
 
 const PresetString = typedMemo(({ n }: { n: number }) => {
     return (
-        <span
-            className={"monospaced"}
-            style={{ display: "inline-block", opacity: n === 0 ? 0.5 : 1 }}
-        >
+        <span className={"monospaced"} style={{ opacity: n === 0 ? 0.5 : 1 }}>
             {n.toString().padStart(3, "0")}
         </span>
     );
@@ -70,7 +67,7 @@ export function PresetDisplay({
                         {open ? "\u25BC" : "\u25B6"}
                     </span>
                     <span
-                        className={"monospaced"}
+                        className={"monospaced midi_patch"}
                         onClick={() =>
                             setOpenedData({
                                 openInstruments: openedInstruments,

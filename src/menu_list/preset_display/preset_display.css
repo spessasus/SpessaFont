@@ -1,3 +1,7 @@
+.midi_patch {
+    display: flex;
+}
+
 .preset_item_wrapper {
     display: flex;
     flex-direction: column;
