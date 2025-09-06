@@ -43,7 +43,7 @@ export function SampleTools({
     const { t } = useTranslation();
     const sampleName = sample.name;
     const sampleRate = sample.sampleRate;
-    const centCorrection = sample.originalKey;
+    const centCorrection = sample.pitchCorrection;
     const loopStart = sample.loopStart;
     const loopEnd = sample.loopEnd;
     const sampleType = sample.sampleType;
