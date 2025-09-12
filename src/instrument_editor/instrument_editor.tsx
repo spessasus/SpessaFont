@@ -183,7 +183,7 @@ const instrumentRows: GeneratorRowType[] = [
         fromGenerator: (v) => v / 10,
         toGenerator: (v) => v * 10,
         precision: 1,
-        unit: "dB"
+        unit: "percent"
     },
     {
         generator: generatorTypes.releaseModEnv,

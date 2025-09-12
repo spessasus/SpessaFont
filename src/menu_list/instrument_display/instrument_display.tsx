@@ -1,7 +1,6 @@
 import "./instrument_display.css";
 import type { BasicInstrument } from "spessasynth_core";
 import * as React from "react";
-import { useRef } from "react";
 import { SampleDisplay } from "../sample_display/sample_display.tsx";
 import { type BankEditView } from "../../core_backend/sound_bank_manager.ts";
 import type { SetViewType } from "../../bank_editor/bank_editor.tsx";
@@ -29,10 +28,9 @@ export function InstrumentDisplay({
     link: boolean;
     onLink?: () => unknown;
 }) {
-    const elementRef = useRef<HTMLDivElement>(null);
     const { t } = useTranslation();
     return (
-        <div className={"instrument_item_wrapper"} ref={elementRef}>
+        <div className={"instrument_item_wrapper"}>
             <div
                 className={`instrument_item ${selected ? "selected" : ""}`}
                 title={instrument.name}

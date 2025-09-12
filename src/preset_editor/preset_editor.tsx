@@ -1,9 +1,4 @@
-import {
-    type BasicPreset,
-    type BasicPresetZone,
-    generatorTypes,
-    type GenericRange
-} from "spessasynth_core";
+import { type BasicPreset, type BasicPresetZone, generatorTypes, type GenericRange } from "spessasynth_core";
 import "./preset_editor.css";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import type { SetViewType } from "../bank_editor/bank_editor.tsx";
@@ -123,7 +118,7 @@ const presetRows: GeneratorRowType[] = [
         fromGenerator: (v) => v / 10,
         toGenerator: (v) => v * 10,
         precision: 1,
-        unit: "dB"
+        unit: "percent"
     },
     {
         generator: generatorTypes.releaseModEnv,

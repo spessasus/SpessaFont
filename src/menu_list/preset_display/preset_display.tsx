@@ -1,7 +1,6 @@
 import type { MappedPresetType } from "../menu_list.tsx";
 import "./preset_display.css";
 import * as React from "react";
-import { useRef } from "react";
 import { InstrumentDisplay } from "../instrument_display/instrument_display.tsx";
 import type { BankEditView } from "../../core_backend/sound_bank_manager.ts";
 import type { SetViewType } from "../../bank_editor/bank_editor.tsx";
@@ -47,9 +46,8 @@ export function PresetDisplay({
     const open = openedData.open;
     const openedInstruments: Record<string, boolean> =
         openedData.openInstruments ?? {};
-    const elementRef = useRef<HTMLDivElement>(null);
     return (
-        <div className={"preset_item_wrapper"} ref={elementRef}>
+        <div className={"preset_item_wrapper"}>
             <div
                 className={`preset_item ${selected ? "selected" : ""}`}
                 title={p.preset.name}

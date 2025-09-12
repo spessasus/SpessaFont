@@ -1,7 +1,8 @@
 import type { BasicInstrumentZone, BasicZone } from "spessasynth_core";
 
 export const ZONE_SORTING_FUNCTION = (z1: BasicZone, z2: BasicZone) =>
-    z1.keyRange.min - z2.keyRange.min;
+    (z1.keyRange.min - z2.keyRange.min) * 10 +
+    (z1.velRange.min - z2.velRange.min);
 
 // reorders so the stereo sample pairs appear immediately after each other
 export function reorderInstrumentZones(
