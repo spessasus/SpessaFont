@@ -7,8 +7,7 @@ import {
     type BasicInstrument,
     BasicPreset,
     BasicSample,
-    BasicZone,
-    MIDIPatchTools
+    BasicZone
 } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import * as React from "react";
@@ -28,6 +27,7 @@ import { CreatePresetAction } from "./create_actions/create_preset_actions.ts";
 import type { HistoryAction } from "../core_backend/history.ts";
 import { CreateZoneAction } from "../generator_table/create_zone_action.ts";
 import toast from "react-hot-toast";
+import { presetSorter } from "../utils/preset_sorter.ts";
 
 export function PresetList({
     view,
@@ -185,11 +185,7 @@ export function PresetList({
                         setSamples,
                         setView
                     );
-                    setPresets([
-                        ...manager.presets.toSorted(
-                            MIDIPatchTools.sorter.bind(MIDIPatchTools)
-                        )
-                    ]);
+                    setPresets([...manager.presets.toSorted(presetSorter)]);
                     toast.success(
                         t("clipboardLocale.pastedPresets", {
                             count: clipboard.presetCount

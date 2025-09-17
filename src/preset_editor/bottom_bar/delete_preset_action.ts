@@ -27,6 +27,7 @@ export class DeletePresetAction implements HistoryAction {
             );
         }
         b.deletePreset(this.preset);
+        b.flushAndSortPresets();
         this.setPresets([...b.presets]);
         // check if there are elements to switch to
         if (b.presets.length > 0) {
@@ -41,6 +42,7 @@ export class DeletePresetAction implements HistoryAction {
             return;
         }
         b.presets.splice(this.index, 0, this.preset);
+        b.flushAndSortPresets();
         this.setPresets([...b.presets]);
         this.setView(this.preset);
     }

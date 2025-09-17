@@ -63,7 +63,7 @@
     background: var(--lighter-color-end);
 }
 
-.zone_table tr:last-child {
+.zone_table tbody tr:last-child {
     border-radius: 0 0 var(--primary-border-radius) var(--primary-border-radius);
     outline: solid 1px var(--track-border-color)
 }

@@ -79,7 +79,10 @@ export function BottomPresetBar({
                                     "bankLSB",
                                     preset.bankLSB,
                                     v,
-                                    () => setPresets([...presets])
+                                    () => {
+                                        manager.flushAndSortPresets();
+                                        setPresets([...presets]);
+                                    }
                                 );
                                 manager.modifyBank([action]);
                                 return v;
@@ -113,7 +116,10 @@ export function BottomPresetBar({
                                     "bankMSB",
                                     preset.bankMSB,
                                     v,
-                                    () => setPresets([...presets])
+                                    () => {
+                                        manager.flushAndSortPresets();
+                                        setPresets([...presets]);
+                                    }
                                 );
                                 manager.modifyBank([action]);
                                 return v;
@@ -150,7 +156,10 @@ export function BottomPresetBar({
                             "program",
                             preset.program,
                             v,
-                            () => setPresets([...presets])
+                            () => {
+                                manager.flushAndSortPresets();
+                                setPresets([...presets]);
+                            }
                         );
                         manager.modifyBank([action]);
                         return v;

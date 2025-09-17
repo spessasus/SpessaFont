@@ -9,6 +9,8 @@
     min-width: 10ch;
     position: relative;
     text-align: start;
+    /*Chrome fix?*/
+    width: 0;
 }
 
 .header_cell:first-child {

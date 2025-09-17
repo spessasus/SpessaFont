@@ -3,7 +3,6 @@ import {
     type BasicPreset,
     type BasicSample,
     BasicSoundBank,
-    MIDIPatchTools,
     type ProgressFunction,
     type SoundBankInfoData,
     SoundBankLoader,
@@ -16,6 +15,7 @@ import {
     reorderInstrumentZones,
     ZONE_SORTING_FUNCTION
 } from "../utils/reorder_zones.ts";
+import { presetSorter } from "../utils/preset_sorter.ts";
 
 export type BankEditView = "info" | BasicInstrument | BasicSample | BasicPreset;
 
@@ -54,8 +54,14 @@ export default class SoundBankManager extends BasicSoundBank {
         this.sendBankToSynth();
     }
 
+    flushAndSortPresets() {
+        this.flush();
+        this.presets.sort(presetSorter);
+    }
+
     sortElements() {
-        this.presets.sort(MIDIPatchTools.sorter.bind(MIDIPatchTools));
+        this.flush();
+        this.flushAndSortPresets();
         this.samples.sort((a, b) =>
             a.name > b.name ? 1 : b.name > a.name ? -1 : 0
         );

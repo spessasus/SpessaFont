@@ -1,9 +1,4 @@
-import {
-    BasicInstrument,
-    BasicPreset,
-    BasicSample,
-    MIDIPatchTools
-} from "spessasynth_core";
+import { BasicInstrument, BasicPreset, BasicSample } from "spessasynth_core";
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -22,6 +17,7 @@ import { DeleteInstrumentAction } from "../instrument_editor/linked_presets/dele
 import { DeleteSampleAction } from "../sample_editor/linked_instruments/delete_sample_action.ts";
 import { DeletePresetAction } from "../preset_editor/bottom_bar/delete_preset_action.ts";
 import toast from "react-hot-toast";
+import { presetSorter } from "../utils/preset_sorter.ts";
 
 export const ESTIMATED_ROW_HEIGHT = 30;
 export const OVERSCAN = 5;
@@ -153,9 +149,7 @@ export const MenuList = React.memo(function ({
                                 setView
                             );
                             setPresets([
-                                ...manager.presets.toSorted(
-                                    MIDIPatchTools.sorter.bind(MIDIPatchTools)
-                                )
+                                ...manager.presets.toSorted(presetSorter)
                             ]);
 
                             toast.success(
