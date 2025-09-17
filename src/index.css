@@ -15,7 +15,6 @@
 }
 
 .spessafont_main *, .spessafont_main {
-    scrollbar-gutter: stable;
     /*global variables*/
     --lighter-color-start: oklch(16% 0 0);
     --lighter-color-end: oklch(20.5% 0 0);

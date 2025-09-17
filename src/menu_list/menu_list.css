@@ -18,7 +18,6 @@
     display: block;
     flex: 1;
     overflow-y: auto;
-    scrollbar-gutter: stable both-edges;
     scrollbar-width: auto;
 }
 
