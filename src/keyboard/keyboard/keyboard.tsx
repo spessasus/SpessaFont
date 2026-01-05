@@ -101,10 +101,6 @@ export function Keyboard({
         const moveHandler = (e: MouseEvent) => {
             const mouseEvent = e;
 
-            if (!mouseHeld) {
-                return;
-            }
-
             const newPressedKeys = new Set<number>();
 
             const target = document.elementFromPoint(
@@ -140,6 +136,11 @@ export function Keyboard({
                     .padStart(3, " ");
             }
 
+            // Do the latter only for pressed
+            if (!mouseHeld) {
+                return;
+            }
+
             newPressedKeys.add(midiNote);
 
             // only release keys that are no longer being pressed
@@ -170,9 +171,7 @@ export function Keyboard({
         };
 
         const onMouseMove = (e: MouseEvent) => {
-            if (mouseHeld) {
-                moveHandler(e);
-            }
+            moveHandler(e);
         };
 
         const kb = keyboardRef.current;
