@@ -105,4 +105,14 @@ _Editing sound banks has never been easier!_
 
 <p align='center'><img width='500' alt='wallace' src="https://github.com/user-attachments/assets/e263f327-1b40-476f-81c6-322077a20cf0"/></p>
 
-<i>beautiful animation by my friend, AlfaFranekPolak</i>
+*beautiful animation by my friend, AlfaFranekPolak*
+
+### License
+Copyright © 2026 Spessasus.
+Licensed under the Apache-2.0 License.
+
+#### Legal
+This project is in no way endorsed or otherwise affiliated with the MIDI Manufacturers Association,
+Creative Technology Ltd. or E-mu Systems, Inc., or any other organization mentioned.
+SoundFont® is a registered trademark of Creative Technology Ltd.
+All other trademarks are the property of their respective owners.
