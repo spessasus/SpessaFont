@@ -25,7 +25,7 @@ export const localePolish = {
         newPrompt: "Lub zacznij z pustym plikiem...",
         copyright:
             "Stworzone przez Spessasus używając spessasynth_core i spessasynth_lib.",
-        copyrightTwo: "Copyright © Spessasus 2025, Na licencji Apache-2.0."
+        copyrightTwo: `Copyright © Spessasus ${new Date().getFullYear()}, Na licencji Apache-2.0.`
     },
     poweredBy: "Napędzane przez",
     firefox: "Rozważ użycie Firefox aby móc wczytywać duże pliki.",

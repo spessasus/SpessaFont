@@ -25,8 +25,7 @@ export const localeEnglish = {
         newPrompt: "Or start with an empty file...",
         copyright:
             "Created by Spessasus using spessasynth_core and spessasynth_lib.",
-        copyrightTwo:
-            "Copyright © Spessasus 2025, Licensed under the Apache-2.0 License."
+        copyrightTwo: `Copyright © Spessasus ${new Date().getFullYear()}, Licensed under the Apache-2.0 License.`
     },
     poweredBy: "Powered by",
     firefox: "Consider using Firefox to load large files.",
