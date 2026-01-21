@@ -12,11 +12,19 @@ export function reorderInstrumentZones(
     const added = new Set<BasicInstrumentZone>();
     zones = zones.toSorted(ZONE_SORTING_FUNCTION);
 
+    const addZone = (z: BasicInstrumentZone) => {
+        if (!added.has(z)) {
+            added.add(z);
+            ordered.push(z);
+        }
+    };
+
     // reorder so the stereo sample pairs appear immediately after each other
     zones.forEach((z) => {
         if (added.has(z)) {
             return;
         }
+        addZone(z);
         const link = z.sample.linkedSample;
 
         // sophisticated piece of code that finds matching zone based on range,
@@ -30,8 +38,7 @@ export function reorderInstrumentZones(
 
             if (links.length > 0) {
                 if (links.length === 1) {
-                    ordered.push(links[0]);
-                    added.add(links[0]);
+                    addZone(links[0]);
                 } else {
                     // pick the best match based on key and velocity range similarity
                     let velMatch = links[0];
@@ -66,14 +73,10 @@ export function reorderInstrumentZones(
 
                     const linkedZone =
                         perfectMatch ?? bothMatch ?? keyMatch ?? velMatch;
-                    ordered.push(linkedZone);
-                    added.add(linkedZone);
+                    addZone(linkedZone);
                 }
             }
         }
-
-        ordered.push(z);
-        added.add(z);
     });
     return ordered;
 }

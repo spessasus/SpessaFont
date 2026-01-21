@@ -60,7 +60,6 @@ export default class SoundBankManager extends BasicSoundBank {
     }
 
     sortElements() {
-        this.flush();
         this.flushAndSortPresets();
         this.samples.sort((a, b) =>
             a.name > b.name ? 1 : b.name > a.name ? -1 : 0
