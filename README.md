@@ -86,6 +86,9 @@ This is also my first TypeScript and React project. It's a bit messy, but it wor
 4. `npm run dev`
 5. Open the link that appears in the terminal
 
+**Note:** There are some performance issues when searching for elements.
+This does not affect the production build though.
+
 ### Build for production
 
 1. Make sure you have Node.js installed
