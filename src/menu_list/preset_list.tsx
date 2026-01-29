@@ -100,18 +100,16 @@ export function PresetList({
             e: React.MouseEvent<HTMLDivElement, MouseEvent>,
             preset: MappedPresetType
         ) => {
-            const newSet = new Set<BasicPreset>();
-            newSet.add(preset.preset);
+            const newSet = new Set<BasicPreset>([preset.preset]);
             if (e.shiftKey && view instanceof BasicPreset) {
                 const viewIndex = presets.findIndex((p) => p.preset === view);
                 const presetIndex = presets.indexOf(preset);
                 const start = Math.min(viewIndex, presetIndex);
                 const end = Math.max(viewIndex, presetIndex);
-                presets
-                    .slice(start, end + 1)
-                    .forEach((i) => newSet.add(i.preset));
+                for (const i of presets.slice(start, end + 1))
+                    newSet.add(i.preset);
             } else if (e.ctrlKey && view instanceof BasicPreset) {
-                selectedPresets.forEach((i) => newSet.add(i));
+                for (const i of selectedPresets) newSet.add(i);
                 if (selectedPresets.has(preset.preset)) {
                     newSet.delete(preset.preset);
                 }
@@ -126,16 +124,16 @@ export function PresetList({
     const createPreset = useCallback(() => {
         const preset = new BasicPreset(manager);
         preset.name = [...selectedInstruments][0].name;
-        selectedInstruments.forEach((i) => {
+        for (const i of selectedInstruments) {
             preset.createZone(i);
-        });
-        let found = !!presets.find((p) => p.preset.matches(preset));
+        }
+        let found = presets.some((p) => p.preset.matches(preset));
         let i = 0;
         while (found) {
             i++;
             preset.bankMSB = i & 0x7f;
             preset.bankLSB = Math.max(i >> 7, 0);
-            found = !!presets.find((p) => p.preset.matches(preset));
+            found = presets.some((p) => p.preset.matches(preset));
         }
         const action = new CreatePresetAction(preset, setPresets, setView);
         manager.modifyBank([action]);
@@ -144,7 +142,7 @@ export function PresetList({
     const linkInstruments = useCallback(
         (preset: BasicPreset) => {
             const actions: HistoryAction[] = [];
-            selectedInstruments.forEach((inst) =>
+            for (const inst of selectedInstruments)
                 actions.push(
                     new CreateZoneAction<BasicPreset, BasicInstrument>(
                         preset,
@@ -155,8 +153,7 @@ export function PresetList({
                             setView(preset);
                         }
                     )
-                )
-            );
+                );
             manager.modifyBank(actions);
         },
         [manager, selectedInstruments, setPresets, setView]
@@ -185,7 +182,7 @@ export function PresetList({
                         setSamples,
                         setView
                     );
-                    setPresets([...manager.presets.toSorted(presetSorter)]);
+                    setPresets(manager.presets.toSorted(presetSorter));
                     toast.success(
                         t("clipboardLocale.pastedPresets", {
                             count: clipboard.presetCount

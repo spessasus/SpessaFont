@@ -15,7 +15,8 @@
     padding: 0.1rem 0.5rem;
 }
 
-.preset_item:hover, .preset_item.selected {
+.preset_item:hover,
+.preset_item.selected {
     background: var(--lighter-color-end);
 }
 

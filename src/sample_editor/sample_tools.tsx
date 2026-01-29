@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 
 const DEFAULT_SAMPLE_GAIN = 0.4;
 
-const ZOOM_PER_SAMPLE = 50000 / 6_000_000;
+const ZOOM_PER_SAMPLE = 50_000 / 6_000_000;
 
 export function SampleTools({
     sample,
@@ -57,9 +57,9 @@ export function SampleTools({
 
         let audioData = sample.getAudioData();
         let bufferRate = sampleRate;
-        if (sampleRate < 8000 || sampleRate > 96000) {
+        if (sampleRate < 8000 || sampleRate > 96_000) {
             // resample to 48kHz
-            const ratio = 48000 / sampleRate;
+            const ratio = 48_000 / sampleRate;
             const resampled = new Float32Array(
                 Math.floor(audioData.length * ratio)
             );
@@ -67,7 +67,7 @@ export function SampleTools({
                 resampled[i] = audioData[Math.floor(i * (1 / ratio))];
             }
             audioData = resampled;
-            bufferRate = 48000;
+            bufferRate = 48_000;
         }
 
         const buf = engine.context.createBuffer(
@@ -85,8 +85,8 @@ export function SampleTools({
         if (playerRef.current) {
             try {
                 playerRef.current.stop();
-            } catch (e) {
-                console.warn("audio already stopped or invalid", e);
+            } catch (error) {
+                console.warn("audio already stopped or invalid", error);
             }
             playerRef.current.disconnect();
             playerRef.current = null;
@@ -251,9 +251,14 @@ export function SampleTools({
     };
 
     const normalizeAudio = () => {
-        const maxSample = sampleData.reduce((max, cur) =>
-            Math.max(max, Math.abs(cur))
-        );
+        let maxSample = 0;
+
+        for (const cur of sampleData) {
+            const abs = Math.abs(cur);
+            if (abs > maxSample) {
+                maxSample = abs;
+            }
+        }
         const gain = 1 / maxSample;
         const newData = new Float32Array(sampleData);
         for (let i = 0; i < newData.length; i++) {
@@ -266,7 +271,7 @@ export function SampleTools({
     return (
         <div className={`info_column ${loading ? "disabled" : ""} tools`}>
             <div
-                className={`pretty_button monospaced ${!loading ? "responsive_button hover_brightness" : ""}`}
+                className={`pretty_button monospaced ${loading ? "" : "responsive_button hover_brightness"}`}
                 onClick={exportWav}
             >
                 {t("sampleLocale.tools.wavExport")}
@@ -274,14 +279,14 @@ export function SampleTools({
             {playerState === "stopped" && (
                 <>
                     <div
-                        className={`pretty_button monospaced ${!loading ? "responsive_button hover_brightness" : ""}`}
+                        className={`pretty_button monospaced ${loading ? "" : "responsive_button hover_brightness"}`}
                         onClick={() => playSample(false)}
                     >
                         {t("sampleLocale.tools.play")}
                     </div>
 
                     <div
-                        className={`pretty_button monospaced ${!loading ? "responsive_button hover_brightness" : ""}`}
+                        className={`pretty_button monospaced ${loading ? "" : "responsive_button hover_brightness"}`}
                         onClick={() => playSample(true)}
                     >
                         {t("sampleLocale.tools.playLooped")}
@@ -292,13 +297,13 @@ export function SampleTools({
                 // duplicated to match the count of play buttons
                 <>
                     <div
-                        className={`pretty_button monospaced ${!loading ? "responsive_button hover_brightness" : ""}`}
+                        className={`pretty_button monospaced ${loading ? "" : "responsive_button hover_brightness"}`}
                         onClick={stopPlayer}
                     >
                         {t("sampleLocale.tools.stop")}
                     </div>
                     <div
-                        className={`pretty_button monospaced ${!loading ? "responsive_button hover_brightness" : ""}`}
+                        className={`pretty_button monospaced ${loading ? "" : "responsive_button hover_brightness"}`}
                         onClick={stopPlayer}
                     >
                         {t("sampleLocale.tools.stop")}
@@ -307,14 +312,14 @@ export function SampleTools({
             )}
             <div
                 onClick={normalizeAudio}
-                className={`pretty_button monospaced ${!loading ? "responsive_button hover_brightness" : ""}`}
+                className={`pretty_button monospaced ${loading ? "" : "responsive_button hover_brightness"}`}
             >
                 {t("sampleLocale.tools.normalize")}
             </div>
 
             <div
                 onClick={replaceData}
-                className={`pretty_button monospaced ${!loading ? "responsive_button hover_brightness" : ""}`}
+                className={`pretty_button monospaced ${loading ? "" : "responsive_button hover_brightness"}`}
             >
                 {loading
                     ? t("sampleLocale.tools.loading")
@@ -333,7 +338,7 @@ export function SampleTools({
                 }}
                 value={inputZoom}
                 text={`${t("sampleLocale.waveZoom")}: ${
-                    Math.floor(zoom * 100_00) / 100
+                    Math.floor(zoom * 10_000) / 100
                 }%`}
             ></ControllerRange>
         </div>

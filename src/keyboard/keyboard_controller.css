@@ -36,7 +36,7 @@
     margin: 0.5rem;
     align-items: stretch;
     justify-content: center;
-    gap: var(--flex-gap);;
+    gap: var(--flex-gap);
 }
 
 .controller_column * {

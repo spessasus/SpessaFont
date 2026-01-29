@@ -28,7 +28,7 @@ export class HistoryManager {
         if (action.length === 0) {
             return;
         }
-        action.forEach((a) => a.do(m));
+        for (const a of action) a.do(m);
         this.history.push(action);
         // clear undo history
         this.undoHistory.length = 0;
@@ -45,7 +45,7 @@ export class HistoryManager {
         if (!action) {
             return;
         }
-        action.forEach((a) => a.do(m));
+        for (const a of action) a.do(m);
         logInfo(`Redid. Remaining undo history: ${this.undoHistory.length}`);
         this.history.push(action);
         // update synth engine
@@ -63,7 +63,7 @@ export class HistoryManager {
             return;
         }
 
-        action.toReversed().forEach((a) => a.undo(m));
+        for (const a of action.toReversed()) a.undo(m);
         logInfo(`Undid. Remaining history: ${this.length}`);
         this.undoHistory.push(action);
         // update synth engine

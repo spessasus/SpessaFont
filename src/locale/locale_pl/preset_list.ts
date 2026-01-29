@@ -4,4 +4,4 @@ export const PresetListLocale = {
     presets: "Presety",
     instruments: "Instrumenty",
     samples: "Próbki"
-}; 
+};

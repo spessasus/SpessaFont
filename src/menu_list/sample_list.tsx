@@ -88,9 +88,9 @@ export function SampleList({
             let sampleName = file.name;
             const lastDotIndex = sampleName.lastIndexOf(".");
             if (lastDotIndex !== -1) {
-                sampleName = sampleName.substring(0, lastDotIndex);
+                sampleName = sampleName.slice(0, Math.max(0, lastDotIndex));
             }
-            sampleName = sampleName.substring(0, 39); // keep spare space for "R" or "L"
+            sampleName = sampleName.slice(0, 39); // keep spare space for "R" or "L"
 
             const sample = new EmptySample();
             sample.name =
@@ -120,16 +120,15 @@ export function SampleList({
         e: React.MouseEvent<HTMLDivElement, MouseEvent>,
         sample: BasicSample
     ) => {
-        const newSet = new Set<BasicSample>();
-        newSet.add(sample);
+        const newSet = new Set<BasicSample>([sample]);
         if (e.shiftKey && view instanceof BasicSample) {
             const viewIndex = samples.indexOf(view);
             const sampleIndex = samples.indexOf(sample);
             const start = Math.min(viewIndex, sampleIndex);
             const end = Math.max(viewIndex, sampleIndex);
-            samples.slice(start, end + 1).forEach((s) => newSet.add(s));
+            for (const s of samples.slice(start, end + 1)) newSet.add(s);
         } else if (e.ctrlKey && view instanceof BasicSample) {
-            selectedSamples.forEach((s) => newSet.add(s));
+            for (const s of selectedSamples) newSet.add(s);
             if (selectedSamples.has(sample)) {
                 newSet.delete(sample);
             }
@@ -159,11 +158,11 @@ export function SampleList({
                 paste={clipboard.hasSamples()}
                 onPaste={() => {
                     clipboard.pasteSamples(manager, setSamples, setView);
-                    setSamples([
-                        ...manager.samples.toSorted((a, b) =>
+                    setSamples(
+                        manager.samples.toSorted((a, b) =>
                             a.name > b.name ? 1 : b.name > a.name ? -1 : 0
                         )
-                    ]);
+                    );
                     toast.success(
                         t("clipboardLocale.pastedSamples", {
                             count: clipboard.sampleCount

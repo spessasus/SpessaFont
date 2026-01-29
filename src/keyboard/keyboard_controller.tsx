@@ -66,27 +66,31 @@ export function KeyboardController({
                     case "controllerChange": {
                         const ccV = e.data.controllerValue;
                         const cc = e.data.controllerNumber;
-                        knobRefs.current.forEach((r) => {
+                        for (const r of knobRefs.current) {
                             r?.current?.ccUpdate(cc, ccV);
-                        });
+                        }
                         break;
                     }
 
-                    case "stopAll":
+                    case "stopAll": {
                         keyboardRef?.current?.clearAll();
                         break;
+                    }
 
-                    case "noteOn":
+                    case "noteOn": {
                         keyboardRef?.current?.pressNote(e.data.midiNote);
                         break;
+                    }
 
-                    case "noteOff":
+                    case "noteOff": {
                         keyboardRef?.current?.releaseNote(e.data.midiNote);
                         break;
+                    }
 
-                    case "pitchWheel":
+                    case "pitchWheel": {
                         pitchRef?.current?.setPitch(e.data.pitch);
                         break;
+                    }
 
                     case "channelPressure": {
                         pitchRef?.current?.setPressure(e.data.pressure);

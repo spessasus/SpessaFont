@@ -37,29 +37,28 @@ export const RangeGeneratorCell = typedMemo(function ({
 
     let rangeText = "";
     if (range.min !== -1) {
-        if (range.max === range.min) {
-            rangeText = range.min.toString();
-        } else {
-            rangeText = `${range.min}-${range.max}`;
-        }
+        rangeText =
+            range.max === range.min
+                ? range.min.toString()
+                : `${range.min}-${range.max}`;
     }
 
     const setValue = (typedText: string) => {
-        const v = typedText.replace(/[^0-9-]/g, "");
+        const v = typedText.replaceAll(/[^0-9-]/g, "");
         if (typedText === rangeText) {
             return typedText;
         }
         const newRange: GenericRange = { min: 0, max: 127 };
-        if (v.length < 1) {
+        if (v.length === 0) {
             newRange.min = -1;
             newRange.max = 127;
-        } else if (!v.includes("-")) {
-            const key = parseInt(v);
-            newRange.min = newRange.max = key;
-        } else {
+        } else if (v.includes("-")) {
             const [min, max] = v.split("-").map(Number);
             newRange.min = Math.min(127, Math.max(0, min));
             newRange.max = Math.max(newRange.min, Math.min(127, max));
+        } else {
+            const key = Number.parseInt(v);
+            newRange.min = newRange.max = key;
         }
 
         const callbackReal = () => {
@@ -98,11 +97,10 @@ export const RangeGeneratorCell = typedMemo(function ({
 
         let newRangeText = "";
         if (range.min !== -1) {
-            if (range.max === range.min) {
-                newRangeText = range.min.toString();
-            } else {
-                newRangeText = `${range.min}-${range.max}`;
-            }
+            newRangeText =
+                range.max === range.min
+                    ? range.min.toString()
+                    : `${range.min}-${range.max}`;
         }
         return newRangeText;
     };

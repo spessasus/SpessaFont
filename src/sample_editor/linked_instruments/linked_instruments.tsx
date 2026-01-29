@@ -21,7 +21,7 @@ export function LinkedInstruments({
     const { t } = useTranslation();
     const linked = useMemo(() => {
         const l = new Set<BasicInstrument>();
-        sample.linkedTo.forEach((i) => l.add(i));
+        for (const i of sample.linkedTo) l.add(i);
         return l;
     }, [sample.linkedTo]);
 

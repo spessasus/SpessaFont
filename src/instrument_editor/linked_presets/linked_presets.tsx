@@ -25,7 +25,7 @@ export function LinkedPresets({
     const { t } = useTranslation();
     const linked = useMemo(() => {
         const l = new Set<BasicPreset>();
-        instrument.linkedTo.forEach((p) => l.add(p));
+        for (const p of instrument.linkedTo) l.add(p);
         return l;
     }, [instrument]);
 

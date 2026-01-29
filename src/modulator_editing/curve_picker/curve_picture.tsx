@@ -11,6 +11,9 @@ const HEIGHT = 100;
 const curveKey = (c: SpessaFontModulatorCurveType) =>
     `${c.curveType}-${c.bipolar}-${c.positive}`;
 
+const concave = (v: number) => 1 - Math.sqrt(1 - v * v);
+const convex = (v: number) => Math.sqrt(1 - (1 - v) * (1 - v));
+
 // Cache map
 const curveCanvasCache: Record<string, HTMLCanvasElement> = {};
 
@@ -22,21 +25,23 @@ function getCurveValue(
     if (!curve.positive) {
         value = 1 - value;
     }
-    const concave = (v: number) => 1 - Math.sqrt(1 - v * v);
-    const convex = (v: number) => Math.sqrt(1 - (1 - v) * (1 - v));
     switch (curve.curveType) {
         default:
-        case modulatorCurveTypes.linear:
+        case modulatorCurveTypes.linear: {
             return polarity ? value * 2 - 1 : value;
-        case modulatorCurveTypes.switch:
+        }
+        case modulatorCurveTypes.switch: {
             value = value > 0.5 ? 1 : 0;
             return polarity ? value * 2 - 1 : value;
-        case modulatorCurveTypes.concave:
+        }
+        case modulatorCurveTypes.concave: {
             value = polarity ? value * 2 - 1 : value;
             return value < 0 ? -concave(-value) : concave(value);
-        case modulatorCurveTypes.convex:
+        }
+        case modulatorCurveTypes.convex: {
             value = polarity ? value * 2 - 1 : value;
             return value < 0 ? -convex(-value) : convex(value);
+        }
     }
 }
 

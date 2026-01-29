@@ -14,51 +14,51 @@ const generatorLimits: {
 // offsets
 generatorLimits[generatorTypes.startAddrsOffset] = {
     min: 0,
-    max: 32768,
+    max: 32_768,
     def: 0,
     nrpn: 1
 };
 generatorLimits[generatorTypes.endAddrOffset] = {
-    min: -32768,
-    max: 32768,
+    min: -32_768,
+    max: 32_768,
     def: 0,
     nrpn: 1
 };
 generatorLimits[generatorTypes.startloopAddrsOffset] = {
-    min: -32768,
-    max: 32768,
+    min: -32_768,
+    max: 32_768,
     def: 0,
     nrpn: 1
 };
 generatorLimits[generatorTypes.endloopAddrsOffset] = {
-    min: -32768,
-    max: 32768,
+    min: -32_768,
+    max: 32_768,
     def: 0,
     nrpn: 1
 };
 generatorLimits[generatorTypes.startAddrsCoarseOffset] = {
     min: 0,
-    max: 32768,
+    max: 32_768,
     def: 0,
     nrpn: 1
 };
 
 // pitch influence
 generatorLimits[generatorTypes.modLfoToPitch] = {
-    min: -12000,
-    max: 12000,
+    min: -12_000,
+    max: 12_000,
     def: 0,
     nrpn: 2
 };
 generatorLimits[generatorTypes.vibLfoToPitch] = {
-    min: -12000,
-    max: 12000,
+    min: -12_000,
+    max: 12_000,
     def: 0,
     nrpn: 2
 };
 generatorLimits[generatorTypes.modEnvToPitch] = {
-    min: -12000,
-    max: 12000,
+    min: -12_000,
+    max: 12_000,
     def: 0,
     nrpn: 2
 };
@@ -66,8 +66,8 @@ generatorLimits[generatorTypes.modEnvToPitch] = {
 // lowpass
 generatorLimits[generatorTypes.initialFilterFc] = {
     min: 1500,
-    max: 13500,
-    def: 13500,
+    max: 13_500,
+    def: 13_500,
     nrpn: 2
 };
 generatorLimits[generatorTypes.initialFilterQ] = {
@@ -77,27 +77,27 @@ generatorLimits[generatorTypes.initialFilterQ] = {
     nrpn: 1
 };
 generatorLimits[generatorTypes.modLfoToFilterFc] = {
-    min: -12000,
-    max: 12000,
+    min: -12_000,
+    max: 12_000,
     def: 0,
     nrpn: 2
 };
 generatorLimits[generatorTypes.vibLfoToFilterFc] = {
-    min: -12000,
-    max: 12000,
+    min: -12_000,
+    max: 12_000,
     def: 0,
     nrpn: 2
 }; // NON-STANDARD
 generatorLimits[generatorTypes.modEnvToFilterFc] = {
-    min: -12000,
-    max: 12000,
+    min: -12_000,
+    max: 12_000,
     def: 0,
     nrpn: 2
 };
 
 generatorLimits[generatorTypes.endAddrsCoarseOffset] = {
-    min: -32768,
-    max: 32768,
+    min: -32_768,
+    max: 32_768,
     def: 0,
     nrpn: 1
 };
@@ -132,25 +132,25 @@ generatorLimits[generatorTypes.pan] = { min: -500, max: 500, def: 0, nrpn: 1 };
 
 // lfo
 generatorLimits[generatorTypes.delayModLFO] = {
-    min: -12000,
+    min: -12_000,
     max: 5000,
-    def: -12000,
+    def: -12_000,
     nrpn: 2
 };
 generatorLimits[generatorTypes.freqModLFO] = {
-    min: -16000,
+    min: -16_000,
     max: 4500,
     def: 0,
     nrpn: 4
 };
 generatorLimits[generatorTypes.delayVibLFO] = {
-    min: -12000,
+    min: -12_000,
     max: 5000,
-    def: -12000,
+    def: -12_000,
     nrpn: 2
 };
 generatorLimits[generatorTypes.freqVibLFO] = {
-    min: -16000,
+    min: -16_000,
     max: 4500,
     def: 0,
     nrpn: 4
@@ -158,27 +158,27 @@ generatorLimits[generatorTypes.freqVibLFO] = {
 
 // mod env
 generatorLimits[generatorTypes.delayModEnv] = {
-    min: -12000,
+    min: -12_000,
     max: 5000,
-    def: -12000,
+    def: -12_000,
     nrpn: 2
 };
 generatorLimits[generatorTypes.attackModEnv] = {
-    min: -12000,
+    min: -12_000,
     max: 8000,
-    def: -12000,
+    def: -12_000,
     nrpn: 2
 };
 generatorLimits[generatorTypes.holdModEnv] = {
-    min: -12000,
+    min: -12_000,
     max: 5000,
-    def: -12000,
+    def: -12_000,
     nrpn: 2
 };
 generatorLimits[generatorTypes.decayModEnv] = {
-    min: -12000,
+    min: -12_000,
     max: 8000,
-    def: -12000,
+    def: -12_000,
     nrpn: 2
 };
 generatorLimits[generatorTypes.sustainModEnv] = {
@@ -188,9 +188,9 @@ generatorLimits[generatorTypes.sustainModEnv] = {
     nrpn: 1
 };
 generatorLimits[generatorTypes.releaseModEnv] = {
-    min: -12000,
+    min: -12_000,
     max: 8000,
-    def: -12000,
+    def: -12_000,
     nrpn: 2
 };
 // key num to mod env
@@ -209,27 +209,27 @@ generatorLimits[generatorTypes.keyNumToModEnvDecay] = {
 
 // vol env
 generatorLimits[generatorTypes.delayVolEnv] = {
-    min: -12000,
+    min: -12_000,
     max: 5000,
-    def: -12000,
+    def: -12_000,
     nrpn: 2
 };
 generatorLimits[generatorTypes.attackVolEnv] = {
-    min: -12000,
+    min: -12_000,
     max: 8000,
-    def: -12000,
+    def: -12_000,
     nrpn: 2
 };
 generatorLimits[generatorTypes.holdVolEnv] = {
-    min: -12000,
+    min: -12_000,
     max: 5000,
-    def: -12000,
+    def: -12_000,
     nrpn: 2
 };
 generatorLimits[generatorTypes.decayVolEnv] = {
-    min: -12000,
+    min: -12_000,
     max: 8000,
-    def: -12000,
+    def: -12_000,
     nrpn: 2
 };
 generatorLimits[generatorTypes.sustainVolEnv] = {
@@ -239,9 +239,9 @@ generatorLimits[generatorTypes.sustainVolEnv] = {
     nrpn: 1
 };
 generatorLimits[generatorTypes.releaseVolEnv] = {
-    min: -12000,
+    min: -12_000,
     max: 8000,
-    def: -12000,
+    def: -12_000,
     nrpn: 2
 };
 // key num to vol env
@@ -259,8 +259,8 @@ generatorLimits[generatorTypes.keyNumToVolEnvDecay] = {
 };
 
 generatorLimits[generatorTypes.startloopAddrsCoarseOffset] = {
-    min: -32768,
-    max: 32768,
+    min: -32_768,
+    max: 32_768,
     def: 0,
     nrpn: 1
 };
@@ -285,8 +285,8 @@ generatorLimits[generatorTypes.initialAttenuation] = {
 };
 
 generatorLimits[generatorTypes.endloopAddrsCoarseOffset] = {
-    min: -32768,
-    max: 32768,
+    min: -32_768,
+    max: 32_768,
     def: 0,
     nrpn: 1
 };
@@ -311,7 +311,7 @@ generatorLimits[generatorTypes.scaleTuning] = {
 };
 generatorLimits[generatorTypes.exclusiveClass] = {
     min: 0,
-    max: 99999,
+    max: 99_999,
     def: 0,
     nrpn: 0
 };

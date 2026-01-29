@@ -77,7 +77,7 @@ export class ClipboardManager {
         setSamples: (s: BasicSample[]) => unknown,
         setView: SetViewType
     ): number {
-        if (this.presetClipboard.size < 1) {
+        if (this.presetClipboard.size === 0) {
             return 0;
         }
         // clone manually so it works with our history system
@@ -86,10 +86,10 @@ export class ClipboardManager {
         const clonedPresets = [...m.presets];
         const actions: HistoryAction[] = [];
         const presetNumbers = new Set<string>();
-        m.presets.forEach((p) => {
+        for (const p of m.presets) {
             presetNumbers.add(p.toMIDIString());
-        });
-        this.presetClipboard.forEach((oldPreset) => {
+        }
+        for (const oldPreset of this.presetClipboard) {
             const patch: MIDIPatch = {
                 bankMSB: oldPreset.bankMSB,
                 bankLSB: oldPreset.bankLSB,
@@ -140,7 +140,7 @@ export class ClipboardManager {
             );
             clonedPresets.push(newPreset);
             presetNumbers.add(newPreset.toMIDIString());
-        });
+        }
         m.modifyBank(actions);
         return actions.length;
     }
@@ -152,14 +152,14 @@ export class ClipboardManager {
         setInstruments: (i: BasicInstrument[]) => unknown,
         setView: SetViewType
     ): number {
-        if (this.instrumentClipboard.size < 1) {
+        if (this.instrumentClipboard.size === 0) {
             return 0;
         }
         // clone manually so it works with our history system
         const clonedInstruments = [...m.instruments];
         const clonedSamples = [...m.samples];
         const actions: HistoryAction[] = [];
-        this.instrumentClipboard.forEach((oldInst) =>
+        for (const oldInst of this.instrumentClipboard)
             this.addInstrument(
                 oldInst,
                 clonedInstruments,
@@ -168,8 +168,7 @@ export class ClipboardManager {
                 setInstruments,
                 setSamples,
                 setView
-            )
-        );
+            );
         m.modifyBank(actions);
         return actions.length;
     }
@@ -180,21 +179,20 @@ export class ClipboardManager {
         setSamples: (s: BasicSample[]) => unknown,
         setView: SetViewType
     ): number {
-        if (this.sampleClipboard.size < 1) {
+        if (this.sampleClipboard.size === 0) {
             return 0;
         }
         // clone manually so it works with our history system
         const alreadyCloned = [...m.samples];
         const actions: CreateSampleAction[] = [];
-        this.sampleClipboard.forEach((oldSample) =>
+        for (const oldSample of this.sampleClipboard)
             this.addSample(
                 oldSample,
                 alreadyCloned,
                 actions,
                 setSamples,
                 setView
-            )
-        );
+            );
         m.modifyBank(actions);
         return actions.length;
     }
@@ -219,7 +217,7 @@ export class ClipboardManager {
     ): BasicSample {
         const names = new Set(alreadyCloned.map((s) => s.name));
         const exists = names.has(oldSample.name);
-        const originalName = oldSample.name.substring(0, 37);
+        const originalName = oldSample.name.slice(0, 37);
         let name = oldSample.name;
         if (exists) {
             if (!duplicate) {
@@ -285,7 +283,7 @@ export class ClipboardManager {
         const names = new Set(alreadyCloned.map((i) => i.name));
         const exists = names.has(oldInst.name);
         let name = oldInst.name;
-        const originalName = oldInst.name.substring(0, 37);
+        const originalName = oldInst.name.slice(0, 37);
         if (exists) {
             if (!duplicate) {
                 const r = alreadyCloned.find((i) => i.name === oldInst.name);

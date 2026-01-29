@@ -81,7 +81,7 @@ export function OtherControllers({
             <div className={"controller_column"}>
                 <ControllerRange
                     text={t("modulatorLocale.sources.pitchWheel")}
-                    max={16383}
+                    max={16_383}
                     min={0}
                     onChange={setPitchValue}
                     value={pitchValue}

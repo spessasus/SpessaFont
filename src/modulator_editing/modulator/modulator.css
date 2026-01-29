@@ -19,7 +19,8 @@
     margin-right: 1rem;
 }
 
-.modulator_main.selected *, .modulator_main.selected {
+.modulator_main.selected *,
+.modulator_main.selected {
     border-color: var(--border-color);
 }
 
@@ -67,7 +68,8 @@
     gap: var(--flex-gap);
 }
 
-.modulator_main .amount_input, .modulator_main .transform_selector {
+.modulator_main .amount_input,
+.modulator_main .transform_selector {
     font-size: 1rem;
 }
 
@@ -81,7 +83,8 @@
     display: flex;
 }
 
-.modulator_main .pretty_input select, .modulator_main .pretty_input input {
+.modulator_main .pretty_input select,
+.modulator_main .pretty_input input {
     background: transparent;
     border: none;
     font-size: 1rem;

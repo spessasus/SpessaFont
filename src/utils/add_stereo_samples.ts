@@ -8,18 +8,18 @@ export function addAndReorderStereoSamples(
 ): BasicSample[] {
     const samples1 = new Set<BasicSample>();
 
-    samples.forEach((s) => {
+    for (const s of samples) {
         samples1.add(s);
         if (s.linkedSample) {
             samples1.add(s.linkedSample);
         }
-    });
+    }
 
     const orderedSamples: BasicSample[] = [];
     // reorder the samples
-    samples.forEach((sample) => {
+    for (const sample of samples) {
         if (orderedSamples.includes(sample)) {
-            return;
+            continue;
         }
         orderedSamples.push(sample);
         if (
@@ -28,7 +28,7 @@ export function addAndReorderStereoSamples(
         ) {
             orderedSamples.push(sample.linkedSample);
         }
-    });
+    }
 
     return orderedSamples;
 }

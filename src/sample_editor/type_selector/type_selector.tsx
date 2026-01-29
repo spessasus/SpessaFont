@@ -27,20 +27,21 @@ export function TypeSelector({
         return samples.indexOf(linkedSample);
     }, [linkedSample, samples]);
 
-    const availableSamples = useMemo(
-        () =>
-            samples.reduce((indexedSamples, s, i) => {
-                if (
-                    (s.linkedSample === undefined ||
-                        s.linkedSample === sample) &&
-                    s !== sample
-                ) {
-                    indexedSamples.push({ s, i });
-                }
-                return indexedSamples;
-            }, Array<{ s: BasicSample; i: number }>()),
-        [sample, samples]
-    );
+    const availableSamples = useMemo(() => {
+        const indexedSamples: { s: BasicSample; i: number }[] = [];
+
+        for (let i = 0; i < samples.length; i++) {
+            const s = samples[i];
+            if (
+                (s.linkedSample === undefined || s.linkedSample === sample) &&
+                s !== sample
+            ) {
+                indexedSamples.push({ s, i });
+            }
+        }
+
+        return indexedSamples;
+    }, [sample, samples]);
 
     const sampleElements = useMemo(
         () => (
@@ -57,7 +58,7 @@ export function TypeSelector({
     );
 
     const nothingToLink =
-        availableSamples.length < 1 ||
+        availableSamples.length === 0 ||
         (availableSamples.length < 2 && linkedSample);
 
     const setType = (t: SampleType) => {
@@ -65,13 +66,15 @@ export function TypeSelector({
         switch (t) {
             case sampleTypes.rightSample:
             case sampleTypes.leftSample:
-            case sampleTypes.linkedSample:
+            case sampleTypes.linkedSample: {
                 setLinkedSample(t, linked);
                 break;
+            }
 
-            default:
+            default: {
                 // set to mono unlinked
                 setLinkedSample(t);
+            }
         }
     };
     return (
@@ -82,7 +85,7 @@ export function TypeSelector({
                     className={"pretty_input monospaced"}
                     value={sampleType}
                     onChange={(e) =>
-                        setType(parseInt(e.target.value) as SampleType)
+                        setType(Number.parseInt(e.target.value) as SampleType)
                     }
                 >
                     <option disabled={true} value={0}>
@@ -136,7 +139,7 @@ export function TypeSelector({
                     onChange={(e) =>
                         setLinkedSample(
                             sampleType,
-                            samples[parseInt(e.target.value)]
+                            samples[Number.parseInt(e.target.value)]
                         )
                     }
                 >

@@ -27,15 +27,18 @@ export const GeneratorCellInput = typedMemo(function ({
             onFocus={() => setClearOnType(true)}
             onKeyDown={(e) => {
                 switch (e.key) {
-                    default:
+                    default: {
                         break;
+                    }
                     case "Backspace":
-                    case "Delete":
+                    case "Delete": {
                         setTypedText("");
                         break;
+                    }
 
-                    case "Enter":
+                    case "Enter": {
                         (e.target as HTMLInputElement).blur();
+                    }
                 }
             }}
             onChange={(e) => {

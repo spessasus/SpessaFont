@@ -52,13 +52,12 @@
     filter: brightness(1.2);
 }
 
-.setting input, .setting select {
+.setting input,
+.setting select {
     font-size: 1rem;
     text-align: center;
 }
 
-
 .setting input {
     width: 4rem;
-
 }

@@ -49,7 +49,7 @@ export default class SoundBankManager extends BasicSoundBank {
         // fix preset references
         // @ts-expect-error hacky way to make this work
         // noinspection JSConstantReassignment
-        this.presets.forEach((p) => (p.parentSoundBank = this));
+        for (const p of this.presets) p.parentSoundBank = this;
         this.sortElements();
         this.sendBankToSynth();
     }
@@ -69,10 +69,10 @@ export default class SoundBankManager extends BasicSoundBank {
         );
 
         // sort stereo zones
-        this.instruments.forEach((i) => this.sortInstrumentZones(i));
+        for (const i of this.instruments) this.sortInstrumentZones(i);
 
         // sort preset zones
-        this.presets.forEach((p) => p.zones.sort(ZONE_SORTING_FUNCTION));
+        for (const p of this.presets) p.zones.sort(ZONE_SORTING_FUNCTION);
     }
 
     sortInstrumentZones(i: BasicInstrument) {
@@ -118,36 +118,39 @@ export default class SoundBankManager extends BasicSoundBank {
         let binary: ArrayBuffer;
         switch (format) {
             default:
-            case "sf2":
+            case "sf2": {
                 binary = await this.writeSF2({
                     progressFunction
                 });
                 break;
+            }
 
-            case "dls":
+            case "dls": {
                 binary = await this.writeDLS({
                     progressFunction
                 });
                 break;
+            }
 
-            case "sf3":
+            case "sf3": {
                 binary = await this.writeSF2({
                     compress: true,
                     compressionFunction: encodeVorbis,
                     progressFunction
                 });
+            }
         }
         if (this.soundBankInfo.version.major === 3) {
             format = "sf3";
         }
         const buffer = binary;
         let blob: Blob;
-        if (buffer.byteLength > 2147483648) {
+        if (buffer.byteLength > 2_147_483_648) {
             const chunks: ArrayBuffer[] = [];
             let toWrite = 0;
             while (toWrite < binary.byteLength) {
                 // 50MB chunks (browsers don't like 4GB array buffers)
-                const size = Math.min(52428800, binary.byteLength - toWrite);
+                const size = Math.min(52_428_800, binary.byteLength - toWrite);
                 chunks.push(buffer.slice(toWrite, toWrite + size));
                 toWrite += size;
             }
@@ -188,7 +191,7 @@ export default class SoundBankManager extends BasicSoundBank {
 
     undo() {
         this.history.undo(this);
-        if (this.history.length < 1) {
+        if (this.history.length === 0) {
             this.dirty = false;
         }
         this.changeCallback?.();

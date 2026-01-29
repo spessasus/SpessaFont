@@ -1,9 +1,9 @@
 import type { HistoryAction } from "../../core_backend/history.ts";
 import type { BasicInstrument } from "spessasynth_core";
 
-export class EditInstrumentAction<K extends keyof BasicInstrument>
-    implements HistoryAction
-{
+export class EditInstrumentAction<
+    K extends keyof BasicInstrument
+> implements HistoryAction {
     private readonly instrument: BasicInstrument;
     private readonly propertyName: K;
     private readonly before: BasicInstrument[K];

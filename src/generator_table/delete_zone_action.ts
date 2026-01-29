@@ -11,9 +11,9 @@ import {
     ZONE_SORTING_FUNCTION
 } from "../utils/reorder_zones.ts";
 
-export class DeleteZoneAction<T extends BasicInstrument | BasicPreset>
-    implements HistoryAction
-{
+export class DeleteZoneAction<
+    T extends BasicInstrument | BasicPreset
+> implements HistoryAction {
     private readonly zone: BasicZone;
     private readonly el: T;
     private readonly index: number;
@@ -47,11 +47,10 @@ export class DeleteZoneAction<T extends BasicInstrument | BasicPreset>
     }
 
     private applyChanges() {
-        if (this.el instanceof BasicInstrument) {
-            this.el.zones = reorderInstrumentZones(this.el.zones);
-        } else {
-            this.el.zones = this.el.zones.toSorted(ZONE_SORTING_FUNCTION);
-        }
+        this.el.zones =
+            this.el instanceof BasicInstrument
+                ? reorderInstrumentZones(this.el.zones)
+                : this.el.zones.toSorted(ZONE_SORTING_FUNCTION);
         this.callback();
     }
 }

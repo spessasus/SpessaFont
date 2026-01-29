@@ -5,19 +5,21 @@ export function getZoneSplits(
     global: GenericRange
 ): GenericRange[] {
     const splits: GenericRange[] = [];
-    zones.forEach(({ keyRange: { min, max } }) => {
+    for (let {
+        keyRange: { min, max }
+    } of zones) {
         if (min === -1) {
             min = global.min;
             max = global.max;
         }
         // don't add out of range
         if (max < global.min || min > global.max) {
-            return;
+            continue;
         }
         // clamp in range
         max = Math.min(global.max, max);
         min = Math.max(global.min, min);
         splits.push({ min, max });
-    });
+    }
     return splits;
 }

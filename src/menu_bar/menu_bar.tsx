@@ -25,7 +25,7 @@ import {
 import type { ProgressFunction } from "spessasynth_core";
 
 // @ts-expect-error chromium check is here
-const isChrome: boolean = window.chrome !== undefined;
+const isChrome: boolean = globalThis.chrome !== undefined;
 
 const waitForRefresh = () => new Promise((r) => setTimeout(r, 200));
 
@@ -83,7 +83,7 @@ export function MenuBar({
                     toast.loading(
                         `${t("loadingAndSaving.writingSamples")} (${
                             Math.floor(
-                                (writtenCount / totalSampleCount) * 100_00
+                                (writtenCount / totalSampleCount) * 10_000
                             ) /
                                 100 +
                             "%"
@@ -93,9 +93,9 @@ export function MenuBar({
                         }
                     );
                 }) as ProgressFunction);
-            } catch (e) {
+            } catch (error) {
                 // make so the error appears at the bottom
-                toast.error(`${e as string}`);
+                toast.error(`${error as string}`);
                 toast.error(t("loadingAndSaving.writingFailed"), { id });
                 return;
             }
@@ -113,28 +113,32 @@ export function MenuBar({
             }
             if (e.ctrlKey || e.metaKey) {
                 switch (e.key) {
-                    case "z":
+                    case "z": {
                         e.preventDefault();
                         manager.undo();
                         break;
-                    case "y":
+                    }
+                    case "y": {
                         e.preventDefault();
                         manager.redo();
                         break;
-                    case "s":
+                    }
+                    case "s": {
                         e.preventDefault();
                         void saveWithToasts("sf2");
                         break;
-                    default:
+                    }
+                    default: {
                         return;
+                    }
                 }
             }
         }
 
-        window.addEventListener("keydown", handleKeyDown);
+        document.addEventListener("keydown", handleKeyDown);
 
         return () => {
-            window.removeEventListener("keydown", handleKeyDown);
+            document.removeEventListener("keydown", handleKeyDown);
         };
     }, [manager, saveWithToasts]);
 
@@ -204,7 +208,7 @@ export function MenuBar({
             <MenuBarDropdown main={t(eLoc + "edit")}>
                 <MenuBarIcon
                     click={() => {
-                        if (manager.history.length < 1) {
+                        if (manager.history.length === 0) {
                             toast(t(eLoc + "nothingToUndo"));
                         }
                         manager.undo();

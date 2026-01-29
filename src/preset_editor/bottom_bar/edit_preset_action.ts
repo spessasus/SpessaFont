@@ -1,9 +1,9 @@
 import type { HistoryAction } from "../../core_backend/history.ts";
 import type { BasicPreset } from "spessasynth_core";
 
-export class EditPresetAction<K extends keyof BasicPreset>
-    implements HistoryAction
-{
+export class EditPresetAction<
+    K extends keyof BasicPreset
+> implements HistoryAction {
     private readonly preset: BasicPreset;
     private readonly propertyName: K;
     private readonly before: BasicPreset[K];

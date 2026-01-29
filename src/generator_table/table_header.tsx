@@ -106,7 +106,7 @@ export const GeneratorTableHeader = typedMemo(function <
                                                 BasicInstrumentZone &&
                                             zon.sample === link
                                     );
-                                    if (linkedIndex >= 0) {
+                                    if (linkedIndex !== -1) {
                                         actions.push(
                                             new DeleteZoneAction<ElementType>(
                                                 element,

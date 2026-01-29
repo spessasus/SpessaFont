@@ -16,7 +16,7 @@ export function DestinationPicker({
             value={destination}
             onChange={(e) =>
                 setDestination(
-                    (parseInt(e.target.value) as GeneratorType) ||
+                    (Number.parseInt(e.target.value) as GeneratorType) ||
                         generatorTypes.initialAttenuation
                 )
             }

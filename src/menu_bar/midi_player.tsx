@@ -12,6 +12,12 @@ import {
 } from "../utils/icons.tsx";
 import { typedMemo } from "../utils/typed_memo.ts";
 
+function formatTime(seconds: number): string {
+    const min = Math.floor(seconds / 60);
+    const sec = Math.floor(seconds % 60);
+    return `${min}:${sec.toString().padStart(2, "0")}`;
+}
+
 const TimeDisplay = typedMemo(({ seq }: { seq: SpessaSynthSequencer }) => {
     const [currentTime, setCurrentTime] = useState(seq.currentTime);
 
@@ -24,12 +30,6 @@ const TimeDisplay = typedMemo(({ seq }: { seq: SpessaSynthSequencer }) => {
     }, [seq.currentTime]);
 
     const duration = seq.midiData?.duration ?? 0;
-
-    function formatTime(seconds: number): string {
-        const min = Math.floor(seconds / 60);
-        const sec = Math.floor(seconds % 60);
-        return `${min}:${sec.toString().padStart(2, "0")}`;
-    }
 
     return (
         <MenuBarIcon
@@ -46,31 +46,27 @@ const PauseComponent = typedMemo(
         // doing not here fixes things??
         const [paused, setPaused] = useState(!audioEngine.MIDIPaused);
         const { t } = useTranslation();
-        if (paused) {
-            return (
-                <MenuBarIcon
-                    text={t("menuBarLocale.midi.resume")}
-                    click={() => {
-                        audioEngine.toggleMIDI();
-                        setPaused(audioEngine.MIDIPaused);
-                    }}
-                >
-                    <PlayIcon />
-                </MenuBarIcon>
-            );
-        } else {
-            return (
-                <MenuBarIcon
-                    text={t("menuBarLocale.midi.pause")}
-                    click={() => {
-                        audioEngine.toggleMIDI();
-                        setPaused(audioEngine.MIDIPaused);
-                    }}
-                >
-                    <PauseIcon />
-                </MenuBarIcon>
-            );
-        }
+        return paused ? (
+            <MenuBarIcon
+                text={t("menuBarLocale.midi.resume")}
+                click={() => {
+                    audioEngine.toggleMIDI();
+                    setPaused(audioEngine.MIDIPaused);
+                }}
+            >
+                <PlayIcon />
+            </MenuBarIcon>
+        ) : (
+            <MenuBarIcon
+                text={t("menuBarLocale.midi.pause")}
+                click={() => {
+                    audioEngine.toggleMIDI();
+                    setPaused(audioEngine.MIDIPaused);
+                }}
+            >
+                <PauseIcon />
+            </MenuBarIcon>
+        );
     }
 );
 
@@ -113,7 +109,7 @@ export function MIDIPlayer({ audioEngine }: { audioEngine: AudioEngine }) {
         );
     } else {
         let name = midi.getName() ?? "No name";
-        name = name.length > 10 ? name.substring(0, 10) + "..." : name;
+        name = name.length > 10 ? name.slice(0, 10) + "..." : name;
         return (
             <MenuBarDropdown main={t("menuBarLocale.midi.player")}>
                 <MenuBarIcon text={name} click={playMIDI}>

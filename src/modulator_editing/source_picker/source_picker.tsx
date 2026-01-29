@@ -25,7 +25,7 @@ export function ModulatorSourcePicker({
         : (-source.sourceIndex).toString();
 
     const handleSelectChange = (e: ChangeEvent<HTMLSelectElement>) => {
-        const num = parseInt(e.target.value) as ModulatorSourceIndex;
+        const num = Number.parseInt(e.target.value) as ModulatorSourceIndex;
 
         if (num >= 0) {
             setSource({ usesCC: true, sourceIndex: num });

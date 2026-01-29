@@ -87,7 +87,7 @@ export function ModulatorList({
                 } else {
                     selectedMods.add(clickedMod);
                 }
-                setSelectedMods(new Set([...selectedMods]));
+                setSelectedMods(new Set(selectedMods));
                 return;
             }
             const index = modulatorList.indexOf(lastSelectedMod);
@@ -106,7 +106,7 @@ export function ModulatorList({
                 }
             }
             setLastSelectedMod(clickedMod);
-            setSelectedMods(new Set([...selectedMods]));
+            setSelectedMods(new Set(selectedMods));
         },
         [lastSelectedMod, modulatorList, selectedMods]
     );

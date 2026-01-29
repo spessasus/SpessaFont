@@ -19,20 +19,20 @@ export function BankInfoStats({
     for (const instrument of bank.instruments) {
         instrumentGens += instrument.globalZone.generators.length;
         instrumentMods += instrument.globalZone.modulators.length;
-        instrument.zones.forEach((z) => {
+        for (const z of instrument.zones) {
             instrumentGens += z.generators.length;
             instrumentMods += z.modulators.length;
-        });
+        }
     }
     let presetGens = 0;
     let presetMods = 0;
     for (const preset of bank.presets) {
         presetGens += preset.globalZone.generators.length;
         presetMods += preset.globalZone.modulators.length;
-        preset.zones.forEach((z) => {
+        for (const z of preset.zones) {
             presetMods += z.modulators.length;
             presetGens += z.generators.length;
-        });
+        }
     }
 
     // count compressed samples

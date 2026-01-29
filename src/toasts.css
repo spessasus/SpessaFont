@@ -5,11 +5,10 @@
     user-select: none;
 }
 
-
 .toast_col {
     display: flex;
     flex-direction: column;
-    gap: var(--flex-gap)
+    gap: var(--flex-gap);
 }
 
 .toast_row {
