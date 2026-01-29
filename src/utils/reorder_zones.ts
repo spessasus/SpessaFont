@@ -20,9 +20,9 @@ export function reorderInstrumentZones(
     };
 
     // reorder so the stereo sample pairs appear immediately after each other
-    zones.forEach((z) => {
+    for (const z of zones) {
         if (added.has(z)) {
-            return;
+            continue;
         }
         addZone(z);
         const link = z.sample.linkedSample;
@@ -77,6 +77,6 @@ export function reorderInstrumentZones(
                 }
             }
         }
-    });
+    }
     return ordered;
 }

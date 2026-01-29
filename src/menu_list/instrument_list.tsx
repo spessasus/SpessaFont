@@ -98,16 +98,16 @@ export function InstrumentList({
             e: React.MouseEvent<HTMLDivElement, MouseEvent>,
             inst: BasicInstrument
         ) => {
-            const newSet = new Set<BasicInstrument>();
-            newSet.add(inst);
+            const newSet = new Set<BasicInstrument>([inst]);
             if (e.shiftKey && view instanceof BasicInstrument) {
                 const viewIndex = instruments.indexOf(view);
                 const instIndex = instruments.indexOf(inst);
                 const start = Math.min(viewIndex, instIndex);
                 const end = Math.max(viewIndex, instIndex);
-                instruments.slice(start, end + 1).forEach((i) => newSet.add(i));
+                for (const i of instruments.slice(start, end + 1))
+                    newSet.add(i);
             } else if (e.ctrlKey && view instanceof BasicInstrument) {
-                selectedInstruments.forEach((i) => newSet.add(i));
+                for (const i of selectedInstruments) newSet.add(i);
                 if (selectedInstruments.has(inst)) {
                     newSet.delete(inst);
                 }
@@ -130,14 +130,12 @@ export function InstrumentList({
 
         const instrument = new BasicInstrument();
         const firstSample = samplesToAdd[0];
-        if (firstSample.linkedSample) {
-            instrument.name = firstSample.name.replace(STEREO_REGEX, "");
-        } else {
-            instrument.name = firstSample.name;
-        }
+        instrument.name = firstSample.linkedSample
+            ? firstSample.name.replace(STEREO_REGEX, "")
+            : firstSample.name;
         // add loop for convenience
         instrument.globalZone.setGenerator(generatorTypes.sampleModes, 1);
-        samplesToAdd.forEach((s) => {
+        for (const s of samplesToAdd) {
             const zone = instrument.createZone(s);
             // sample types!
             if (s.sampleType === sampleTypes.leftSample) {
@@ -145,7 +143,7 @@ export function InstrumentList({
             } else if (s.sampleType === sampleTypes.rightSample) {
                 zone.setGenerator(generatorTypes.pan, 500);
             }
-        });
+        }
         const action = new CreateInstrumentAction(
             instrument,
             setInstruments,
@@ -158,7 +156,7 @@ export function InstrumentList({
         (inst: BasicInstrument) => {
             const actions: HistoryAction[] = [];
             const ordered = addAndReorderStereoSamples(selectedSamples);
-            ordered.forEach((sample) => {
+            for (const sample of ordered) {
                 const zone = new BasicZone();
                 if (sample.sampleType === sampleTypes.leftSample) {
                     zone.setGenerator(generatorTypes.pan, -500);
@@ -176,7 +174,7 @@ export function InstrumentList({
                         }
                     )
                 );
-            });
+            }
             manager.modifyBank(actions);
         },
         [instruments, manager, selectedSamples, setInstruments, setView]
@@ -204,11 +202,11 @@ export function InstrumentList({
                         setInstruments,
                         setView
                     );
-                    setInstruments([
-                        ...manager.instruments.toSorted((a, b) =>
+                    setInstruments(
+                        manager.instruments.toSorted((a, b) =>
                             a.name > b.name ? 1 : b.name > a.name ? -1 : 0
                         )
-                    ]);
+                    );
                     toast.success(
                         t("clipboardLocale.pastedInstruments", {
                             count: clipboard.instrumentCount

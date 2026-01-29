@@ -25,8 +25,8 @@ export function WaitingInput<T extends string | number>({
 
     const clampNumber = useCallback(
         (val: number): number => {
-            const minVal = min !== undefined ? Number(min) : -Infinity;
-            const maxVal = max !== undefined ? Number(max) : Infinity;
+            const minVal = min === undefined ? -Infinity : Number(min);
+            const maxVal = max === undefined ? Infinity : Number(max);
             return Math.min(Math.max(val, minVal), maxVal);
         },
         [max, min]
@@ -36,8 +36,8 @@ export function WaitingInput<T extends string | number>({
         let parsedValue: T;
 
         if (isNumber) {
-            let num = parseFloat(v);
-            if (isNaN(num)) {
+            let num = Number.parseFloat(v);
+            if (Number.isNaN(num)) {
                 num = 0;
             }
             num = clampNumber(num);

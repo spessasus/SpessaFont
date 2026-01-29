@@ -38,7 +38,8 @@
     flex-grow: 1;
 }
 
-.instrument_item:hover, .instrument_item.selected {
+.instrument_item:hover,
+.instrument_item.selected {
     background: var(--lighter-color-end);
 }
 

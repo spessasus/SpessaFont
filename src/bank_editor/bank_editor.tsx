@@ -105,47 +105,35 @@ export function BankEditor({
             removeUnusedElements: () => {
                 // remove unused elements with history
                 const deletedInstruments = new Set<BasicInstrument>();
-                const instrumentActions: DeleteInstrumentAction[] =
-                    manager.instruments.reduce(
-                        (actions: DeleteInstrumentAction[], instrument) => {
-                            if (instrument.useCount === 0) {
-                                deletedInstruments.add(instrument);
-                                actions.push(
-                                    new DeleteInstrumentAction(
-                                        instrument,
-                                        setInstruments,
-                                        setView
-                                    )
-                                );
-                            }
-                            return actions;
-                        },
-                        []
-                    );
+                const instrumentActions = new Array<DeleteInstrumentAction>();
+                for (const instrument of manager.instruments) {
+                    if (instrument.useCount === 0) {
+                        deletedInstruments.add(instrument);
+                        instrumentActions.push(
+                            new DeleteInstrumentAction(
+                                instrument,
+                                setInstruments,
+                                setView
+                            )
+                        );
+                    }
+                }
 
-                const sampleActions: DeleteSampleAction[] =
-                    manager.samples.reduce(
-                        (actions: DeleteSampleAction[], sample) => {
-                            // determine the use count
-                            let useCount = sample.useCount;
-                            sample.linkedTo.forEach((i) => {
-                                if (deletedInstruments.has(i)) {
-                                    useCount--;
-                                }
-                            });
-                            if (useCount === 0) {
-                                actions.push(
-                                    new DeleteSampleAction(
-                                        sample,
-                                        setSamples,
-                                        setView
-                                    )
-                                );
-                            }
-                            return actions;
-                        },
-                        []
-                    );
+                const sampleActions = new Array<DeleteSampleAction>();
+                for (const sample of manager.samples) {
+                    // determine the use count
+                    let useCount = sample.useCount;
+                    for (const i of sample.linkedTo) {
+                        if (deletedInstruments.has(i)) {
+                            useCount--;
+                        }
+                    }
+                    if (useCount === 0) {
+                        sampleActions.push(
+                            new DeleteSampleAction(sample, setSamples, setView)
+                        );
+                    }
+                }
                 manager.modifyBank([...sampleActions, ...instrumentActions]);
                 toast.success(
                     t("soundBankLocale.removedElements", {
@@ -159,9 +147,9 @@ export function BankEditor({
             autoLinkSamples: () => {
                 const actions: SetSampleTypeAction[] = [];
                 const linkedSamples = new Set<BasicSample>();
-                samples.forEach((sample) => {
+                for (const sample of samples) {
                     if (sample.linkedSample) {
-                        return;
+                        continue;
                     }
 
                     const match = /[a-zA-Z!](?=\s*$|\)|$)/.exec(
@@ -171,31 +159,35 @@ export function BankEditor({
                         match?.toLowerCase() !== "l" &&
                         match?.toLowerCase() !== "r"
                     ) {
-                        return;
+                        continue;
                     }
                     let replacement: string;
                     let type: SampleType;
                     switch (match) {
                         default:
-                        case "l":
+                        case "l": {
                             replacement = "r";
                             type = sampleTypes.leftSample;
                             break;
+                        }
 
-                        case "L":
+                        case "L": {
                             replacement = "R";
                             type = sampleTypes.leftSample;
                             break;
+                        }
 
-                        case "r":
+                        case "r": {
                             replacement = "l";
                             type = sampleTypes.rightSample;
                             break;
+                        }
 
-                        case "R":
+                        case "R": {
                             replacement = "L";
                             type = sampleTypes.rightSample;
                             break;
+                        }
                     }
                     const linkedName = sample.name.replace(
                         /([a-zA-Z!])(?!.*[a-zA-Z!])/,
@@ -223,7 +215,7 @@ export function BankEditor({
                             )
                         );
                     }
-                });
+                }
                 if (actions.length > 0) {
                     toast.success(
                         t("soundBankLocale.modifiedSamples", {

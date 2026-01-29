@@ -13,8 +13,7 @@ import {
 export class CreateZoneAction<
     ElementType extends BasicInstrument | BasicPreset,
     ChildType extends BasicInstrument | BasicSample
-> implements HistoryAction
-{
+> implements HistoryAction {
     private readonly zone: BasicZone;
     private readonly child: ChildType;
     private readonly el: ElementType;
@@ -52,7 +51,7 @@ export class CreateZoneAction<
         }
         const zones: BasicZone[] = this.el.zones;
         const index = zones.indexOf(this.clonedZone);
-        if (index < 0) {
+        if (index === -1) {
             throw new Error("Invalid index for undoing zone creation.");
         }
         this.el.deleteZone(index, true);
@@ -60,11 +59,10 @@ export class CreateZoneAction<
     }
 
     private applyChanges() {
-        if (this.el instanceof BasicInstrument) {
-            this.el.zones = reorderInstrumentZones(this.el.zones);
-        } else {
-            this.el.zones = this.el.zones.toSorted(ZONE_SORTING_FUNCTION);
-        }
+        this.el.zones =
+            this.el instanceof BasicInstrument
+                ? reorderInstrumentZones(this.el.zones)
+                : this.el.zones.toSorted(ZONE_SORTING_FUNCTION);
         this.callback();
     }
 }

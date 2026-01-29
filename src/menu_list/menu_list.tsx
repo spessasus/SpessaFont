@@ -82,10 +82,11 @@ export const MenuList = React.memo(function ({
     useEffect(() => {
         const onKeyDown = (e: KeyboardEvent) => {
             switch (e.key) {
-                default:
+                default: {
                     return;
+                }
 
-                case "Delete":
+                case "Delete": {
                     {
                         let action: HistoryAction;
                         if (view instanceof BasicInstrument) {
@@ -118,8 +119,9 @@ export const MenuList = React.memo(function ({
                         manager.modifyBank([action]);
                     }
                     break;
+                }
 
-                case "c":
+                case "c": {
                     {
                         if (e.ctrlKey) {
                             if (selectedSamples.size > 0) {
@@ -137,6 +139,7 @@ export const MenuList = React.memo(function ({
                         }
                     }
                     break;
+                }
 
                 case "v": {
                     if (e.ctrlKey) {
@@ -148,9 +151,7 @@ export const MenuList = React.memo(function ({
                                 setSamples,
                                 setView
                             );
-                            setPresets([
-                                ...manager.presets.toSorted(presetSorter)
-                            ]);
+                            setPresets(manager.presets.toSorted(presetSorter));
 
                             toast.success(
                                 t("clipboardLocale.pastedPresets", {
@@ -166,15 +167,15 @@ export const MenuList = React.memo(function ({
                                 setInstruments,
                                 setView
                             );
-                            setInstruments([
-                                ...manager.instruments.toSorted((a, b) =>
+                            setInstruments(
+                                manager.instruments.toSorted((a, b) =>
                                     a.name > b.name
                                         ? 1
                                         : b.name > a.name
                                           ? -1
                                           : 0
                                 )
-                            ]);
+                            );
                             toast.success(
                                 t("clipboardLocale.pastedInstruments", {
                                     count: clipboard.instrumentCount
@@ -188,15 +189,15 @@ export const MenuList = React.memo(function ({
                                 setSamples,
                                 setView
                             );
-                            setSamples([
-                                ...manager.samples.toSorted((a, b) =>
+                            setSamples(
+                                manager.samples.toSorted((a, b) =>
                                     a.name > b.name
                                         ? 1
                                         : b.name > a.name
                                           ? -1
                                           : 0
                                 )
-                            ]);
+                            );
                             toast.success(
                                 t("clipboardLocale.pastedSamples", {
                                     count: clipboard.sampleCount
@@ -253,37 +254,34 @@ export const MenuList = React.memo(function ({
             const matchedPresetSet = new Set<MappedPresetType>();
 
             // match presets directly
-            presetNameMap.forEach((p) => {
+            for (const p of presetNameMap) {
                 if (p.searchString.includes(searchQueryLower)) {
                     matchedPresetSet.add(p);
                 }
-            });
+            }
 
             // match instruments directly
-            instruments.forEach((i) => {
+            for (const i of instruments) {
                 if (i.name.toLowerCase().includes(searchQueryLower)) {
                     matchedInstrumentSet.add(i);
                 }
-            });
+            }
 
             // match samples directly
-            samples.forEach((s) => {
+            for (const s of samples) {
                 if (s.name.toLowerCase().includes(searchQueryLower)) {
                     matchedSampleSet.add(s);
                 }
-            });
+            }
 
             // backfill the presets' instruments
-            matchedPresetSet.forEach((p) =>
-                p.preset.zones.forEach((z) =>
-                    matchedInstrumentSet.add(z.instrument)
-                )
-            );
+            for (const p of matchedPresetSet)
+                for (const z of p.preset.zones)
+                    matchedInstrumentSet.add(z.instrument);
 
             // backfill the instruments' samples
-            matchedInstrumentSet.forEach((i) =>
-                i.zones.forEach((z) => matchedSampleSet.add(z.sample))
-            );
+            for (const i of matchedInstrumentSet)
+                for (const z of i.zones) matchedSampleSet.add(z.sample);
 
             return {
                 filteredSamples: samples.filter((s) => matchedSampleSet.has(s)),

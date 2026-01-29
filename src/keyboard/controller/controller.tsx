@@ -43,10 +43,10 @@ function ControllerWrapper({
     };
 
     const toggleCC = (v: boolean) => {
-        if (!v) {
-            setCCValue(0);
-        } else {
+        if (v) {
             setCCValue(127);
+        } else {
+            setCCValue(0);
         }
     };
 
@@ -59,28 +59,22 @@ function ControllerWrapper({
         }
     }));
 
-    let knobElement: JSX.Element;
-    if (isToggle) {
-        knobElement = (
-            <div className={"controller_knob_wrapper"}>
-                <ControllerSwitch
-                    onChange={toggleCC}
-                    value={ccValue >= 64}
-                ></ControllerSwitch>
-                <span className={"monospaced"}>{ccValue}</span>
-            </div>
-        );
-    } else {
-        knobElement = (
-            <ControllerKnob
-                max={127}
-                min={0}
-                onChange={setCCValue}
-                value={ccValue}
-            ></ControllerKnob>
-        );
-    }
-    return knobElement;
+    return isToggle ? (
+        <div className={"controller_knob_wrapper"}>
+            <ControllerSwitch
+                onChange={toggleCC}
+                value={ccValue >= 64}
+            ></ControllerSwitch>
+            <span className={"monospaced"}>{ccValue}</span>
+        </div>
+    ) : (
+        <ControllerKnob
+            max={127}
+            min={0}
+            onChange={setCCValue}
+            value={ccValue}
+        ></ControllerKnob>
+    );
 }
 
 export function Controller({
@@ -107,7 +101,7 @@ export function Controller({
                 value={cc}
                 onChange={(e) =>
                     setCC(
-                        (parseInt(e.target.value) as MIDIController) ||
+                        (Number.parseInt(e.target.value) as MIDIController) ||
                             midiControllers.modulationWheel
                     )
                 }

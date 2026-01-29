@@ -21,9 +21,9 @@ export function MidiSettings({ engine }: { engine: AudioEngine }) {
 
     useEffect(() => {
         if (midiAccess) {
-            midiAccess.inputs.forEach((i) => {
+            for (const i of midiAccess.inputs.values()) {
                 i.onmidimessage = null;
-            });
+            }
         }
         if (selectedDevice !== null) {
             selectedDevice.onmidimessage = (e) => {

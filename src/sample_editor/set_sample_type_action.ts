@@ -38,11 +38,11 @@ export class SetSampleTypeAction implements HistoryAction {
         newLink: BasicSample | undefined,
         newType: SampleType
     ) {
-        if (!newLink) {
+        if (newLink) {
+            sample.setLinkedSample(newLink, newType);
+        } else {
             // mono
             sample.unlinkSample();
-        } else {
-            sample.setLinkedSample(newLink, newType);
         }
         this.callback();
     }

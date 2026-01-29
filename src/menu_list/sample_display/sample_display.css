@@ -26,6 +26,7 @@
     margin-right: 1ch;
 }
 
-.sample_display:hover, .sample_display.selected {
+.sample_display:hover,
+.sample_display.selected {
     background: var(--lighter-color-end);
 }

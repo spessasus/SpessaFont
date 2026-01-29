@@ -1,19 +1,19 @@
 .sample_editor {
     display: flex;
     flex-direction: column;
-    gap: var(--flex-gap);;
+    gap: var(--flex-gap);
     height: 100%;
 }
 
 .info_split {
     display: flex;
-    gap: var(--flex-gap);;
+    gap: var(--flex-gap);
 }
 
 .info_column {
     display: flex;
     flex-direction: column;
-    gap: var(--flex-gap);;
+    gap: var(--flex-gap);
     width: 100%;
 }
 

@@ -178,11 +178,11 @@ export const ModulatorView = React.memo(function ({
                             return;
                         }
 
-                        const parsed = parseInt(numericPart, 10);
+                        const parsed = Number.parseInt(numericPart, 10);
                         if (
-                            !isNaN(parsed) &&
-                            parsed >= -32767 &&
-                            parsed <= 32767
+                            !Number.isNaN(parsed) &&
+                            parsed >= -32_767 &&
+                            parsed <= 32_767
                         ) {
                             setAmount(parsed);
                         }
@@ -192,7 +192,7 @@ export const ModulatorView = React.memo(function ({
                     className={"transform_selector monospaced"}
                     value={mod.transformType}
                     onChange={(e) =>
-                        setTransformType(parseInt(e.target.value) || 0)
+                        setTransformType(Number.parseInt(e.target.value) || 0)
                     }
                 >
                     <option value={0}>

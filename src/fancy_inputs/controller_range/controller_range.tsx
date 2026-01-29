@@ -23,11 +23,10 @@ export function ControllerRange({
 
         const oldPercent = Math.round(((oldVal - min) / (max - min)) * 100);
 
-        if (Math.abs(oldPercent - newVal) > 5) {
-            visualWrapper.classList.add("controller_range_transition");
-        } else {
-            visualWrapper.classList.remove("controller_range_transition");
-        }
+        visualWrapper.classList.toggle(
+            "controller_range_transition",
+            Math.abs(oldPercent - newVal) > 5
+        );
 
         visualWrapper.style.setProperty("--visual-width", `${newVal}%`);
         previousValueRef.current = value;
@@ -48,7 +47,7 @@ export function ControllerRange({
                     min={min}
                     max={max}
                     value={value}
-                    onChange={(e) => onChange(parseInt(e.target.value))}
+                    onChange={(e) => onChange(Number.parseInt(e.target.value))}
                 />
             </div>
         </div>

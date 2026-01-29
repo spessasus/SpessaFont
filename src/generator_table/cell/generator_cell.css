@@ -24,7 +24,8 @@
     width: max-content;
 }
 
-.generator_cell input, .generator_cell select {
+.generator_cell input,
+.generator_cell select {
     background: transparent;
     font-size: var(--generator-table-font-size);
     border: none;
@@ -36,11 +37,13 @@
     border-radius: 2px;
 }
 
-.generator_cell.modulated input, .generator_cell.modulated select {
+.generator_cell.modulated input,
+.generator_cell.modulated select {
     outline: outset var(--sample-item-color) 0.15rem;
 }
 
-.generator_cell input:focus, .generator_cell select:focus {
+.generator_cell input:focus,
+.generator_cell select:focus {
     outline: outset var(--border-color) 0.15rem;
 }
 
@@ -65,7 +68,7 @@
 
 .zone_table tbody tr:last-child {
     border-radius: 0 0 var(--primary-border-radius) var(--primary-border-radius);
-    outline: solid 1px var(--track-border-color)
+    outline: solid 1px var(--track-border-color);
 }
 
 .zone_table tbody tr:last-child th {

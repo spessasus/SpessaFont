@@ -42,7 +42,7 @@ export const NumberGeneratorCell = typedMemo(function <
     const value = zone.getGenerator(generator, null);
     const v2txt = useCallback(
         (v: number | null) =>
-            v !== null ? fromGenerator(v).toFixed(precision) : "",
+            v === null ? "" : fromGenerator(v).toFixed(precision),
         [fromGenerator, precision]
     );
 
@@ -65,7 +65,7 @@ export const NumberGeneratorCell = typedMemo(function <
     }
 
     const modulated = useMemo(
-        () => !!zone.modulators.find((m) => m.destination === generator),
+        () => zone.modulators.some((m) => m.destination === generator),
         [generator, zone.modulators]
     );
 
@@ -82,7 +82,7 @@ export const NumberGeneratorCell = typedMemo(function <
             }
             let newValue: number | null = null;
             if (typedText !== "") {
-                const num = parseFloat(typedText);
+                const num = Number.parseFloat(typedText);
                 const rawNum = Math.floor(toGenerator(num));
                 newValue = Math.max(limits.min, Math.min(limits.max, rawNum));
             }

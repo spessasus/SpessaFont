@@ -1,9 +1,9 @@
 import type { HistoryAction } from "../core_backend/history.ts";
 import type { BasicSample } from "spessasynth_core";
 
-export class EditSampleAction<K extends keyof BasicSample>
-    implements HistoryAction
-{
+export class EditSampleAction<
+    K extends keyof BasicSample
+> implements HistoryAction {
     private readonly sample: BasicSample;
     private readonly propertyName: K;
     private readonly before: BasicSample[K];

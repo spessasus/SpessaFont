@@ -36,19 +36,23 @@ export const OffsetGeneratorCell = typedMemo(function ({
 }) {
     let coarseGeneratorType: CoarseOffsetGenerator;
     switch (generatorType) {
-        case generatorTypes.startAddrsOffset:
+        case generatorTypes.startAddrsOffset: {
             coarseGeneratorType = generatorTypes.startAddrsCoarseOffset;
             break;
+        }
 
-        case generatorTypes.endAddrOffset:
+        case generatorTypes.endAddrOffset: {
             coarseGeneratorType = generatorTypes.endAddrsCoarseOffset;
             break;
+        }
 
-        case generatorTypes.startloopAddrsOffset:
+        case generatorTypes.startloopAddrsOffset: {
             coarseGeneratorType = generatorTypes.startloopAddrsCoarseOffset;
             break;
-        case generatorTypes.endloopAddrsOffset:
+        }
+        case generatorTypes.endloopAddrsOffset: {
             coarseGeneratorType = generatorTypes.endloopAddrsCoarseOffset;
+        }
     }
     const currentFineOffset = zone.getGenerator(generatorType, null);
     const currentCoarseOffset = zone.getGenerator(coarseGeneratorType, null);
@@ -56,7 +60,7 @@ export const OffsetGeneratorCell = typedMemo(function ({
     if (currentFineOffset !== null) {
         let offsetNum = currentFineOffset;
         if (currentCoarseOffset !== null) {
-            offsetNum += currentCoarseOffset * 32768;
+            offsetNum += currentCoarseOffset * 32_768;
         }
         textValue = offsetNum.toString();
     }
@@ -68,7 +72,7 @@ export const OffsetGeneratorCell = typedMemo(function ({
             }
             let newOffset: number | null = null;
             if (typedText !== "") {
-                const num = parseInt(typedText);
+                const num = Number.parseInt(typedText);
                 // clamp to a reasonable one
                 const sampleLength =
                     zone instanceof BasicInstrumentZone
@@ -116,8 +120,8 @@ export const OffsetGeneratorCell = typedMemo(function ({
                     );
                 }
             } else {
-                const fine = newOffset % 32768;
-                const coarse = Math.trunc(newOffset / 32768);
+                const fine = newOffset % 32_768;
+                const coarse = Math.trunc(newOffset / 32_768);
                 const coarseTarget = coarse || null;
                 actions.push(
                     new SetGeneratorAction(
@@ -126,9 +130,7 @@ export const OffsetGeneratorCell = typedMemo(function ({
                         currentFineOffset,
                         fine,
                         callback
-                    )
-                );
-                actions.push(
+                    ),
                     new SetGeneratorAction(
                         zone,
                         coarseGeneratorType,
@@ -145,9 +147,7 @@ export const OffsetGeneratorCell = typedMemo(function ({
                             linkedZone.getGenerator(generatorType, null),
                             fine,
                             callback
-                        )
-                    );
-                    actions.push(
+                        ),
                         new SetGeneratorAction(
                             linkedZone,
                             coarseGeneratorType,

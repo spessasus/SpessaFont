@@ -74,7 +74,7 @@ export function AudioEngineSettings({
                 <select
                     onChange={(e) =>
                         setInterpolation(
-                            parseInt(e.target.value) as InterpolationType
+                            Number.parseInt(e.target.value) as InterpolationType
                         )
                     }
                     className={"pretty_input monospaced"}

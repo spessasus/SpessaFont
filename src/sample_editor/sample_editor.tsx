@@ -24,7 +24,7 @@ import { SampleTools } from "./sample_tools.tsx";
 import { midiNoteToPitchClass } from "../utils/note_name.ts";
 
 const MIN_SAMPLE_RATE = 8000;
-const MAX_SAMPLE_RATE = 192000;
+const MAX_SAMPLE_RATE = 192_000;
 
 export type SamplePlayerState = "stopped" | "playing" | "playing_loop";
 
@@ -167,9 +167,9 @@ export const SampleEditor = React.memo(function ({
         if (n === sampleName) {
             return n;
         }
-        n = n.substring(0, 39); // keep spare space for "R" or "L"
+        n = n.slice(0, 39); // keep spare space for "R" or "L"
         if (n.endsWith("R") || n.endsWith("L")) {
-            n = n.substring(0, n.length - 1);
+            n = n.slice(0, Math.max(0, n.length - 1));
         }
         let newName = n;
 

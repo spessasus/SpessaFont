@@ -86,6 +86,8 @@ export class AudioEngine {
         this.worklet.connect(this.targetNode, 0);
         this.worklet.connect(this.reverb.input, 1);
         this.worklet.connect(this.chorus.input, 2);
+        // Disable for performance
+
         this.worklet.port.onmessage = (e: MessageEvent<number>) =>
             (this.audioChunksQueued = e.data);
 

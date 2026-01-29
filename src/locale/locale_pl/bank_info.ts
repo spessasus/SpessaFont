@@ -22,4 +22,4 @@ export const BankInfoLocale = {
     modulatorCount: "Liczba modulatorów:",
     defaultModulatorsFor: "Domyślne modulatory dla",
     defaultModulators: "Domyślne modulatory:"
-}; 
+};

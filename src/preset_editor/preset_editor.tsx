@@ -1,4 +1,9 @@
-import { type BasicPreset, type BasicPresetZone, generatorTypes, type GenericRange } from "spessasynth_core";
+import {
+    type BasicPreset,
+    type BasicPresetZone,
+    generatorTypes,
+    type GenericRange
+} from "spessasynth_core";
 import "./preset_editor.css";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import type { SetViewType } from "../bank_editor/bank_editor.tsx";
@@ -223,7 +228,7 @@ export function PresetEditor({
         setPresets([...presets]);
         engine.processor.clearCache();
     };
-    const zones = preset.zones;
+    const presetZones = preset.zones;
     const global = preset.globalZone;
 
     useEffect(() => {
@@ -234,23 +239,24 @@ export function PresetEditor({
     useEffect(() => {
         const splits: GenericRange[] = [];
         const glob = global.keyRange;
-        zones.forEach(
-            ({ keyRange: { min, max }, instrument: { zones, globalZone } }) => {
-                const range = { ...globalZone.keyRange };
-                range.min = Math.max(range.min, min);
-                range.max = Math.min(range.max, max);
-                getZoneSplits(zones, range).forEach(({ min, max }) => {
-                    // don't add out of range
-                    if (max < glob.min || min > glob.max) {
-                        return;
-                    }
-                    // clamp in range
-                    max = Math.min(glob.max, max);
-                    min = Math.max(glob.min, min);
-                    splits.push({ min, max });
-                });
+        for (const {
+            keyRange: { min, max },
+            instrument: { zones, globalZone }
+        } of presetZones) {
+            const range = { ...globalZone.keyRange };
+            range.min = Math.max(range.min, min);
+            range.max = Math.min(range.max, max);
+            for (let { min, max } of getZoneSplits(zones, range)) {
+                // don't add out of range
+                if (max < glob.min || min > glob.max) {
+                    continue;
+                }
+                // clamp in range
+                max = Math.min(glob.max, max);
+                min = Math.max(glob.min, min);
+                splits.push({ min, max });
             }
-        );
+        }
 
         setSplits(splits);
     }, [
@@ -258,14 +264,14 @@ export function PresetEditor({
         global.keyRange.max,
         global.keyRange.min,
         setSplits,
-        zones
+        presetZones
     ]);
 
     return (
         <div className={"preset_editor"}>
             <GeneratorTable<BasicPresetZone, BasicPreset>
                 name={preset.name}
-                zones={zones}
+                zones={presetZones}
                 element={preset}
                 global={global}
                 callback={update}

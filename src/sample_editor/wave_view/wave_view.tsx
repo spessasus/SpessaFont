@@ -23,6 +23,12 @@ interface WaveViewProps {
     centCorrection: number;
 }
 
+const getStyle = (v: string) => {
+    return getComputedStyle(
+        document.querySelectorAll(".spessafont_main")[0]
+    ).getPropertyValue(v);
+};
+
 export const WaveView = React.memo(function ({
     data,
     loopStart,
@@ -68,12 +74,6 @@ export const WaveView = React.memo(function ({
         }
         return () => observer.disconnect();
     }, []);
-
-    const getStyle = (v: string) => {
-        return getComputedStyle(
-            document.getElementsByClassName("spessafont_main")[0]
-        ).getPropertyValue(v);
-    };
 
     const dataLength = useMemo(() => data.length - 1, [data.length]);
 
@@ -132,8 +132,8 @@ export const WaveView = React.memo(function ({
                     dataLength
                 );
 
-                let min = 1.0;
-                let max = -1.0;
+                let min = 1;
+                let max = -1;
 
                 for (let i = start; i < end; i++) {
                     const value = data[i];
@@ -155,7 +155,7 @@ export const WaveView = React.memo(function ({
             const indexStep = dataLength / width;
             let index = (xOffset / width) * dataLength;
             for (let x = xOffset; x < xEnd; x++) {
-                const floor = ~~index;
+                const floor = Math.trunc(index);
                 const lower = data[floor];
                 const upper = data[Math.ceil(index)];
                 const frac = index - floor;
@@ -213,19 +213,13 @@ export const WaveView = React.memo(function ({
             if (isPlaying) {
                 const elapsed =
                     (context.currentTime - playbackStartTime) * playbackRate;
-                let percent: number;
-                if (
+                const percent =
                     elapsed > loopEndTime &&
                     playerStateRef.current === "playing_loop"
-                ) {
-                    // loop
-                    percent =
-                        (loopStartTime +
-                            ((elapsed - loopStartTime) % loopDuration)) /
-                        sampleLength;
-                } else {
-                    percent = elapsed / sampleLength;
-                }
+                        ? (loopStartTime +
+                              ((elapsed - loopStartTime) % loopDuration)) /
+                          sampleLength
+                        : elapsed / sampleLength;
                 const x = percent * width;
 
                 ctx.strokeStyle = fontColor;
@@ -236,10 +230,11 @@ export const WaveView = React.memo(function ({
                 ctx.stroke();
 
                 // scroll into view
-                if (xPosReal > canvas.width || xPosReal < 0) {
-                    if (scrollerRef.current) {
-                        scrollerRef.current.scrollLeft = x + 1;
-                    }
+                if (
+                    (xPosReal > canvas.width || xPosReal < 0) &&
+                    scrollerRef.current
+                ) {
+                    scrollerRef.current.scrollLeft = x + 1;
                 }
             }
 

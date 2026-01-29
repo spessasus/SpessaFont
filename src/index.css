@@ -14,25 +14,34 @@
     flex-direction: column;
 }
 
-.spessafont_main *, .spessafont_main {
+.spessafont_main *,
+.spessafont_main {
     /*global variables*/
     --lighter-color-start: oklch(16% 0 0);
     --lighter-color-end: oklch(20.5% 0 0);
-    --lighter-color: linear-gradient(201deg, var(--lighter-color-start), var(--lighter-color-end));
+    --lighter-color: linear-gradient(
+        201deg,
+        var(--lighter-color-start),
+        var(--lighter-color-end)
+    );
 
     --font-color: oklch(95% 0 0);
     --top-index: 100;
 
     --darker-color-start: #000;
     --darker-color-end: oklch(14.5% 0 0);
-    --darker-color: linear-gradient(31deg, var(--darker-color-start), var(--darker-color-end));
+    --darker-color: linear-gradient(
+        31deg,
+        var(--darker-color-start),
+        var(--darker-color-end)
+    );
 
     --primary-border-radius: 0.5rem;
     --active-scale: 0.9;
     --menu-bar-height: 2rem;
 
     /* theme colors */
-    --primary-color: #320056FF;
+    --primary-color: #320056ff;
     --border-color: #4c037a;
     --light-primary-color: #d3a3ff;
     --track-color: #333;
@@ -43,7 +52,7 @@
     --sample-item-color: gold;
 
     /*thanks for this bezier mozilla devtools*/
-    --bouncy-transition: cubic-bezier(.68, -0.55, .27, 1.55);
+    --bouncy-transition: cubic-bezier(0.68, -0.55, 0.27, 1.55);
 
     --flex-gap: 0.5rem;
 
@@ -63,7 +72,8 @@
     gap: var(--flex-gap);
 }
 
-.spessafont_main.light_mode, .spessafont_main.light_mode * {
+.spessafont_main.light_mode,
+.spessafont_main.light_mode * {
     --lighter-color-start: #efefef;
     --lighter-color-end: #eee;
 
@@ -89,12 +99,12 @@ select option {
     color: var(--font-color);
 }
 
-input[type=number]::-webkit-inner-spin-button,
-input[type=number]::-webkit-outer-spin-button {
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
 }
 
-input[type=number] {
+input[type="number"] {
     -moz-appearance: textfield;
 }
 
@@ -164,11 +174,11 @@ input[type=number] {
     color: red !important;
 }
 
-input:focus, select:focus {
+input:focus,
+select:focus {
     transition: none;
     outline: ridge var(--border-color) 0.2rem;
 }
-
 
 /* Commented for now because native scrollbars seem nice */
 /*::-webkit-scrollbar {*/

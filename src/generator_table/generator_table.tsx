@@ -157,33 +157,38 @@ export const GeneratorTable = typedMemo(function <
                             rowEl
                         );
                         switch (e.key) {
-                            default:
+                            default: {
                                 return;
-                            case "ArrowUp":
+                            }
+                            case "ArrowUp": {
                                 row = Math.max(0, row - 1);
                                 e.preventDefault();
                                 break;
+                            }
 
-                            case "ArrowDown":
+                            case "ArrowDown": {
                                 row = Math.min(
                                     table.children.length - 1,
                                     row + 1
                                 );
                                 e.preventDefault();
                                 break;
+                            }
 
-                            case "ArrowLeft":
+                            case "ArrowLeft": {
                                 col = Math.max(0, col - 1);
                                 e.preventDefault();
                                 break;
+                            }
 
-                            case "ArrowRight":
+                            case "ArrowRight": {
                                 col = Math.min(
                                     rowEl.children.length - 2,
                                     col + 1
                                 );
                                 e.preventDefault();
                                 break;
+                            }
                         }
                         const nextEl =
                             table.children?.[row]?.children?.[col + 1];

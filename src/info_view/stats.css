@@ -22,7 +22,6 @@
     filter: brightness(1.2);
 }
 
-
 .sound_bank_info .stat_span {
     display: flex;
     justify-content: space-between;
@@ -40,13 +39,13 @@
     filter: brightness(1.2);
 }
 
-
 .sound_bank_info .default_modulators_button {
     display: flex;
     padding: 0;
 }
 
-.sound_bank_info .default_modulators_button, .sound_bank_info .default_modulators_button * {
+.sound_bank_info .default_modulators_button,
+.sound_bank_info .default_modulators_button * {
     cursor: pointer;
 }
 
@@ -82,13 +81,13 @@
     padding: 0.3rem;
 }
 
-
 .sound_bank_info .stats .stat_group span {
     border: none;
     margin-top: auto;
 }
 
-.sound_bank_info .stats pre, .sound_bank_info .stats label {
+.sound_bank_info .stats pre,
+.sound_bank_info .stats label {
     font-size: 1rem;
 }
 
