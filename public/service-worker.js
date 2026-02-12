@@ -9,7 +9,16 @@ const service = /** @type {ServiceWorkerGlobalScope} */ self;
 // Install and activate
 service.addEventListener("install", (event) => {
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => cache.addAll(["/"]))
+        caches
+            .open(CACHE_NAME)
+            .then((cache) =>
+                cache.addAll([
+                    "/",
+                    "index.html",
+                    "audio_worklet.js",
+                    "manifest.webmanifest"
+                ])
+            )
     );
     void service.skipWaiting();
 });

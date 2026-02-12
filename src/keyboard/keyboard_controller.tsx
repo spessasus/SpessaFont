@@ -57,13 +57,10 @@ export function KeyboardController({
 
     useEffect(() => {
         engine.processor.onEventCall = (e) => {
-            if (
-                e.data &&
-                "channel" in e.data &&
-                e.data?.channel === KEYBOARD_TARGET_CHANNEL
-            ) {
+            if (e.data && "channel" in e.data) {
                 switch (e.type) {
                     case "controllerChange": {
+                        if (e.data?.channel !== KEYBOARD_TARGET_CHANNEL) return;
                         const ccV = e.data.controllerValue;
                         const cc = e.data.controllerNumber;
                         for (const r of knobRefs.current) {
@@ -88,11 +85,13 @@ export function KeyboardController({
                     }
 
                     case "pitchWheel": {
+                        if (e.data?.channel !== KEYBOARD_TARGET_CHANNEL) return;
                         pitchRef?.current?.setPitch(e.data.pitch);
                         break;
                     }
 
                     case "channelPressure": {
+                        if (e.data?.channel !== KEYBOARD_TARGET_CHANNEL) return;
                         pitchRef?.current?.setPressure(e.data.pressure);
                     }
                 }
