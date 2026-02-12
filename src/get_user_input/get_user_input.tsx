@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import "./get_user_input.css";
 
@@ -8,11 +8,15 @@ export function GetUserInput({ audioEngine }: { audioEngine: AudioEngine }) {
     const [hidden, setHidden] = useState(false);
     const { t } = useTranslation();
 
-    function onClicked() {
+    // Wait for the context to be resumed (will resume automatically in PWA)
+    useEffect(() => {
         void audioEngine.resumeContext().then(() => {
             setHidden(true);
         });
-    }
+    }, [audioEngine]);
+
+    // Resume manually
+    const onClicked = () => void audioEngine.context.resume();
 
     if (hidden) {
         return null;

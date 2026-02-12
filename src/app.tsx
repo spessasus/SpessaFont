@@ -59,6 +59,23 @@ applyAudioSettings(initialSettings, audioEngine);
 // shared clipboard
 const clipboardManager = new ClipboardManager();
 
+interface LaunchParams {
+    files: readonly FileSystemFileHandle[];
+}
+
+interface LaunchQueue {
+    setConsumer(consumer: (params: LaunchParams) => void): void;
+}
+
+interface GlobalThisLaunch {
+    launchQueue?: LaunchQueue;
+}
+
+if (navigator.serviceWorker) {
+    await navigator.serviceWorker.register("service-worker.js");
+    console.info("Registered service worker");
+}
+
 function App() {
     const { t } = useTranslation();
     const [tabs, setTabs] = useState<SoundBankManager[]>([]);
@@ -152,6 +169,19 @@ function App() {
         },
         [t]
     );
+
+    useEffect(() => {
+        if ("launchQueue" in globalThis) {
+            const launch = (globalThis as GlobalThisLaunch).launchQueue!;
+            launch.setConsumer(async (launchParams) => {
+                await audioEngine.context.resume();
+                for (const fileHandle of launchParams.files) {
+                    const file = await fileHandle.getFile();
+                    await openNewBankTab(file);
+                }
+            });
+        }
+    }, [openNewBankTab]);
 
     const openFile = useCallback(() => {
         const input = document.createElement("input");

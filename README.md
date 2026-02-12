@@ -1,5 +1,5 @@
 <!--suppress HtmlDeprecatedAttribute, CheckImageSize -->
-<p align='center'><img width='300' alt='hammer obliterating a piano' src="src/logo.png"/></p>
+<p align='center'><img width='300' alt='hammer obliterating a piano' src="public/logo.png"/></p>
 Fully online SoundFont/DLS Editor, written in TypeScript and React.
 No download needed!
 

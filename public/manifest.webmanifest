@@ -1,0 +1,55 @@
+{
+    "short_name": "SpessaFont",
+    "name": "SpessaFont",
+    "description": "SpessaFont is a SoundFont2/DLS sound bank editor. It is easy to use, cross-platform and open source.",
+    "display": "standalone",
+    "start_url": "./",
+    "scope": "./",
+    "id": "SpessaFont",
+    "categories": ["music"],
+    "orientation": "landscape",
+    "theme_color": "#320056ff",
+    "icons": [
+        {
+            "src": "favicon.ico",
+            "sizes": "32x32",
+            "type": "image/x-icon"
+        },
+
+        {
+            "src": "logo.png",
+            "sizes": "940x940",
+            "type": "image/png"
+        }
+    ],
+
+    "screenshots": [
+        {
+            "src": "https://github.com/user-attachments/assets/2efe807b-dc35-4108-a503-2d134a71bc2d",
+            "type": "image/png",
+            "form_factor": "wide",
+            "sizes": "2560x1306"
+        },
+        {
+            "src": "https://github.com/user-attachments/assets/4244a515-e4d1-4d73-b5b6-27bbbb9b3b1d",
+            "type": "image/png",
+            "form_factor": "wide",
+            "sizes": "2560x1306"
+        },
+        {
+            "src": "https://github.com/user-attachments/assets/59f31726-9935-4700-8c78-1c76f62c80d0",
+            "type": "image/png",
+            "form_factor": "wide",
+            "sizes": "2560x1306"
+        }
+    ],
+
+    "file_handlers": [
+        {
+            "action": "/",
+            "accept": {
+                "application/octet-stream": [".sf2", ".sf3", ".dls", ".sfogg"]
+            }
+        }
+      ]
+}

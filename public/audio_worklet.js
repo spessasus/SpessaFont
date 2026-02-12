@@ -42,5 +42,5 @@ class PlaybackProcessor extends AudioWorkletProcessor {
     }
 }
 
-console.log("Registered JS processor");
+console.info("Registered JS processor");
 registerProcessor("playback-processor", PlaybackProcessor);

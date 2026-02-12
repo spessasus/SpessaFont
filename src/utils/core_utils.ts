@@ -4,5 +4,5 @@ const consoleColors = SpessaSynthCoreUtils.consoleColors;
 export { consoleColors };
 
 export function logInfo(text: string) {
-    console.log("%c" + text, consoleColors.info);
+    console.info("%c" + text, consoleColors.info);
 }

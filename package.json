@@ -1,11 +1,12 @@
 {
     "name": "spessafont",
     "private": true,
-    "version": "1.2.9",
+    "version": "1.2.10",
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "npm run test:types  && vite build",
+        "build": "npm run test:types && npm run build:fast",
+        "build:fast": "vite build",
         "test:types": "eslint --cache src && tsc -b",
         "preview": "vite preview",
         "debug": "debug_scripts/local_core.sh",
@@ -27,6 +28,7 @@
         "@types/node": "^24.0.4",
         "@types/react": "^19.1.2",
         "@types/react-dom": "^19.1.2",
+        "@types/serviceworker": "^0.0.187",
         "@vitejs/plugin-react-swc": "^3.9.0",
         "eslint": "^9.25.0",
         "eslint-config-prettier": "^10.1.8",
