@@ -31,7 +31,8 @@ import { loadSoundBank } from "./core_backend/load_sound_bank.ts";
 import type { BasicSoundBank, GenericRange } from "spessasynth_core";
 import toast, { Toaster } from "react-hot-toast";
 import "./toasts.css";
-import { Welcome } from "./welcome/welcome.tsx"; // apply locale
+import { Welcome } from "./welcome/welcome.tsx";
+import { readSampleRateParam } from "./utils/sample_rate_param.ts"; // apply locale
 
 // apply locale
 const initialSettings = loadSettings();
@@ -47,7 +48,7 @@ void i18next.use(initReactI18next).init({
 });
 
 const context = new AudioContext({
-    sampleRate: 48_000,
+    sampleRate: readSampleRateParam(),
     latencyHint: "interactive"
 });
 

@@ -15,6 +15,8 @@ export interface GroupSettingsProps {
 const MAX_GAIN = 10;
 const MAX_REVERB = 10;
 const MAX_CHORUS = 10;
+const MAX_DELAY = 10;
+const MAX_VOICE_CAP = 2048;
 
 export function AudioEngineSettings({
     updateSettings,
@@ -54,11 +56,50 @@ export function AudioEngineSettings({
         return vReal * 100;
     }
 
+    function setDelay(v: number) {
+        const vReal = Math.max(0, Math.min(MAX_DELAY, v / 100));
+        updateSettings({
+            ...settings,
+            delayLevel: vReal
+        });
+        return vReal * 100;
+    }
+
+    function setVoiceCap(v: number) {
+        const vReal = Math.max(
+            0,
+            Math.min(Math.round(Math.abs(v)), MAX_VOICE_CAP)
+        );
+        updateSettings({
+            ...settings,
+            voiceCap: vReal
+        });
+        return vReal;
+    }
+
+    function setSampleRate(v: number) {
+        updateSettings({
+            ...settings,
+            sampleRate: v
+        });
+        return v;
+    }
+
     const { t } = useTranslation();
     const engineT = "settingsLocale.audioEngine.";
     return (
         <div className={"settings_group hover_brightness"}>
             <h2>{t(`${engineT}title`)}</h2>
+            <Setting locale={`${engineT}sampleRate`}>
+                <WaitingInput
+                    setValue={setSampleRate}
+                    type={"text"}
+                    maxLength={8}
+                    className={"pretty_input monospaced"}
+                    suffix={"Hz"}
+                    value={getSetting("sampleRate", settings)}
+                />
+            </Setting>
             <Setting locale={`${engineT}volume`}>
                 <WaitingInput
                     setValue={setVolume}
@@ -92,6 +133,16 @@ export function AudioEngineSettings({
                 </select>
             </Setting>
 
+            <Setting locale={`${engineT}voiceCap`}>
+                <WaitingInput
+                    setValue={setVoiceCap}
+                    type={"text"}
+                    maxLength={5}
+                    className={"pretty_input monospaced"}
+                    value={getSetting("voiceCap", settings)}
+                />
+            </Setting>
+
             <Setting locale={`${engineT}reverbLevel`}>
                 <WaitingInput
                     setValue={setReverb}
@@ -111,6 +162,17 @@ export function AudioEngineSettings({
                     value={Math.floor(
                         getSetting("chorusLevel", settings) * 100
                     )}
+                    type={"text"}
+                    maxLength={5}
+                    className={"pretty_input monospaced"}
+                    suffix={`%`}
+                />
+            </Setting>
+
+            <Setting locale={`${engineT}delayLevel`}>
+                <WaitingInput
+                    setValue={setDelay}
+                    value={Math.floor(getSetting("delayLevel", settings) * 100)}
                     type={"text"}
                     maxLength={5}
                     className={"pretty_input monospaced"}

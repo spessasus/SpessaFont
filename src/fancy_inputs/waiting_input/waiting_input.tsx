@@ -67,6 +67,7 @@ export function WaitingInput<T extends string | number>({
             {...attributes}
             min={min}
             maxLength={maxLength}
+            size={maxLength}
             max={max}
             value={text + suffix}
             onBlur={(e) => {

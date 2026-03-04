@@ -9,7 +9,9 @@ export const SettingsLocale = {
     },
     audioEngine: {
         title: "Ustawienia silnika audio",
+        sampleRate: "Częstotliwość Próbkowania",
         volume: "Głośność",
+        voiceCap: "Limit głosów",
         interpolation: {
             title: "Metoda interpolacji",
             nearestNeighbor: "Najbliższy sąsiad",
