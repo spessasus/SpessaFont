@@ -6,14 +6,11 @@ import {
     SpessaSynthProcessor,
     SpessaSynthSequencer
 } from "spessasynth_core";
-import { ChorusProcessor, ReverbProcessor } from "spessasynth_lib";
 import { logInfo } from "../utils/core_utils.ts";
 
 // audio worklet processor operates at that
 const BLOCK_SIZE = 128;
 const MAX_CHUNKS_QUEUED = 16; // 16 * 128 = 2,048 // Windows does not like small buffer sizes
-
-type AudioChunk = [Float32Array, Float32Array];
 
 const dummy = BasicSoundBank.getSampleSoundBankFile();
 
@@ -23,13 +20,13 @@ export class AudioEngine {
     processor: SpessaSynthProcessor;
     sequencer: SpessaSynthSequencer;
     analyser: AnalyserNode;
-    chorus: ChorusProcessor;
-    reverb: ReverbProcessor;
     intervalID = 0;
 
     targetNode: GainNode;
 
     audioChunksQueued = 0;
+
+    readonly maxChunksQueued;
 
     private worklet: AudioWorkletNode | undefined;
 
@@ -39,6 +36,13 @@ export class AudioEngine {
             enableEffects: true,
             initialTime: context.currentTime
         });
+        this.maxChunksQueued = Math.min(
+            Math.max(
+                2,
+                Math.round((context.sampleRate / 48_000) * MAX_CHUNKS_QUEUED)
+            ),
+            32
+        );
         void dummy.then((d) =>
             this.processor.soundBankManager.addSoundBank(
                 SoundBankLoader.fromArrayBuffer(d.slice()),
@@ -53,12 +57,6 @@ export class AudioEngine {
         this.analyser.connect(this.context.destination);
         this.targetNode = new GainNode(context);
         this.targetNode.connect(this.analyser);
-
-        this.chorus = new ChorusProcessor(this.context);
-        this.chorus.connect(this.targetNode);
-
-        this.reverb = new ReverbProcessor(this.context);
-        this.reverb.connect(this.targetNode);
         const isDev = import.meta.env.MODE === "development";
         if (isDev) {
             logInfo("Dev mode on");
@@ -83,9 +81,7 @@ export class AudioEngine {
                 numberOfOutputs: 3
             }
         );
-        this.worklet.connect(this.targetNode, 0);
-        this.worklet.connect(this.reverb.input, 1);
-        this.worklet.connect(this.chorus.input, 2);
+        this.worklet.connect(this.targetNode);
         // Disable for performance
 
         this.worklet.port.onmessage = (e: MessageEvent<number>) =>
@@ -95,16 +91,16 @@ export class AudioEngine {
     }
 
     audioLoop() {
-        if (this.audioChunksQueued >= MAX_CHUNKS_QUEUED) {
+        if (this.audioChunksQueued >= this.maxChunksQueued) {
             return;
         }
-        const toRender = MAX_CHUNKS_QUEUED - this.audioChunksQueued;
+        const toRender = this.maxChunksQueued - this.audioChunksQueued;
         const data: Float32Array[] = [];
         const transferList: ArrayBuffer[] = [];
 
         // encode the rendered data into a single f32array as it's faster
         for (let i = 0; i < toRender; i++) {
-            const dataChunk = new Float32Array(BLOCK_SIZE * 6);
+            const dataChunk = new Float32Array(BLOCK_SIZE * 2);
             let byteOffset = 0;
             // dry
             const dL = new Float32Array(
@@ -118,42 +114,10 @@ export class AudioEngine {
                 byteOffset,
                 BLOCK_SIZE
             );
-            byteOffset += Float32Array.BYTES_PER_ELEMENT * BLOCK_SIZE;
-            const d: AudioChunk = [dL, dR];
-
-            // reverb
-            const rL = new Float32Array(
-                dataChunk.buffer,
-                byteOffset,
-                BLOCK_SIZE
-            );
-            byteOffset += Float32Array.BYTES_PER_ELEMENT * BLOCK_SIZE;
-            const rR = new Float32Array(
-                dataChunk.buffer,
-                byteOffset,
-                BLOCK_SIZE
-            );
-            byteOffset += Float32Array.BYTES_PER_ELEMENT * BLOCK_SIZE;
-            const r: AudioChunk = [rL, rR];
-
-            // chorus
-            const cL = new Float32Array(
-                dataChunk.buffer,
-                byteOffset,
-                BLOCK_SIZE
-            );
-            byteOffset += Float32Array.BYTES_PER_ELEMENT * BLOCK_SIZE;
-            const cR = new Float32Array(
-                dataChunk.buffer,
-                byteOffset,
-                BLOCK_SIZE
-            );
-            byteOffset += Float32Array.BYTES_PER_ELEMENT * BLOCK_SIZE;
-            const c: AudioChunk = [cL, cR];
 
             // render!
             this.sequencer.processTick();
-            this.processor.renderAudio(d, r, c);
+            this.processor.process(dL, dR);
             // copy out
             data.push(dataChunk);
             transferList.push(dataChunk.buffer);
