@@ -56,7 +56,7 @@ export const MidiControllersLocale = {
     reverbDepth: "Głębokość pogłosu",
     tremoloDepth: "Głębokość tremolo",
     chorusDepth: "Głębokość chóru",
-    detuneDepth: "Głębokość rozstrojenia",
+    variationDepth: "Głębokość efektów",
     phaserDepth: "Głębokość fazera",
     dataIncrement: "Przyrost danych",
     dataDecrement: "Spadek danych",

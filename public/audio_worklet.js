@@ -4,7 +4,7 @@
  */
 
 /**
- * An AudioWorkletProcessor that plays back three separate streams of stereo audio: dry, reverb, and chorus.
+ * An AudioWorkletProcessor that plays a stream of audio.
  */
 class PlaybackProcessor extends AudioWorkletProcessor {
     /**
@@ -30,13 +30,8 @@ class PlaybackProcessor extends AudioWorkletProcessor {
         }
 
         // decode the data
-        let offset = 0;
-        for (let i = 0; i < 3; i++) {
-            outputs[i][0].set(data.subarray(offset, offset + blockSize));
-            offset += blockSize;
-            outputs[i][1].set(data.subarray(offset, offset + blockSize));
-            offset += blockSize;
-        }
+        outputs[0][0].set(data.subarray(0, blockSize));
+        outputs[0][1].set(data.subarray(blockSize, blockSize * 2));
         this.port.postMessage(this.data.length);
         return true;
     }

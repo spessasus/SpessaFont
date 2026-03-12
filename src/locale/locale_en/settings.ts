@@ -9,7 +9,9 @@ export const SettingsLocale = {
     },
     audioEngine: {
         title: "Audio Engine Settings",
+        sampleRate: "Sample Rate",
         volume: "Volume",
+        voiceCap: "Voice Cap",
         interpolation: {
             title: "Interpolation Method",
             nearestNeighbor: "Nearest Neighbor",
@@ -17,7 +19,8 @@ export const SettingsLocale = {
             cubic: "Cubic"
         },
         reverbLevel: "Reverb Level",
-        chorusLevel: "Chorus Level"
+        chorusLevel: "Chorus Level",
+        delayLevel: "Delay Level"
     },
 
     midi: {
