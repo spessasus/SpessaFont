@@ -22,7 +22,7 @@ export const SPESSAFONT_SETTINGS_KEY = "SPESSAFONT-USER-SETTINGS";
 let CURRENT_SAMPLE_RATE = readSampleRateParam();
 export const DEFAULT_SETTINGS: SavedSettingsType = {
     lang: UNSET_LANGUAGE,
-    volume: 2,
+    volume: 1,
     theme: "dark",
     interpolation: interpolationTypes.hermite,
     reverbLevel: 1,
