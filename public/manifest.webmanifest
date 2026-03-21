@@ -7,7 +7,7 @@
     "scope": "./",
     "id": "SpessaFont",
     "categories": ["music"],
-    "orientation": "landscape",
+    "orientation": "natural",
     "theme_color": "#320056ff",
     "icons": [
         {
