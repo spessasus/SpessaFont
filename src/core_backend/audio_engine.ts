@@ -12,7 +12,7 @@ import { logInfo } from "../utils/core_utils.ts";
 // audio worklet processor operates at that
 const BLOCK_SIZE = 128;
 const MAX_CHUNKS_QUEUED = 16; // 16 * 128 = 2,048 // Windows does not like small buffer sizes
-const MAX_RENDERED_AT_ONCE = 2;
+const MAX_RENDERED_AT_ONCE = 4;
 
 const dummy = BasicSoundBank.getSampleSoundBankFile();
 
