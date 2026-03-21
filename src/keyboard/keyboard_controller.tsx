@@ -101,59 +101,61 @@ export function KeyboardController({
 
     return (
         <div className={"keyboard_controller"}>
-            <Keyboard
-                ref={keyboardRef}
-                engine={engine}
-                keyDisplay={keyDisplayRef}
-                velocityDisplay={velocityDisplayRef}
-                splits={splits}
-            ></Keyboard>
-            <div className={"controller_row_scroll"}>
-                <div className={"controller_row controller_row_main"}>
-                    <OtherControllers
-                        engine={engine}
-                        ref={pitchRef}
-                    ></OtherControllers>
+            <div className={"keyboard_controller_scroll"}>
+                <Keyboard
+                    ref={keyboardRef}
+                    engine={engine}
+                    keyDisplay={keyDisplayRef}
+                    velocityDisplay={velocityDisplayRef}
+                    splits={splits}
+                ></Keyboard>
+                <div className={"controller_row_scroll"}>
+                    <div className={"controller_row controller_row_main"}>
+                        <OtherControllers
+                            engine={engine}
+                            ref={pitchRef}
+                        ></OtherControllers>
 
-                    <div className={"controller_row"}>
-                        {controllers.map((cc, i) => {
-                            const setCC = (cc: MIDIController) => {
-                                const newControllers = [...controllers];
-                                newControllers[i] = cc;
-                                setControllers(newControllers);
-                            };
-                            return (
-                                <Controller
-                                    ccOptions={ccOptions}
-                                    cc={cc}
-                                    engine={engine}
-                                    setCC={setCC}
-                                    key={i}
-                                    ref={knobRefs.current[i]}
-                                ></Controller>
-                            );
-                        })}
-                    </div>
-
-                    <div className={"controller_column"}>
-                        <div>
-                            <span>{t("keyboardLocale.midiKey")}</span>
-                            <span
-                                className={"monospaced number_display"}
-                                ref={keyDisplayRef}
-                            >
-                                127
-                            </span>
+                        <div className={"controller_row"}>
+                            {controllers.map((cc, i) => {
+                                const setCC = (cc: MIDIController) => {
+                                    const newControllers = [...controllers];
+                                    newControllers[i] = cc;
+                                    setControllers(newControllers);
+                                };
+                                return (
+                                    <Controller
+                                        ccOptions={ccOptions}
+                                        cc={cc}
+                                        engine={engine}
+                                        setCC={setCC}
+                                        key={i}
+                                        ref={knobRefs.current[i]}
+                                    ></Controller>
+                                );
+                            })}
                         </div>
 
-                        <div>
-                            <span>{t("keyboardLocale.velocity")}</span>
-                            <span
-                                className={"monospaced number_display"}
-                                ref={velocityDisplayRef}
-                            >
-                                127
-                            </span>
+                        <div className={"controller_column"}>
+                            <div>
+                                <span>{t("keyboardLocale.midiKey")}</span>
+                                <span
+                                    className={"monospaced number_display"}
+                                    ref={keyDisplayRef}
+                                >
+                                    127
+                                </span>
+                            </div>
+
+                            <div>
+                                <span>{t("keyboardLocale.velocity")}</span>
+                                <span
+                                    className={"monospaced number_display"}
+                                    ref={velocityDisplayRef}
+                                >
+                                    127
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
