@@ -5,11 +5,13 @@
     flex-wrap: nowrap;
     align-items: stretch;
     height: 5vw;
+    min-height: 3rem;
     background: black;
-    overflow: hidden;
-    width: 100%;
+    overflow-x: scroll;
+    min-width: 100%;
     touch-action: none;
     --key-border-radius: 0.2vmin;
+    align-self: start;
 }
 
 .keyboard .key {
@@ -17,6 +19,7 @@
     user-select: none;
     touch-action: none;
 
+    min-width: 0.6rem;
     flex: 1;
     transition:
         transform 0.1s ease,

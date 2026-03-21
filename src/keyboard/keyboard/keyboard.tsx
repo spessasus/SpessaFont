@@ -98,7 +98,7 @@ export function Keyboard({
             }
         };
 
-        const moveHandler = (e: MouseEvent) => {
+        const moveHandler = (e: PointerEvent) => {
             const mouseEvent = e;
 
             const newPressedKeys = new Set<number>();
@@ -160,7 +160,7 @@ export function Keyboard({
             }
         };
 
-        const onMouseDown = (e: MouseEvent) => {
+        const onMouseDown = (e: PointerEvent) => {
             mouseHeld = true;
             moveHandler(e);
         };
@@ -174,7 +174,7 @@ export function Keyboard({
             for (const note of pressedKeys) userNoteOff(note);
         };
 
-        const onMouseMove = (e: MouseEvent) => {
+        const onMouseMove = (e: PointerEvent) => {
             moveHandler(e);
         };
 
@@ -183,17 +183,17 @@ export function Keyboard({
             return;
         }
 
-        document.addEventListener("mousedown", onMouseDown);
-        document.addEventListener("mouseup", onMouseUp);
-        kb.addEventListener("mousemove", onMouseMove);
-        kb.addEventListener("mouseleave", onMouseLeave);
+        document.addEventListener("pointerdown", onMouseDown);
+        document.addEventListener("pointerup", onMouseUp);
+        kb.addEventListener("pointermove", onMouseMove);
+        kb.addEventListener("pointerleave", onMouseLeave);
 
         // cleanup
         return () => {
-            document.removeEventListener("mousedown", onMouseDown);
-            document.removeEventListener("mouseup", onMouseUp);
-            kb.removeEventListener("mousemove", onMouseMove);
-            kb.removeEventListener("mouseleave", onMouseLeave);
+            document.removeEventListener("pointerdown", onMouseDown);
+            document.removeEventListener("pointerup", onMouseUp);
+            kb.removeEventListener("pointermove", onMouseMove);
+            kb.removeEventListener("pointerleave", onMouseLeave);
         };
     }, [engine.processor, keyDisplay, matchingSplits, velocityDisplay]);
 
