@@ -79,7 +79,7 @@ export function Keyboard({
     useEffect(() => {
         const userNoteOff = (note: number) => {
             // processor callback will trigger the note release
-            engine.processor.noteOff(KEYBOARD_TARGET_CHANNEL, note);
+            engine.noteOffRealTime(KEYBOARD_TARGET_CHANNEL, note);
             // find all splits tha this key belongs to
             for (const split of matchingSplits[note]) {
                 for (let i = split.min; i <= split.max; i++) {
@@ -89,7 +89,7 @@ export function Keyboard({
         };
 
         const userNoteOn = (note: number, velocity: number) => {
-            engine.processor.noteOn(KEYBOARD_TARGET_CHANNEL, note, velocity);
+            engine.noteOnRealTime(KEYBOARD_TARGET_CHANNEL, note, velocity);
 
             for (const split of matchingSplits[note]) {
                 for (let i = split.min; i <= split.max; i++) {
@@ -195,7 +195,7 @@ export function Keyboard({
             kb.removeEventListener("pointermove", onMouseMove);
             kb.removeEventListener("pointerleave", onMouseLeave);
         };
-    }, [engine.processor, keyDisplay, matchingSplits, velocityDisplay]);
+    }, [engine, engine.processor, keyDisplay, matchingSplits, velocityDisplay]);
 
     const keys: number[] = Array.from({ length: 128 }, (_, i) => i);
 

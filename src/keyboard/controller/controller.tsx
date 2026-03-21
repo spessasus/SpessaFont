@@ -35,11 +35,7 @@ function ControllerWrapper({
 
     const setCCValue = (v: number) => {
         // event callback will update the knob
-        engine.processor.controllerChange(
-            KEYBOARD_TARGET_CHANNEL,
-            cc,
-            Math.floor(v)
-        );
+        engine.ccChangeRealTime(KEYBOARD_TARGET_CHANNEL, cc, Math.floor(v));
     };
 
     const toggleCC = (v: boolean) => {
