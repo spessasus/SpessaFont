@@ -81,26 +81,22 @@ export class AudioEngine {
         );
     }
 
+    public processRealTime(msg: number[] | Uint8Array) {
+        this.processor.processMessage(msg, 0, false, {
+            time: this.synthTime
+        });
+    }
+
     public ccChangeRealTime(ch: number, cc: number, value: number) {
-        this.processor.processMessage(
-            [midiMessageTypes.controllerChange | (ch % 16), cc, value],
-            0,
-            false,
-            {
-                time: this.synthTime
-            }
-        );
+        this.processRealTime([
+            midiMessageTypes.controllerChange | (ch % 16),
+            cc,
+            value
+        ]);
     }
 
     public noteOffRealTime(ch: number, note: number) {
-        this.processor.processMessage(
-            [midiMessageTypes.noteOff | (ch % 16), note],
-            0,
-            false,
-            {
-                time: this.synthTime
-            }
-        );
+        this.processRealTime([midiMessageTypes.noteOff | (ch % 16), note]);
     }
 
     public noteOnRealTime(ch: number, note: number, velocity: number) {

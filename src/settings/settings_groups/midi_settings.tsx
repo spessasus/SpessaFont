@@ -28,11 +28,11 @@ export function MidiSettings({ engine }: { engine: AudioEngine }) {
         if (selectedDevice !== null) {
             selectedDevice.onmidimessage = (e) => {
                 if (e.data) {
-                    engine.processor.processMessage(e.data);
+                    engine.processRealTime(e.data);
                 }
             };
         }
-    }, [engine.processor, midiAccess, selectedDevice]);
+    }, [engine, midiAccess, selectedDevice]);
 
     if (midiError) {
         return (
