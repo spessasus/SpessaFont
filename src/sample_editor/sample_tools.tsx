@@ -2,9 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SamplePlayerState } from "./sample_editor.tsx";
 import { ControllerRange } from "../fancy_inputs/controller_range/controller_range.tsx";
 import { useTranslation } from "react-i18next";
-import { type BasicSample, sampleTypes } from "spessasynth_core";
+import { audioToWav, type BasicSample, sampleTypes } from "spessasynth_core";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
-import { audioBufferToWav } from "spessasynth_lib";
 import toast from "react-hot-toast";
 
 const DEFAULT_SAMPLE_GAIN = 0.4;
@@ -174,8 +173,11 @@ export function SampleTools({
     }, [playSample, playerState, stopPlayer]);
 
     const exportWav = () => {
-        const blob = audioBufferToWav(buffer, {
+        const buf = audioToWav([buffer.getChannelData(0)], buffer.sampleRate, {
             normalizeAudio: false
+        });
+        const blob = new Blob([buf], {
+            type: "audio/wav"
         });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);

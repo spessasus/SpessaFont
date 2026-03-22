@@ -16,7 +16,7 @@ No download needed!
 
 ## Description
 
-This is an online SoundFont/DLS editor based on [spessasynth_core](https://github.com/spessasus/spessasynth_core) and [spessasynth_lib](https://github.com/spessasus/spessasynth_lib),
+This is an online SoundFont/DLS editor based on [spessasynth_core](https://github.com/spessasus/spessasynth_core),
 inspired by
 Davy7125's [polyphone](https://github.com/davy7125/polyphone).
 This is also my first TypeScript and React project. It's a bit messy, but it works! :-P

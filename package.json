@@ -1,7 +1,7 @@
 {
     "name": "spessafont",
     "private": true,
-    "version": "1.3.2",
+    "version": "1.3.3",
     "type": "module",
     "scripts": {
         "dev": "vite",
@@ -20,8 +20,7 @@
         "react-dom": "^19.1.0",
         "react-hot-toast": "^2.5.2",
         "react-i18next": "^15.5.2",
-        "spessasynth_core": "latest",
-        "spessasynth_lib": "latest"
+        "spessasynth_core": "latest"
     },
     "devDependencies": {
         "@eslint/js": "^9.25.0",
@@ -49,5 +48,8 @@
             "eslint --cache --fix"
         ],
         "*.{json,css,html,md,yml,yaml}": "prettier --write"
-    }
+    },
+    "trustedDependencies": [
+        "@swc/core"
+    ]
 }
