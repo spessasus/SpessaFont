@@ -82,7 +82,7 @@ export class AudioEngine {
     }
 
     public processRealTime(msg: number[] | Uint8Array) {
-        this.processor.processMessage(msg, 0, false, {
+        this.processor.processMessage(msg, 0, {
             time: this.synthTime
         });
     }
@@ -100,14 +100,11 @@ export class AudioEngine {
     }
 
     public noteOnRealTime(ch: number, note: number, velocity: number) {
-        this.processor.processMessage(
-            [midiMessageTypes.noteOn | (ch % 16), note, velocity],
-            0,
-            false,
-            {
-                time: this.synthTime
-            }
-        );
+        this.processRealTime([
+            midiMessageTypes.noteOn | (ch % 16),
+            note,
+            velocity
+        ]);
     }
 
     async resumeContext() {
