@@ -26,17 +26,19 @@ This is also my first TypeScript and React project. It's a bit messy, but it wor
 - **Fully online:** _No download needed!_
 - **Multiple tabs:** _Copy between sound banks or edit multiple of them at once!_
 - **Multiple formats import and export:**
-    - SF2 - SoundFonts!
-    - SF3 - Compressed SoundFonts with compression preservation!
-    - SFOGG - SF2Pack! _(import only)_
-    - DLS - DownLoadable Sounds with articulator support!
-    - Mobile DLS - _Apparently it's different from DLS... So I'm including it as well!_
+    - **SF2** - _SoundFonts!_
+    - **SF3** - _Compressed SoundFonts with compression preservation!_
+    - **SFOGG** - _SF2Pack! (import only)_
+    - **DLS** - _DownLoadable Sounds with articulator support!_
+    - **Mobile DLS** - _Apparently it's different from DLS... So I'm including it as well!_
 - **Built-in MIDI player:** _Test your bank with a MIDI file!_
 - **Real-time synthesizer:**
+    - _Fully-featured spessasynth_core's synthesizer!_
     - _Instant response to parameter changes! (to new notes)_
     - _Full modulator support!_
     - _Full generator support!_
     - _GM, GM2, GS, XG support!_
+    - _Built-in effects!_
     - _Somewhat configurable!_
 - **SoundFont Extensions:**
     - **Default modulator editing:** _Via the DMOD chunk!_
@@ -69,12 +71,12 @@ This is also my first TypeScript and React project. It's a bit messy, but it wor
 
 ## Some screenshots!
 
-<img src="https://github.com/user-attachments/assets/2efe807b-dc35-4108-a503-2d134a71bc2d" width="30%"></img>
-<img src="https://github.com/user-attachments/assets/4244a515-e4d1-4d73-b5b6-27bbbb9b3b1d" width="30%"></img>
-<img src="https://github.com/user-attachments/assets/59f31726-9935-4700-8c78-1c76f62c80d0" width="30%"></img>
-<img src="https://github.com/user-attachments/assets/a380ac0b-2e9e-431a-b00f-d5ff0dcb927a" width="30%"></img>
-<img src="https://github.com/user-attachments/assets/9ffeebf8-cc1e-41a5-9367-078b87abe5e1" width="30%"></img>
-<img src="https://github.com/user-attachments/assets/39fbe3cd-b05b-4cf5-b099-331acf2b314e" width="30%"></img>
+<img src="https://github.com/user-attachments/assets/65eb626e-de00-4634-88c0-573511078d9b" width="30%"></img>
+<img src="https://github.com/user-attachments/assets/9818315a-a1a6-4fed-9235-56f37549af80" width="30%"></img>
+<img src="https://github.com/user-attachments/assets/81975eb0-4cb3-4c04-a507-4ffc20190e6c" width="30%"></img>
+<img src="https://github.com/user-attachments/assets/5c77fbe2-f2f5-4c45-a4b0-3a0fd96476e0" width="30%"></img>
+<img src="https://github.com/user-attachments/assets/9918ee9f-52aa-4a3f-bbab-c6fc89a79e25" width="30%"></img>
+<img src="https://github.com/user-attachments/assets/1cdd9900-0910-4db3-9ca1-6e11f71f387f" width="30%"></img>
 
 ## Building from source
 
