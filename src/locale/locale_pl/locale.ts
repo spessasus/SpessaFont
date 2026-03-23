@@ -52,6 +52,7 @@ export const localePolish = {
     no: "Nie",
     none: "Brak",
     githubPage: "Strona projektu",
+    discord: "Dołącz do serwera Discord!",
     keyboard: "Klawiatura",
 
     addNew: "Dodaj nowy",

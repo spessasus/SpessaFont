@@ -51,6 +51,7 @@ export const localeEnglish = {
     no: "No",
     none: "None",
     githubPage: "Project page",
+    discord: "Join the Discord server!",
     keyboard: "Keyboard",
 
     // generic stuff

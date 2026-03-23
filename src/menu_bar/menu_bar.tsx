@@ -12,8 +12,10 @@ import toast from "react-hot-toast";
 import {
     CloseFileIcon,
     DeleteIcon,
+    Discord,
     FullscreenIcon,
     Gear,
+    GitHub,
     InfoIcon,
     LinkIcon,
     NewFileIcon,
@@ -246,13 +248,6 @@ export function MenuBar({
             )}
             <a
                 className={"menu_bar_button"}
-                href={"https://github.com/spessasus/SpessaFont"}
-                target={"_blank"}
-            >
-                {t("githubPage")}
-            </a>
-            <a
-                className={"menu_bar_button"}
                 href={"https://spessasus.github.io/SpessaSynth"}
                 target={"_blank"}
             >
@@ -262,6 +257,22 @@ export function MenuBar({
                 <MenuBarDropdown main={t("firefox")}></MenuBarDropdown>
             )}
             <div style={{ flex: 1 }}></div>
+            <a
+                className={"menu_bar_button"}
+                href={"https://github.com/spessasus/SpessaFont"}
+                target={"_blank"}
+                title={t("githubPage")}
+            >
+                <GitHub />
+            </a>
+            <a
+                className={"menu_bar_button"}
+                href={"https://discord.gg/TAVVxMFnsn"}
+                target={"_blank"}
+                title={t("discord")}
+            >
+                <Discord />
+            </a>
             <div className={"menu_bar_button"} onClick={toggleKeyboard}>
                 {t("keyboard")}
             </div>
