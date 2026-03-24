@@ -80,6 +80,13 @@ This is also my first TypeScript and React project. It's a bit messy, but it wor
 
 [If you would like to help translate SpessaFont, please read this guide (and thank you!)](src/locale/README.md)
 
+## Download Locally
+
+SpessaFont is a PWA app, meaning you can install it on any device with just one click:
+
+<img width="2343" height="624" alt="How to install SpessaFont" src="https://github.com/user-attachments/assets/a2ea19ee-003c-4679-b4c6-d5b0553fd1aa" />
+
+
 ## Building from source
 
 ### Development
