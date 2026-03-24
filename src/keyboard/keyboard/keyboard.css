@@ -7,7 +7,7 @@
     height: 5vw;
     min-height: 3rem;
     background: black;
-    overflow-x: scroll;
+    overflow-x: auto;
     min-width: 100%;
     touch-action: none;
     --key-border-radius: 0.2vmin;
