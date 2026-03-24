@@ -78,6 +78,8 @@ This is also my first TypeScript and React project. It's a bit messy, but it wor
 <img src="https://github.com/user-attachments/assets/9918ee9f-52aa-4a3f-bbab-c6fc89a79e25" width="30%"></img>
 <img src="https://github.com/user-attachments/assets/1cdd9900-0910-4db3-9ca1-6e11f71f387f" width="30%"></img>
 
+[If you would like to help translate SpessaSynth, please read this guide (and thank you!)](src/locale/README.md)
+
 ## Building from source
 
 ### Development
