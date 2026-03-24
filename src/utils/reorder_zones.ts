@@ -10,7 +10,7 @@ export function reorderInstrumentZones(
 ): BasicInstrumentZone[] {
     const ordered: BasicInstrumentZone[] = [];
     const added = new Set<BasicInstrumentZone>();
-    zones = zones.toSorted(ZONE_SORTING_FUNCTION);
+    zones = zones.slice().sort(ZONE_SORTING_FUNCTION);
 
     const addZone = (z: BasicInstrumentZone) => {
         if (!added.has(z)) {

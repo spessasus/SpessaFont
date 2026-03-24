@@ -203,9 +203,11 @@ export function InstrumentList({
                         setView
                     );
                     setInstruments(
-                        manager.instruments.toSorted((a, b) =>
-                            a.name > b.name ? 1 : b.name > a.name ? -1 : 0
-                        )
+                        manager.instruments
+                            .slice()
+                            .sort((a, b) =>
+                                a.name > b.name ? 1 : b.name > a.name ? -1 : 0
+                            )
                     );
                     toast.success(
                         t("clipboardLocale.pastedInstruments", {

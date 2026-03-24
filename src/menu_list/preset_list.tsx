@@ -182,7 +182,7 @@ export function PresetList({
                         setSamples,
                         setView
                     );
-                    setPresets(manager.presets.toSorted(presetSorter));
+                    setPresets(manager.presets.slice().sort(presetSorter));
                     toast.success(
                         t("clipboardLocale.pastedPresets", {
                             count: clipboard.presetCount

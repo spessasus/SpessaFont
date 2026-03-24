@@ -63,7 +63,7 @@ export class HistoryManager {
             return;
         }
 
-        for (const a of action.toReversed()) a.undo(m);
+        for (const a of action.slice().reverse()) a.undo(m);
         logInfo(`Undid. Remaining history: ${this.length}`);
         this.undoHistory.push(action);
         // update synth engine

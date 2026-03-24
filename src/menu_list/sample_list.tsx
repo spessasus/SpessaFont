@@ -159,9 +159,11 @@ export function SampleList({
                 onPaste={() => {
                     clipboard.pasteSamples(manager, setSamples, setView);
                     setSamples(
-                        manager.samples.toSorted((a, b) =>
-                            a.name > b.name ? 1 : b.name > a.name ? -1 : 0
-                        )
+                        manager.samples
+                            .slice()
+                            .sort((a, b) =>
+                                a.name > b.name ? 1 : b.name > a.name ? -1 : 0
+                            )
                     );
                     toast.success(
                         t("clipboardLocale.pastedSamples", {

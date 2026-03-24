@@ -151,7 +151,9 @@ export const MenuList = React.memo(function ({
                                 setSamples,
                                 setView
                             );
-                            setPresets(manager.presets.toSorted(presetSorter));
+                            setPresets(
+                                manager.presets.slice().sort(presetSorter)
+                            );
 
                             toast.success(
                                 t("clipboardLocale.pastedPresets", {
@@ -168,13 +170,15 @@ export const MenuList = React.memo(function ({
                                 setView
                             );
                             setInstruments(
-                                manager.instruments.toSorted((a, b) =>
-                                    a.name > b.name
-                                        ? 1
-                                        : b.name > a.name
-                                          ? -1
-                                          : 0
-                                )
+                                manager.instruments
+                                    .slice()
+                                    .sort((a, b) =>
+                                        a.name > b.name
+                                            ? 1
+                                            : b.name > a.name
+                                              ? -1
+                                              : 0
+                                    )
                             );
                             toast.success(
                                 t("clipboardLocale.pastedInstruments", {
@@ -190,13 +194,15 @@ export const MenuList = React.memo(function ({
                                 setView
                             );
                             setSamples(
-                                manager.samples.toSorted((a, b) =>
-                                    a.name > b.name
-                                        ? 1
-                                        : b.name > a.name
-                                          ? -1
-                                          : 0
-                                )
+                                manager.samples
+                                    .slice()
+                                    .sort((a, b) =>
+                                        a.name > b.name
+                                            ? 1
+                                            : b.name > a.name
+                                              ? -1
+                                              : 0
+                                    )
                             );
                             toast.success(
                                 t("clipboardLocale.pastedSamples", {

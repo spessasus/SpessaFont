@@ -73,7 +73,11 @@ export default tseslint.config(
             "unicorn/prefer-spread": "off",
 
             // No need to hold function references
-            "unicorn/prefer-add-event-listener": "off"
+            "unicorn/prefer-add-event-listener": "off",
+
+            // We are targeting es2022
+            "unicorn/no-array-reverse": "off",
+            "unicorn/no-array-sort": "off"
         }
     },
     {

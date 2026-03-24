@@ -50,7 +50,7 @@ export class DeleteZoneAction<
         this.el.zones =
             this.el instanceof BasicInstrument
                 ? reorderInstrumentZones(this.el.zones)
-                : this.el.zones.toSorted(ZONE_SORTING_FUNCTION);
+                : this.el.zones.slice().sort(ZONE_SORTING_FUNCTION);
         this.callback();
     }
 }
