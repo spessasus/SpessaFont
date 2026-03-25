@@ -3,6 +3,7 @@
     flex-direction: column;
     text-align: center;
     overflow-y: auto;
+    overflow-x: hidden;
     flex-grow: 0;
     min-width: max-content;
     user-select: none;
