@@ -24,12 +24,12 @@ export class SetGeneratorAction implements HistoryAction {
     }
 
     do() {
-        this.zone.setGenerator(this.generator, this.newValue);
+        this.zone.setGenerator(this.generator, this.newValue, false);
         this.callback();
     }
 
     undo() {
-        this.zone.setGenerator(this.generator, this.previousValue);
+        this.zone.setGenerator(this.generator, this.previousValue, false);
         this.callback();
     }
 }

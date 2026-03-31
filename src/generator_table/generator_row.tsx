@@ -15,6 +15,7 @@ import { RangeGeneratorCell } from "./cell/range_cell.tsx";
 import type { LinkedZoneMap } from "./generator_table.tsx";
 import { OffsetGeneratorCell } from "./cell/offset_cell.tsx";
 import { typedMemo } from "../utils/typed_memo.ts";
+import { generatorLimits } from "../core_backend/generator_limits.ts";
 
 export interface GeneratorProps {
     generator: GeneratorType;
@@ -60,6 +61,21 @@ export const NumberGeneratorRow = typedMemo(function <
         generator === generatorTypes.endAddrOffset ||
         generator === generatorTypes.startloopAddrsOffset ||
         generator === generatorTypes.endloopAddrsOffset;
+    const l = generatorLimits[generator];
+    let min, max, def;
+    if (isRange || isOffset) {
+        min = max = def = 0;
+    } else if (instrument) {
+        // Instrument level
+        min = l.min;
+        max = l.max;
+        def = l.def;
+    } else {
+        // Preset level
+        min = l.pMin ?? l.min;
+        max = l.pMax ?? l.max;
+        def = l.def;
+    }
     return (
         <tr className={highlight ? "generator_row_highlight" : "generator_row"}>
             <th className={"generator_cell_header"}>
@@ -153,6 +169,9 @@ export const NumberGeneratorRow = typedMemo(function <
                         manager={manager}
                         callback={callback}
                         generator={generator}
+                        min={min}
+                        max={max}
+                        def={def}
                         zone={global}
                         fromGenerator={fromGenerator}
                         toGenerator={toGenerator}
@@ -177,6 +196,9 @@ export const NumberGeneratorRow = typedMemo(function <
                                 linkedZone={linked.linkedZone}
                                 callback={callback}
                                 generator={generator}
+                                min={min}
+                                max={max}
+                                def={def}
                                 zone={z}
                                 key={i}
                                 fromGenerator={fromGenerator}

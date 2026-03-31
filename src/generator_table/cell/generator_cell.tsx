@@ -7,7 +7,6 @@ import {
 } from "spessasynth_core";
 import type { NumberGeneratorProps } from "../generator_row.tsx";
 import { type CSSProperties, useCallback, useMemo } from "react";
-import { generatorLimits } from "../../core_backend/generator_limits.ts";
 import { SetGeneratorAction } from "./set_generator_action.ts";
 import { midiNoteToPitchClass } from "../../utils/note_name.ts";
 import { GeneratorCellInput } from "./generator_cell_input.tsx";
@@ -21,6 +20,15 @@ function getDistinctColor(index: number, total = 10) {
     return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 }
 
+type NumberGeneratorCellProps<T> = NumberGeneratorProps & {
+    zone: BasicZone;
+    linkedZone?: T;
+    colSpan: number;
+    min: number;
+    max: number;
+    def: number;
+};
+
 export const NumberGeneratorCell = typedMemo(function <
     T extends BasicPresetZone | BasicInstrumentZone
 >({
@@ -28,16 +36,15 @@ export const NumberGeneratorCell = typedMemo(function <
     callback,
     manager,
     generator,
+    min,
+    max,
+    def,
     linkedZone,
     fromGenerator = (v) => v,
     toGenerator = (v) => v,
     precision = 0,
     colSpan
-}: NumberGeneratorProps & {
-    zone: BasicZone;
-    linkedZone?: T;
-    colSpan: number;
-}) {
+}: NumberGeneratorCellProps<T>) {
     const { t } = useTranslation();
     const value = zone.getGenerator(generator, null);
     const v2txt = useCallback(
@@ -48,7 +55,6 @@ export const NumberGeneratorCell = typedMemo(function <
 
     const textValue = v2txt(value);
 
-    const limits = generatorLimits[generator];
     let placeholder = "";
     if (
         zone instanceof BasicInstrumentZone &&
@@ -58,7 +64,7 @@ export const NumberGeneratorCell = typedMemo(function <
             zone.sample.originalKey
         )})`;
     } else if (zone instanceof BasicGlobalZone) {
-        placeholder = v2txt(limits.def);
+        placeholder = v2txt(def);
         if (placeholder === "-1") {
             placeholder = "-";
         }
@@ -84,7 +90,7 @@ export const NumberGeneratorCell = typedMemo(function <
             if (typedText !== "") {
                 const num = Number.parseFloat(typedText);
                 const rawNum = Math.floor(toGenerator(num));
-                newValue = Math.max(limits.min, Math.min(limits.max, rawNum));
+                newValue = Math.max(min, Math.min(max, rawNum));
             }
             const actions = [
                 new SetGeneratorAction(
@@ -112,8 +118,8 @@ export const NumberGeneratorCell = typedMemo(function <
         [
             callback,
             generator,
-            limits.max,
-            limits.min,
+            max,
+            min,
             linkedZone,
             manager,
             textValue,

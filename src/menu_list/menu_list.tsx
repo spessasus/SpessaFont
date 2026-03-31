@@ -290,13 +290,9 @@ export const MenuList = React.memo(function ({
                 for (const z of i.zones) matchedSampleSet.add(z.sample);
 
             return {
-                filteredSamples: samples.filter((s) => matchedSampleSet.has(s)),
-                filteredInstruments: instruments.filter((i) =>
-                    matchedInstrumentSet.has(i)
-                ),
-                filteredPresets: presetNameMap.filter((p) =>
-                    matchedPresetSet.has(p)
-                )
+                filteredSamples: Array.from(matchedSampleSet),
+                filteredInstruments: Array.from(matchedInstrumentSet),
+                filteredPresets: Array.from(matchedPresetSet)
             };
         }, [searchQueryLower, samples, instruments, presetNameMap]);
 
