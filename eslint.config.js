@@ -4,11 +4,13 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 import eslintPluginUnicorn from "eslint-plugin-unicorn";
 import eslintConfigPrettier from "eslint-config-prettier";
+import eslint from "@eslint/js";
 
 export default tseslint.config(
-    { ignores: ["dist"] },
+    { ignores: ["dist", "externals"] },
     {
         extends: [
+            eslint.configs.recommended,
             tseslint.configs.recommendedTypeChecked,
             tseslint.configs.stylisticTypeChecked,
             eslintPluginUnicorn.configs.recommended,
@@ -28,6 +30,8 @@ export default tseslint.config(
             "react-refresh": reactRefresh
         },
         rules: {
+            eqeqeq: "error",
+            "no-fallthrough": ["error", { allowEmptyCase: true }],
             ...reactHooks.configs.recommended.rules,
             "react-refresh/only-export-components": [
                 "warn",
