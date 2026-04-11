@@ -24,6 +24,7 @@ export function MidiSettings({ engine }: { engine: AudioEngine }) {
             for (const i of midiAccess.inputs.values()) {
                 i.onmidimessage = null;
             }
+            engine.processor.stopAllChannels();
         }
         if (selectedDevice !== null) {
             selectedDevice.onmidimessage = (e) => {
