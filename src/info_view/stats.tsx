@@ -38,7 +38,7 @@ export function BankInfoStats({
     // count compressed samples
     const compressed = bank.samples.filter((s) => s.isCompressed).length;
     const version = manager.getInfo("version");
-    const versionString = `${version.major}.${version.minor}`;
+    const versionString = `${version.major}.${version.minor.toString().padStart(2, "0")}`;
     return (
         <div className={"stats"}>
             <h1>{t("bankInfo.stats")}</h1>
