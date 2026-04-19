@@ -36,9 +36,10 @@ import { readSampleRateParam } from "./utils/sample_rate_param.ts"; // apply loc
 
 // apply locale
 const initialSettings = loadSettings();
+const supportedLocales = Object.keys(LocaleList);
 let targetLocale = getSetting("lang", initialSettings);
 if (targetLocale === UNSET_LANGUAGE) {
-    targetLocale = getUserLocale();
+    targetLocale = getUserLocale(supportedLocales);
 }
 
 void i18next.use(initReactI18next).init({
