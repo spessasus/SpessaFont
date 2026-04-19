@@ -5,8 +5,11 @@ export const MenuBarLocale = {
         open: "Open",
         close: "Close",
         saveSF2: "Save SF2",
-        saveDLS: "Export DLS",
-        saveSF3: "Export SF3",
+        saveDLS: "Save DLS",
+        saveSF3: "Save SF3",
+        warnSF2:
+            "This sound bank contains compressed samples. " +
+            "Saving it as SF2 will result in quality loss. Are you sure you want to continue?",
         fullscreen: "Fullscreen",
         about: "About"
     },

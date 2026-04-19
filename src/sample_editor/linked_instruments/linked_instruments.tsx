@@ -41,7 +41,9 @@ export function LinkedInstruments({
             {sample.isCompressed && (
                 <div>
                     <strong>
-                        <i>{t("sampleLocale.compressedSample")}</i>
+                        <i className={"warning"}>
+                            {t("sampleLocale.compressedSample")}
+                        </i>
                     </strong>
                 </div>
             )}

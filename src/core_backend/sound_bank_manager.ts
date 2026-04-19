@@ -19,6 +19,8 @@ import { presetSorter } from "../utils/preset_sorter.ts";
 
 export type BankEditView = "info" | BasicInstrument | BasicSample | BasicPreset;
 
+export type SaveFormat = "auto" | "sf2" | "dls" | "sf3";
+
 const dummy = await BasicSoundBank.getSampleSoundBankFile();
 
 export default class SoundBankManager extends BasicSoundBank {
@@ -111,16 +113,25 @@ export default class SoundBankManager extends BasicSoundBank {
         this.destroySoundBank();
     }
 
-    async save(
-        format: "sf2" | "dls" | "sf3",
-        progressFunction?: ProgressFunction
-    ) {
+    async save(format: SaveFormat, progressFunction?: ProgressFunction) {
         let binary: ArrayBuffer;
         switch (format) {
             default:
-            case "sf2": {
+            case "auto": {
+                // Auto means either SF2 or sf3
                 binary = await this.writeSF2({
                     progressFunction
+                });
+                // Prevent writing .auto extension (will change to sf3 if needed)
+                format = "sf2";
+                break;
+            }
+
+            case "sf2": {
+                binary = await this.writeSF2({
+                    progressFunction,
+                    // SF2 means explicit decompression
+                    decompress: true
                 });
                 break;
             }
@@ -140,7 +151,8 @@ export default class SoundBankManager extends BasicSoundBank {
                 });
             }
         }
-        if (this.soundBankInfo.version.major === 3) {
+        // Ensure SF3
+        if (this.samples.some((s) => s.isCompressed)) {
             format = "sf3";
         }
         const buffer = binary;

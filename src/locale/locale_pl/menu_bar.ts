@@ -5,8 +5,11 @@ export const MenuBarLocale = {
         open: "Otwórz",
         close: "Zamknij",
         saveSF2: "Zapisz SF2",
-        saveDLS: "Eksportuj DLS",
-        saveSF3: "Eksportuj SF3",
+        saveDLS: "Zapisz DLS",
+        saveSF3: "Zapisz SF3",
+        warnSF2:
+            "Ten bank dźwiękowy zawiera skompresowane próbki. " +
+            "Zapisanie go w formacie SF2 bezpowrotnie pogorszy ich jakość. Czy na pewno chcesz kontynuować?",
         fullscreen: "Pełny ekran",
         about: "O programie"
     },

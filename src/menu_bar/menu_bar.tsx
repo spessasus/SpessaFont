@@ -1,5 +1,4 @@
 import { MenuBarDropdown, MenuBarIcon } from "./dropdown.tsx";
-import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import { MIDIPlayer } from "./midi_player.tsx";
 import { VoiceDisplay } from "./voice_display.tsx";
 import "./menu_bar.css";
@@ -25,6 +24,9 @@ import {
     UndoIcon
 } from "../utils/icons.tsx";
 import type { ProgressFunction } from "spessasynth_core";
+import SoundBankManager, {
+    type SaveFormat
+} from "../core_backend/sound_bank_manager.ts";
 
 // @ts-expect-error chromium check is here
 const isChrome: boolean = globalThis.chrome !== undefined;
@@ -72,8 +74,8 @@ export function MenuBar({
         openTab();
     }
 
-    const saveWithToasts = useCallback(
-        async (format: "sf2" | "dls" | "sf3") => {
+    const performSave = useCallback(
+        async (format: SaveFormat) => {
             const id = toast.loading(t("loadingAndSaving.savingSoundBank"));
             await waitForRefresh();
             try {
@@ -106,6 +108,42 @@ export function MenuBar({
         [manager, t]
     );
 
+    const saveWithToasts = useCallback(
+        (format: SaveFormat) => {
+            if (
+                format === "sf2" &&
+                manager.samples.some((s) => s.isCompressed)
+            ) {
+                toast(
+                    (tost) => (
+                        <div className={"toast_col"}>
+                            <span>{t(fLoc + "warnSF2")}</span>
+                            <span
+                                onClick={() => {
+                                    toast.dismiss(tost.id);
+                                    void performSave(format);
+                                }}
+                                className={"pretty_outline"}
+                            >
+                                {t("yes")}
+                            </span>
+                            <span
+                                onClick={() => toast.dismiss(tost.id)}
+                                className={"pretty_outline"}
+                            >
+                                {t("no")}
+                            </span>
+                        </div>
+                    ),
+                    {
+                        duration: Infinity
+                    }
+                );
+            } else void performSave(format);
+        },
+        [manager, performSave, t]
+    );
+
     // keybinds
 
     useEffect(() => {
@@ -127,7 +165,7 @@ export function MenuBar({
                     }
                     case "s": {
                         e.preventDefault();
-                        void saveWithToasts("sf2");
+                        void saveWithToasts("auto");
                         break;
                     }
                     default: {
