@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import "./get_user_input.css";
+import { IS_ELECTRON } from "../utils/environment_detection.ts";
 
 // gets user input so the audio context can be resumed
 export function GetUserInput({ audioEngine }: { audioEngine: AudioEngine }) {
@@ -20,6 +21,10 @@ export function GetUserInput({ audioEngine }: { audioEngine: AudioEngine }) {
 
     if (hidden) {
         return null;
+    }
+
+    if (IS_ELECTRON) {
+        return <></>;
     }
 
     return (

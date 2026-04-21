@@ -1,7 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { typedMemo } from "../utils/typed_memo.ts";
 import "./welcome.css";
-import { NewFileIcon, OpenFileIcon } from "../utils/icons.tsx";
+import { DownloadIcon, NewFileIcon, OpenFileIcon } from "../utils/icons.tsx";
+import { IS_ELECTRON } from "../utils/environment_detection.ts";
 
 export const Welcome = typedMemo(function ({
     openFile,
@@ -29,6 +30,12 @@ export const Welcome = typedMemo(function ({
                         </span>
                     </div>
                 </div>
+                {!IS_ELECTRON && (
+                    <div className={"action_button"}>
+                        <DownloadIcon />
+                        <span>{t("welcome.downloadPrompt")}</span>
+                    </div>
+                )}
             </div>
             <div className={"welcome_copyright grouped"}>
                 <span>{t("welcome.copyright")}</span>

@@ -27,9 +27,7 @@ import type { ProgressFunction } from "spessasynth_core";
 import SoundBankManager, {
     type SaveFormat
 } from "../core_backend/sound_bank_manager.ts";
-
-// @ts-expect-error chromium check is here
-const isChrome: boolean = globalThis.chrome !== undefined;
+import { IS_CHROME, IS_ELECTRON } from "../utils/environment_detection.ts";
 
 const waitForRefresh = () => new Promise((r) => setTimeout(r, 200));
 
@@ -291,7 +289,7 @@ export function MenuBar({
             >
                 {"SpessaSynth"}
             </a>
-            {isChrome && (
+            {IS_CHROME && !IS_ELECTRON && (
                 <MenuBarDropdown main={t("firefox")}></MenuBarDropdown>
             )}
             <div style={{ flex: 1 }}></div>
