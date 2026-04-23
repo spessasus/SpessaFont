@@ -1,10 +1,12 @@
 {
     "name": "spessafont",
+    "productName": "SpessaFont",
     "description": "Online and open source SF2/DLS sound bank editor",
     "author": {
         "name": "spessasus",
         "email": "spesekspesek@gmail.com"
     },
+    "homepage": "https://github.com/spessasus/SpessaFont",
     "repository": "github:spessasus/SpessaFont",
     "private": true,
     "version": "1.4.0",
@@ -19,7 +21,7 @@
         "debug": "debug_scripts/local_core.sh",
         "release": "debug_scripts/npm_core.sh",
         "prepare": "husky install",
-        "app:dev": "vite & electron .",
+        "app:dev": "concurrently \"vite\" \"electron .\"",
         "app:dist": "tsx electron/builder.ts"
     },
     "dependencies": {
@@ -40,8 +42,9 @@
         "@types/react-dom": "^19.1.2",
         "@types/serviceworker": "^0.0.187",
         "@vitejs/plugin-react-swc": "^3.9.0",
+        "concurrently": "^9.2.1",
         "cross-env": "^10.1.0",
-        "electron": "^41.2.1",
+        "electron": "^41.3.0",
         "electron-builder": "^26.8.1",
         "electron-updater": "^6.8.3",
         "eslint": "^9.25.0",

@@ -3,11 +3,15 @@ import { app, BrowserWindow, ipcMain, Menu, nativeImage } from "electron";
 
 const devServerUrl = "http://localhost:5173/";
 const distIndex = path.join(app.getAppPath(), "dist", "index.html");
+const preloadPath = path.join(app.getAppPath(), "electron", "preload.js");
+const windowIcon = nativeImage.createFromPath(
+    path.join(app.getAppPath(), "public", "logo.png")
+);
 
 let fileToOpen = undefined;
 
 /**
- * @type {null|BrowserWindow}
+ * @type {Electron.CrossProcessExports.BrowserWindow}
  */
 let mainWindow = null;
 
@@ -23,9 +27,6 @@ app.on("open-file", (event, path) => {
 const DEV_MODE = !app.isPackaged;
 
 async function createWindow() {
-    const windowIcon = nativeImage.createFromPath(
-        path.join(app.getAppPath(), "public", "logo.png")
-    );
     // Hide menu
     Menu.setApplicationMenu(null);
 
@@ -40,7 +41,7 @@ async function createWindow() {
         webPreferences: {
             devTools: DEV_MODE,
             nodeIntegration: false,
-            preload: new URL("./preload.js", import.meta.url).pathname
+            preload: preloadPath
         }
     });
     if (DEV_MODE) {

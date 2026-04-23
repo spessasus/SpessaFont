@@ -6,11 +6,10 @@ const projectDir = path.join(import.meta.dirname, "..");
 
 await vite.build();
 
-void builder.build({
+await builder.build({
     projectDir,
     config: {
-        compression: "maximum",
-        productName: "SpessaFont Desktop",
+        productName: "SpessaFont",
         appId: "com.spessasus.SpessaFont",
         icon: "public/logo.png",
         copyright: `Copyright © Spessasus ${new Date().getFullYear()}, Licensed under the Apache-2.0 License.`,
@@ -21,25 +20,24 @@ void builder.build({
             category: "Audio",
             target: ["AppImage", "deb"]
         },
-        nsis: {
-            perMachine: false
-        },
         publish: {
             provider: "github",
             owner: "spessasus"
         },
         win: {
             icon: "public/favicon.ico",
-            target: ["nsis", "nsis-web", "portable", "zip"]
+            target: ["nsis", "portable"]
         },
         mac: {
             category: "Audio"
         },
         files: [
+            "!node_modules/**/*",
             "dist/assets/*",
             "electron/*.js",
             "package.json",
             "dist/*.{js,html,css}",
+            "public/*.png",
             "LICENSE",
             "externals/sl-web-ogg/Ogg-COPYING",
             "externals/sl-web-ogg/Vorbis-COPYING",
