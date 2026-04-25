@@ -1,0 +1,50 @@
+name: Build and Release Desktop App
+
+on:
+    release:
+        types: [published]
+    workflow_dispatch:
+
+jobs:
+    build-linux:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Set up Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: latest
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Build
+              run: npx tsx electron/builder.ts
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    build-windows:
+        needs: build-linux
+        runs-on: windows-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Set up Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: latest
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Build
+              run: npx tsx electron/builder.ts
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
