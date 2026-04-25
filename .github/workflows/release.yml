@@ -3,7 +3,11 @@ name: Build and Release Desktop App
 on:
     release:
         types: [published]
+
     workflow_dispatch:
+
+permissions:
+    contents: write
 
 jobs:
     build-linux:
