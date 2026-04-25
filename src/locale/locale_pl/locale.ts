@@ -50,6 +50,14 @@ export const localePolish = {
         writingFailed: "Błąd podczas zapisu banku dźwięków!"
     },
 
+    downloadDesktop: {
+        chooseFormat: "Wybierz format",
+        windowsInstaller: "Instalator Windows",
+        windowsPortable: "Windows Exe",
+        linuxAppImage: "Linux AppImage",
+        debianPackage: "Paczka Debiana"
+    },
+
     error: "Błąd",
     yes: "Tak",
     no: "Nie",
