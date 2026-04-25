@@ -22,10 +22,11 @@
         "release": "debug_scripts/npm_core.sh",
         "prepare": "husky install",
         "app:dev": "concurrently \"vite\" \"electron .\"",
-        "app:dist": "tsx electron/builder.ts"
+        "app:dist": "node electron/builder.ts"
     },
     "dependencies": {
         "@tanstack/react-virtual": "^3.13.10",
+        "electron-updater": "^6.8.3",
         "i18next": "^25.2.1",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
@@ -46,7 +47,6 @@
         "cross-env": "^10.1.0",
         "electron": "^41.3.0",
         "electron-builder": "^26.8.1",
-        "electron-updater": "^6.8.3",
         "eslint": "^9.25.0",
         "eslint-config-prettier": "^10.1.8",
         "eslint-plugin-react-hooks": "^5.2.0",

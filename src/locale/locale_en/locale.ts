@@ -49,6 +49,14 @@ export const localeEnglish = {
         writingFailed: "Error writing the sound bank!"
     },
 
+    downloadDesktop: {
+        chooseFormat: "Choose format",
+        windowsInstaller: "Windows Installer",
+        windowsPortable: "Windows Portable",
+        linuxAppImage: "Linux AppImage",
+        debianPackage: "Debian Package"
+    },
+
     error: "Error",
     yes: "Yes",
     no: "No",

@@ -22,7 +22,8 @@ await builder.build({
         },
         publish: {
             provider: "github",
-            owner: "spessasus"
+            owner: "spessasus",
+            repo: "SpessaFont"
         },
         win: {
             icon: "public/favicon.ico",
@@ -32,7 +33,6 @@ await builder.build({
             category: "Audio"
         },
         files: [
-            "!node_modules/**/*",
             "dist/assets/*",
             "electron/*.js",
             "package.json",

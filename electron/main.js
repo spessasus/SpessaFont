@@ -1,5 +1,8 @@
 import path from "node:path";
 import { app, BrowserWindow, ipcMain, Menu, nativeImage } from "electron";
+import pkg from "electron-updater";
+
+const { autoUpdater } = pkg;
 
 const devServerUrl = "http://localhost:5173/";
 const distIndex = path.join(app.getAppPath(), "dist", "index.html");
@@ -85,8 +88,7 @@ async function createWindow() {
     });
 }
 
-//autoUpdater.checkForUpdatesAndNotify().then(() =>
-app.whenReady().then(() => {
-    void createWindow();
+app.whenReady().then(async () => {
+    await createWindow();
+    if (app.isPackaged) void autoUpdater.checkForUpdatesAndNotify();
 });
-//);
