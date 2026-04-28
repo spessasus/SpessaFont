@@ -4,6 +4,10 @@ on:
     release:
         types: [published]
 
+    # Runs on pushes targeting the default branch
+    push:
+        branches: ["master"]
+
     workflow_dispatch:
 
 permissions:
