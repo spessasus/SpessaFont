@@ -7,6 +7,9 @@ export const MenuBarLocale = {
         saveSF2: "Enregistrer en SF2",
         saveDLS: "Exporter en DLS",
         saveSF3: "Exporter en SF3",
+        warnSF2:
+            "Cette banque de son contient des échantillons compressés. " +
+            "Il y aura une perte de qualité si vous l'enregistrez en SF2. Êtes vous sûr de vouloir continuer ?",
         fullscreen: "Mettre en Plein Écran",
         about: "About"
     },
