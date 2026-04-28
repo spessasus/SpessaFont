@@ -16,6 +16,7 @@ import {
     ZONE_SORTING_FUNCTION
 } from "../utils/reorder_zones.ts";
 import { presetSorter } from "../utils/preset_sorter.ts";
+import { SOFTWARE_NAME } from "../utils/software_name.ts";
 
 export type BankEditView = "info" | BasicInstrument | BasicSample | BasicPreset;
 
@@ -42,8 +43,14 @@ export default class SoundBankManager extends BasicSoundBank {
         super();
         this.processor = processor;
         this.sequencer = sequencer;
-        const actualBank: BasicSoundBank =
-            bank ?? SoundBankLoader.fromArrayBuffer(dummy.slice());
+
+        let actualBank: BasicSoundBank;
+        if (bank) actualBank = bank;
+        else {
+            const b = SoundBankLoader.fromArrayBuffer(dummy.slice());
+            b.soundBankInfo.software = SOFTWARE_NAME;
+            actualBank = b;
+        }
         Object.assign(this, actualBank);
         if (bank === undefined) {
             this.soundBankInfo.name = "";
@@ -120,7 +127,8 @@ export default class SoundBankManager extends BasicSoundBank {
             case "auto": {
                 // Auto means either SF2 or sf3
                 binary = await this.writeSF2({
-                    progressFunction
+                    progressFunction,
+                    software: SOFTWARE_NAME
                 });
                 // Prevent writing .auto extension (will change to sf3 if needed)
                 format = "sf2";
@@ -130,6 +138,7 @@ export default class SoundBankManager extends BasicSoundBank {
             case "sf2": {
                 binary = await this.writeSF2({
                     progressFunction,
+                    software: SOFTWARE_NAME,
                     // SF2 means explicit decompression
                     decompress: true
                 });
@@ -138,7 +147,8 @@ export default class SoundBankManager extends BasicSoundBank {
 
             case "dls": {
                 binary = await this.writeDLS({
-                    progressFunction
+                    progressFunction,
+                    software: SOFTWARE_NAME
                 });
                 break;
             }
@@ -147,6 +157,7 @@ export default class SoundBankManager extends BasicSoundBank {
                 binary = await this.writeSF2({
                     compress: true,
                     compressionFunction: encodeVorbis,
+                    software: SOFTWARE_NAME,
                     progressFunction
                 });
             }

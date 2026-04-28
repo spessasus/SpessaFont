@@ -32,13 +32,16 @@ import type { BasicSoundBank, GenericRange } from "spessasynth_core";
 import toast, { Toaster } from "react-hot-toast";
 import "./toasts.css";
 import { Welcome } from "./welcome/welcome.tsx";
-import { readSampleRateParam } from "./utils/sample_rate_param.ts"; // apply locale
+import { readSampleRateParam } from "./utils/sample_rate_param.ts";
+import type { ElectronAPI } from "./types/electron.ts";
+import { IS_CHROME, IS_ELECTRON } from "./utils/environment_detection.ts"; // apply locale
 
 // apply locale
 const initialSettings = loadSettings();
+const supportedLocales = Object.keys(LocaleList);
 let targetLocale = getSetting("lang", initialSettings);
 if (targetLocale === UNSET_LANGUAGE) {
-    targetLocale = getUserLocale();
+    targetLocale = getUserLocale(supportedLocales);
 }
 
 void i18next.use(initReactI18next).init({
@@ -72,7 +75,8 @@ interface GlobalThisLaunch {
     launchQueue?: LaunchQueue;
 }
 
-if (navigator.serviceWorker) {
+// Service workers are unsafe on electron
+if (navigator.serviceWorker && !IS_ELECTRON) {
     await navigator.serviceWorker.register("service-worker.js");
     console.info("Registered service worker");
 }
@@ -93,7 +97,7 @@ function App() {
     );
 
     // cached translated options
-    // note: i can't use JSX here as it calls MCO 9 times for some reason?
+    // note: I can't use JSX here as it calls MCO 9 times for some reason?
     const ccOptions = useMemo(
         () => ModulableControllerOptions({ t: t, padLength: 5 }),
         [t]
@@ -131,8 +135,11 @@ function App() {
             const id = toast.loading(t("loadingAndSaving.loadingFileFromDisk"));
             let bank: BasicSoundBank | undefined = undefined;
             if (bankFile instanceof File) {
-                // @ts-expect-error chrome property
-                if (bankFile.size > 2_147_483_648 && globalThis.chrome) {
+                if (
+                    bankFile.size > 2_147_483_648 &&
+                    IS_CHROME &&
+                    !IS_ELECTRON
+                ) {
                     // this not anti-chrome code,
                     // loading 4GB sound banks throws NotReadable error,
                     // uncomment this code and try it for yourself
@@ -150,9 +157,16 @@ function App() {
                 } catch (error) {
                     console.error(error);
                     toast.dismiss(id);
-                    // make so the error appears at the bottom
-                    toast.error(`${error as string}`);
-                    toast.error(t("loadingAndSaving.errorLoadingSoundBank"));
+                    if ((error as Error).name === "NotReadableError") {
+                        // special Electron error
+                        toast.error(t("loadingAndSaving.electronError"));
+                    } else {
+                        // make so the error appears at the bottom
+                        toast.error(`${error as string}`);
+                        toast.error(
+                            t("loadingAndSaving.errorLoadingSoundBank")
+                        );
+                    }
                     return;
                 }
             }
@@ -171,16 +185,54 @@ function App() {
         [t]
     );
 
+    // Electron ready signal
+    useEffect(() => {
+        if (IS_ELECTRON && "electronAPI" in globalThis) {
+            const api = (globalThis as unknown as { electronAPI: ElectronAPI })
+                .electronAPI;
+            api.appReady();
+        }
+    }, []);
+
+    // Loading files with electron or launch queue
     useEffect(() => {
         if ("launchQueue" in globalThis) {
             const launch = (globalThis as GlobalThisLaunch).launchQueue!;
             launch.setConsumer(async (launchParams) => {
                 await audioEngine.context.resume();
                 for (const fileHandle of launchParams.files) {
+                    console.info(`Opening file ${fileHandle.name}`);
                     const file = await fileHandle.getFile();
                     await openNewBankTab(file);
                 }
             });
+        }
+        if ("electronAPI" in globalThis) {
+            const api = (globalThis as unknown as { electronAPI: ElectronAPI })
+                .electronAPI;
+
+            api.onFileOpened(async (path: string) => {
+                try {
+                    await audioEngine.context.resume();
+                    console.info(`Attempting to open ${path}`);
+                    const response = await fetch(`file://${path}`);
+                    const blob = await response.blob();
+
+                    const file = new File(
+                        [blob],
+                        path.split("/").pop() ?? "soundfont"
+                    );
+
+                    await openNewBankTab(file);
+                } catch (error) {
+                    toast.error(
+                        `Failed to open file ${path.split("/").at(-1)}\n` +
+                            `${(error as Error).message}\n` +
+                            "Are you in development mode?"
+                    );
+                }
+            });
+            console.info("Connected to Electron file handlers");
         }
     }, [openNewBankTab]);
 

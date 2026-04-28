@@ -23,6 +23,7 @@ export const localePolish = {
         main: "Witamy w SpessaFont, internetowym edytorze SoundFont2/DLS!",
         openPrompt: "Otwórz plik, aby rozpocząć",
         newPrompt: "Lub zacznij z pustym plikiem...",
+        downloadPrompt: "Pobierz SpessaFont Desktop",
         copyright: "Stworzone przez Spessasus używając spessasynth_core.",
         copyrightTwo: `Copyright © Spessasus ${new Date().getFullYear()}, Na licencji Apache-2.0.`
     },
@@ -40,11 +41,21 @@ export const localePolish = {
         errorLoadingSoundBank: "Błąd ładowania banku dźwięków!",
         chromeError:
             "Plik zbyt duży, aby być otwarty w przeglądarkach opartych na Chromium.",
+        electronError:
+            "Ten plik może zostać otwarty jedynie na SpessaFont Web w Firefoxie.",
 
         savingSoundBank: "Zapisywanie banku dźwięków...",
         savedSuccessfully: "Zapisano pomyślnie!",
         writingSamples: "Zapisywanie próbek dźwiękowych...",
         writingFailed: "Błąd podczas zapisu banku dźwięków!"
+    },
+
+    downloadDesktop: {
+        chooseFormat: "Wybierz format",
+        windowsInstaller: "Instalator Windows",
+        windowsPortable: "Windows Exe",
+        linuxAppImage: "Linux AppImage",
+        debianPackage: "Paczka Debiana"
     },
 
     error: "Błąd",

@@ -23,7 +23,7 @@ export function InterfaceSettings({
 
     let language = getSetting("lang", settings);
     if (language === UNSET_LANGUAGE) {
-        language = getUserLocale();
+        language = getUserLocale(Object.keys(LocaleList));
     }
 
     function setLanguage(code: string) {
