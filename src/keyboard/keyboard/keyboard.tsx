@@ -6,9 +6,9 @@ import {
     useRef
 } from "react";
 import "./keyboard.css";
-import type { AudioEngine } from "../../core_backend/audio_engine.ts";
 import { KEYBOARD_TARGET_CHANNEL } from "../target_channel.ts";
 import type { GenericRange } from "spessasynth_core";
+import { useAudioEngine } from "../../core_backend/audio_engine_context.ts";
 
 function isBlackNoteNumber(midiNote: number) {
     const pitchClass = midiNote % 12;
@@ -26,18 +26,17 @@ let mouseHeld = false;
 
 // most of this code is ported over from spessasynth web app
 export function Keyboard({
-    engine,
     ref,
     keyDisplay,
     velocityDisplay,
     splits
 }: {
-    engine: AudioEngine;
     ref: RefObject<KeyboardRef | null>;
     keyDisplay: RefObject<HTMLSpanElement | null>;
     velocityDisplay: RefObject<HTMLSpanElement | null>;
     splits: GenericRange[];
 }) {
+    const { audioEngine } = useAudioEngine();
     const keysRef = useRef<HTMLDivElement[]>([]);
     const keyboardRef = useRef<HTMLDivElement | null>(null);
 
@@ -79,7 +78,7 @@ export function Keyboard({
     useEffect(() => {
         const userNoteOff = (note: number) => {
             // processor callback will trigger the note release
-            engine.noteOffRealTime(KEYBOARD_TARGET_CHANNEL, note);
+            audioEngine.noteOffRealTime(KEYBOARD_TARGET_CHANNEL, note);
             // find all splits tha this key belongs to
             for (const split of matchingSplits[note]) {
                 for (let i = split.min; i <= split.max; i++) {
@@ -89,7 +88,7 @@ export function Keyboard({
         };
 
         const userNoteOn = (note: number, velocity: number) => {
-            engine.noteOnRealTime(KEYBOARD_TARGET_CHANNEL, note, velocity);
+            audioEngine.noteOnRealTime(KEYBOARD_TARGET_CHANNEL, note, velocity);
 
             for (const split of matchingSplits[note]) {
                 for (let i = split.min; i <= split.max; i++) {
@@ -195,7 +194,7 @@ export function Keyboard({
             kb.removeEventListener("pointermove", onMouseMove);
             kb.removeEventListener("pointerleave", onMouseLeave);
         };
-    }, [engine, engine.processor, keyDisplay, matchingSplits, velocityDisplay]);
+    }, [audioEngine, keyDisplay, matchingSplits, velocityDisplay]);
 
     const keys: number[] = Array.from({ length: 128 }, (_, i) => i);
 

@@ -1,9 +1,7 @@
 import SoundBankManager, {
     type BankEditView
 } from "../core_backend/sound_bank_manager.ts";
-import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
-import * as React from "react";
 import {
     type JSX,
     type RefObject,
@@ -34,7 +32,6 @@ import { useTranslation } from "react-i18next";
 
 export interface BankEditorProps {
     manager: SoundBankManager;
-    audioEngine: AudioEngine;
     clipboardManager: ClipboardManager;
     destinationOptions: JSX.Element;
     ccOptions: JSX.Element;
@@ -45,8 +42,6 @@ export interface BankEditorProps {
 
 export type SetViewType = (v: BankEditView) => unknown;
 
-export const MemoizedBankEditor = React.memo(BankEditor);
-
 export type BankEditorRef = RefObject<{
     removeUnusedElements: () => void;
     autoLinkSamples: () => void;
@@ -54,7 +49,6 @@ export type BankEditorRef = RefObject<{
 
 export function BankEditor({
     manager,
-    audioEngine,
     clipboardManager,
     destinationOptions,
     ccOptions,
@@ -236,7 +230,6 @@ export function BankEditor({
                 view={view}
                 sv={setView}
                 manager={manager}
-                engine={audioEngine}
                 setPresets={setPresets}
                 presets={presets}
                 samples={samples}
@@ -248,7 +241,6 @@ export function BankEditor({
             <div className={"main_content_window"}>
                 {view === "info" && (
                     <SoundBankInfo
-                        engine={audioEngine}
                         destinationOptions={destinationOptions}
                         ccOptions={ccOptions}
                         manager={manager}
@@ -258,7 +250,6 @@ export function BankEditor({
                 {view instanceof BasicPreset && (
                     <PresetEditor
                         manager={manager}
-                        engine={audioEngine}
                         preset={view}
                         setView={setView}
                         presets={presets}
@@ -271,7 +262,6 @@ export function BankEditor({
                 )}
                 {view instanceof BasicInstrument && (
                     <InstrumentEditor
-                        engine={audioEngine}
                         instrument={view}
                         manager={manager}
                         setView={setView}
@@ -287,7 +277,6 @@ export function BankEditor({
                     <SampleEditor
                         manager={manager}
                         setView={setView}
-                        engine={audioEngine}
                         sample={view}
                         setSamples={setSamples}
                         samples={samples}

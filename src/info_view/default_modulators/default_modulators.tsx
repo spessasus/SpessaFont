@@ -5,29 +5,30 @@ import { type JSX, useCallback, useState } from "react";
 import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
 import type { ClipboardManager } from "../../core_backend/clipboard_manager.ts";
 import { SetDefaultModulators } from "./set_default_modulators.tsx";
-import type { AudioEngine } from "../../core_backend/audio_engine.ts";
+import { useAudioEngine } from "../../core_backend/audio_engine_context.ts";
 
 export function DefaultModulatorList({
     manager,
     clipboard,
     ccOptions,
-    destinationOptions,
-    engine
+    destinationOptions
 }: {
     manager: SoundBankManager;
     clipboard: ClipboardManager;
     ccOptions: JSX.Element;
     destinationOptions: JSX.Element;
-    engine: AudioEngine;
 }) {
     const [dmods, setDmods] = useState(manager.defaultModulators);
+    const {
+        audioEngine: { processor }
+    } = useAudioEngine();
 
     const { t } = useTranslation();
 
     const update = useCallback(() => {
         setDmods([...manager.defaultModulators]);
-        engine.processor.clearCache();
-    }, [engine.processor, manager.defaultModulators]);
+        processor.clearCache();
+    }, [processor, manager.defaultModulators]);
     if (dmods === undefined) {
         return <></>;
     }
@@ -35,7 +36,7 @@ export function DefaultModulatorList({
         if (manager === undefined) {
             return;
         }
-        engine.processor.clearCache();
+        processor.clearCache();
         manager.modifyBank([
             new SetDefaultModulators(update, mods, manager.defaultModulators)
         ]);

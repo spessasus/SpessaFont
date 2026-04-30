@@ -1,44 +1,47 @@
-import type { AudioEngine } from "../../core_backend/audio_engine.ts";
-import { type Ref, useImperativeHandle, useState } from "react";
+import { type Ref, useCallback, useImperativeHandle, useState } from "react";
 import { ControllerRange } from "../../fancy_inputs/controller_range/controller_range.tsx";
 import { useTranslation } from "react-i18next";
 import { KEYBOARD_TARGET_CHANNEL } from "../target_channel.ts";
 import { modulatorSources } from "spessasynth_core";
+import { useAudioEngine } from "../../core_backend/audio_engine_context.ts";
 
 export interface OtherCCRef {
     setPitch: (pitch: number) => void;
     setPressure: (pressure: number) => void;
 }
 
-export function OtherControllers({
-    engine,
-    ref
-}: {
-    engine: AudioEngine;
-    ref: Ref<OtherCCRef>;
-}) {
+export function OtherControllers({ ref }: { ref: Ref<OtherCCRef> }) {
+    const {
+        audioEngine: { processor }
+    } = useAudioEngine();
     const [pitchValue, sp] = useState(
-        engine.processor.midiChannels[KEYBOARD_TARGET_CHANNEL].midiControllers[
+        processor.midiChannels[KEYBOARD_TARGET_CHANNEL].midiControllers[
             128 + modulatorSources.pitchWheel
         ]
     );
     const [pressure, spres] = useState(
-        engine.processor.midiChannels[KEYBOARD_TARGET_CHANNEL].midiControllers[
+        processor.midiChannels[KEYBOARD_TARGET_CHANNEL].midiControllers[
             128 + modulatorSources.channelPressure
         ] >> 7
     );
     const { t } = useTranslation();
 
-    const setPitchValue = (v: number) => {
-        v = Math.floor(v);
-        // event callback will update the range
-        engine.processor.pitchWheel(KEYBOARD_TARGET_CHANNEL, v);
-    };
+    const setPitchValue = useCallback(
+        (v: number) => {
+            v = Math.floor(v);
+            // event callback will update the range
+            processor.pitchWheel(KEYBOARD_TARGET_CHANNEL, v);
+        },
+        [processor]
+    );
 
-    const setPressureValue = (v: number) => {
-        v = Math.floor(v);
-        engine.processor.channelPressure(KEYBOARD_TARGET_CHANNEL, v);
-    };
+    const setPressureValue = useCallback(
+        (v: number) => {
+            v = Math.floor(v);
+            processor.channelPressure(KEYBOARD_TARGET_CHANNEL, v);
+        },
+        [processor]
+    );
 
     useImperativeHandle(ref, () => ({
         setPitch(pitch: number) {
@@ -49,14 +52,14 @@ export function OtherControllers({
         }
     }));
 
-    const midiPanic = () => {
-        engine.processor.stopAllChannels(true);
-    };
+    const midiPanic = useCallback(() => {
+        processor.stopAllChannels(true);
+    }, [processor]);
 
-    const systemReset = () => {
+    const systemReset = useCallback(() => {
         midiPanic();
-        engine.processor.resetAllControllers();
-    };
+        processor.resetAllControllers();
+    }, [midiPanic, processor]);
 
     return (
         <div className={"controller_row"}>

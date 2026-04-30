@@ -1,19 +1,16 @@
-import type { SpessaSynthProcessor } from "spessasynth_core";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
 
 const CANVAS_WIDTH = 100;
 const CANVAS_HEIGHT = 50;
 const FFT_SIZE = 1024;
 
-export function VoiceDisplay({
-    analyser,
-    processor
-}: {
-    analyser: AnalyserNode;
-    processor: SpessaSynthProcessor;
-}) {
+export function VoiceDisplay() {
     const { t } = useTranslation();
+    const {
+        audioEngine: { analyser, processor }
+    } = useAudioEngine();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     useEffect(() => {
         const canvas = canvasRef.current;

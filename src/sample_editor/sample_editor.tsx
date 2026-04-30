@@ -6,7 +6,6 @@ import {
     type SampleType,
     sampleTypes
 } from "spessasynth_core";
-import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import "./sample_editor.css";
 import * as React from "react";
 import { useCallback, useEffect, useState } from "react";
@@ -22,6 +21,7 @@ import { SetSampleTypeAction } from "./set_sample_type_action.ts";
 import { EditSampleAction } from "./edit_sample_action.ts";
 import { SampleTools } from "./sample_tools.tsx";
 import { midiNoteToPitchClass } from "../utils/note_name.ts";
+import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
 
 const MIN_SAMPLE_RATE = 8000;
 const MAX_SAMPLE_RATE = 192_000;
@@ -31,14 +31,12 @@ export type SamplePlayerState = "stopped" | "playing" | "playing_loop";
 interface SampleEditorProps {
     manager: SoundBankManager;
     sample: BasicSample;
-    engine: AudioEngine;
     setView: SetViewType;
     setSamples: (s: BasicSample[]) => void;
     samples: BasicSample[];
 }
 
 export const SampleEditor = React.memo(function ({
-    engine,
     sample,
     setView,
     manager,
@@ -46,6 +44,9 @@ export const SampleEditor = React.memo(function ({
     samples
 }: SampleEditorProps) {
     const { t } = useTranslation();
+    const {
+        audioEngine: { processor }
+    } = useAudioEngine();
     const [sampleData, setSampleDataLocal] = useState(sample.getAudioData());
 
     useEffect(() => {
@@ -77,16 +78,16 @@ export const SampleEditor = React.memo(function ({
         // unlink here as we don't want to mark it as linked
         sample.unlinkFrom(instrument);
         instZone.setGenerator(generatorTypes.sampleModes, 1);
-        engine.processor.midiChannels[KEYBOARD_TARGET_CHANNEL].preset = preset;
+        processor.midiChannels[KEYBOARD_TARGET_CHANNEL].preset = preset;
 
-        engine.processor.clearCache();
+        processor.clearCache();
         return () => {
-            engine.processor.clearCache();
+            processor.clearCache();
             if (manager?.presets?.length > 0) {
-                engine.processor.programChange(KEYBOARD_TARGET_CHANNEL, 0);
+                processor.programChange(KEYBOARD_TARGET_CHANNEL, 0);
             }
         };
-    }, [engine.processor, engine.processor.midiChannels, manager, sample]);
+    }, [processor, processor.midiChannels, manager, sample]);
 
     const sampleType = sample.sampleType;
     const linkedSample = sample.linkedSample;
@@ -260,7 +261,6 @@ export const SampleEditor = React.memo(function ({
                 loopStart={loopStart}
                 loopEnd={loopEnd}
                 sampleRate={sampleRate}
-                context={engine.context}
                 playerState={playerState}
                 playbackStartTime={playbackStart}
                 centCorrection={centCorrection}
@@ -361,7 +361,6 @@ export const SampleEditor = React.memo(function ({
                         setPlayerState={setPlayerState}
                         setPlaybackStart={setPlaybackStart}
                         sample={sample}
-                        engine={engine}
                         setLoopStart={setLoopStart}
                         setLoopEnd={setLoopEnd}
                         sampleData={sampleData}

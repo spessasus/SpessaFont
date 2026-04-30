@@ -9,4 +9,8 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
+
+    /* Needed as this is above spessafont_main */
+    color: var(--font-color);
+    font-family: system-ui, "Noto Sans", "Open Sans", sans-serif;
 }

@@ -3,7 +3,6 @@ import { MIDIPlayer } from "./midi_player.tsx";
 import { VoiceDisplay } from "./voice_display.tsx";
 import "./menu_bar.css";
 import { useTranslation } from "react-i18next";
-import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import { useCallback, useEffect } from "react";
 import type { BankEditorRef } from "../bank_editor/bank_editor.tsx";
 import { ACCEPTED_FORMATS } from "../utils/accepted_formats.ts";
@@ -33,7 +32,6 @@ const waitForRefresh = () => new Promise((r) => setTimeout(r, 200));
 
 export function MenuBar({
     toggleSettings,
-    audioEngine,
     openTab,
     closeTab,
     manager,
@@ -41,7 +39,6 @@ export function MenuBar({
     toggleKeyboard,
     bankEditorRef
 }: {
-    audioEngine: AudioEngine;
     toggleSettings: () => void;
     openTab: (b?: File) => void;
     closeTab: () => void;
@@ -279,9 +276,7 @@ export function MenuBar({
                     <LinkIcon />
                 </MenuBarIcon>
             </MenuBarDropdown>
-            {showMidiPlayer && (
-                <MIDIPlayer audioEngine={audioEngine}></MIDIPlayer>
-            )}
+            {showMidiPlayer && <MIDIPlayer></MIDIPlayer>}
             <a
                 className={"menu_bar_button"}
                 href={"https://spessasus.github.io/SpessaSynth"}
@@ -312,10 +307,7 @@ export function MenuBar({
             <div className={"menu_bar_button"} onClick={toggleKeyboard}>
                 {t("keyboard")}
             </div>
-            <VoiceDisplay
-                analyser={audioEngine.analyser}
-                processor={audioEngine.processor}
-            ></VoiceDisplay>
+            <VoiceDisplay />
             <div
                 className={"menu_bar_button settings_button"}
                 onClick={toggleSettings}

@@ -1,4 +1,3 @@
-import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import "./keyboard_controller.css";
 import { Keyboard, type KeyboardRef } from "./keyboard/keyboard.tsx";
 import * as React from "react";
@@ -18,6 +17,7 @@ import {
     OtherControllers
 } from "./controller/other_controllers.tsx";
 import { useTranslation } from "react-i18next";
+import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
 
 const INITIAL_CC_LIST: MIDIController[] = [
     midiControllers.modulationWheel,
@@ -33,15 +33,16 @@ const INITIAL_CC_LIST: MIDIController[] = [
 ];
 
 export function KeyboardController({
-    engine,
     ccOptions,
     splits
 }: {
-    engine: AudioEngine;
     ccOptions: JSX.Element;
     splits: GenericRange[];
 }) {
     const { t } = useTranslation();
+    const {
+        audioEngine: { processor }
+    } = useAudioEngine();
     const [controllers, setControllers] =
         useState<MIDIController[]>(INITIAL_CC_LIST);
     const knobRefs = useRef<RefObject<ControllerKnobRef | null>[]>([]);
@@ -56,7 +57,7 @@ export function KeyboardController({
     const keyboardRef = useRef<KeyboardRef>(null);
 
     useEffect(() => {
-        engine.processor.onEventCall = (e) => {
+        processor.onEventCall = (e) => {
             if (e.data && "channel" in e.data) {
                 switch (e.type) {
                     case "controllerChange": {
@@ -97,24 +98,20 @@ export function KeyboardController({
                 }
             }
         };
-    }, [controllers, engine.processor, keyboardRef]);
+    }, [controllers, processor, keyboardRef]);
 
     return (
         <div className={"keyboard_controller"}>
             <div className={"keyboard_controller_scroll"}>
                 <Keyboard
                     ref={keyboardRef}
-                    engine={engine}
                     keyDisplay={keyDisplayRef}
                     velocityDisplay={velocityDisplayRef}
                     splits={splits}
                 ></Keyboard>
                 <div className={"controller_row_scroll"}>
                     <div className={"controller_row controller_row_main"}>
-                        <OtherControllers
-                            engine={engine}
-                            ref={pitchRef}
-                        ></OtherControllers>
+                        <OtherControllers ref={pitchRef}></OtherControllers>
 
                         <div className={"controller_row"}>
                             {controllers.map((cc, i) => {
@@ -127,7 +124,6 @@ export function KeyboardController({
                                     <Controller
                                         ccOptions={ccOptions}
                                         cc={cc}
-                                        engine={engine}
                                         setCC={setCC}
                                         key={i}
                                         ref={knobRefs.current[i]}

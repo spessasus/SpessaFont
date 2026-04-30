@@ -1,10 +1,10 @@
 import { useMIDIAccess } from "../midi_context/midi_context.ts";
 import { useEffect } from "react";
-import type { AudioEngine } from "../../core_backend/audio_engine.ts";
 import { Setting } from "../setting.tsx";
 import { useTranslation } from "react-i18next";
+import { useAudioEngine } from "../../core_backend/audio_engine_context.ts";
 
-export function MidiSettings({ engine }: { engine: AudioEngine }) {
+export function MidiSettings() {
     const {
         devices,
         accessStatus,
@@ -13,13 +13,14 @@ export function MidiSettings({ engine }: { engine: AudioEngine }) {
         setSelectedDevice
     } = useMIDIAccess();
     const { t } = useTranslation();
+    const { audioEngine } = useAudioEngine();
 
     useEffect(() => {
         if (!selectedDevice) return;
 
         const handler = (e: MIDIMessageEvent) => {
             if (e.data) {
-                engine.processRealTime(e.data);
+                audioEngine.processRealTime(e.data);
             }
         };
 
@@ -27,7 +28,7 @@ export function MidiSettings({ engine }: { engine: AudioEngine }) {
         return () => {
             selectedDevice.removeEventListener("midimessage", handler);
         };
-    }, [selectedDevice, engine]);
+    }, [selectedDevice, audioEngine]);
 
     if (accessStatus === "waiting")
         return (

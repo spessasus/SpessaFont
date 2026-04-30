@@ -2,6 +2,7 @@ import * as React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { SamplePlayerState } from "../sample_editor.tsx";
 import "./wave_view.css";
+import { useAudioEngine } from "../../core_backend/audio_engine_context.ts";
 
 const SCALE_LINES_COUNT = 8;
 const MIN_WAVE_THICKNESS = 1;
@@ -17,7 +18,6 @@ interface WaveViewProps {
     sampleRate: number;
     playbackStartTime: number;
     playerState: SamplePlayerState;
-    context: AudioContext;
     zoom: number;
     disabled: boolean;
     centCorrection: number;
@@ -38,7 +38,6 @@ export const WaveView = React.memo(function ({
     sampleRate,
     playbackStartTime,
     playerState,
-    context,
     zoom,
     disabled,
     centCorrection
@@ -46,6 +45,9 @@ export const WaveView = React.memo(function ({
     const waveformRef = useRef<HTMLCanvasElement>(null);
     const pointsAndInfoRef = useRef<HTMLCanvasElement>(null);
     const scrollerRef = useRef<HTMLDivElement>(null);
+    const {
+        audioEngine: { context }
+    } = useAudioEngine();
 
     const playbackRate = useMemo(
         () => Math.pow(2, centCorrection / 1200),
@@ -247,7 +249,7 @@ export const WaveView = React.memo(function ({
             ctx.textAlign = "end";
             ctx.fillText(
                 `${Math.floor(sampleLength * 1000) / 1000}s`,
-                canvas.width - 10, // use canvas so zoom doesn't impact
+                canvas.width - 10, // use canvas so the zoom doesn't impact
                 10
             );
         };

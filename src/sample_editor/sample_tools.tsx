@@ -3,8 +3,8 @@ import type { SamplePlayerState } from "./sample_editor.tsx";
 import { ControllerRange } from "../fancy_inputs/controller_range/controller_range.tsx";
 import { useTranslation } from "react-i18next";
 import { audioToWav, type BasicSample, sampleTypes } from "spessasynth_core";
-import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import toast from "react-hot-toast";
+import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
 
 const DEFAULT_SAMPLE_GAIN = 0.4;
 
@@ -12,7 +12,6 @@ const ZOOM_PER_SAMPLE = 50_000 / 6_000_000;
 
 export function SampleTools({
     sample,
-    engine,
     playerState,
     setPlayerState,
     setPlaybackStart,
@@ -26,7 +25,6 @@ export function SampleTools({
     setLoopEnd
 }: {
     sample: BasicSample;
-    engine: AudioEngine;
     playerState: SamplePlayerState;
     setPlayerState: (s: SamplePlayerState) => unknown;
     setPlaybackStart: (s: number) => unknown;
@@ -40,6 +38,9 @@ export function SampleTools({
     setLoopEnd: (e: number) => unknown;
 }) {
     const { t } = useTranslation();
+    const {
+        audioEngine: { context, targetNode }
+    } = useAudioEngine();
     const sampleName = sample.name;
     const sampleRate = sample.sampleRate;
     const centCorrection = sample.pitchCorrection;
@@ -69,14 +70,14 @@ export function SampleTools({
             bufferRate = 48_000;
         }
 
-        const buf = engine.context.createBuffer(
+        const buf = context.createBuffer(
             1,
             Math.max(audioData.length, 2),
             bufferRate
         );
         buf.getChannelData(0).set(audioData);
         return buf;
-    }, [sample, sampleRate, engine.context]);
+    }, [sample, sampleRate, context]);
 
     const playerRef = useRef<AudioBufferSourceNode | null>(null);
 
@@ -129,7 +130,7 @@ export function SampleTools({
     const playSample = useCallback(
         (loop: boolean) => {
             stopSampleInternal();
-            const player = engine.context.createBufferSource();
+            const player = context.createBufferSource();
             player.detune.value = centCorrection;
             player.buffer = buffer;
             player.onended = stopPlayer;
@@ -140,19 +141,19 @@ export function SampleTools({
                 player.loop = true;
             }
 
-            const gain = new GainNode(engine.context, {
+            const gain = new GainNode(context, {
                 gain: DEFAULT_SAMPLE_GAIN
             });
-            player.connect(gain).connect(engine.targetNode);
-            setPlaybackStart(engine.context.currentTime - 0.1);
+            player.connect(gain).connect(targetNode);
+            setPlaybackStart(context.currentTime - 0.1);
             player.start();
             setPlayerState(loop ? "playing_loop" : "playing");
         },
         [
             buffer,
             centCorrection,
-            engine.context,
-            engine.targetNode,
+            context,
+            targetNode,
             loopEnd,
             loopStart,
             sampleRate,
@@ -199,7 +200,7 @@ export function SampleTools({
             setLoading(true);
             let audioBuffer: AudioBuffer;
             try {
-                audioBuffer = await engine.context.decodeAudioData(
+                audioBuffer = await context.decodeAudioData(
                     await file.arrayBuffer()
                 );
             } catch {

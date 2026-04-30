@@ -5,7 +5,6 @@ import {
     type GenericRange
 } from "spessasynth_core";
 import "./preset_editor.css";
-import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import type { SetViewType } from "../bank_editor/bank_editor.tsx";
 import { useEffect } from "react";
 import { cb2db, db2cb } from "../utils/conversion_helpers.ts";
@@ -16,6 +15,7 @@ import { GeneratorTable } from "../generator_table/generator_table.tsx";
 import { KEYBOARD_TARGET_CHANNEL } from "../keyboard/target_channel.ts";
 import { getZoneSplits } from "../utils/get_instrument_clickable_keys.ts";
 import type { ModulatorListGlobals } from "../modulator_editing/modulator_list/modulator_list.tsx";
+import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
 
 const presetRows: GeneratorRowType[] = [
     {
@@ -205,7 +205,6 @@ const presetRows: GeneratorRowType[] = [
 
 export function PresetEditor({
     preset,
-    engine,
     presets,
     setPresets,
     setView,
@@ -216,25 +215,27 @@ export function PresetEditor({
     clipboardManager
 }: {
     preset: BasicPreset;
-    engine: AudioEngine;
     presets: BasicPreset[];
     setPresets: (p: BasicPreset[]) => unknown;
     setView: SetViewType;
     manager: SoundBankManager;
     setSplits: (s: GenericRange[]) => unknown;
 } & ModulatorListGlobals) {
+    const {
+        audioEngine: { processor }
+    } = useAudioEngine();
     const update = () => {
         preset.zones = [...preset.zones];
         setPresets([...presets]);
-        engine.processor.clearCache();
+        processor.clearCache();
     };
     const presetZones = preset.zones;
     const global = preset.globalZone;
 
     useEffect(() => {
-        engine.processor.midiChannels[KEYBOARD_TARGET_CHANNEL].preset = preset;
-        engine.processor.clearCache();
-    }, [engine.processor, preset]);
+        processor.midiChannels[KEYBOARD_TARGET_CHANNEL].preset = preset;
+        processor.clearCache();
+    }, [processor, preset]);
 
     useEffect(() => {
         const splits: GenericRange[] = [];

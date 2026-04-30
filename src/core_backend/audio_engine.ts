@@ -8,6 +8,10 @@ import {
     SpessaSynthSequencer
 } from "spessasynth_core";
 import { logInfo } from "../utils/core_utils.ts";
+import {
+    getSetting,
+    type SavedSettingsType
+} from "../settings/save_load/settings_typedef.ts";
 
 // audio worklet processor operates at that
 const BLOCK_SIZE = 128;
@@ -29,6 +33,7 @@ export class AudioEngine {
     audioChunksQueued = 0;
 
     readonly maxChunksQueued;
+    private readonly currentSampleRate;
 
     private worklet: AudioWorkletNode | undefined;
     private processorTime = {
@@ -36,7 +41,7 @@ export class AudioEngine {
         time: 0
     };
 
-    constructor(context: AudioContext) {
+    constructor(context: AudioContext, initialSettings: SavedSettingsType) {
         this.context = context;
         this.processor = new SpessaSynthProcessor(context.sampleRate, {
             enableEffects: true,
@@ -68,6 +73,9 @@ export class AudioEngine {
             logInfo("Dev mode on");
         }
         SpessaSynthLogging(isDev, isDev, isDev);
+
+        this.currentSampleRate = context.sampleRate;
+        this.applySettings(initialSettings);
     }
 
     get MIDIPaused() {
@@ -105,6 +113,37 @@ export class AudioEngine {
             note,
             velocity
         ]);
+    }
+
+    applySettings(settings: SavedSettingsType) {
+        const processor = this.processor;
+        this.setVolume(getSetting("volume", settings));
+        processor.setMasterParameter(
+            "interpolationType",
+            getSetting("interpolation", settings)
+        );
+        processor.setMasterParameter(
+            "reverbGain",
+            getSetting("reverbLevel", settings)
+        );
+        processor.setMasterParameter(
+            "chorusGain",
+            getSetting("chorusLevel", settings)
+        );
+        processor.setMasterParameter(
+            "delayGain",
+            getSetting("delayLevel", settings)
+        );
+        processor.setMasterParameter(
+            "voiceCap",
+            getSetting("voiceCap", settings)
+        );
+        const rate = getSetting("sampleRate", settings);
+        if (this.currentSampleRate !== rate) {
+            const url = new URL(globalThis.location.href);
+            url.searchParams.set("samplerate", rate.toString());
+            globalThis.location.replace(url);
+        }
     }
 
     async resumeContext() {

@@ -1,4 +1,3 @@
-import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import {
     type BasicInstrument,
     type BasicInstrumentZone,
@@ -24,11 +23,11 @@ import { LinkedPresets } from "./linked_presets/linked_presets.tsx";
 import { GeneratorTable } from "../generator_table/generator_table.tsx";
 import { getZoneSplits } from "../utils/get_instrument_clickable_keys.ts";
 import type { ModulatorListGlobals } from "../modulator_editing/modulator_list/modulator_list.tsx";
+import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
 
 interface InstrumentEditorProps {
     manager: SoundBankManager;
     instrument: BasicInstrument;
-    engine: AudioEngine;
     setView: SetViewType;
     setInstruments: (s: BasicInstrument[]) => void;
     instruments: BasicInstrument[];
@@ -301,7 +300,6 @@ const instrumentRows: GeneratorRowType[] = [
 ];
 
 export function InstrumentEditor({
-    engine,
     instrument,
     manager,
     setInstruments,
@@ -312,10 +310,14 @@ export function InstrumentEditor({
     ccOptions,
     destinationOptions
 }: InstrumentEditorProps & ModulatorListGlobals) {
+    const {
+        audioEngine: { processor }
+    } = useAudioEngine();
+
     const update = () => {
         instrument.zones = [...instrument.zones];
         setInstruments([...instruments]);
-        engine.processor.clearCache();
+        processor.clearCache();
     };
 
     const zones = instrument.zones;
@@ -331,15 +333,15 @@ export function InstrumentEditor({
         // note: unlink it we don't want the instrument to be aware of the preset
         // (it won't allow us to delete it)
         instrument.unlinkFrom(preset);
-        engine.processor.midiChannels[KEYBOARD_TARGET_CHANNEL].preset = preset;
-        engine.processor.clearCache();
+        processor.midiChannels[KEYBOARD_TARGET_CHANNEL].preset = preset;
+        processor.clearCache();
         return () => {
             // manually clear the preset to not trigger any warnings
             // (the instrument is not linked to the preset in this hack)
-            engine.processor.clearCache();
-            engine.processor.programChange(KEYBOARD_TARGET_CHANNEL, 0);
+            processor.clearCache();
+            processor.programChange(KEYBOARD_TARGET_CHANNEL, 0);
         };
-    }, [engine.processor, instrument, manager]);
+    }, [processor, instrument, manager]);
 
     // set up splits
     useEffect(() => {

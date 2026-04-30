@@ -14,9 +14,9 @@
     flex-direction: column;
 }
 
-.spessafont_main *,
-.spessafont_main {
-    /*global variables*/
+/* Dark theme */
+#root * {
+    /* global variables */
     --lighter-color-start: oklch(16% 0 0);
     --lighter-color-end: oklch(20.5% 0 0);
     --lighter-color: linear-gradient(
@@ -55,25 +55,10 @@
     --bouncy-transition: cubic-bezier(0.68, -0.55, 0.27, 1.55);
 
     --flex-gap: 0.5rem;
-
-    /*global styles*/
-    font-family: system-ui, "Noto Sans", "Open Sans", sans-serif;
-    color: var(--font-color);
-
-    transition: all 0.2s ease;
 }
 
-.spessafont_main {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    background: var(--darker-color-start);
-    scrollbar-width: thin;
-    gap: var(--flex-gap);
-}
-
-.spessafont_main.light_mode,
-.spessafont_main.light_mode * {
+/* Light theme */
+#root.light_mode * {
     --lighter-color-start: #efefef;
     --lighter-color-end: #eee;
 
@@ -92,6 +77,22 @@
     --preset-item-color: red;
     --instrument-item-color: deepskyblue;
     --sample-item-color: #e58900;
+}
+
+.spessafont_main * {
+    /*global styles*/
+    color: var(--font-color);
+    font-family: system-ui, "Noto Sans", "Open Sans", sans-serif;
+    transition: all 0.2s ease;
+}
+
+.spessafont_main {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--darker-color-start);
+    scrollbar-width: thin;
+    gap: var(--flex-gap);
 }
 
 select option {

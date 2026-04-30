@@ -9,18 +9,17 @@ import SoundBankManager, {
     type BankEditView
 } from "../core_backend/sound_bank_manager.ts";
 import { CreateSampleAction } from "./create_actions/create_sample_action.ts";
-import type { AudioEngine } from "../core_backend/audio_engine.ts";
 import type { SetViewType } from "../bank_editor/bank_editor.tsx";
 import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
 import { SampleDisplay } from "./sample_display/sample_display.tsx";
 import toast from "react-hot-toast";
+import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
 
 export function SampleList({
     samples,
     view,
     setView,
     manager,
-    engine,
     setSamples,
     clipboard,
     selectedSamples,
@@ -30,13 +29,13 @@ export function SampleList({
     view: BankEditView;
     setView: SetViewType;
     manager: SoundBankManager;
-    engine: AudioEngine;
     setSamples: (s: BasicSample[]) => unknown;
     clipboard: ClipboardManager;
     selectedSamples: Set<BasicSample>;
     setSelectedSamples: (s: Set<BasicSample>) => unknown;
 }) {
     const { t } = useTranslation();
+    const { audioEngine } = useAudioEngine();
     const [showSamples, setShowSamples] = useState(view instanceof BasicSample);
     const samplesParentRef = useRef<HTMLDivElement>(null);
     const samplesVirtualizer = useVirtualizer({
@@ -79,7 +78,7 @@ export function SampleList({
             const buffer = await file.arrayBuffer();
             let audioBuffer: AudioBuffer;
             try {
-                audioBuffer = await engine.context.decodeAudioData(buffer);
+                audioBuffer = await audioEngine.context.decodeAudioData(buffer);
             } catch {
                 toast.error(t("sampleLocale.tools.invalidAudioFile"));
                 return;
@@ -114,7 +113,7 @@ export function SampleList({
             setShowSamples(true);
         };
         input.click();
-    }, [engine.context, manager, setSamples, setView, t]);
+    }, [audioEngine.context, manager, setSamples, setView, t]);
 
     const handleClick = (
         e: React.MouseEvent<HTMLDivElement, MouseEvent>,

@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useState } from "react";
-import { BasicMIDI, type SpessaSynthSequencer } from "spessasynth_core";
-import type { AudioEngine } from "../core_backend/audio_engine.ts";
+import { BasicMIDI } from "spessasynth_core";
 import { MenuBarDropdown, MenuBarIcon } from "./dropdown.tsx";
 import {
     MIDINameIcon,
@@ -11,6 +10,7 @@ import {
     TimeIcon
 } from "../utils/icons.tsx";
 import { typedMemo } from "../utils/typed_memo.ts";
+import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
 
 function formatTime(seconds: number): string {
     const min = Math.floor(seconds / 60);
@@ -18,22 +18,25 @@ function formatTime(seconds: number): string {
     return `${min}:${sec.toString().padStart(2, "0")}`;
 }
 
-const TimeDisplay = typedMemo(({ seq }: { seq: SpessaSynthSequencer }) => {
-    const [currentTime, setCurrentTime] = useState(seq.currentTime);
+const TimeDisplay = typedMemo(() => {
+    const {
+        audioEngine: { sequencer }
+    } = useAudioEngine();
+    const [currentTime, setCurrentTime] = useState(sequencer.currentTime);
 
     useEffect(() => {
         const interval = setInterval(() => {
-            setCurrentTime(seq.currentTime);
+            setCurrentTime(sequencer.currentTime);
         }, 800);
 
         return () => clearInterval(interval);
-    }, [seq.currentTime]);
+    }, [sequencer.currentTime]);
 
-    const duration = seq.midiData?.duration ?? 0;
+    const duration = sequencer.midiData?.duration ?? 0;
 
     return (
         <MenuBarIcon
-            click={() => (seq.currentTime -= 0.1)}
+            click={() => (sequencer.currentTime -= 0.1)}
             text={`${formatTime(currentTime)} / ${formatTime(duration)}`}
         >
             <TimeIcon />
@@ -41,37 +44,37 @@ const TimeDisplay = typedMemo(({ seq }: { seq: SpessaSynthSequencer }) => {
     );
 });
 
-const PauseComponent = typedMemo(
-    ({ audioEngine }: { audioEngine: AudioEngine }) => {
-        // doing not here fixes things??
-        const [paused, setPaused] = useState(!audioEngine.MIDIPaused);
-        const { t } = useTranslation();
-        return paused ? (
-            <MenuBarIcon
-                text={t("menuBarLocale.midi.resume")}
-                click={() => {
-                    audioEngine.toggleMIDI();
-                    setPaused(audioEngine.MIDIPaused);
-                }}
-            >
-                <PlayIcon />
-            </MenuBarIcon>
-        ) : (
-            <MenuBarIcon
-                text={t("menuBarLocale.midi.pause")}
-                click={() => {
-                    audioEngine.toggleMIDI();
-                    setPaused(audioEngine.MIDIPaused);
-                }}
-            >
-                <PauseIcon />
-            </MenuBarIcon>
-        );
-    }
-);
-
-export function MIDIPlayer({ audioEngine }: { audioEngine: AudioEngine }) {
+const PauseComponent = typedMemo(() => {
+    // doing not here fixes things??
+    const { audioEngine } = useAudioEngine();
+    const [paused, setPaused] = useState(!audioEngine.MIDIPaused);
     const { t } = useTranslation();
+    return paused ? (
+        <MenuBarIcon
+            text={t("menuBarLocale.midi.resume")}
+            click={() => {
+                audioEngine.toggleMIDI();
+                setPaused(audioEngine.MIDIPaused);
+            }}
+        >
+            <PlayIcon />
+        </MenuBarIcon>
+    ) : (
+        <MenuBarIcon
+            text={t("menuBarLocale.midi.pause")}
+            click={() => {
+                audioEngine.toggleMIDI();
+                setPaused(audioEngine.MIDIPaused);
+            }}
+        >
+            <PauseIcon />
+        </MenuBarIcon>
+    );
+});
+
+export function MIDIPlayer() {
+    const { t } = useTranslation();
+    const { audioEngine } = useAudioEngine();
     const [midi, setMidi] = useState<BasicMIDI>();
 
     useEffect(() => {
@@ -115,8 +118,8 @@ export function MIDIPlayer({ audioEngine }: { audioEngine: AudioEngine }) {
                 <MenuBarIcon text={name} click={playMIDI}>
                     <MIDINameIcon />
                 </MenuBarIcon>
-                <PauseComponent audioEngine={audioEngine} />
-                <TimeDisplay seq={audioEngine.sequencer} />
+                <PauseComponent />
+                <TimeDisplay />
             </MenuBarDropdown>
         );
     }
