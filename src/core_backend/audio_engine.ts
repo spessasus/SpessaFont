@@ -54,11 +54,9 @@ export class AudioEngine {
             ),
             32
         );
-        void dummy.then((d) =>
-            this.processor.soundBankManager.addSoundBank(
-                SoundBankLoader.fromArrayBuffer(d.slice()),
-                "main"
-            )
+        this.processor.soundBankManager.addSoundBank(
+            SoundBankLoader.fromArrayBuffer(dummy.slice()),
+            "main"
         );
 
         this.sequencer = new SpessaSynthSequencer(this.processor);
