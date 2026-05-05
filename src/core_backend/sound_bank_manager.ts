@@ -22,7 +22,7 @@ export type BankEditView = "info" | BasicInstrument | BasicSample | BasicPreset;
 
 export type SaveFormat = "auto" | "sf2" | "dls" | "sf3";
 
-const dummy = await BasicSoundBank.getSampleSoundBankFile();
+const dummy = BasicSoundBank.getSampleSoundBankFile();
 
 export default class SoundBankManager extends BasicSoundBank {
     processor: SpessaSynthProcessor;
@@ -126,7 +126,7 @@ export default class SoundBankManager extends BasicSoundBank {
             default:
             case "auto": {
                 // Auto means either SF2 or sf3
-                binary = await this.writeSF2({
+                binary = this.writeSF2({
                     progressFunction,
                     software: SOFTWARE_NAME
                 });
@@ -136,17 +136,20 @@ export default class SoundBankManager extends BasicSoundBank {
             }
 
             case "sf2": {
-                binary = await this.writeSF2({
+                // SF2 means explicit decompression
+                await this.setSampleFormat({
+                    format: "pcm",
+                    progressFunction
+                });
+                binary = this.writeSF2({
                     progressFunction,
-                    software: SOFTWARE_NAME,
-                    // SF2 means explicit decompression
-                    decompress: true
+                    software: SOFTWARE_NAME
                 });
                 break;
             }
 
             case "dls": {
-                binary = await this.writeDLS({
+                binary = this.writeDLS({
                     progressFunction,
                     software: SOFTWARE_NAME
                 });
@@ -154,9 +157,12 @@ export default class SoundBankManager extends BasicSoundBank {
             }
 
             case "sf3": {
-                binary = await this.writeSF2({
-                    compress: true,
+                await this.setSampleFormat({
+                    format: "compressed",
                     compressionFunction: encodeVorbis,
+                    progressFunction
+                });
+                binary = this.writeSF2({
                     software: SOFTWARE_NAME,
                     progressFunction
                 });

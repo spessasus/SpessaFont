@@ -74,18 +74,10 @@ export function MenuBar({
             const id = toast.loading(t("loadingAndSaving.savingSoundBank"));
             await waitForRefresh();
             try {
-                await manager.save(format, ((
-                    _sampleName,
-                    writtenCount,
-                    totalSampleCount
-                ) => {
+                await manager.save(format, ((progress) => {
                     toast.loading(
                         `${t("loadingAndSaving.writingSamples")} (${
-                            Math.floor(
-                                (writtenCount / totalSampleCount) * 10_000
-                            ) /
-                                100 +
-                            "%"
+                            Math.floor(progress * 10_000) / 100 + "%"
                         })`,
                         {
                             id

@@ -54,11 +54,9 @@ export class AudioEngine {
             ),
             32
         );
-        void dummy.then((d) =>
-            this.processor.soundBankManager.addSoundBank(
-                SoundBankLoader.fromArrayBuffer(d.slice()),
-                "main"
-            )
+        this.processor.soundBankManager.addSoundBank(
+            SoundBankLoader.fromArrayBuffer(dummy.slice()),
+            "main"
         );
 
         this.sequencer = new SpessaSynthSequencer(this.processor);
@@ -204,7 +202,7 @@ export class AudioEngine {
             transferList.push(dataChunk.buffer);
         }
         this.processorTime.taken = performance.now();
-        this.processorTime.time = this.processor.currentSynthTime;
+        this.processorTime.time = this.processor.currentTime;
 
         // send to worklet
         if (this.worklet) {

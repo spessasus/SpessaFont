@@ -1,8 +1,7 @@
 import {
-    BasicGlobalZone,
     BasicInstrumentZone,
     type BasicPresetZone,
-    type BasicZone,
+    BasicZone,
     generatorTypes
 } from "spessasynth_core";
 import type { NumberGeneratorProps } from "../generator_row.tsx";
@@ -63,7 +62,7 @@ export const NumberGeneratorCell = typedMemo(function <
         placeholder = `${zone.sample.originalKey} (${midiNoteToPitchClass(
             zone.sample.originalKey
         )})`;
-    } else if (zone instanceof BasicGlobalZone) {
+    } else if (zone instanceof BasicZone) {
         placeholder = v2txt(def);
         if (placeholder === "-1") {
             placeholder = "-";

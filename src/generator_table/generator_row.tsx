@@ -1,9 +1,9 @@
 import "./cell/generator_cell.css";
 import {
-    type BasicGlobalZone,
     type BasicInstrument,
     BasicInstrumentZone,
     type BasicPresetZone,
+    type BasicZone,
     type GeneratorType,
     generatorTypes
 } from "spessasynth_core";
@@ -45,7 +45,7 @@ export const NumberGeneratorRow = typedMemo(function <
     precision = 0,
     highlight = false
 }: NumberGeneratorProps & {
-    global: BasicGlobalZone;
+    global: BasicZone;
     unit?: string;
     highlight?: boolean;
     zones: T[];

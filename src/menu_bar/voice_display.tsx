@@ -47,11 +47,11 @@ export function VoiceDisplay() {
     }, [analyser]);
 
     function VoiceDisplay() {
-        const [voices, setVoices] = useState(processor.totalVoicesAmount);
+        const [voices, setVoices] = useState(processor.voiceCount);
 
         useEffect(() => {
             const interval = setInterval(() => {
-                setVoices(processor.totalVoicesAmount);
+                setVoices(processor.voiceCount);
             }, 300);
 
             return () => clearInterval(interval);
