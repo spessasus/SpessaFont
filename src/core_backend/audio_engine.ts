@@ -202,7 +202,7 @@ export class AudioEngine {
             transferList.push(dataChunk.buffer);
         }
         this.processorTime.taken = performance.now();
-        this.processorTime.time = this.processor.currentSynthTime;
+        this.processorTime.time = this.processor.currentTime;
 
         // send to worklet
         if (this.worklet) {

@@ -1,5 +1,4 @@
 import {
-    BasicGlobalZone,
     BasicInstrument,
     BasicInstrumentZone,
     type BasicPreset,
@@ -47,7 +46,7 @@ export const GeneratorTable = typedMemo(function <
     name: string;
     element: ElementType;
     zones: ZoneType[];
-    global: BasicGlobalZone;
+    global: BasicZone;
     callback: () => unknown;
     rows: GeneratorRowType[];
     setView: SetViewType;
