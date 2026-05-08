@@ -19,7 +19,7 @@ import {
     BasicSample,
     type GenericRange,
     type SampleType,
-    sampleTypes
+    SampleTypes
 } from "spessasynth_core";
 import { PresetEditor } from "../preset_editor/preset_editor.tsx";
 import { InstrumentEditor } from "../instrument_editor/instrument_editor.tsx";
@@ -161,25 +161,25 @@ export function BankEditor({
                         default:
                         case "l": {
                             replacement = "r";
-                            type = sampleTypes.leftSample;
+                            type = SampleTypes.leftSample;
                             break;
                         }
 
                         case "L": {
                             replacement = "R";
-                            type = sampleTypes.leftSample;
+                            type = SampleTypes.leftSample;
                             break;
                         }
 
                         case "r": {
                             replacement = "l";
-                            type = sampleTypes.rightSample;
+                            type = SampleTypes.rightSample;
                             break;
                         }
 
                         case "R": {
                             replacement = "L";
-                            type = sampleTypes.rightSample;
+                            type = SampleTypes.rightSample;
                             break;
                         }
                     }

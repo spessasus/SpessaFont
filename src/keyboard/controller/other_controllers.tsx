@@ -2,7 +2,6 @@ import { type Ref, useCallback, useImperativeHandle, useState } from "react";
 import { ControllerRange } from "../../fancy_inputs/controller_range/controller_range.tsx";
 import { useTranslation } from "react-i18next";
 import { KEYBOARD_TARGET_CHANNEL } from "../target_channel.ts";
-import { modulatorSources } from "spessasynth_core";
 import { useAudioEngine } from "../../core_backend/audio_engine_context.ts";
 
 export interface OtherCCRef {
@@ -15,14 +14,11 @@ export function OtherControllers({ ref }: { ref: Ref<OtherCCRef> }) {
         audioEngine: { processor }
     } = useAudioEngine();
     const [pitchValue, sp] = useState(
-        processor.midiChannels[KEYBOARD_TARGET_CHANNEL].midiControllers[
-            128 + modulatorSources.pitchWheel
-        ]
+        processor.midiChannels[KEYBOARD_TARGET_CHANNEL].midiParameters
+            .pitchWheel
     );
     const [pressure, spres] = useState(
-        processor.midiChannels[KEYBOARD_TARGET_CHANNEL].midiControllers[
-            128 + modulatorSources.channelPressure
-        ] >> 7
+        processor.midiChannels[KEYBOARD_TARGET_CHANNEL].midiParameters.pressure
     );
     const { t } = useTranslation();
 

@@ -1,4 +1,4 @@
-import { type InterpolationType, interpolationTypes } from "spessasynth_core";
+import { type InterpolationType, InterpolationTypes } from "spessasynth_core";
 import { readSampleRateParam } from "../../utils/sample_rate_param.ts";
 
 export type ThemeType = "dark" | "light";
@@ -22,7 +22,7 @@ export const DEFAULT_SETTINGS: SavedSettingsType = {
     lang: UNSET_LANGUAGE,
     volume: 1,
     theme: "dark",
-    interpolation: interpolationTypes.hermite,
+    interpolation: InterpolationTypes.hermite,
     reverbLevel: 1,
     chorusLevel: 1,
     delayLevel: 1,

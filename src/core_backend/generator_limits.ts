@@ -1,6 +1,6 @@
 // shamelessly stolen from spessasynth_core
 
-import { generatorTypes } from "spessasynth_core";
+import { GeneratorTypes } from "spessasynth_core";
 
 interface GeneratorLimit {
     min: number;
@@ -14,73 +14,73 @@ interface GeneratorLimit {
  * min: minimum value, max: maximum value, def: default value
  */
 // prettier-ignore
-export const generatorLimits: Readonly<Record<number, GeneratorLimit>> = Object.freeze({
+export const GeneratorLimits: Readonly<Record<number, GeneratorLimit>> = Object.freeze({
 // Offsets
-[generatorTypes.startAddrsOffset]:            { min:       0, max: 32_768, def:       0 },
-[generatorTypes.endAddrOffset]:               { min: -32_768, max: 32_768, def:       0 },
-[generatorTypes.startAddrsCoarseOffset]:      { min:       0, max: 32_768, def:       0 },
-[generatorTypes.endAddrsCoarseOffset]:        { min: -32_768, max: 32_768, def:       0 },
+[GeneratorTypes.startAddrsOffset]:            { min:       0, max: 32_768, def:       0 },
+[GeneratorTypes.endAddrOffset]:               { min: -32_768, max: 32_768, def:       0 },
+[GeneratorTypes.startAddrsCoarseOffset]:      { min:       0, max: 32_768, def:       0 },
+[GeneratorTypes.endAddrsCoarseOffset]:        { min: -32_768, max: 32_768, def:       0 },
 // Loop offsets
-[generatorTypes.startloopAddrsOffset]:        { min: -32_768, max: 32_768, def:       0 },
-[generatorTypes.endloopAddrsOffset]:          { min: -32_768, max: 32_768, def:       0 },
-[generatorTypes.startloopAddrsCoarseOffset]:  { min: -32_768, max: 32_768, def:       0 },
-[generatorTypes.endloopAddrsCoarseOffset]:    { min: -32_768, max: 32_768, def:       0 },
+[GeneratorTypes.startloopAddrsOffset]:        { min: -32_768, max: 32_768, def:       0 },
+[GeneratorTypes.endloopAddrsOffset]:          { min: -32_768, max: 32_768, def:       0 },
+[GeneratorTypes.startloopAddrsCoarseOffset]:  { min: -32_768, max: 32_768, def:       0 },
+[GeneratorTypes.endloopAddrsCoarseOffset]:    { min: -32_768, max: 32_768, def:       0 },
 
 
 
 // Excursion
-[generatorTypes.modLfoToPitch]:               { min: -12_000, max: 12_000, def:       0, pMin: -24_000, pMax: 24_000 },
-[generatorTypes.vibLfoToPitch]:               { min: -12_000, max: 12_000, def:       0, pMin: -24_000, pMax: 24_000 },
-[generatorTypes.modEnvToPitch]:               { min: -12_000, max: 12_000, def:       0, pMin: -24_000, pMax: 24_000 },
-[generatorTypes.modLfoToFilterFc]:            { min: -12_000, max: 12_000, def:       0, pMin: -24_000, pMax: 24_000 },
-[generatorTypes.modEnvToFilterFc]:            { min: -12_000, max: 12_000, def:       0, pMin: -24_000, pMax: 24_000 },
-[generatorTypes.modLfoToVolume]:              { min:    -960, max:    960, def:       0, pMin: -1920,   pMax: 1920   },
+[GeneratorTypes.modLfoToPitch]:               { min: -12_000, max: 12_000, def:       0, pMin: -24_000, pMax: 24_000 },
+[GeneratorTypes.vibLfoToPitch]:               { min: -12_000, max: 12_000, def:       0, pMin: -24_000, pMax: 24_000 },
+[GeneratorTypes.modEnvToPitch]:               { min: -12_000, max: 12_000, def:       0, pMin: -24_000, pMax: 24_000 },
+[GeneratorTypes.modLfoToFilterFc]:            { min: -12_000, max: 12_000, def:       0, pMin: -24_000, pMax: 24_000 },
+[GeneratorTypes.modEnvToFilterFc]:            { min: -12_000, max: 12_000, def:       0, pMin: -24_000, pMax: 24_000 },
+[GeneratorTypes.modLfoToVolume]:              { min:    -960, max:    960, def:       0, pMin: -1920,   pMax: 1920   },
 
 // Lowpass
-[generatorTypes.initialFilterFc]:             { min:   1500,  max: 13_500, def:  13_500, pMin: -21_000, pMax: 21_000 },
-[generatorTypes.initialFilterQ]:              { min:       0, max:    960, def:       0, pMin: -960                  },
+[GeneratorTypes.initialFilterFc]:             { min:   1500,  max: 13_500, def:  13_500, pMin: -21_000, pMax: 21_000 },
+[GeneratorTypes.initialFilterQ]:              { min:       0, max:    960, def:       0, pMin: -960                  },
 
 // Effects / pan
-[generatorTypes.chorusEffectsSend]:           { min:       0, max:   1000, def:       0, pMin: -1000                 },
-[generatorTypes.reverbEffectsSend]:           { min:       0, max:   1000, def:       0, pMin: -1000                 },
-[generatorTypes.pan]:                         { min:    -500, max:    500, def:       0, pMin: -1000,   pMax: 1000   },
+[GeneratorTypes.chorusEffectsSend]:           { min:       0, max:   1000, def:       0, pMin: -1000                 },
+[GeneratorTypes.reverbEffectsSend]:           { min:       0, max:   1000, def:       0, pMin: -1000                 },
+[GeneratorTypes.pan]:                         { min:    -500, max:    500, def:       0, pMin: -1000,   pMax: 1000   },
 
 // LFO
-[generatorTypes.delayModLFO]:                 { min: -12_000, max:   5000, def: -12_000, pMin: -21_000, pMax: 21_000 },
-[generatorTypes.freqModLFO]:                  { min: -16_000, max:   4500, def:       0, pMin: -21_000, pMax: 21_000 },
-[generatorTypes.delayVibLFO]:                 { min: -12_000, max:   5000, def: -12_000, pMin: -21_000, pMax: 21_000 },
-[generatorTypes.freqVibLFO]:                  { min: -16_000, max:   4500, def:       0, pMin: -21_000, pMax: 21_000 },
+[GeneratorTypes.delayModLFO]:                 { min: -12_000, max:   5000, def: -12_000, pMin: -21_000, pMax: 21_000 },
+[GeneratorTypes.freqModLFO]:                  { min: -16_000, max:   4500, def:       0, pMin: -21_000, pMax: 21_000 },
+[GeneratorTypes.delayVibLFO]:                 { min: -12_000, max:   5000, def: -12_000, pMin: -21_000, pMax: 21_000 },
+[GeneratorTypes.freqVibLFO]:                  { min: -16_000, max:   4500, def:       0, pMin: -21_000, pMax: 21_000 },
 
 // Mod envelope
-[generatorTypes.delayModEnv]:                 { min: -12_000, max:   5000, def: -12_000, pMin: -21_000, pMax: 21_000 },
-[generatorTypes.attackModEnv]:                { min: -12_000, max:   8000, def: -12_000, pMin: -21_000, pMax: 21_000 },
-[generatorTypes.holdModEnv]:                  { min: -12_000, max:   5000, def: -12_000, pMin: -21_000, pMax: 21_000 },
-[generatorTypes.decayModEnv]:                 { min: -12_000, max:   8000, def: -12_000, pMin: -21_000, pMax: 21_000 },
-[generatorTypes.sustainModEnv]:               { min:       0, max:   1000, def:       0, pMin: -1000                 },
-[generatorTypes.releaseModEnv]:               { min: -12_000, max:   8000, def: -12_000, pMin: -21_000, pMax: 21_000 },
-[generatorTypes.keyNumToModEnvHold]:          { min:   -1200, max:   1200, def:       0, pMin: -2400,   pMax: 2400   },
-[generatorTypes.keyNumToModEnvDecay]:         { min:   -1200, max:   1200, def:       0, pMin: -2400,   pMax: 2400   },
+[GeneratorTypes.delayModEnv]:                 { min: -12_000, max:   5000, def: -12_000, pMin: -21_000, pMax: 21_000 },
+[GeneratorTypes.attackModEnv]:                { min: -12_000, max:   8000, def: -12_000, pMin: -21_000, pMax: 21_000 },
+[GeneratorTypes.holdModEnv]:                  { min: -12_000, max:   5000, def: -12_000, pMin: -21_000, pMax: 21_000 },
+[GeneratorTypes.decayModEnv]:                 { min: -12_000, max:   8000, def: -12_000, pMin: -21_000, pMax: 21_000 },
+[GeneratorTypes.sustainModEnv]:               { min:       0, max:   1000, def:       0, pMin: -1000                 },
+[GeneratorTypes.releaseModEnv]:               { min: -12_000, max:   8000, def: -12_000, pMin: -21_000, pMax: 21_000 },
+[GeneratorTypes.keyNumToModEnvHold]:          { min:   -1200, max:   1200, def:       0, pMin: -2400,   pMax: 2400   },
+[GeneratorTypes.keyNumToModEnvDecay]:         { min:   -1200, max:   1200, def:       0, pMin: -2400,   pMax: 2400   },
 
 // Volume envelope
-[generatorTypes.delayVolEnv]:                 { min: -12_000, max:   5000, def: -12_000, pMin: -21_000, pMax: 21_000 },
-[generatorTypes.attackVolEnv]:                { min: -12_000, max:   8000, def: -12_000, pMin: -21_000, pMax: 21_000 },
-[generatorTypes.holdVolEnv]:                  { min: -12_000, max:   5000, def: -12_000, pMin: -21_000, pMax: 21_000 },
-[generatorTypes.decayVolEnv]:                 { min: -12_000, max:   8000, def: -12_000, pMin: -21_000, pMax: 21_000 },
-[generatorTypes.sustainVolEnv]:               { min:       0, max:   1440, def:       0, pMin: -1440                 },
-[generatorTypes.releaseVolEnv]:               { min: -12_000, max:   8000, def: -12_000, pMin: -21_000, pMax: 21_000 },
-[generatorTypes.keyNumToVolEnvHold]:          { min:   -1200, max:   1200, def:       0, pMin: -2400,   pMax: 2400   },
-[generatorTypes.keyNumToVolEnvDecay]:         { min:   -1200, max:   1200, def:       0, pMin: -2400,   pMax: 2400   },
+[GeneratorTypes.delayVolEnv]:                 { min: -12_000, max:   5000, def: -12_000, pMin: -21_000, pMax: 21_000 },
+[GeneratorTypes.attackVolEnv]:                { min: -12_000, max:   8000, def: -12_000, pMin: -21_000, pMax: 21_000 },
+[GeneratorTypes.holdVolEnv]:                  { min: -12_000, max:   5000, def: -12_000, pMin: -21_000, pMax: 21_000 },
+[GeneratorTypes.decayVolEnv]:                 { min: -12_000, max:   8000, def: -12_000, pMin: -21_000, pMax: 21_000 },
+[GeneratorTypes.sustainVolEnv]:               { min:       0, max:   1440, def:       0, pMin: -1440                 },
+[GeneratorTypes.releaseVolEnv]:               { min: -12_000, max:   8000, def: -12_000, pMin: -21_000, pMax: 21_000 },
+[GeneratorTypes.keyNumToVolEnvHold]:          { min:   -1200, max:   1200, def:       0, pMin: -2400,   pMax: 2400   },
+[GeneratorTypes.keyNumToVolEnvDecay]:         { min:   -1200, max:   1200, def:       0, pMin: -2400,   pMax: 2400   },
 
 // Tuning
-[generatorTypes.coarseTune]:                  { min:    -120, max:    120, def:       0, pMin: -240, pMax: 240       },
-[generatorTypes.fineTune]:                    { min: -12_700, max: 12_700, def:       0, pMin: -198, pMax: 198       },
-[generatorTypes.scaleTuning]:                 { min:       0, max:   1200, def:     100, pMin: -1200                 },
+[GeneratorTypes.coarseTune]:                  { min:    -120, max:    120, def:       0, pMin: -240, pMax: 240       },
+[GeneratorTypes.fineTune]:                    { min: -12_700, max: 12_700, def:       0, pMin: -198, pMax: 198       },
+[GeneratorTypes.scaleTuning]:                 { min:       0, max:   1200, def:     100, pMin: -1200                 },
 
 // Misc
-[generatorTypes.keyNum]:                      { min:      -1, max:    127, def:      -1                              },
-[generatorTypes.velocity]:                    { min:      -1, max:    127, def:      -1                              },
-[generatorTypes.initialAttenuation]:          { min:       0, max:   1440, def:       0, pMin: -1440                 },
-[generatorTypes.exclusiveClass]:              { min:       0, max: 99_999, def:       0                              },
-[generatorTypes.overridingRootKey]:           { min:      -1, max:    127, def:      -1                              },
-[generatorTypes.sampleModes]:                 { min:       0, max:      3, def:       0                              }
+[GeneratorTypes.keyNum]:                      { min:      -1, max:    127, def:      -1                              },
+[GeneratorTypes.velocity]:                    { min:      -1, max:    127, def:      -1                              },
+[GeneratorTypes.initialAttenuation]:          { min:       0, max:   1440, def:       0, pMin: -1440                 },
+[GeneratorTypes.exclusiveClass]:              { min:       0, max: 99_999, def:       0                              },
+[GeneratorTypes.overridingRootKey]:           { min:      -1, max:    127, def:      -1                              },
+[GeneratorTypes.sampleModes]:                 { min:       0, max:      3, def:       0                              }
 });

@@ -1,4 +1,4 @@
-import { type GeneratorType, generatorTypes } from "spessasynth_core";
+import { type GeneratorType, GeneratorTypes } from "spessasynth_core";
 import type { JSX } from "react";
 
 export function DestinationPicker({
@@ -17,7 +17,7 @@ export function DestinationPicker({
             onChange={(e) =>
                 setDestination(
                     (Number.parseInt(e.target.value) as GeneratorType) ||
-                        generatorTypes.initialAttenuation
+                        GeneratorTypes.initialAttenuation
                 )
             }
         >

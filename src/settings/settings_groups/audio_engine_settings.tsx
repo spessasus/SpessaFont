@@ -4,7 +4,7 @@ import {
     getSetting,
     type SavedSettingsType
 } from "../save_load/settings_typedef.ts";
-import { type InterpolationType, interpolationTypes } from "spessasynth_core";
+import { type InterpolationType, InterpolationTypes } from "spessasynth_core";
 import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
 
 export interface GroupSettingsProps {
@@ -121,13 +121,13 @@ export function AudioEngineSettings({
                     className={"pretty_input monospaced"}
                     value={getSetting("interpolation", settings)}
                 >
-                    <option value={interpolationTypes.nearestNeighbor}>
+                    <option value={InterpolationTypes.nearestNeighbor}>
                         {t(`${engineT}interpolation.nearestNeighbor`)}
                     </option>
-                    <option value={interpolationTypes.linear}>
+                    <option value={InterpolationTypes.linear}>
                         {t(`${engineT}interpolation.linear`)}
                     </option>
-                    <option value={interpolationTypes.hermite}>
+                    <option value={InterpolationTypes.hermite}>
                         {t(`${engineT}interpolation.cubic`)}
                     </option>
                 </select>

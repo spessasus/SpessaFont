@@ -3,9 +3,11 @@ import { Keyboard, type KeyboardRef } from "./keyboard/keyboard.tsx";
 import * as React from "react";
 import { type JSX, type RefObject, useEffect, useRef, useState } from "react";
 import {
+    CONTROLLER_TABLE_SIZE,
+    DEFAULT_MIDI_CONTROLLERS,
     type GenericRange,
     type MIDIController,
-    midiControllers
+    MIDIControllers
 } from "spessasynth_core";
 import {
     Controller,
@@ -20,16 +22,16 @@ import { useTranslation } from "react-i18next";
 import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
 
 const INITIAL_CC_LIST: MIDIController[] = [
-    midiControllers.modulationWheel,
-    midiControllers.mainVolume,
-    midiControllers.pan,
-    midiControllers.expressionController,
-    midiControllers.sustainPedal,
-    midiControllers.filterResonance,
-    midiControllers.brightness,
+    MIDIControllers.modulationWheel,
+    MIDIControllers.mainVolume,
+    MIDIControllers.pan,
+    MIDIControllers.expressionController,
+    MIDIControllers.sustainPedal,
+    MIDIControllers.filterResonance,
+    MIDIControllers.brightness,
 
-    midiControllers.reverbDepth,
-    midiControllers.chorusDepth
+    MIDIControllers.reverbDepth,
+    MIDIControllers.chorusDepth
 ];
 
 export function KeyboardController({
@@ -62,10 +64,22 @@ export function KeyboardController({
                 switch (e.type) {
                     case "controllerChange": {
                         if (e.data?.channel !== KEYBOARD_TARGET_CHANNEL) return;
-                        const ccV = e.data.controllerValue;
-                        const cc = e.data.controllerNumber;
+                        const ccV = e.data.value;
+                        const cc = e.data.controller;
                         for (const r of knobRefs.current) {
                             r?.current?.ccUpdate(cc, ccV);
+                        }
+                        break;
+                    }
+
+                    case "allControllerReset": {
+                        for (let i = 0; i < CONTROLLER_TABLE_SIZE; i++) {
+                            for (const r of knobRefs.current) {
+                                r?.current?.ccUpdate(
+                                    i,
+                                    DEFAULT_MIDI_CONTROLLERS[i]
+                                );
+                            }
                         }
                         break;
                     }
@@ -85,15 +99,19 @@ export function KeyboardController({
                         break;
                     }
 
-                    case "pitchWheel": {
-                        if (e.data?.channel !== KEYBOARD_TARGET_CHANNEL) return;
-                        pitchRef?.current?.setPitch(e.data.pitch);
-                        break;
-                    }
+                    case "midiChannelChange": {
+                        if (e.data.channel !== KEYBOARD_TARGET_CHANNEL) return;
+                        switch (e.data.parameter) {
+                            case "pressure": {
+                                pitchRef?.current?.setPressure(e.data.value);
+                                break;
+                            }
 
-                    case "channelPressure": {
-                        if (e.data?.channel !== KEYBOARD_TARGET_CHANNEL) return;
-                        pitchRef?.current?.setPressure(e.data.pressure);
+                            case "pitchWheel": {
+                                pitchRef?.current?.setPitch(e.data.value);
+                            }
+                        }
+                        break;
                     }
                 }
             }

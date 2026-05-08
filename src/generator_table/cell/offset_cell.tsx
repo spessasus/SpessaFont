@@ -2,7 +2,7 @@ import type { GeneratorProps } from "../generator_row.tsx";
 import {
     BasicInstrumentZone,
     type BasicZone,
-    generatorTypes
+    GeneratorTypes
 } from "spessasynth_core";
 import { GeneratorCellInput } from "./generator_cell_input.tsx";
 import { useCallback } from "react";
@@ -10,16 +10,16 @@ import { SetGeneratorAction } from "./set_generator_action.ts";
 import { typedMemo } from "../../utils/typed_memo.ts";
 
 export type OffsetGenerator =
-    | typeof generatorTypes.startAddrsOffset
-    | typeof generatorTypes.endAddrOffset
-    | typeof generatorTypes.startloopAddrsOffset
-    | typeof generatorTypes.endloopAddrsOffset;
+    | typeof GeneratorTypes.startAddrsOffset
+    | typeof GeneratorTypes.endAddrOffset
+    | typeof GeneratorTypes.startloopAddrsOffset
+    | typeof GeneratorTypes.endloopAddrsOffset;
 
 export type CoarseOffsetGenerator =
-    | typeof generatorTypes.startAddrsCoarseOffset
-    | typeof generatorTypes.endAddrsCoarseOffset
-    | typeof generatorTypes.startloopAddrsCoarseOffset
-    | typeof generatorTypes.endloopAddrsCoarseOffset;
+    | typeof GeneratorTypes.startAddrsCoarseOffset
+    | typeof GeneratorTypes.endAddrsCoarseOffset
+    | typeof GeneratorTypes.startloopAddrsCoarseOffset
+    | typeof GeneratorTypes.endloopAddrsCoarseOffset;
 
 export const OffsetGeneratorCell = typedMemo(function ({
     zone,
@@ -36,22 +36,22 @@ export const OffsetGeneratorCell = typedMemo(function ({
 }) {
     let coarseGeneratorType: CoarseOffsetGenerator;
     switch (generatorType) {
-        case generatorTypes.startAddrsOffset: {
-            coarseGeneratorType = generatorTypes.startAddrsCoarseOffset;
+        case GeneratorTypes.startAddrsOffset: {
+            coarseGeneratorType = GeneratorTypes.startAddrsCoarseOffset;
             break;
         }
 
-        case generatorTypes.endAddrOffset: {
-            coarseGeneratorType = generatorTypes.endAddrsCoarseOffset;
+        case GeneratorTypes.endAddrOffset: {
+            coarseGeneratorType = GeneratorTypes.endAddrsCoarseOffset;
             break;
         }
 
-        case generatorTypes.startloopAddrsOffset: {
-            coarseGeneratorType = generatorTypes.startloopAddrsCoarseOffset;
+        case GeneratorTypes.startloopAddrsOffset: {
+            coarseGeneratorType = GeneratorTypes.startloopAddrsCoarseOffset;
             break;
         }
-        case generatorTypes.endloopAddrsOffset: {
-            coarseGeneratorType = generatorTypes.endloopAddrsCoarseOffset;
+        case GeneratorTypes.endloopAddrsOffset: {
+            coarseGeneratorType = GeneratorTypes.endloopAddrsCoarseOffset;
         }
     }
     const currentFineOffset = zone.getGenerator(generatorType, null);

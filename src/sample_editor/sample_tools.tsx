@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SamplePlayerState } from "./sample_editor.tsx";
 import { ControllerRange } from "../fancy_inputs/controller_range/controller_range.tsx";
 import { useTranslation } from "react-i18next";
-import { audioToWav, type BasicSample, sampleTypes } from "spessasynth_core";
+import { audioToWav, type BasicSample, SampleTypes } from "spessasynth_core";
 import toast from "react-hot-toast";
 import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
 
@@ -215,13 +215,13 @@ export function SampleTools({
                 const right = audioBuffer.getChannelData(1);
                 // check for linked sample
                 if (
-                    (sampleType === sampleTypes.leftSample ||
-                        sampleType === sampleTypes.rightSample) &&
+                    (sampleType === SampleTypes.leftSample ||
+                        sampleType === SampleTypes.rightSample) &&
                     linkedSample
                 ) {
                     const linked = linkedSample;
 
-                    if (sampleType === sampleTypes.leftSample) {
+                    if (sampleType === SampleTypes.leftSample) {
                         linked.setAudioData(right, audioBuffer.sampleRate);
                         linked.loopStart = 0;
                         linked.loopEnd = right.length - 1;

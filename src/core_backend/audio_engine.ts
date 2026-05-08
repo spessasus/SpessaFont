@@ -1,9 +1,9 @@
 import {
     type BasicMIDI,
     BasicSoundBank,
-    midiMessageTypes,
+    MIDIMessageTypes,
     SoundBankLoader,
-    SpessaSynthLogging,
+    SpessaSynthLog,
     SpessaSynthProcessor,
     SpessaSynthSequencer
 } from "spessasynth_core";
@@ -44,7 +44,6 @@ export class AudioEngine {
     constructor(context: AudioContext, initialSettings: SavedSettingsType) {
         this.context = context;
         this.processor = new SpessaSynthProcessor(context.sampleRate, {
-            enableEffects: true,
             initialTime: context.currentTime
         });
         this.maxChunksQueued = Math.min(
@@ -70,7 +69,7 @@ export class AudioEngine {
         if (isDev) {
             logInfo("Dev mode on");
         }
-        SpessaSynthLogging(isDev, isDev, isDev);
+        SpessaSynthLog.setLogLevel(isDev, isDev, isDev);
 
         this.currentSampleRate = context.sampleRate;
         this.applySettings(initialSettings);
@@ -95,19 +94,19 @@ export class AudioEngine {
 
     public ccChangeRealTime(ch: number, cc: number, value: number) {
         this.processRealTime([
-            midiMessageTypes.controllerChange | (ch % 16),
+            MIDIMessageTypes.controllerChange | (ch % 16),
             cc,
             value
         ]);
     }
 
     public noteOffRealTime(ch: number, note: number) {
-        this.processRealTime([midiMessageTypes.noteOff | (ch % 16), note]);
+        this.processRealTime([MIDIMessageTypes.noteOff | (ch % 16), note]);
     }
 
     public noteOnRealTime(ch: number, note: number, velocity: number) {
         this.processRealTime([
-            midiMessageTypes.noteOn | (ch % 16),
+            MIDIMessageTypes.noteOn | (ch % 16),
             note,
             velocity
         ]);

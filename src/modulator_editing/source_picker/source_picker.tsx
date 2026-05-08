@@ -1,5 +1,7 @@
-import type { ModulatorSourceIndex } from "spessasynth_core";
-import { modulatorSources } from "spessasynth_core";
+import {
+    ModulatorControllerSources,
+    type ModulatorSourceIndex
+} from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import type { ChangeEvent, JSX } from "react";
 import "./source_picker.css";
@@ -43,25 +45,25 @@ export function ModulatorSourcePicker({
             onChange={handleSelectChange}
             value={selectValue}
         >
-            <option value={-modulatorSources.noController}>
+            <option value={-ModulatorControllerSources.noController}>
                 {t("modulatorLocale.sources.noController")}
             </option>
-            <option value={-modulatorSources.noteOnVelocity}>
+            <option value={-ModulatorControllerSources.noteOnVelocity}>
                 {t("modulatorLocale.sources.velocity")}
             </option>
-            <option value={-modulatorSources.noteOnKeyNum}>
+            <option value={-ModulatorControllerSources.noteOnKeyNum}>
                 {t("modulatorLocale.sources.midiNote")}
             </option>
-            <option value={-modulatorSources.polyPressure}>
+            <option value={-ModulatorControllerSources.polyPressure}>
                 {t("modulatorLocale.sources.polyPressure")}
             </option>
-            <option value={-modulatorSources.channelPressure}>
+            <option value={-ModulatorControllerSources.channelPressure}>
                 {t("modulatorLocale.sources.channelPressure")}
             </option>
-            <option value={-modulatorSources.pitchWheel}>
+            <option value={-ModulatorControllerSources.pitchWheel}>
                 {t("modulatorLocale.sources.pitchWheel")}
             </option>
-            <option value={-modulatorSources.pitchWheelRange}>
+            <option value={-ModulatorControllerSources.pitchWheelRange}>
                 {t("modulatorLocale.sources.pitchWheelRange")}
             </option>
             {ccOptions}

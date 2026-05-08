@@ -2,7 +2,7 @@ import {
     BasicInstrumentZone,
     type BasicPresetZone,
     BasicZone,
-    generatorTypes
+    GeneratorTypes
 } from "spessasynth_core";
 import type { NumberGeneratorProps } from "../generator_row.tsx";
 import { type CSSProperties, useCallback, useMemo } from "react";
@@ -57,7 +57,7 @@ export const NumberGeneratorCell = typedMemo(function <
     let placeholder = "";
     if (
         zone instanceof BasicInstrumentZone &&
-        generator === generatorTypes.overridingRootKey
+        generator === GeneratorTypes.overridingRootKey
     ) {
         placeholder = `${zone.sample.originalKey} (${midiNoteToPitchClass(
             zone.sample.originalKey
@@ -75,7 +75,7 @@ export const NumberGeneratorCell = typedMemo(function <
     );
 
     const style: CSSProperties = {};
-    if (generator === generatorTypes.exclusiveClass && value && value > 0) {
+    if (generator === GeneratorTypes.exclusiveClass && value && value > 0) {
         style.color = getDistinctColor(value);
         style.fontWeight = "bold";
     }
@@ -130,7 +130,7 @@ export const NumberGeneratorCell = typedMemo(function <
     );
 
     // loop playback special case
-    if (generator === generatorTypes.sampleModes) {
+    if (generator === GeneratorTypes.sampleModes) {
         return (
             <td className={`generator_cell`} colSpan={colSpan}>
                 <select

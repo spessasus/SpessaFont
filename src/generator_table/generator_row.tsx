@@ -5,7 +5,7 @@ import {
     type BasicPresetZone,
     type BasicZone,
     type GeneratorType,
-    generatorTypes
+    GeneratorTypes
 } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import { generatorLocaleMap } from "../utils/translated_options/generator_to_locale_map.ts";
@@ -15,7 +15,7 @@ import { RangeGeneratorCell } from "./cell/range_cell.tsx";
 import type { LinkedZoneMap } from "./generator_table.tsx";
 import { OffsetGeneratorCell } from "./cell/offset_cell.tsx";
 import { typedMemo } from "../utils/typed_memo.ts";
-import { generatorLimits } from "../core_backend/generator_limits.ts";
+import { GeneratorLimits } from "../core_backend/generator_limits.ts";
 
 export interface GeneratorProps {
     generator: GeneratorType;
@@ -54,14 +54,14 @@ export const NumberGeneratorRow = typedMemo(function <
 }) {
     const { t } = useTranslation();
     const isRange =
-        generator === generatorTypes.velRange ||
-        generator === generatorTypes.keyRange;
+        generator === GeneratorTypes.velRange ||
+        generator === GeneratorTypes.keyRange;
     const isOffset =
-        generator === generatorTypes.startAddrsOffset ||
-        generator === generatorTypes.endAddrOffset ||
-        generator === generatorTypes.startloopAddrsOffset ||
-        generator === generatorTypes.endloopAddrsOffset;
-    const l = generatorLimits[generator];
+        generator === GeneratorTypes.startAddrsOffset ||
+        generator === GeneratorTypes.endAddrOffset ||
+        generator === GeneratorTypes.startloopAddrsOffset ||
+        generator === GeneratorTypes.endloopAddrsOffset;
+    const l = GeneratorLimits[generator];
     let min, max, def;
     if (isRange || isOffset) {
         min = max = def = 0;
@@ -181,7 +181,7 @@ export const NumberGeneratorRow = typedMemo(function <
                         const linked = linkedZoneMap[i];
 
                         let span = 1;
-                        if (generator !== generatorTypes.pan) {
+                        if (generator !== GeneratorTypes.pan) {
                             if (linked.index === 2) {
                                 return null;
                             }

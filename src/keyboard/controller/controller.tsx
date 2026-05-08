@@ -1,4 +1,4 @@
-import { type MIDIController, midiControllers } from "spessasynth_core";
+import { type MIDIController, MIDIControllers } from "spessasynth_core";
 import "./controller.css";
 import { CC_TOGGLES } from "../../utils/midi_constants.ts";
 import {
@@ -105,7 +105,7 @@ export function Controller({
                 onChange={(e) =>
                     setCC(
                         (Number.parseInt(e.target.value) as MIDIController) ||
-                            midiControllers.modulationWheel
+                            MIDIControllers.modulationWheel
                     )
                 }
             >

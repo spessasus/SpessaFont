@@ -2,9 +2,9 @@ import {
     BasicInstrument,
     BasicPreset,
     type BasicSample,
-    generatorTypes,
+    GeneratorTypes,
     type SampleType,
-    sampleTypes
+    SampleTypes
 } from "spessasynth_core";
 import "./sample_editor.css";
 import * as React from "react";
@@ -77,7 +77,7 @@ export const SampleEditor = React.memo(function ({
         const instZone = instrument.createZone(sample);
         // unlink here as we don't want to mark it as linked
         sample.unlinkFrom(instrument);
-        instZone.setGenerator(generatorTypes.sampleModes, 1);
+        instZone.setGenerator(GeneratorTypes.sampleModes, 1);
         processor.midiChannels[KEYBOARD_TARGET_CHANNEL].preset = preset;
 
         processor.clearCache();
@@ -176,9 +176,9 @@ export const SampleEditor = React.memo(function ({
 
         // automatically add "R" or "L" for linked stereo samples, making sure to do so for the other linked sample
         if (linkedSample) {
-            if (sample.sampleType === sampleTypes.rightSample) {
+            if (sample.sampleType === SampleTypes.rightSample) {
                 newName += "R";
-            } else if (sample.sampleType === sampleTypes.leftSample) {
+            } else if (sample.sampleType === SampleTypes.leftSample) {
                 newName += "L";
             }
         }
@@ -194,9 +194,9 @@ export const SampleEditor = React.memo(function ({
         ];
         if (linkedSample) {
             let secondNewName = n;
-            if (sample.sampleType === sampleTypes.rightSample) {
+            if (sample.sampleType === SampleTypes.rightSample) {
                 secondNewName += "L";
-            } else if (sample.sampleType === sampleTypes.leftSample) {
+            } else if (sample.sampleType === SampleTypes.leftSample) {
                 secondNewName += "R";
             }
             actions.push(

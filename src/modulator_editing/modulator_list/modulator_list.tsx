@@ -1,4 +1,4 @@
-import { generatorTypes, Modulator, ModulatorSource } from "spessasynth_core";
+import { GeneratorTypes, Modulator, ModulatorSource } from "spessasynth_core";
 import { ModulatorView } from "../modulator/modulator.tsx";
 import "./modulator_list.css";
 import { useTranslation } from "react-i18next";
@@ -40,7 +40,7 @@ export function ModulatorList({
         const mod = new Modulator(
             new ModulatorSource(),
             new ModulatorSource(),
-            generatorTypes.initialAttenuation,
+            GeneratorTypes.initialAttenuation,
             0,
             0
         );

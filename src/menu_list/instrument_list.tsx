@@ -6,8 +6,8 @@ import {
     BasicInstrument,
     type BasicSample,
     BasicZone,
-    generatorTypes,
-    sampleTypes
+    GeneratorTypes,
+    SampleTypes
 } from "spessasynth_core";
 import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
 import { DropdownHeader } from "./dropdown_header/dropdown_header.tsx";
@@ -134,14 +134,14 @@ export function InstrumentList({
             ? firstSample.name.replace(STEREO_REGEX, "")
             : firstSample.name;
         // add loop for convenience
-        instrument.globalZone.setGenerator(generatorTypes.sampleModes, 1);
+        instrument.globalZone.setGenerator(GeneratorTypes.sampleModes, 1);
         for (const s of samplesToAdd) {
             const zone = instrument.createZone(s);
             // sample types!
-            if (s.sampleType === sampleTypes.leftSample) {
-                zone.setGenerator(generatorTypes.pan, -500);
-            } else if (s.sampleType === sampleTypes.rightSample) {
-                zone.setGenerator(generatorTypes.pan, 500);
+            if (s.sampleType === SampleTypes.leftSample) {
+                zone.setGenerator(GeneratorTypes.pan, -500);
+            } else if (s.sampleType === SampleTypes.rightSample) {
+                zone.setGenerator(GeneratorTypes.pan, 500);
             }
         }
         const action = new CreateInstrumentAction(
@@ -158,10 +158,10 @@ export function InstrumentList({
             const ordered = addAndReorderStereoSamples(selectedSamples);
             for (const sample of ordered) {
                 const zone = new BasicZone();
-                if (sample.sampleType === sampleTypes.leftSample) {
-                    zone.setGenerator(generatorTypes.pan, -500);
-                } else if (sample.sampleType === sampleTypes.rightSample) {
-                    zone.setGenerator(generatorTypes.pan, 500);
+                if (sample.sampleType === SampleTypes.leftSample) {
+                    zone.setGenerator(GeneratorTypes.pan, -500);
+                } else if (sample.sampleType === SampleTypes.rightSample) {
+                    zone.setGenerator(GeneratorTypes.pan, 500);
                 }
                 actions.push(
                     new CreateZoneAction<BasicInstrument, BasicSample>(

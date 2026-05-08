@@ -1,7 +1,7 @@
 import {
     type BasicSample,
     type SampleType,
-    sampleTypes
+    SampleTypes
 } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import { useMemo } from "react";
@@ -64,9 +64,9 @@ export function TypeSelector({
     const setType = (t: SampleType) => {
         const linked: BasicSample = linkedSample ?? samples[0];
         switch (t) {
-            case sampleTypes.rightSample:
-            case sampleTypes.leftSample:
-            case sampleTypes.linkedSample: {
+            case SampleTypes.rightSample:
+            case SampleTypes.leftSample:
+            case SampleTypes.linkedSample: {
                 setLinkedSample(t, linked);
                 break;
             }
@@ -91,41 +91,41 @@ export function TypeSelector({
                     <option disabled={true} value={0}>
                         {t("sampleLocale.types.invalid")}
                     </option>
-                    <option value={sampleTypes.monoSample}>
+                    <option value={SampleTypes.monoSample}>
                         {t("sampleLocale.types.mono")}
                     </option>
                     <option
                         disabled={
                             nothingToLink &&
-                            sampleType !== sampleTypes.rightSample
+                            sampleType !== SampleTypes.rightSample
                         }
-                        value={sampleTypes.leftSample}
+                        value={SampleTypes.leftSample}
                     >
                         {t("sampleLocale.types.left")}
                     </option>
                     <option
                         disabled={
                             nothingToLink &&
-                            sampleType !== sampleTypes.leftSample
+                            sampleType !== SampleTypes.leftSample
                         }
-                        value={sampleTypes.rightSample}
+                        value={SampleTypes.rightSample}
                     >
                         {t("sampleLocale.types.right")}
                     </option>
-                    <option disabled={true} value={sampleTypes.linkedSample}>
+                    <option disabled={true} value={SampleTypes.linkedSample}>
                         {t("sampleLocale.types.linked")}
                     </option>
 
-                    <option disabled={true} value={sampleTypes.romMonoSample}>
+                    <option disabled={true} value={SampleTypes.romMonoSample}>
                         {t("sampleLocale.types.romMono")}
                     </option>
-                    <option disabled={true} value={sampleTypes.romLeftSample}>
+                    <option disabled={true} value={SampleTypes.romLeftSample}>
                         {t("sampleLocale.types.romLeft")}
                     </option>
-                    <option disabled={true} value={sampleTypes.romRightSample}>
+                    <option disabled={true} value={SampleTypes.romRightSample}>
                         {t("sampleLocale.types.romRight")}
                     </option>
-                    <option disabled={true} value={sampleTypes.romLinkedSample}>
+                    <option disabled={true} value={SampleTypes.romLinkedSample}>
                         {t("sampleLocale.types.romLinked")}
                     </option>
                 </select>
