@@ -3,7 +3,7 @@ import {
     BasicSoundBank,
     MIDIMessageTypes,
     SoundBankLoader,
-    SpessaSynthLog,
+    SpessaLog,
     SpessaSynthProcessor,
     SpessaSynthSequencer
 } from "spessasynth_core";
@@ -69,7 +69,7 @@ export class AudioEngine {
         if (isDev) {
             logInfo("Dev mode on");
         }
-        SpessaSynthLog.setLogLevel(isDev, isDev, isDev);
+        SpessaLog.setLogLevel(isDev, isDev, isDev);
 
         this.currentSampleRate = context.sampleRate;
         this.applySettings(initialSettings);
@@ -115,23 +115,23 @@ export class AudioEngine {
     applySettings(settings: SavedSettingsType) {
         const processor = this.processor;
         this.setVolume(getSetting("volume", settings));
-        processor.setMasterParameter(
+        processor.setSystemParameter(
             "interpolationType",
             getSetting("interpolation", settings)
         );
-        processor.setMasterParameter(
+        processor.setSystemParameter(
             "reverbGain",
             getSetting("reverbLevel", settings)
         );
-        processor.setMasterParameter(
+        processor.setSystemParameter(
             "chorusGain",
             getSetting("chorusLevel", settings)
         );
-        processor.setMasterParameter(
+        processor.setSystemParameter(
             "delayGain",
             getSetting("delayLevel", settings)
         );
-        processor.setMasterParameter(
+        processor.setSystemParameter(
             "voiceCap",
             getSetting("voiceCap", settings)
         );

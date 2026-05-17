@@ -25,7 +25,7 @@ const INITIAL_CC_LIST: MIDIController[] = [
     MIDIControllers.modulationWheel,
     MIDIControllers.mainVolume,
     MIDIControllers.pan,
-    MIDIControllers.expressionController,
+    MIDIControllers.expression,
     MIDIControllers.sustainPedal,
     MIDIControllers.filterResonance,
     MIDIControllers.brightness,
@@ -99,7 +99,7 @@ export function KeyboardController({
                         break;
                     }
 
-                    case "midiChannelChange": {
+                    case "channelMIDIParamChange": {
                         if (e.data.channel !== KEYBOARD_TARGET_CHANNEL) return;
                         switch (e.data.parameter) {
                             case "pressure": {
