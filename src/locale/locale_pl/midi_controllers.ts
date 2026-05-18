@@ -1,5 +1,5 @@
 // capitalize all words except ones like the, a, for, and, or, etc...
-export const MidiControllersLocale = {
+export const MIDIControllersLocale = {
     // translate "Undefined", this is just so JS works fine
     notDefined: "Niezdefiniowane",
 

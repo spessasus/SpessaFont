@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import { modulatorCurveTypes } from "spessasynth_core";
 import type { SpessaFontModulatorCurveType } from "./curve_picker.tsx";
+import { ModulatorCurveTypes } from "spessasynth_core";
 
 const MARGIN = 10;
 const ARROW_HEAD_SIZE = 3;
@@ -27,18 +27,18 @@ function getCurveValue(
     }
     switch (curve.curveType) {
         default:
-        case modulatorCurveTypes.linear: {
+        case ModulatorCurveTypes.linear: {
             return polarity ? value * 2 - 1 : value;
         }
-        case modulatorCurveTypes.switch: {
+        case ModulatorCurveTypes.switch: {
             value = value > 0.5 ? 1 : 0;
             return polarity ? value * 2 - 1 : value;
         }
-        case modulatorCurveTypes.concave: {
+        case ModulatorCurveTypes.concave: {
             value = polarity ? value * 2 - 1 : value;
             return value < 0 ? -concave(-value) : concave(value);
         }
-        case modulatorCurveTypes.convex: {
+        case ModulatorCurveTypes.convex: {
             value = polarity ? value * 2 - 1 : value;
             return value < 0 ? -convex(-value) : convex(value);
         }

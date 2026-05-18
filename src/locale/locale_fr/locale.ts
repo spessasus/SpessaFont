@@ -4,7 +4,7 @@ import { PresetListLocale } from "./preset_list.ts";
 import { ModulatorLocale } from "./modulator.ts";
 import { GeneratorLocale } from "./generator.ts";
 import { SettingsLocale } from "./settings.ts";
-import { MidiControllersLocale } from "./midi_controllers.ts";
+import { MIDIControllersLocale } from "./midi_controllers.ts";
 import { SampleLocale } from "./sample.ts";
 import { KeyboardLocale } from "./keyboard.ts";
 import { SoundBankLocale } from "./sound_bank.ts";
@@ -37,13 +37,16 @@ export const localeFrench = {
     loadingAndSaving: {
         loadingFileFromDisk: "Chargement d'un fichier depuis le disque...",
         parsingSoundBank: "Analyse de la Banque de Son...",
-        errorLoadingSoundBank: "Il y a eu une erreur lors du chargement de la Banque de Son!",
-        chromeError: "Le fichier est trop lourd pour être ouvert sur des navigateurs basés sur Chromium.",
+        errorLoadingSoundBank:
+            "Il y a eu une erreur lors du chargement de la Banque de Son!",
+        chromeError:
+            "Le fichier est trop lourd pour être ouvert sur des navigateurs basés sur Chromium.",
 
         savingSoundBank: "En train d'enregistrer la banque sonore...",
         savedSuccessfully: "Enregistré avec succès!",
         writingSamples: "En train d'écrire les échantillons...",
-        writingFailed: "Il y a eu une erreur lors de l'écriture de la Banque de Son!"
+        writingFailed:
+            "Il y a eu une erreur lors de l'écriture de la Banque de Son!"
     },
 
     error: "Erreur",
@@ -68,7 +71,7 @@ export const localeFrench = {
     bankInfo: BankInfoLocale,
     presetList: PresetListLocale,
     settingsLocale: SettingsLocale,
-    midiControllersLocale: MidiControllersLocale,
+    MIDIControllersLocale: MIDIControllersLocale,
     keyboardLocale: KeyboardLocale,
 
     sampleLocale: SampleLocale,

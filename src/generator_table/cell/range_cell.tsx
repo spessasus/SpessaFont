@@ -1,7 +1,7 @@
 import {
     type BasicInstrument,
     type BasicZone,
-    generatorTypes,
+    GeneratorTypes,
     type GenericRange
 } from "spessasynth_core";
 import { GeneratorCellInput } from "./generator_cell_input.tsx";
@@ -10,8 +10,8 @@ import { SetRangeAction } from "./set_range_action.ts";
 import { typedMemo } from "../../utils/typed_memo.ts";
 
 export type RangeGenerator =
-    | typeof generatorTypes.keyRange
-    | typeof generatorTypes.velRange;
+    | typeof GeneratorTypes.keyRange
+    | typeof GeneratorTypes.velRange;
 
 export const RangeGeneratorCell = typedMemo(function ({
     zone,
@@ -32,7 +32,7 @@ export const RangeGeneratorCell = typedMemo(function ({
     colSpan: number;
     instrument?: BasicInstrument;
 }) {
-    const isKeyRange = generator === generatorTypes.keyRange;
+    const isKeyRange = generator === GeneratorTypes.keyRange;
     const range = isKeyRange ? keyRange : velRange;
 
     let rangeText = "";

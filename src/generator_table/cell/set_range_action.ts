@@ -2,7 +2,7 @@ import type { HistoryAction } from "../../core_backend/history.ts";
 import {
     type BasicZone,
     type GeneratorType,
-    generatorTypes,
+    GeneratorTypes,
     type GenericRange
 } from "spessasynth_core";
 
@@ -28,7 +28,7 @@ export class SetRangeAction implements HistoryAction {
     }
 
     do() {
-        if (this.generator === generatorTypes.velRange) {
+        if (this.generator === GeneratorTypes.velRange) {
             this.zone.velRange = this.newValue;
         } else {
             this.zone.keyRange = this.newValue;
@@ -37,7 +37,7 @@ export class SetRangeAction implements HistoryAction {
     }
 
     undo() {
-        if (this.generator === generatorTypes.velRange) {
+        if (this.generator === GeneratorTypes.velRange) {
             this.zone.velRange = this.previousValue;
         } else {
             this.zone.keyRange = this.previousValue;

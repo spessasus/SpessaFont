@@ -1,4 +1,4 @@
-import { BasicSample, EmptySample, sampleTypes } from "spessasynth_core";
+import { BasicSample, EmptySample, SampleTypes } from "spessasynth_core";
 import { DropdownHeader } from "./dropdown_header/dropdown_header.tsx";
 import * as React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -104,7 +104,7 @@ export function SampleList({
                 const sample2 = new EmptySample();
                 sample2.name = sampleName + "R";
                 sample2.setAudioData(otherOut, audioBuffer.sampleRate);
-                sample2.setLinkedSample(sample, sampleTypes.rightSample);
+                sample2.setLinkedSample(sample, SampleTypes.rightSample);
                 actions.push(
                     new CreateSampleAction(sample2, setSamples, setView)
                 );

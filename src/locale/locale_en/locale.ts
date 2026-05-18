@@ -4,7 +4,7 @@ import { PresetListLocale } from "./preset_list.ts";
 import { ModulatorLocale } from "./modulator.ts";
 import { GeneratorLocale } from "./generator.ts";
 import { SettingsLocale } from "./settings.ts";
-import { MidiControllersLocale } from "./midi_controllers.ts";
+import { MIDIControllersLocale } from "./midi_controllers.ts";
 import { SampleLocale } from "./sample.ts";
 import { KeyboardLocale } from "./keyboard.ts";
 import { SoundBankLocale } from "./sound_bank.ts";
@@ -79,7 +79,7 @@ export const localeEnglish = {
     bankInfo: BankInfoLocale,
     presetList: PresetListLocale,
     settingsLocale: SettingsLocale,
-    midiControllersLocale: MidiControllersLocale,
+    MIDIControllersLocale: MIDIControllersLocale,
     keyboardLocale: KeyboardLocale,
 
     sampleLocale: SampleLocale,

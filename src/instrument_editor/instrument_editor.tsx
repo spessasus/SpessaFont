@@ -3,7 +3,7 @@ import {
     type BasicInstrumentZone,
     BasicPreset,
     type GeneratorType,
-    generatorTypes,
+    GeneratorTypes,
     type GenericRange
 } from "spessasynth_core";
 import "./instrument_editor.css";
@@ -43,56 +43,56 @@ export interface GeneratorRowType {
 }
 const instrumentRows: GeneratorRowType[] = [
     {
-        generator: generatorTypes.keyRange
+        generator: GeneratorTypes.keyRange
     },
     {
-        generator: generatorTypes.velRange
+        generator: GeneratorTypes.velRange
     },
     {
-        generator: generatorTypes.initialAttenuation,
+        generator: GeneratorTypes.initialAttenuation,
         fromGenerator: (v) => v * 0.04,
         toGenerator: (v) => v / 0.04,
         unit: "dB",
         precision: 2
     },
     {
-        generator: generatorTypes.pan,
+        generator: GeneratorTypes.pan,
         unit: "pan"
     },
     {
-        generator: generatorTypes.sampleModes
+        generator: GeneratorTypes.sampleModes
     },
     {
-        generator: generatorTypes.overridingRootKey
+        generator: GeneratorTypes.overridingRootKey
     },
     {
-        generator: generatorTypes.coarseTune,
+        generator: GeneratorTypes.coarseTune,
         highlight: true
     },
     {
-        generator: generatorTypes.fineTune,
+        generator: GeneratorTypes.fineTune,
         highlight: true
     },
     {
-        generator: generatorTypes.scaleTuning,
+        generator: GeneratorTypes.scaleTuning,
         highlight: true,
         unit: "cent"
     },
     {
-        generator: generatorTypes.initialFilterFc,
+        generator: GeneratorTypes.initialFilterFc,
         fromGenerator: ac2hz,
         toGenerator: hz2ac,
         unit: "Hz"
     },
     {
-        generator: generatorTypes.initialFilterQ,
+        generator: GeneratorTypes.initialFilterQ,
         fromGenerator: cb2db,
         toGenerator: db2cb,
         precision: 1,
         unit: "dB"
     },
     {
-        generator: generatorTypes.delayVolEnv,
+        generator: GeneratorTypes.delayVolEnv,
         highlight: true,
         fromGenerator: tc2s,
         toGenerator: s2tc,
@@ -100,7 +100,7 @@ const instrumentRows: GeneratorRowType[] = [
         unit: "sec"
     },
     {
-        generator: generatorTypes.attackVolEnv,
+        generator: GeneratorTypes.attackVolEnv,
         highlight: true,
         fromGenerator: tc2s,
         toGenerator: s2tc,
@@ -108,7 +108,7 @@ const instrumentRows: GeneratorRowType[] = [
         unit: "sec"
     },
     {
-        generator: generatorTypes.holdVolEnv,
+        generator: GeneratorTypes.holdVolEnv,
         highlight: true,
         fromGenerator: tc2s,
         toGenerator: s2tc,
@@ -116,7 +116,7 @@ const instrumentRows: GeneratorRowType[] = [
         unit: "sec"
     },
     {
-        generator: generatorTypes.decayVolEnv,
+        generator: GeneratorTypes.decayVolEnv,
         highlight: true,
         fromGenerator: tc2s,
         toGenerator: s2tc,
@@ -124,117 +124,7 @@ const instrumentRows: GeneratorRowType[] = [
         unit: "sec"
     },
     {
-        generator: generatorTypes.sustainVolEnv,
-        highlight: true,
-        fromGenerator: cb2db,
-        toGenerator: db2cb,
-        precision: 1,
-        unit: "dB"
-    },
-    {
-        generator: generatorTypes.releaseVolEnv,
-        highlight: true,
-        fromGenerator: tc2s,
-        toGenerator: s2tc,
-        precision: 3,
-        unit: "sec"
-    },
-    {
-        generator: generatorTypes.keyNumToVolEnvHold,
-        highlight: true,
-        unit: "cent"
-    },
-    {
-        generator: generatorTypes.keyNumToVolEnvDecay,
-        highlight: true,
-        unit: "cent"
-    },
-    {
-        generator: generatorTypes.delayModEnv,
-        fromGenerator: tc2s,
-        toGenerator: s2tc,
-        precision: 3,
-        unit: "sec"
-    },
-    {
-        generator: generatorTypes.attackModEnv,
-        fromGenerator: tc2s,
-        toGenerator: s2tc,
-        precision: 3,
-        unit: "sec"
-    },
-    {
-        generator: generatorTypes.holdModEnv,
-        fromGenerator: tc2s,
-        toGenerator: s2tc,
-        precision: 3,
-        unit: "sec"
-    },
-    {
-        generator: generatorTypes.decayModEnv,
-        fromGenerator: tc2s,
-        toGenerator: s2tc,
-        precision: 3,
-        unit: "sec"
-    },
-    {
-        generator: generatorTypes.sustainModEnv,
-        fromGenerator: (v) => v / 10,
-        toGenerator: (v) => v * 10,
-        precision: 1,
-        unit: "percent"
-    },
-    {
-        generator: generatorTypes.releaseModEnv,
-        fromGenerator: tc2s,
-        toGenerator: s2tc,
-        precision: 3,
-        unit: "sec"
-    },
-    {
-        generator: generatorTypes.modEnvToFilterFc,
-        unit: "cent"
-    },
-    {
-        generator: generatorTypes.modEnvToPitch,
-        unit: "cent"
-    },
-    {
-        generator: generatorTypes.keyNumToModEnvHold,
-        unit: "cent"
-    },
-    {
-        generator: generatorTypes.keyNumToModEnvDecay,
-        unit: "cent"
-    },
-    {
-        generator: generatorTypes.delayModLFO,
-        highlight: true,
-        fromGenerator: tc2s,
-        toGenerator: s2tc,
-        precision: 3,
-        unit: "sec"
-    },
-    {
-        generator: generatorTypes.freqModLFO,
-        highlight: true,
-        fromGenerator: ac2hz,
-        toGenerator: hz2ac,
-        precision: 3,
-        unit: "Hz"
-    },
-    {
-        generator: generatorTypes.modLfoToPitch,
-        highlight: true,
-        unit: "cent"
-    },
-    {
-        generator: generatorTypes.modLfoToFilterFc,
-        highlight: true,
-        unit: "cent"
-    },
-    {
-        generator: generatorTypes.modLfoToVolume,
+        generator: GeneratorTypes.sustainVolEnv,
         highlight: true,
         fromGenerator: cb2db,
         toGenerator: db2cb,
@@ -242,29 +132,139 @@ const instrumentRows: GeneratorRowType[] = [
         unit: "dB"
     },
     {
-        generator: generatorTypes.delayVibLFO,
+        generator: GeneratorTypes.releaseVolEnv,
+        highlight: true,
         fromGenerator: tc2s,
         toGenerator: s2tc,
         precision: 3,
         unit: "sec"
     },
     {
-        generator: generatorTypes.freqVibLFO,
+        generator: GeneratorTypes.keyNumToVolEnvHold,
+        highlight: true,
+        unit: "cent"
+    },
+    {
+        generator: GeneratorTypes.keyNumToVolEnvDecay,
+        highlight: true,
+        unit: "cent"
+    },
+    {
+        generator: GeneratorTypes.delayModEnv,
+        fromGenerator: tc2s,
+        toGenerator: s2tc,
+        precision: 3,
+        unit: "sec"
+    },
+    {
+        generator: GeneratorTypes.attackModEnv,
+        fromGenerator: tc2s,
+        toGenerator: s2tc,
+        precision: 3,
+        unit: "sec"
+    },
+    {
+        generator: GeneratorTypes.holdModEnv,
+        fromGenerator: tc2s,
+        toGenerator: s2tc,
+        precision: 3,
+        unit: "sec"
+    },
+    {
+        generator: GeneratorTypes.decayModEnv,
+        fromGenerator: tc2s,
+        toGenerator: s2tc,
+        precision: 3,
+        unit: "sec"
+    },
+    {
+        generator: GeneratorTypes.sustainModEnv,
+        fromGenerator: (v) => v / 10,
+        toGenerator: (v) => v * 10,
+        precision: 1,
+        unit: "percent"
+    },
+    {
+        generator: GeneratorTypes.releaseModEnv,
+        fromGenerator: tc2s,
+        toGenerator: s2tc,
+        precision: 3,
+        unit: "sec"
+    },
+    {
+        generator: GeneratorTypes.modEnvToFilterFc,
+        unit: "cent"
+    },
+    {
+        generator: GeneratorTypes.modEnvToPitch,
+        unit: "cent"
+    },
+    {
+        generator: GeneratorTypes.keyNumToModEnvHold,
+        unit: "cent"
+    },
+    {
+        generator: GeneratorTypes.keyNumToModEnvDecay,
+        unit: "cent"
+    },
+    {
+        generator: GeneratorTypes.delayModLFO,
+        highlight: true,
+        fromGenerator: tc2s,
+        toGenerator: s2tc,
+        precision: 3,
+        unit: "sec"
+    },
+    {
+        generator: GeneratorTypes.freqModLFO,
+        highlight: true,
         fromGenerator: ac2hz,
         toGenerator: hz2ac,
         precision: 3,
         unit: "Hz"
     },
     {
-        generator: generatorTypes.vibLfoToPitch,
+        generator: GeneratorTypes.modLfoToPitch,
+        highlight: true,
         unit: "cent"
     },
     {
-        generator: generatorTypes.exclusiveClass,
+        generator: GeneratorTypes.modLfoToFilterFc,
+        highlight: true,
+        unit: "cent"
+    },
+    {
+        generator: GeneratorTypes.modLfoToVolume,
+        highlight: true,
+        fromGenerator: cb2db,
+        toGenerator: db2cb,
+        precision: 1,
+        unit: "dB"
+    },
+    {
+        generator: GeneratorTypes.delayVibLFO,
+        fromGenerator: tc2s,
+        toGenerator: s2tc,
+        precision: 3,
+        unit: "sec"
+    },
+    {
+        generator: GeneratorTypes.freqVibLFO,
+        fromGenerator: ac2hz,
+        toGenerator: hz2ac,
+        precision: 3,
+        unit: "Hz"
+    },
+    {
+        generator: GeneratorTypes.vibLfoToPitch,
+        unit: "cent"
+    },
+    {
+        generator: GeneratorTypes.exclusiveClass,
         highlight: true
     },
     {
-        generator: generatorTypes.chorusEffectsSend,
+        generator: GeneratorTypes.chorusEffectsSend,
         highlight: true,
         fromGenerator: (v) => v / 10,
         toGenerator: (v) => v * 10,
@@ -272,7 +272,7 @@ const instrumentRows: GeneratorRowType[] = [
         unit: "percent"
     },
     {
-        generator: generatorTypes.reverbEffectsSend,
+        generator: GeneratorTypes.reverbEffectsSend,
         highlight: true,
         fromGenerator: (v) => v / 10,
         toGenerator: (v) => v * 10,
@@ -280,22 +280,22 @@ const instrumentRows: GeneratorRowType[] = [
         unit: "percent"
     },
     {
-        generator: generatorTypes.keyNum
+        generator: GeneratorTypes.keyNum
     },
     {
-        generator: generatorTypes.velocity
+        generator: GeneratorTypes.velocity
     },
     {
-        generator: generatorTypes.startAddrsOffset
+        generator: GeneratorTypes.startAddrsOffset
     },
     {
-        generator: generatorTypes.endAddrOffset
+        generator: GeneratorTypes.endAddrOffset
     },
     {
-        generator: generatorTypes.startloopAddrsOffset
+        generator: GeneratorTypes.startloopAddrsOffset
     },
     {
-        generator: generatorTypes.endloopAddrsOffset
+        generator: GeneratorTypes.endloopAddrsOffset
     }
 ];
 

@@ -1,9 +1,9 @@
 import {
     type BasicMIDI,
     BasicSoundBank,
-    midiMessageTypes,
+    MIDIMessageTypes,
     SoundBankLoader,
-    SpessaSynthLogging,
+    SpessaLog,
     SpessaSynthProcessor,
     SpessaSynthSequencer
 } from "spessasynth_core";
@@ -44,7 +44,6 @@ export class AudioEngine {
     constructor(context: AudioContext, initialSettings: SavedSettingsType) {
         this.context = context;
         this.processor = new SpessaSynthProcessor(context.sampleRate, {
-            enableEffects: true,
             initialTime: context.currentTime
         });
         this.maxChunksQueued = Math.min(
@@ -54,11 +53,9 @@ export class AudioEngine {
             ),
             32
         );
-        void dummy.then((d) =>
-            this.processor.soundBankManager.addSoundBank(
-                SoundBankLoader.fromArrayBuffer(d.slice()),
-                "main"
-            )
+        this.processor.soundBankManager.addSoundBank(
+            SoundBankLoader.fromArrayBuffer(dummy.slice()),
+            "main"
         );
 
         this.sequencer = new SpessaSynthSequencer(this.processor);
@@ -72,7 +69,7 @@ export class AudioEngine {
         if (isDev) {
             logInfo("Dev mode on");
         }
-        SpessaSynthLogging(isDev, isDev, isDev);
+        SpessaLog.setLogLevel(isDev, isDev, isDev);
 
         this.currentSampleRate = context.sampleRate;
         this.applySettings(initialSettings);
@@ -97,19 +94,19 @@ export class AudioEngine {
 
     public ccChangeRealTime(ch: number, cc: number, value: number) {
         this.processRealTime([
-            midiMessageTypes.controllerChange | (ch % 16),
+            MIDIMessageTypes.controllerChange | (ch % 16),
             cc,
             value
         ]);
     }
 
     public noteOffRealTime(ch: number, note: number) {
-        this.processRealTime([midiMessageTypes.noteOff | (ch % 16), note]);
+        this.processRealTime([MIDIMessageTypes.noteOff | (ch % 16), note]);
     }
 
     public noteOnRealTime(ch: number, note: number, velocity: number) {
         this.processRealTime([
-            midiMessageTypes.noteOn | (ch % 16),
+            MIDIMessageTypes.noteOn | (ch % 16),
             note,
             velocity
         ]);
@@ -118,23 +115,23 @@ export class AudioEngine {
     applySettings(settings: SavedSettingsType) {
         const processor = this.processor;
         this.setVolume(getSetting("volume", settings));
-        processor.setMasterParameter(
+        processor.setSystemParameter(
             "interpolationType",
             getSetting("interpolation", settings)
         );
-        processor.setMasterParameter(
+        processor.setSystemParameter(
             "reverbGain",
             getSetting("reverbLevel", settings)
         );
-        processor.setMasterParameter(
+        processor.setSystemParameter(
             "chorusGain",
             getSetting("chorusLevel", settings)
         );
-        processor.setMasterParameter(
+        processor.setSystemParameter(
             "delayGain",
             getSetting("delayLevel", settings)
         );
-        processor.setMasterParameter(
+        processor.setSystemParameter(
             "voiceCap",
             getSetting("voiceCap", settings)
         );
@@ -204,7 +201,7 @@ export class AudioEngine {
             transferList.push(dataChunk.buffer);
         }
         this.processorTime.taken = performance.now();
-        this.processorTime.time = this.processor.currentSynthTime;
+        this.processorTime.time = this.processor.currentTime;
 
         // send to worklet
         if (this.worklet) {

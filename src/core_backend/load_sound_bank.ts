@@ -1,7 +1,6 @@
 import {
     BasicMIDI,
     type BasicSoundBank,
-    IndexedByteArray,
     SoundBankLoader,
     SpessaSynthCoreUtils
 } from "spessasynth_core";
@@ -9,8 +8,8 @@ import {
 export function loadSoundBank(buf: ArrayBuffer): BasicSoundBank {
     // check
     const identifier = buf.slice(8, 12);
-    const text = SpessaSynthCoreUtils.readBytesAsString(
-        new IndexedByteArray(identifier),
+    const text = SpessaSynthCoreUtils.readBinaryString(
+        new Uint8Array(identifier),
         4
     );
     if (text === "RMID") {

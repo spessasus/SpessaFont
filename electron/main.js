@@ -89,6 +89,6 @@ async function createWindow() {
 }
 
 app.whenReady().then(async () => {
-    await createWindow();
     if (app.isPackaged) void autoUpdater.checkForUpdatesAndNotify();
+    await createWindow();
 });

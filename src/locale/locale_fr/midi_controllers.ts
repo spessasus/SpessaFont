@@ -1,5 +1,5 @@
 // capitalize all words except ones like the, a, for, and, or, etc...
-export const MidiControllersLocale = {
+export const MIDIControllersLocale = {
     // translate "Undefined", this is just so JS works fine
     notDefined: "Non défini",
 
@@ -20,8 +20,10 @@ export const MidiControllersLocale = {
     generalPurposeController3: "Contrôleur à Usage Général 3",
     generalPurposeController4: "Contrôleur à Usage Général 4",
     lsbForControl0BankSelect: "LSB pour le Contrôle 0 Sélection de Banque",
-    lsbForControl1ModulationWheel: "LSB pour le Contrôle 1 Molette de Modulation",
-    lsbForControl2BreathController: "LSB pour le Contrôle 2 Contrôleur de Souffle",
+    lsbForControl1ModulationWheel:
+        "LSB pour le Contrôle 1 Molette de Modulation",
+    lsbForControl2BreathController:
+        "LSB pour le Contrôle 2 Contrôleur de Souffle",
     lsbForControl4FootController: "LSB pour le Contrôle 4 Contrôleur au Pied",
     lsbForControl5PortamentoTime: "LSB pour le Contrôle 5 Temps de Portamento",
     lsbForControl6DataEntry: "LSB pour le Contrôle 6 Entrée de Données",

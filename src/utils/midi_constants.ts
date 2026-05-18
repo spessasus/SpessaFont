@@ -6,7 +6,7 @@
  structure should be ignored.
  */
 
-import { type MIDIController, midiControllers } from "spessasynth_core";
+import { type MIDIController, MIDIControllers } from "spessasynth_core";
 
 export const ILLEGAL_CC_DESTINATIONS: MIDIController[] = [
     0, 6, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
@@ -22,12 +22,12 @@ for (let i = 0; i < 128; i++) {
 }
 
 export const CC_TOGGLES: MIDIController[] = [
-    midiControllers.sustainPedal,
-    midiControllers.portamentoOnOff,
-    midiControllers.sostenutoPedal,
-    midiControllers.softPedal,
-    midiControllers.legatoFootswitch,
-    midiControllers.hold2Pedal
+    MIDIControllers.sustainPedal,
+    MIDIControllers.portamentoOnOff,
+    MIDIControllers.sostenutoPedal,
+    MIDIControllers.softPedal,
+    MIDIControllers.legatoFootswitch,
+    MIDIControllers.hold2Pedal
 ];
 
 export { MODULABLE_CCS };
