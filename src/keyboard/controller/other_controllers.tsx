@@ -54,7 +54,7 @@ export function OtherControllers({ ref }: { ref: Ref<OtherCCRef> }) {
 
     const systemReset = useCallback(() => {
         midiPanic();
-        processor.resetAllControllers();
+        processor.reset();
     }, [midiPanic, processor]);
 
     return (

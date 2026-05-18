@@ -60,7 +60,7 @@ export function KeyboardController({
 
     useEffect(() => {
         processor.onEventCall = (e) => {
-            if (e.data && "channel" in e.data) {
+            if (e.data) {
                 switch (e.type) {
                     case "controllerChange": {
                         if (e.data?.channel !== KEYBOARD_TARGET_CHANNEL) return;
@@ -72,7 +72,7 @@ export function KeyboardController({
                         break;
                     }
 
-                    case "allControllerReset": {
+                    case "reset": {
                         for (let i = 0; i < CONTROLLER_TABLE_SIZE; i++) {
                             for (const r of knobRefs.current) {
                                 r?.current?.ccUpdate(
@@ -99,7 +99,7 @@ export function KeyboardController({
                         break;
                     }
 
-                    case "channelMIDIParamChange": {
+                    case "channelParamChange": {
                         if (e.data.channel !== KEYBOARD_TARGET_CHANNEL) return;
                         switch (e.data.parameter) {
                             case "pressure": {
