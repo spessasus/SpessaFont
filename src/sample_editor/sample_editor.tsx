@@ -153,10 +153,7 @@ export const SampleEditor = React.memo(function ({
 
     const loopEnd = sample.loopEnd;
     const setLoopEnd = (newEnd: number) => {
-        newEnd = Math.min(
-            Math.max(newEnd, loopStart, 0),
-            sampleData.length - 1
-        );
+        newEnd = Math.min(Math.max(newEnd, loopStart, 0), sampleData.length);
         if (newEnd === loopEnd) {
             return newEnd;
         }
@@ -310,7 +307,7 @@ export const SampleEditor = React.memo(function ({
                                     className={"pretty_input monospaced"}
                                     type={"number"}
                                     min={loopStart}
-                                    max={sampleData.length - 1}
+                                    max={sampleData.length}
                                     placeholder={t("sampleLocale.loopEnd")}
                                 ></WaitingInput>
                             </div>
