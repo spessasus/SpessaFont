@@ -21,6 +21,13 @@ inspired by
 Davy7125's [polyphone](https://github.com/davy7125/polyphone).
 This is also my first TypeScript and React project. It's a bit messy, but it works! :-P
 
+## Supported Browsers 
+
+- **Chromium-based:** such as Google Chrome, Microsoft Edge, Brave, Opera, etc.
+- **Gecko-based:** such as Mozilla Firefox, Floorp, Zen, Waterfox, Librewolf, etc.
+- **Chrome for Android/Chromebook**
+- **Firefox for Android**
+
 ## Features
 
 - **Fully online:** _No download needed!_
