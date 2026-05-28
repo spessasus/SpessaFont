@@ -1,4 +1,4 @@
-name: Deploy SpessaFont
+name: Build and Release Desktop App
 
 on:
     # Runs on pushes targeting the default branch
@@ -8,16 +8,17 @@ on:
     workflow_dispatch:
 
 permissions:
-    contents: read
+    contents: write
     pages: write
     id-token: write
 
 concurrency:
-    group: "pages"
+    group: "deploy-and-release"
     cancel-in-progress: true
 
 jobs:
-    deploy:
+    # Deploy to pages first
+    deploy-pages:
         environment:
             name: github-pages
             url: ${{ steps.deployment.outputs.page_url }}
@@ -44,3 +45,127 @@ jobs:
             - name: Deploy to GitHub Pages
               id: deployment
               uses: actions/deploy-pages@v4
+
+    version-check:
+        name: Check version and generate release
+        needs: deploy-pages
+        runs-on: ubuntu-latest
+        outputs:
+            should_release: ${{ steps.version_check.outputs.should_release }}
+            version: ${{ steps.version_check.outputs.version }}
+        steps:
+            - name: Checkout with full history
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Check version
+              id: version_check
+              run: |
+                  VERSION=$(node -p "require('./package.json').version")
+                  LATEST_TAG=$(git tag --list 'v*' --sort=-version:refname | head -1)
+                  echo "version=v$VERSION" >> "$GITHUB_OUTPUT"
+
+                  if [ -z "$LATEST_TAG" ]; then
+                      echo "should_release=true" >> "$GITHUB_OUTPUT"
+                  else
+                      LATEST_VER=${LATEST_TAG#v}
+                      if dpkg --compare-versions "$VERSION" gt "$LATEST_VER" 2>/dev/null; then
+                          echo "should_release=true" >> "$GITHUB_OUTPUT"
+                      else
+                          echo "should_release=false" >> "$GITHUB_OUTPUT"
+                      fi
+                  fi
+
+            - name: Generate patch notes (git commit list)
+              if: steps.version_check.outputs.should_release == 'true'
+              run: |
+                  PREVIOUS_TAG=$(git tag --list 'v*' --sort=-version:refname | head -1)
+                  if [ -n "$PREVIOUS_TAG" ]; then
+                      git log "$PREVIOUS_TAG..HEAD" --oneline --no-merges | sed 's/^/- /' > release_notes.md
+                  else
+                      git log --oneline --no-merges | sed 's/^/- /' > release_notes.md
+                  fi
+
+            - name: Upload patch notes
+              if: steps.version_check.outputs.should_release == 'true'
+              uses: actions/upload-artifact@v7
+              with:
+                  name: release-notes
+                  path: release_notes.md
+                  retention-days: 1
+
+    # Build Desktop app
+    build-electron:
+        name: Build Electron (${{ matrix.os }})
+        needs: version-check
+        if: needs.version-check.outputs.should_release == 'true'
+        runs-on: ${{ matrix.os }}
+        strategy:
+            matrix:
+                os: [ubuntu-latest, windows-latest]
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+            - name: Set up Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: latest
+                  cache: "npm"
+            - name: Install dependencies
+              run: npm ci
+            - name: Build
+              run: node electron/builder.ts
+
+            - name: Upload Linux artifacts
+              if: matrix.os == 'ubuntu-latest'
+              uses: actions/upload-artifact@v7
+              with:
+                  name: linux-artifacts
+                  path: |
+                      dist/desktop/*.AppImage
+                      dist/desktop/*.deb
+                      dist/desktop/latest*.yml
+                  retention-days: 1
+
+            - name: Upload Windows artifacts
+              if: matrix.os == 'windows-latest'
+              uses: actions/upload-artifact@v7
+              with:
+                  name: windows-artifacts
+                  path: |
+                      dist/desktop/*.exe
+                      dist/desktop/latest*.yml
+                  retention-days: 1
+
+    publish-release:
+        name: Publish GitHub release
+        needs: [version-check, build-electron]
+        runs-on: ubuntu-latest
+        steps:
+            - name: Download notes
+              uses: actions/download-artifact@v8
+              with:
+                  name: release-notes
+                  path: .
+            - name: Download Linux artifacts
+              uses: actions/download-artifact@v8
+              with:
+                  name: linux-artifacts
+                  path: artifacts
+            - name: Download Windows artifacts
+              uses: actions/download-artifact@v8
+              with:
+                  name: windows-artifacts
+                  path: artifacts
+
+            - name: Create release
+              uses: softprops/action-gh-release@v3
+              with:
+                  tag_name: ${{ needs.version-check.outputs.version }}
+                  body_path: release_notes.md
+                  draft: false
+                  prerelease: false
+                  files: artifacts/*
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

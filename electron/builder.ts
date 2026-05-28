@@ -8,7 +8,6 @@ await vite.build();
 
 await builder.build({
     projectDir,
-    publish: "always",
     config: {
         productName: "SpessaFont",
         appId: "com.spessasus.SpessaFont",
@@ -20,11 +19,6 @@ await builder.build({
         linux: {
             category: "Audio",
             target: ["AppImage", "deb"]
-        },
-        publish: {
-            provider: "github",
-            owner: "spessasus",
-            repo: "SpessaFont"
         },
         win: {
             icon: "public/favicon.ico",
