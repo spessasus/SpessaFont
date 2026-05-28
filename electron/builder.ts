@@ -8,8 +8,8 @@ await vite.build();
 
 await builder.build({
     projectDir,
+    publish: "never",
     config: {
-        publish: "never",
         productName: "SpessaFont",
         appId: "com.spessasus.SpessaFont",
         icon: "public/logo.png",
