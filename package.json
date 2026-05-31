@@ -9,7 +9,7 @@
     "homepage": "https://github.com/spessasus/SpessaFont",
     "repository": "github:spessasus/SpessaFont",
     "private": true,
-    "version": "1.4.4",
+    "version": "1.4.5",
     "type": "module",
     "main": "electron/main.js",
     "scripts": {
