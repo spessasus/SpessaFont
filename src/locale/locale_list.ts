@@ -7,7 +7,7 @@ import { localePolish } from "./locale_pl/locale.ts";
 export const LocaleList: Record<string, { translation: object; name: string }> =
     {
         en: { translation: localeEnglish, name: "English" },
-        es: { translation: localeSpanish, name: "Spanish" },
+        es: { translation: localeSpanish, name: "Español" },
         fr: { translation: localeFrench, name: "Français" },
         pl: { translation: localePolish, name: "Polski" }
     };
