@@ -15,7 +15,7 @@ import { ClipboardLocale } from "./clipboard.ts";
 /**
  *
  */
-export const localeEnglish = {
+export const localeSpanish = {
     localeName: "Español",
     // title message
     titleMessage: "SpessaFont: Editor en Línea de SoundFont2/DLS",
@@ -39,7 +39,8 @@ export const localeEnglish = {
         loadingFileFromDisk: "Cargando archivo del disco...",
         parsingSoundBank: "Analizando banco de sonido...",
         errorLoadingSoundBank: "¡Error al cargar banco de sonido!",
-        chromeError: "Archivo demasiado grande para ser abierto en navegadores basados en Chromium.",
+        chromeError:
+            "Archivo demasiado grande para ser abierto en navegadores basados en Chromium.",
         electronError:
             "Este archivo solo se puede abrir en SpessaFont Web en Firefox.",
 
