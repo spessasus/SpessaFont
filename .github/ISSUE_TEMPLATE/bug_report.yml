@@ -52,7 +52,6 @@ body:
               - Linux
               - MacOS
               - Android
-              - iOS
               - Other (please specify in additional info)
       validations:
           required: false
@@ -64,13 +63,12 @@ body:
           options:
               - Chromium (Chrome, Edge, Brave, Opera, etc.)
               - Gecko (Firefox, Librewolf, Waterfox, etc.)
-              - WebKit (Safari on MacOS, all browsers on iOs)
               - Other (please specify in additional info)
       validations:
           required: true
     - type: textarea
       attributes:
           label: Additional info
-          description: Any additional info and attachments (screenshots, MIDIs, soundfonts, other environments) go here.
+          description: Any additional info and attachments (screenshots, MIDIs, other environments) go here.
       validations:
           required: false
