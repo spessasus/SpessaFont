@@ -36,10 +36,18 @@ body:
           label: Reproduction steps
           description: Steps to reproduce the behavior.
           placeholder: |
-              1. Load this...
-              1. Click this...
-              1. Play '...'
-              1. See error...
+              1. Load this file...
+              2. Click this button...
+              3. See error.
+      validations:
+          required: true
+    - type: textarea
+      id: offending_sound_bank
+      attributes:
+          label: Offending sound bank
+          description: |
+              If the bug is related to a specific sound bank file, please attach it here. 
+              Make sure to compress it as a `.zip` file.
       validations:
           required: true
     - type: dropdown
