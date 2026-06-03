@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { SamplePlayerState } from "../sample_editor.tsx";
 import "./wave_view.css";
 import { useAudioEngine } from "../../core_backend/audio_engine_context.ts";
+import { useTranslation } from "react-i18next";
 
 const SCALE_LINES_COUNT = 8;
 const MIN_WAVE_THICKNESS = 1;
@@ -42,6 +43,7 @@ export const WaveView = React.memo(function ({
     disabled,
     centCorrection
 }: WaveViewProps) {
+    const { t } = useTranslation();
     const waveformRef = useRef<HTMLCanvasElement>(null);
     const pointsAndInfoRef = useRef<HTMLCanvasElement>(null);
     const scrollerRef = useRef<HTMLDivElement>(null);
@@ -242,15 +244,33 @@ export const WaveView = React.memo(function ({
 
             // draw sample rate
             ctx.fillStyle = fontColor;
-            ctx.textBaseline = "hanging";
+            ctx.textBaseline = "top";
             ctx.textAlign = "start";
             ctx.font = "1rem monospace";
-            ctx.fillText(`${sampleRate} Hz`, 10, 10);
+            ctx.fillText(`${sampleRate} Hz`, 5, 5);
+
+            // Draw sample length
             ctx.textAlign = "end";
             ctx.fillText(
+                `${t("sampleLocale.length")}: ${dataLength}`,
+                canvas.width - 5, // use canvas so the zoom doesn't impact
+                5
+            );
+
+            // Draw loop length
+            ctx.textBaseline = "bottom";
+            ctx.fillText(
+                `${t("sampleLocale.loopLength")}: ${loopEnd - loopStart}`,
+                canvas.width - 5,
+                canvas.height - 5
+            );
+
+            // Draw sample length in seconds
+            ctx.textAlign = "start";
+            ctx.fillText(
                 `${Math.floor(sampleLength * 1000) / 1000}s`,
-                canvas.width - 10, // use canvas so the zoom doesn't impact
-                10
+                5,
+                canvas.height - 5
             );
         };
         draw();

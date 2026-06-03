@@ -9,6 +9,8 @@ export const SampleLocale = {
     link: "Link",
     unlinked: "Unlinked",
     waveZoom: "Wave Zoom",
+    length: "Length",
+    loopLength: "Loop Length",
     types: {
         invalid: "Invalid",
         mono: "Mono",

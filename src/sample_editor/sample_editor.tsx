@@ -268,7 +268,7 @@ export const SampleEditor = React.memo(function ({
                     value={sampleName}
                     maxLength={40}
                     className={"pretty_input sample_name monospaced"}
-                    placeholder={t("sampleLocale.name")}
+                    placeholder={t("sampleLocale.sampleName")}
                 />
                 <div className={"info_split"}>
                     <div className={"info_column"}>
