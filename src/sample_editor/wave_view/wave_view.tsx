@@ -224,7 +224,7 @@ export const WaveView = React.memo(function ({
         ctx.stroke();
 
         ctx.setLineDash([]);
-    }, [data, dataLength, loopEnd, size, xOffset, zoom]);
+    }, [data, dataLength, loopEnd, loopStart, size, xOffset, zoom]);
     const playerStateRef = useRef(playerState);
     const sampleLength = dataLength / sampleRate;
 

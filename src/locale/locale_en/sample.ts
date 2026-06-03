@@ -28,6 +28,7 @@ export const SampleLocale = {
         playLooped: "Play Looped",
         stop: "Stop",
         wavExport: "WAV Export",
+        wavExportLoop: "Wav Export (Loop)",
         replaceAudio: "Replace Audio",
         normalize: "Normalize",
         loading: "Loading...",

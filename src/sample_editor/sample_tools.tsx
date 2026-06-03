@@ -10,6 +10,20 @@ const DEFAULT_SAMPLE_GAIN = 0.4;
 
 const ZOOM_PER_SAMPLE = 50_000 / 6_000_000;
 
+const exportWavData = (data: Float32Array, rate: number, name: string) => {
+    const buf = audioToWav([data], rate, {
+        normalizeAudio: false
+    });
+    const blob = new Blob([buf], {
+        type: "audio/wav"
+    });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${name}.wav`;
+    console.info(a);
+    a.click();
+};
+
 export function SampleTools({
     sample,
     playerState,
@@ -175,17 +189,12 @@ export function SampleTools({
     }, [playSample, playerState, stopPlayer]);
 
     const exportWav = () => {
-        const buf = audioToWav([buffer.getChannelData(0)], buffer.sampleRate, {
-            normalizeAudio: false
-        });
-        const blob = new Blob([buf], {
-            type: "audio/wav"
-        });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = `${sampleName}.wav`;
-        console.info(a);
-        a.click();
+        exportWavData(buffer.getChannelData(0), buffer.sampleRate, sampleName);
+    };
+
+    const exportWavLoop = () => {
+        const loopData = buffer.getChannelData(0).slice(loopStart, loopEnd);
+        exportWavData(loopData, buffer.sampleRate, `${sampleName}_loop`);
     };
 
     const replaceData = () => {
@@ -279,6 +288,12 @@ export function SampleTools({
                 onClick={exportWav}
             >
                 {t("sampleLocale.tools.wavExport")}
+            </div>
+            <div
+                className={`pretty_button monospaced ${loading ? "" : "responsive_button hover_brightness"}`}
+                onClick={exportWavLoop}
+            >
+                {t("sampleLocale.tools.wavExportLoop")}
             </div>
             {playerState === "stopped" && (
                 <>
