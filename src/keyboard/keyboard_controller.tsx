@@ -77,7 +77,7 @@ export function KeyboardController({
                             for (const r of knobRefs.current) {
                                 r?.current?.ccUpdate(
                                     i,
-                                    DEFAULT_MIDI_CONTROLLERS[i]
+                                    DEFAULT_MIDI_CONTROLLERS[i] >> 7
                                 );
                             }
                         }
