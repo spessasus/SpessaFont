@@ -9,6 +9,7 @@ const SCALE_LINES_COUNT = 8;
 const MIN_WAVE_THICKNESS = 1;
 const MAX_LINE_THICKNESS = 10;
 const LINE_WIDTH_CONSTANT = 0.9;
+const LOOP_PREVIEW_POINTS = 32;
 
 interface WaveViewProps {
     data: Float32Array;
@@ -125,6 +126,7 @@ export const WaveView = React.memo(function ({
             Math.max(MIN_WAVE_THICKNESS, LINE_WIDTH_CONSTANT / samplesPerPixel),
             MAX_LINE_THICKNESS
         );
+
         const amplifier = halfHeight;
         ctx.beginPath();
 
@@ -170,7 +172,59 @@ export const WaveView = React.memo(function ({
             }
         }
         ctx.stroke();
-    }, [data, dataLength, size, xOffset, zoom]);
+
+        // Draw 16 loop points preview
+        // End loop around loop start,
+        // Start loop around loop end
+        const loopEndPreviewStart = Math.max(0, loopEnd - LOOP_PREVIEW_POINTS);
+        const loopEndPreviewEnd = Math.min(
+            dataLength,
+            loopEnd + LOOP_PREVIEW_POINTS
+        );
+        const loopLength = loopEnd - loopStart;
+        const loopStartPreviewStart = Math.max(
+            0,
+            loopStart - LOOP_PREVIEW_POINTS
+        );
+        const loopStartPreviewEnd = Math.min(
+            dataLength,
+            loopStart + LOOP_PREVIEW_POINTS
+        );
+
+        let firstPoint = true;
+        ctx.strokeStyle = "green";
+
+        ctx.setLineDash([15, 15]);
+        ctx.beginPath();
+        for (let i = loopEndPreviewStart; i < loopEndPreviewEnd; i++) {
+            const sample = data[i] * amplifier + halfHeight;
+            const x = ((i - loopLength) / dataLength) * width;
+            if (firstPoint) {
+                ctx.moveTo(x - xOffset, height - sample);
+                firstPoint = false;
+                continue;
+            }
+            ctx.lineTo(x - xOffset, height - sample);
+        }
+        ctx.stroke();
+
+        ctx.strokeStyle = "red";
+        ctx.beginPath();
+        firstPoint = true;
+        for (let i = loopStartPreviewStart; i < loopStartPreviewEnd; i++) {
+            const sample = data[i] * amplifier + halfHeight;
+            const x = ((i + loopLength) / dataLength) * width;
+            if (firstPoint) {
+                ctx.moveTo(x - xOffset, height - sample);
+                firstPoint = false;
+                continue;
+            }
+            ctx.lineTo(x - xOffset, height - sample);
+        }
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+    }, [data, dataLength, loopEnd, size, xOffset, zoom]);
     const playerStateRef = useRef(playerState);
     const sampleLength = dataLength / sampleRate;
 
@@ -252,7 +306,7 @@ export const WaveView = React.memo(function ({
             // Draw sample length
             ctx.textAlign = "end";
             ctx.fillText(
-                `${t("sampleLocale.length")}: ${dataLength}`,
+                `${t("sampleLocale.length")}: ${dataLength + 1}`,
                 canvas.width - 5, // use canvas so the zoom doesn't impact
                 5
             );
@@ -260,7 +314,7 @@ export const WaveView = React.memo(function ({
             // Draw loop length
             ctx.textBaseline = "bottom";
             ctx.fillText(
-                `${t("sampleLocale.loopLength")}: ${loopEnd - loopStart}`,
+                `${t("sampleLocale.loop")}: ${loopEnd - loopStart}`,
                 canvas.width - 5,
                 canvas.height - 5
             );
@@ -290,6 +344,7 @@ export const WaveView = React.memo(function ({
         sampleLength,
         sampleRate,
         size,
+        t,
         xOffset,
         zoom
     ]);

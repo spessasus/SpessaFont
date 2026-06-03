@@ -10,7 +10,7 @@ export const SampleLocale = {
     unlinked: "Unlinked",
     waveZoom: "Wave Zoom",
     length: "Length",
-    loopLength: "Loop Length",
+    loop: "Loop",
     types: {
         invalid: "Invalid",
         mono: "Mono",
