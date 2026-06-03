@@ -48,15 +48,16 @@ export function SampleTools({
     const loopEnd = sample.loopEnd;
     const sampleType = sample.sampleType;
     const linkedSample = sample.linkedSample;
+    const audioData = sample.getAudioData();
 
     const [inputZoom, setInputZoom] = useState(100);
 
     const buffer = useMemo(() => {
         // resample if sample range is ridiculous
         // test case: Calm 4 with a whopping 384 kHz
-
-        let audioData = sample.getAudioData();
         let bufferRate = sampleRate;
+        // Audio data is grabbed outside to reflect updates, such as "normalize"
+        let targetData = audioData;
         if (sampleRate < 8000 || sampleRate > 96_000) {
             // resample to 48kHz
             const ratio = 48_000 / sampleRate;
@@ -66,18 +67,18 @@ export function SampleTools({
             for (let i = 0; i < resampled.length; i++) {
                 resampled[i] = audioData[Math.floor(i * (1 / ratio))];
             }
-            audioData = resampled;
+            targetData = resampled;
             bufferRate = 48_000;
         }
 
         const buf = context.createBuffer(
             1,
-            Math.max(audioData.length, 2),
+            Math.max(targetData.length, 2),
             bufferRate
         );
-        buf.getChannelData(0).set(audioData);
+        buf.getChannelData(0).set(targetData);
         return buf;
-    }, [sample, sampleRate, context]);
+    }, [sampleRate, audioData, context]);
 
     const playerRef = useRef<AudioBufferSourceNode | null>(null);
 
