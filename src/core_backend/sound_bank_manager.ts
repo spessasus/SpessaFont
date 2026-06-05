@@ -28,6 +28,7 @@ export default class SoundBankManager extends BasicSoundBank {
     processor: SpessaSynthProcessor;
     sequencer: SpessaSynthSequencer;
     history = new HistoryManager();
+    writeType: SaveFormat = "auto";
 
     currentView: BankEditView = "info";
 
@@ -51,6 +52,7 @@ export default class SoundBankManager extends BasicSoundBank {
             b.soundBankInfo.software = SOFTWARE_NAME;
             actualBank = b;
         }
+        this.writeType = actualBank.type;
         Object.assign(this, actualBank);
         if (bank === undefined) {
             this.soundBankInfo.name = "";
@@ -125,18 +127,38 @@ export default class SoundBankManager extends BasicSoundBank {
         switch (format) {
             default:
             case "auto": {
-                // Auto means either SF2 or sf3
-                binary = this.writeSF2({
-                    progressFunction,
-                    software: SOFTWARE_NAME
-                });
-                // Prevent writing .auto extension (will change to sf3 if needed)
-                format = "sf2";
+                // Auto means the last write type
+                switch (this.writeType) {
+                    default:
+                    case "auto":
+                    case "sf2":
+                    case "sf3": {
+                        // SF2 write without compress/decompress preserves sf2/sf3
+                        binary = this.writeSF2({
+                            progressFunction,
+                            software: SOFTWARE_NAME
+                        });
+                        // Prevent writing .auto extension (will change to sf3 if needed)
+                        format = "sf2";
+                        break;
+                    }
+
+                    case "dls": {
+                        binary = this.writeDLS({
+                            progressFunction,
+                            software: SOFTWARE_NAME
+                        });
+                        format = "dls";
+                        break;
+                    }
+                }
+
                 break;
             }
 
             case "sf2": {
                 // SF2 means explicit decompression
+                this.writeType = "sf2";
                 await this.setSampleFormat({
                     format: "pcm",
                     progressFunction
@@ -149,6 +171,7 @@ export default class SoundBankManager extends BasicSoundBank {
             }
 
             case "dls": {
+                this.writeType = "dls";
                 binary = this.writeDLS({
                     progressFunction,
                     software: SOFTWARE_NAME
@@ -157,6 +180,7 @@ export default class SoundBankManager extends BasicSoundBank {
             }
 
             case "sf3": {
+                this.writeType = "sf3";
                 await this.setSampleFormat({
                     format: "compressed",
                     compressionFunction: encodeVorbis,

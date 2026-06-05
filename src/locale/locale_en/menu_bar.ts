@@ -4,6 +4,7 @@ export const MenuBarLocale = {
         new: "New",
         open: "Open",
         close: "Close",
+        save: "Save",
         saveSF2: "Save SF2",
         saveDLS: "Save DLS",
         saveSF3: "Save SF3",

@@ -205,6 +205,12 @@ export function MenuBar({
                     <CloseFileIcon />
                 </MenuBarIcon>
                 <MenuBarIcon
+                    click={() => void saveWithToasts("auto")}
+                    text={t(fLoc + "save")}
+                >
+                    <SaveFileIcon />
+                </MenuBarIcon>
+                <MenuBarIcon
                     click={() => void saveWithToasts("sf2")}
                     text={t(fLoc + "saveSF2")}
                 >
