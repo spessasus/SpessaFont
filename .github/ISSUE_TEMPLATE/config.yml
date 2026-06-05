@@ -1,6 +1,6 @@
 blank_issues_enabled: false
 contact_links:
-    - name: "Ask a question"
+    - name: "Question"
       url: "https://github.com/spessasus/SpessaFont/discussions/new?category=q-a"
       about: "Something is unclear? Ask a question!"
     - name: "Discord Server"
