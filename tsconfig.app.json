@@ -5,6 +5,7 @@
         "useDefineForClassFields": true,
         "lib": ["ES2022", "DOM", "DOM.Iterable"],
         "module": "ES2022",
+        "types": ["wicg-file-system-access"],
         "skipLibCheck": true,
         "allowJs": true,
         /* Bundler mode */
@@ -21,7 +22,7 @@
         "erasableSyntaxOnly": true,
         "noFallthroughCasesInSwitch": true,
         "noUncheckedSideEffectImports": true,
-        "typeRoots": ["./src/types"],
+        "typeRoots": ["./src/types", "./node_modules/@types"],
         "paths": {
             "sl-web-ogg": ["./externals/sl-web-ogg/dist/index.min.js"]
         }

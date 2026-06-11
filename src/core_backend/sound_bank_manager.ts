@@ -29,6 +29,7 @@ export default class SoundBankManager extends BasicSoundBank {
     sequencer: SpessaSynthSequencer;
     history = new HistoryManager();
     writeType: SaveFormat = "auto";
+    saveHandle?: FileSystemFileHandle;
 
     currentView: BankEditView = "info";
 
@@ -124,6 +125,7 @@ export default class SoundBankManager extends BasicSoundBank {
 
     async save(format: SaveFormat, progressFunction?: ProgressFunction) {
         let binary: ArrayBuffer;
+        const saveAs = format !== "auto";
         switch (format) {
             default:
             case "auto": {
@@ -196,6 +198,51 @@ export default class SoundBankManager extends BasicSoundBank {
         if (this.samples.some((s) => s.isCompressed)) {
             format = "sf3";
         }
+        try {
+            await this.saveToDisk(
+                binary,
+                `${this.getBankName("Unnamed")}.${format}`,
+                saveAs
+            );
+        } catch (error) {
+            console.error(error);
+            return false;
+        }
+        this.dirty = false;
+        this.changeCallback?.();
+        return true;
+    }
+
+    /**
+     * Performs the actual "saving" of the file (downloading).
+     * Uses File System Access API on supported browsers and Desktop Edition.
+     * @param binary the binary data
+     * @param name the suggested file
+     * @param overrideSaveHandle for FSA API only: shows a new file picker window even if we already have a save handle.
+     */
+    async saveToDisk(
+        binary: ArrayBuffer,
+        name: string,
+        overrideSaveHandle: boolean
+    ) {
+        // get file handle if we don't have it and the browser supports it
+        if (
+            (!this.saveHandle || overrideSaveHandle) &&
+            "showSaveFilePicker" in globalThis
+        ) {
+            this.saveHandle = await globalThis.showSaveFilePicker({
+                id: "spessafont-save-file",
+                suggestedName: name
+            });
+        }
+
+        if (this.saveHandle) {
+            const writable = await this.saveHandle.createWritable();
+            await writable.write(binary);
+            await writable.close();
+            return;
+        }
+
         const buffer = binary;
         let blob: Blob;
         if (buffer.byteLength > 2_147_483_648) {
@@ -215,10 +262,8 @@ export default class SoundBankManager extends BasicSoundBank {
         const a = document.createElement("a");
         const url = URL.createObjectURL(blob);
         a.href = url;
-        a.download = `${this.getBankName("Unnamed")}.${format}`;
+        a.download = name;
         a.click();
-        this.dirty = false;
-        this.changeCallback?.();
 
         // clean up the object URL after a short delay
         setTimeout(() => {

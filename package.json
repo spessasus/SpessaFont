@@ -42,11 +42,12 @@
         "@types/react": "^19.1.2",
         "@types/react-dom": "^19.1.2",
         "@types/serviceworker": "^0.0.187",
+        "@types/wicg-file-system-access": "^2023.10.7",
         "@vitejs/plugin-react-swc": "^3.9.0",
-        "concurrently": "^9.2.1",
+        "concurrently": "^10.0.3",
         "cross-env": "^10.1.0",
-        "electron": "^41.3.0",
-        "electron-builder": "^26.8.1",
+        "electron": "^42.4.0",
+        "electron-builder": "^26.15.2",
         "eslint": "^9.25.0",
         "eslint-config-prettier": "^10.1.8",
         "eslint-plugin-react-hooks": "^5.2.0",
@@ -70,5 +71,11 @@
     },
     "trustedDependencies": [
         "@swc/core"
-    ]
+    ],
+    "allowScripts": {
+        "@swc/core@1.15.21": true,
+        "electron@41.3.0": true,
+        "electron-winstaller@5.4.0": true,
+        "esbuild@0.25.12": true
+    }
 }

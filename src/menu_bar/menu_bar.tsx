@@ -74,7 +74,7 @@ export function MenuBar({
             const id = toast.loading(t("loadingAndSaving.savingSoundBank"));
             await waitForRefresh();
             try {
-                await manager.save(format, ((progress) => {
+                const saved = await manager.save(format, ((progress) => {
                     toast.loading(
                         `${t("loadingAndSaving.writingSamples")} (${
                             Math.floor(progress * 10_000) / 100 + "%"
@@ -84,6 +84,11 @@ export function MenuBar({
                         }
                     );
                 }) as ProgressFunction);
+                if (!saved) {
+                    // don't show success
+                    toast.dismiss(id);
+                    return;
+                }
             } catch (error) {
                 // make so the error appears at the bottom
                 toast.error(`${error as string}`);
