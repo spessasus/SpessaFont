@@ -1,5 +1,11 @@
 import * as React from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+    type PointerEventHandler,
+    useEffect,
+    useMemo,
+    useRef,
+    useState
+} from "react";
 import type { SamplePlayerState } from "../sample_editor.tsx";
 import "./wave_view.css";
 import { useAudioEngine } from "../../core_backend/audio_engine_context.ts";
@@ -10,6 +16,7 @@ const MIN_WAVE_THICKNESS = 1;
 const MAX_LINE_THICKNESS = 10;
 const LINE_WIDTH_CONSTANT = 0.9;
 const LOOP_PREVIEW_POINTS = 32;
+const FONT_SIZE = 16;
 
 interface WaveViewProps {
     data: Float32Array;
@@ -57,6 +64,8 @@ export const WaveView = React.memo(function ({
         [centCorrection]
     );
 
+    // -1 = do not render pointer
+    const [pointerX, setPointerX] = useState(-1);
     const [size, setSize] = useState({ width: 300, height: 100 });
     const [xOffset, setXOffset] = useState(0);
     useEffect(() => {
@@ -80,7 +89,7 @@ export const WaveView = React.memo(function ({
         return () => observer.disconnect();
     }, []);
 
-    const dataLength = useMemo(() => data.length - 1, [data.length]);
+    const dataLength = data.length;
 
     useEffect(() => {
         const canvas = waveformRef.current;
@@ -230,6 +239,17 @@ export const WaveView = React.memo(function ({
 
     const fontColor = getStyle("--font-color");
 
+    const pointermove: PointerEventHandler<HTMLDivElement> = (e) => {
+        const rect = (e.target as HTMLDivElement).getBoundingClientRect();
+        if (!rect) return;
+        setPointerX(e.clientX - rect.left);
+    };
+
+    const pointerleave = () => {
+        setPointerX(-1);
+    };
+
+    // Loop points and info canvas
     useEffect(() => {
         playerStateRef.current = playerState;
         const canvas = pointsAndInfoRef.current;
@@ -296,36 +316,54 @@ export const WaveView = React.memo(function ({
                 }
             }
 
-            // draw sample rate
+            // draw hover cursor
+            if (pointerX >= 0) {
+                const sample = Math.round((pointerX / width) * dataLength);
+                const snapped = (sample / dataLength) * width - xOffset;
+                const ms = Math.round(sampleLength * (pointerX / width) * 1000);
+
+                ctx.strokeStyle = fontColor;
+                ctx.lineWidth = 1;
+                ctx.setLineDash([15, 15]);
+                ctx.beginPath();
+                ctx.moveTo(snapped, 0);
+                ctx.lineTo(snapped, height);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Draw hovered sample pos
+                ctx.font = `${FONT_SIZE}px monospace`;
+                ctx.textAlign = "right";
+                ctx.textBaseline = "top";
+
+                const x = width / zoom - 5;
+                ctx.fillText(sample.toString(), x, 5);
+                ctx.fillText(ms + "ms", x, FONT_SIZE + 7);
+            }
+
+            // Draw stats
             ctx.fillStyle = fontColor;
-            ctx.textBaseline = "top";
-            ctx.textAlign = "start";
-            ctx.font = "1rem monospace";
-            ctx.fillText(`${sampleRate} Hz`, 5, 5);
+
+            ctx.font = `${FONT_SIZE}px monospace`;
+
+            let y = 5;
 
             // Draw sample length
-            ctx.textAlign = "end";
-            ctx.fillText(
-                `${t("sampleLocale.length")}: ${dataLength + 1}`,
-                canvas.width - 5, // use canvas so the zoom doesn't impact
-                5
-            );
+            ctx.textBaseline = "top";
+            ctx.textAlign = "left";
+            ctx.fillText(`${t("sampleLocale.length")}: ${dataLength}`, 5, y);
 
+            y += FONT_SIZE + 2;
             // Draw loop length
-            ctx.textBaseline = "bottom";
             ctx.fillText(
                 `${t("sampleLocale.loop")}: ${loopEnd - loopStart}`,
-                canvas.width - 5,
-                canvas.height - 5
+                5,
+                y
             );
+            y += FONT_SIZE + 2;
 
             // Draw sample length in seconds
-            ctx.textAlign = "start";
-            ctx.fillText(
-                `${Math.floor(sampleLength * 1000) / 1000}s`,
-                5,
-                canvas.height - 5
-            );
+            ctx.fillText(`${Math.floor(sampleLength * 1000) / 1000}s`, 5, y);
         };
         draw();
 
@@ -341,6 +379,7 @@ export const WaveView = React.memo(function ({
         playbackRate,
         playbackStartTime,
         playerState,
+        pointerX,
         sampleLength,
         sampleRate,
         size,
@@ -376,6 +415,8 @@ export const WaveView = React.memo(function ({
             className={`wave_view ${zoom > 1 ? "zoomed" : ""} ${disabled ? "disabled" : ""}`}
             onClick={setLoopStartClick}
             onContextMenu={setLoopEndClick}
+            onPointerMove={pointermove}
+            onPointerLeave={pointerleave}
         >
             <div className={"wave_view_child"}>
                 <canvas

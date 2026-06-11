@@ -234,13 +234,13 @@ export function SampleTools({
                     if (sampleType === SampleTypes.leftSample) {
                         linked.setAudioData(right, audioBuffer.sampleRate);
                         linked.loopStart = 0;
-                        linked.loopEnd = right.length - 1;
+                        linked.loopEnd = right.length;
 
                         setSampleData(left, audioBuffer.sampleRate);
                     } else {
                         linked.setAudioData(left, audioBuffer.sampleRate);
                         linked.loopStart = 0;
-                        linked.loopEnd = left.length - 1;
+                        linked.loopEnd = left.length;
 
                         setSampleData(right, audioBuffer.sampleRate);
                     }
@@ -252,7 +252,7 @@ export function SampleTools({
                     }
                     setSampleData(finalData, audioBuffer.sampleRate);
                     setLoopStart(0);
-                    setLoopEnd(finalData.length - 1);
+                    setLoopEnd(finalData.length);
                 }
             } else if (audioBuffer.numberOfChannels === 1) {
                 audioBuffer.copyFromChannel(audioBuffer.getChannelData(0), 0);
