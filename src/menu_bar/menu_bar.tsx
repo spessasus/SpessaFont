@@ -234,6 +234,12 @@ export function MenuBar({
                     <SaveFileIcon format={"SF3"} />
                 </MenuBarIcon>
                 <MenuBarIcon
+                    click={() => void saveWithToasts("sf4")}
+                    text={t(fLoc + "saveSFE")}
+                >
+                    <SaveFileIcon format={"SFe"} />
+                </MenuBarIcon>
+                <MenuBarIcon
                     click={() => void document.body.requestFullscreen()}
                     text={t(fLoc + "fullscreen")}
                 >

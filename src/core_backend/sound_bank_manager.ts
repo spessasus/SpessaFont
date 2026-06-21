@@ -20,7 +20,7 @@ import { SOFTWARE_NAME } from "../utils/software_name.ts";
 
 export type BankEditView = "info" | BasicInstrument | BasicSample | BasicPreset;
 
-export type SaveFormat = "auto" | "sf2" | "dls" | "sf3";
+export type SaveFormat = "auto" | "sf2" | "dls" | "sf3" | "sf4";
 
 const dummy = BasicSoundBank.getSampleSoundBankFile();
 
@@ -53,7 +53,7 @@ export default class SoundBankManager extends BasicSoundBank {
             b.soundBankInfo.software = SOFTWARE_NAME;
             actualBank = b;
         }
-        this.writeType = actualBank.type;
+        this.writeType = actualBank.type === "sfe" ? "sf4" : actualBank.type;
         Object.assign(this, actualBank);
         if (bank === undefined) {
             this.soundBankInfo.name = "";
@@ -145,6 +145,15 @@ export default class SoundBankManager extends BasicSoundBank {
                         break;
                     }
 
+                    case "sf4": {
+                        binary = this.writeSFE({
+                            progressFunction,
+                            software: SOFTWARE_NAME
+                        });
+                        format = "sf4";
+                        break;
+                    }
+
                     case "dls": {
                         binary = this.writeDLS({
                             progressFunction,
@@ -169,6 +178,15 @@ export default class SoundBankManager extends BasicSoundBank {
                     progressFunction,
                     software: SOFTWARE_NAME
                 });
+                break;
+            }
+
+            case "sf4": {
+                binary = this.writeSFE({
+                    progressFunction,
+                    software: SOFTWARE_NAME
+                });
+                format = "sf4";
                 break;
             }
 

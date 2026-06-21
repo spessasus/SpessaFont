@@ -1,10 +1,7 @@
 import * as builder from "electron-builder";
-import * as vite from "vite";
 import path from "node:path";
 
 const projectDir = path.join(import.meta.dirname, "..");
-
-await vite.build();
 
 await builder.build({
     projectDir,

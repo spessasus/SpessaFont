@@ -22,8 +22,9 @@
         "release": "debug_scripts/npm_core.sh",
         "prepare": "husky install",
         "app:dev": "concurrently \"vite\" \"electron .\"",
-        "app:dist": "node electron/builder.ts"
+        "app:dist": "vite build && node electron/builder.ts"
     },
+    "desktopName": "com.spessasus.SpessaFont",
     "dependencies": {
         "@tanstack/react-virtual": "^3.13.10",
         "electron-updater": "^6.8.3",

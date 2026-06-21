@@ -8,6 +8,7 @@ export const MenuBarLocale = {
         saveSF2: "Zapisz SF2",
         saveDLS: "Zapisz DLS",
         saveSF3: "Zapisz SF3",
+        saveSFE: "Zapisz SFE",
         warnSF2:
             "Ten bank dźwiękowy zawiera skompresowane próbki. " +
             "Zapisanie go w formacie SF2 bezpowrotnie pogorszy ich jakość. Czy na pewno chcesz kontynuować?",
