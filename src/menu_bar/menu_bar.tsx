@@ -42,7 +42,7 @@ export function MenuBar({
     toggleSettings: () => void;
     openTab: (b?: File) => void;
     closeTab: () => void;
-    manager: SoundBankManager;
+    manager: SoundBankManager | undefined;
     showMidiPlayer: boolean;
     toggleKeyboard: () => void;
     bankEditorRef: BankEditorRef;
@@ -71,6 +71,7 @@ export function MenuBar({
 
     const performSave = useCallback(
         async (format: SaveFormat) => {
+            if (!manager) return;
             const id = toast.loading(t("loadingAndSaving.savingSoundBank"));
             await waitForRefresh();
             try {
@@ -102,6 +103,7 @@ export function MenuBar({
 
     const saveWithToasts = useCallback(
         (format: SaveFormat) => {
+            if (!manager) return;
             if (
                 format === "sf2" &&
                 manager.samples.some((s) => s.isCompressed)
@@ -206,39 +208,44 @@ export function MenuBar({
                 <MenuBarIcon click={openFile} text={t(fLoc + "open")}>
                     <OpenFileIcon />
                 </MenuBarIcon>
-                <MenuBarIcon click={closeTab} text={t(fLoc + "close")}>
-                    <CloseFileIcon />
-                </MenuBarIcon>
-                <MenuBarIcon
-                    click={() => void saveWithToasts("auto")}
-                    text={t(fLoc + "save")}
-                >
-                    <SaveFileIcon />
-                </MenuBarIcon>
-                <MenuBarIcon
-                    click={() => void saveWithToasts("sf2")}
-                    text={t(fLoc + "saveSF2")}
-                >
-                    <SaveFileIcon />
-                </MenuBarIcon>
-                <MenuBarIcon
-                    click={() => void saveWithToasts("dls")}
-                    text={t(fLoc + "saveDLS")}
-                >
-                    <SaveFileIcon format={"DLS"} />
-                </MenuBarIcon>
-                <MenuBarIcon
-                    click={() => void saveWithToasts("sf3")}
-                    text={t(fLoc + "saveSF3")}
-                >
-                    <SaveFileIcon format={"SF3"} />
-                </MenuBarIcon>
-                <MenuBarIcon
-                    click={() => void saveWithToasts("sf4")}
-                    text={t(fLoc + "saveSFE")}
-                >
-                    <SaveFileIcon format={"SFe"} />
-                </MenuBarIcon>
+                {manager && (
+                    <>
+                        <MenuBarIcon click={closeTab} text={t(fLoc + "close")}>
+                            <CloseFileIcon />
+                        </MenuBarIcon>
+
+                        <MenuBarIcon
+                            click={() => void saveWithToasts("auto")}
+                            text={t(fLoc + "save")}
+                        >
+                            <SaveFileIcon />
+                        </MenuBarIcon>
+                        <MenuBarIcon
+                            click={() => void saveWithToasts("sf2")}
+                            text={t(fLoc + "saveSF2")}
+                        >
+                            <SaveFileIcon />
+                        </MenuBarIcon>
+                        <MenuBarIcon
+                            click={() => void saveWithToasts("dls")}
+                            text={t(fLoc + "saveDLS")}
+                        >
+                            <SaveFileIcon format={"DLS"} />
+                        </MenuBarIcon>
+                        <MenuBarIcon
+                            click={() => void saveWithToasts("sf3")}
+                            text={t(fLoc + "saveSF3")}
+                        >
+                            <SaveFileIcon format={"SF3"} />
+                        </MenuBarIcon>
+                        <MenuBarIcon
+                            click={() => void saveWithToasts("sf4")}
+                            text={t(fLoc + "saveSFE")}
+                        >
+                            <SaveFileIcon format={"SFe"} />
+                        </MenuBarIcon>
+                    </>
+                )}
                 <MenuBarIcon
                     click={() => void document.body.requestFullscreen()}
                     text={t(fLoc + "fullscreen")}
@@ -249,42 +256,50 @@ export function MenuBar({
                     <InfoIcon />
                 </MenuBarIcon>
             </MenuBarDropdown>
-            <MenuBarDropdown main={t(eLoc + "edit")}>
-                <MenuBarIcon
-                    click={() => {
-                        if (manager.history.length === 0) {
-                            toast(t(eLoc + "nothingToUndo"));
-                        }
-                        manager.undo();
-                    }}
-                    text={t(eLoc + "undo")}
-                >
-                    <UndoIcon />
-                </MenuBarIcon>
-                <MenuBarIcon
-                    click={() => {
-                        if (manager.history.undoLength < 1) {
-                            toast(t(eLoc + "nothingToRedo"));
-                        }
-                        manager.redo();
-                    }}
-                    text={t(eLoc + "redo")}
-                >
-                    <RedoIcon />
-                </MenuBarIcon>
-                <MenuBarIcon
-                    click={() => bankEditorRef?.current?.removeUnusedElements()}
-                    text={t(eLoc + "removeUnusedElements")}
-                >
-                    <DeleteIcon />
-                </MenuBarIcon>
-                <MenuBarIcon
-                    text={t(eLoc + "autoLinkSamples")}
-                    click={() => bankEditorRef?.current?.autoLinkSamples()}
-                >
-                    <LinkIcon />
-                </MenuBarIcon>
-            </MenuBarDropdown>
+            {manager && (
+                <>
+                    <MenuBarDropdown main={t(eLoc + "edit")}>
+                        <MenuBarIcon
+                            click={() => {
+                                if (manager.history.length === 0) {
+                                    toast(t(eLoc + "nothingToUndo"));
+                                }
+                                manager.undo();
+                            }}
+                            text={t(eLoc + "undo")}
+                        >
+                            <UndoIcon />
+                        </MenuBarIcon>
+                        <MenuBarIcon
+                            click={() => {
+                                if (manager.history.undoLength < 1) {
+                                    toast(t(eLoc + "nothingToRedo"));
+                                }
+                                manager.redo();
+                            }}
+                            text={t(eLoc + "redo")}
+                        >
+                            <RedoIcon />
+                        </MenuBarIcon>
+                        <MenuBarIcon
+                            click={() =>
+                                bankEditorRef?.current?.removeUnusedElements()
+                            }
+                            text={t(eLoc + "removeUnusedElements")}
+                        >
+                            <DeleteIcon />
+                        </MenuBarIcon>
+                        <MenuBarIcon
+                            text={t(eLoc + "autoLinkSamples")}
+                            click={() =>
+                                bankEditorRef?.current?.autoLinkSamples()
+                            }
+                        >
+                            <LinkIcon />
+                        </MenuBarIcon>
+                    </MenuBarDropdown>
+                </>
+            )}
             {showMidiPlayer && <MIDIPlayer></MIDIPlayer>}
             <a
                 className={"menu_bar_button"}

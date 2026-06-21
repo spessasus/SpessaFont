@@ -1,6 +1,8 @@
 import path from "node:path";
 import { app, BrowserWindow, ipcMain, Menu, nativeImage } from "electron";
-import { autoUpdater } from "electron-updater";
+import pkg from "electron-updater";
+
+const { autoUpdater } = pkg;
 
 const devServerUrl = "http://localhost:5173/";
 const distIndex = path.join(app.getAppPath(), "dist", "index.html");
