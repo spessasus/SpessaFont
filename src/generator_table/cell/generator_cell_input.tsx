@@ -26,6 +26,7 @@ export const GeneratorCellInput = typedMemo(function ({
             onBlur={() => setTypedText(onBlur(typedText))}
             onFocus={() => setClearOnType(true)}
             onKeyDown={(e) => {
+                e.stopPropagation();
                 switch (e.key) {
                     default: {
                         break;
