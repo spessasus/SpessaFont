@@ -34,9 +34,7 @@ export function SampleTools({
     zoom,
     setZoom,
     sampleData,
-    setSampleData,
-    setLoopStart,
-    setLoopEnd
+    setSampleData
 }: {
     sample: BasicSample;
     playerState: SamplePlayerState;
@@ -48,8 +46,6 @@ export function SampleTools({
     setZoom: (z: number) => unknown;
     sampleData: Float32Array;
     setSampleData: (d: Float32Array, rate: number) => unknown;
-    setLoopStart: (s: number) => unknown;
-    setLoopEnd: (e: number) => unknown;
 }) {
     const { t } = useTranslation();
     const {
@@ -251,11 +247,10 @@ export function SampleTools({
                         finalData[i] = (left[i] + right[i]) / 2;
                     }
                     setSampleData(finalData, audioBuffer.sampleRate);
-                    setLoopStart(0);
-                    setLoopEnd(finalData.length);
                 }
             } else if (audioBuffer.numberOfChannels === 1) {
-                audioBuffer.copyFromChannel(audioBuffer.getChannelData(0), 0);
+                const data = audioBuffer.getChannelData(0);
+                setSampleData(data, audioBuffer.sampleRate);
             } else {
                 toast.error(t("sampleLocale.tools.tooManyChannels"));
             }

@@ -57,6 +57,8 @@ export const SampleEditor = React.memo(function ({
         setSampleRate(rate);
         sample.setAudioData(data, rate);
         setSampleDataLocal(data);
+        sample.loopStart = 0;
+        sample.loopEnd = data.length;
     };
 
     const updateSamples = useCallback(
@@ -358,8 +360,6 @@ export const SampleEditor = React.memo(function ({
                         setPlayerState={setPlayerState}
                         setPlaybackStart={setPlaybackStart}
                         sample={sample}
-                        setLoopStart={setLoopStart}
-                        setLoopEnd={setLoopEnd}
                         sampleData={sampleData}
                         setSampleData={setSampleData}
                     />
