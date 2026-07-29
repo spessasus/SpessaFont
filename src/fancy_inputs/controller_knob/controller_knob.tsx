@@ -27,7 +27,7 @@ export function ControllerKnob({ min, max, onChange, value }: ControllerProps) {
         if (!isMouseDownRef.current) {
             return;
         }
-        const el = e.currentTarget as HTMLDivElement;
+        const el = e.currentTarget;
         const rect = el.getBoundingClientRect();
         const radius = rect.width / 2;
         const x = e.clientX - rect.left - radius;

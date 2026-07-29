@@ -22,7 +22,6 @@ import {
     SaveFileIcon,
     UndoIcon
 } from "../utils/icons.tsx";
-import type { ProgressFunction } from "spessasynth_core";
 import SoundBankManager, {
     type SaveFormat
 } from "../core_backend/sound_bank_manager.ts";
@@ -75,7 +74,7 @@ export function MenuBar({
             const id = toast.loading(t("loadingAndSaving.savingSoundBank"));
             await waitForRefresh();
             try {
-                const saved = await manager.save(format, ((progress) => {
+                const saved = await manager.save(format, (progress) => {
                     toast.loading(
                         `${t("loadingAndSaving.writingSamples")} (${
                             Math.floor(progress * 10_000) / 100 + "%"
@@ -84,7 +83,7 @@ export function MenuBar({
                             id
                         }
                     );
-                }) as ProgressFunction);
+                });
                 if (!saved) {
                     // don't show success
                     toast.dismiss(id);

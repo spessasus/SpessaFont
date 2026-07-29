@@ -298,7 +298,7 @@ function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
                 bankEditorRef={bankEditorRef}
                 showMidiPlayer={tabs.length > 0}
                 toggleSettings={toggleSettings}
-                openTab={openNewBankTab as () => void}
+                openTab={openNewBankTab}
                 closeTab={() => closeTab(activeTab)}
                 manager={currentManager}
                 toggleKeyboard={() => setShowKeyboard(!showKeyboard)}
