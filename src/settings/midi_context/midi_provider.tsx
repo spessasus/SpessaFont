@@ -12,6 +12,13 @@ export function MIDIProvider({ children }: { children?: React.ReactNode }) {
         useState<MIDIAccessStatus>("waiting");
 
     useEffect(() => {
+        if (!("requestMIDIAccess" in navigator)) {
+            console.error("Your browser does not support WebMIDI.");
+            setAccessStatus("denied");
+            setMidiError("Your browser does not support WebMIDI.");
+            return;
+        }
+
         navigator
             .requestMIDIAccess({ sysex: true, software: true })
             .then((access) => {
