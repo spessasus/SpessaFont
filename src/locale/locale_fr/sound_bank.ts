@@ -1,7 +1,8 @@
 export const SoundBankLocale = {
     globalZone: "Zone Globale",
     createNewZone: "Créer une Nouvelle Zone",
-    thisIsAStereoSamplePair: "Cette échantillon fait partie une paire d'échantillons stéréo.",
+    thisIsAStereoSamplePair:
+        "Cette échantillon fait partie une paire d'échantillons stéréo.",
 
     modifiedSamples: "{{count}} échantillons ont été modifiés.",
     noSamplesWereChanged: "Aucun échantillon n'a été changé.",

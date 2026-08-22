@@ -5,6 +5,5 @@ export const PresetLocale = {
     drums: "Kit de Batterie",
     programNumber: "Numéro du Programme",
     linkSelectedInstruments: "Lier les instruments sélectionnés",
-    presetWithTheParametersExists:
-        "Un Preset avec ces paramètres éxiste déjà."
+    presetWithTheParametersExists: "Un Preset avec ces paramètres éxiste déjà."
 };

@@ -10,8 +10,7 @@ import { SetRangeAction } from "./set_range_action.ts";
 import { typedMemo } from "../../utils/typed_memo.ts";
 
 export type RangeGenerator =
-    | typeof GeneratorTypes.keyRange
-    | typeof GeneratorTypes.velRange;
+    typeof GeneratorTypes.keyRange | typeof GeneratorTypes.velRange;
 
 export const RangeGeneratorCell = typedMemo(function ({
     zone,

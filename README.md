@@ -21,7 +21,7 @@ inspired by
 Davy7125's [polyphone](https://github.com/davy7125/polyphone).
 This is also my first TypeScript and React project. It's a bit messy, but it works! :-P
 
-## Supported Browsers 
+## Supported Browsers
 
 - **Chromium-based:** such as Google Chrome, Microsoft Edge, Brave, Opera, etc.
 - **Gecko-based:** such as Mozilla Firefox, Floorp, Zen, Waterfox, Librewolf, etc.
@@ -92,7 +92,6 @@ This is also my first TypeScript and React project. It's a bit messy, but it wor
 SpessaFont is a PWA app, meaning you can install it on any device with just one click:
 
 <img width="2343" height="624" alt="How to install SpessaFont" src="https://github.com/user-attachments/assets/a2ea19ee-003c-4679-b4c6-d5b0553fd1aa" />
-
 
 ## Building from source
 
