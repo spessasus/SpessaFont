@@ -22,6 +22,7 @@ import { Welcome } from "./welcome/welcome.tsx";
 import type { ElectronAPI } from "./types/electron.ts";
 import { IS_CHROME, IS_ELECTRON } from "./utils/environment_detection.ts";
 import { useAudioEngine } from "./core_backend/audio_engine_context.ts"; // apply locale
+import { useMIDIAccess } from "./settings/midi_context/midi_context.ts"; // for MIDI listener
 
 // shared clipboard
 const clipboardManager = new ClipboardManager();
@@ -213,6 +214,22 @@ function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
             console.info("Connected to Electron file handlers");
         }
     }, [audioEngine.context, openNewBankTab]);
+
+    const { selectedDevice } = useMIDIAccess();
+    useEffect(() => {
+        if (!selectedDevice) return;
+
+        const handler = (e: MIDIMessageEvent) => {
+            if (e.data) {
+                audioEngine.processRealTime(e.data);
+            }
+        };
+
+        selectedDevice.addEventListener("midimessage", handler);
+        return () => {
+            selectedDevice.removeEventListener("midimessage", handler);
+        };
+    }, [audioEngine, selectedDevice]);
 
     const openFile = useCallback(() => {
         const input = document.createElement("input");

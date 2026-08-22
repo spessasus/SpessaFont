@@ -1,8 +1,6 @@
 import { useMIDIAccess } from "../midi_context/midi_context.ts";
-import { useEffect } from "react";
 import { Setting } from "../setting.tsx";
 import { useTranslation } from "react-i18next";
-import { useAudioEngine } from "../../core_backend/audio_engine_context.ts";
 
 export function MidiSettings() {
     const {
@@ -13,22 +11,6 @@ export function MidiSettings() {
         setSelectedDevice
     } = useMIDIAccess();
     const { t } = useTranslation();
-    const { audioEngine } = useAudioEngine();
-
-    useEffect(() => {
-        if (!selectedDevice) return;
-
-        const handler = (e: MIDIMessageEvent) => {
-            if (e.data) {
-                audioEngine.processRealTime(e.data);
-            }
-        };
-
-        selectedDevice.addEventListener("midimessage", handler);
-        return () => {
-            selectedDevice.removeEventListener("midimessage", handler);
-        };
-    }, [selectedDevice, audioEngine]);
 
     if (accessStatus === "waiting")
         return (

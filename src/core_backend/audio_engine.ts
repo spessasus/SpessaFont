@@ -15,8 +15,8 @@ import {
 
 // audio worklet processor operates at that
 const BLOCK_SIZE = 128;
-const MAX_CHUNKS_QUEUED = 16; // 16 * 128 = 2,048 // Windows does not like small buffer sizes
-const MAX_RENDERED_AT_ONCE = 6;
+const MAX_CHUNKS_QUEUED = 32; // 16 * 128 = 2,048 // Windows does not like small buffer sizes
+const MAX_RENDERED_AT_ONCE = 2;
 
 const dummy = BasicSoundBank.getSampleSoundBankFile();
 
@@ -26,7 +26,6 @@ export class AudioEngine {
     processor: SpessaSynthProcessor;
     sequencer: SpessaSynthSequencer;
     analyser: AnalyserNode;
-    intervalID = 0;
 
     targetNode: GainNode;
 
@@ -36,10 +35,6 @@ export class AudioEngine {
     private readonly currentSampleRate;
 
     private worklet: AudioWorkletNode | undefined;
-    private processorTime = {
-        taken: 0,
-        time: 0
-    };
 
     constructor(context: AudioContext, initialSettings: SavedSettingsType) {
         this.context = context;
@@ -79,17 +74,8 @@ export class AudioEngine {
         return this.sequencer.paused;
     }
 
-    private get synthTime() {
-        return (
-            this.processorTime.time +
-            (performance.now() - this.processorTime.taken) / 1000
-        );
-    }
-
     public processRealTime(msg: number[] | Uint8Array) {
-        this.processor.processMessage(msg, 0, {
-            time: this.synthTime
-        });
+        this.processor.processMessage(msg, 0);
     }
 
     public ccChangeRealTime(ch: number, cc: number, value: number) {
@@ -145,24 +131,24 @@ export class AudioEngine {
 
     async resumeContext() {
         await this.context.resume();
-        clearInterval(this.intervalID);
         console.info("setting up audio loop");
         await this.context.audioWorklet.addModule("./audio_worklet.js");
         this.worklet = new AudioWorkletNode(
             this.context,
             "playback-processor",
             {
-                outputChannelCount: [2, 2, 2],
-                numberOfOutputs: 3
+                outputChannelCount: [2],
+                numberOfOutputs: 1
             }
         );
         this.worklet.connect(this.targetNode);
         // Disable for performance
 
-        this.worklet.port.onmessage = (e: MessageEvent<number>) =>
-            (this.audioChunksQueued = e.data);
-
-        this.intervalID = setInterval(this.audioLoop.bind(this));
+        this.worklet.port.onmessage = (e: MessageEvent<number>) => {
+            this.audioChunksQueued = e.data;
+            this.audioLoop();
+        };
+        this.audioLoop();
     }
 
     audioLoop() {
@@ -200,8 +186,6 @@ export class AudioEngine {
             data.push(dataChunk);
             transferList.push(dataChunk.buffer);
         }
-        this.processorTime.taken = performance.now();
-        this.processorTime.time = this.processor.currentTime;
 
         // send to worklet
         if (this.worklet) {
