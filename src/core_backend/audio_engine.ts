@@ -1,17 +1,20 @@
 import {
     type BasicMIDI,
     BasicSoundBank,
+    DEFAULT_SYNTH_MODE,
     MIDIMessageTypes,
+    MIDIUtils,
     SoundBankLoader,
     SpessaLog,
     SpessaSynthProcessor,
     SpessaSynthSequencer
 } from "spessasynth_core";
-import { logInfo } from "../utils/core_utils.ts";
+import { KEYBOARD_TARGET_CHANNEL } from "../keyboard/target_channel.ts";
 import {
     getSetting,
     type SavedSettingsType
 } from "../settings/save_load/settings_typedef.ts";
+import { logInfo } from "../utils/core_utils.ts";
 
 // audio worklet processor operates at that
 const BLOCK_SIZE = 128;
@@ -105,6 +108,43 @@ export class AudioEngine {
             "interpolationType",
             getSetting("interpolation", settings)
         );
+
+        processor.midiChannels[KEYBOARD_TARGET_CHANNEL].lockMIDIParameter(
+            "velocitySenseDepth",
+            false
+        );
+        processor.processMessages(
+            MIDIUtils.setChannelMIDIParameter(
+                0,
+                KEYBOARD_TARGET_CHANNEL,
+                DEFAULT_SYNTH_MODE,
+                "velocitySenseDepth",
+                getSetting("velocitySenseDepth", settings)
+            )
+        );
+        processor.midiChannels[KEYBOARD_TARGET_CHANNEL].lockMIDIParameter(
+            "velocitySenseDepth",
+            true
+        );
+
+        processor.midiChannels[KEYBOARD_TARGET_CHANNEL].lockMIDIParameter(
+            "velocitySenseOffset",
+            false
+        );
+        processor.processMessages(
+            MIDIUtils.setChannelMIDIParameter(
+                0,
+                KEYBOARD_TARGET_CHANNEL,
+                DEFAULT_SYNTH_MODE,
+                "velocitySenseOffset",
+                getSetting("velocitySenseOffset", settings)
+            )
+        );
+        processor.midiChannels[KEYBOARD_TARGET_CHANNEL].lockMIDIParameter(
+            "velocitySenseOffset",
+            true
+        );
+
         processor.setSystemParameter(
             "reverbGain",
             getSetting("reverbLevel", settings)
@@ -117,6 +157,7 @@ export class AudioEngine {
             "delayGain",
             getSetting("delayLevel", settings)
         );
+
         processor.setSystemParameter(
             "voiceCap",
             getSetting("voiceCap", settings)

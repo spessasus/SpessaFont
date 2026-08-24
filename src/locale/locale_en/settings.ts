@@ -20,7 +20,9 @@ export const SettingsLocale = {
         },
         reverbLevel: "Reverb Level",
         chorusLevel: "Chorus Level",
-        delayLevel: "Delay Level"
+        delayLevel: "Delay Level",
+        velocitySenseDepth: "Velocity Sense Depth",
+        velocitySenseOffset: "Velocity Sense Offset"
     },
 
     midi: {

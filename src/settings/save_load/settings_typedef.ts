@@ -8,9 +8,14 @@ export interface SavedSettingsType {
     volume: number;
     theme: ThemeType;
     interpolation: InterpolationType;
+
+    velocitySenseDepth: number;
+    velocitySenseOffset: number;
+
     reverbLevel: number;
     chorusLevel: number;
     delayLevel: number;
+
     voiceCap: number;
     sampleRate: number;
 }
@@ -23,9 +28,14 @@ export const DEFAULT_SETTINGS: SavedSettingsType = {
     volume: 1,
     theme: "dark",
     interpolation: InterpolationTypes.hermite,
+
+    velocitySenseDepth: 64,
+    velocitySenseOffset: 64,
+
     reverbLevel: 1,
     chorusLevel: 1,
     delayLevel: 1,
+
     voiceCap: 350,
     sampleRate: readSampleRateParam()
 };

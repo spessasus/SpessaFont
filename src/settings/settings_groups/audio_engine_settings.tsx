@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { Setting } from "../setting.tsx";
+import { type InterpolationType, InterpolationTypes } from "spessasynth_core";
+import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
 import {
     getSetting,
     type SavedSettingsType
 } from "../save_load/settings_typedef.ts";
-import { type InterpolationType, InterpolationTypes } from "spessasynth_core";
-import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
+import { Setting } from "../setting.tsx";
 
 export interface GroupSettingsProps {
     settings: SavedSettingsType;
@@ -63,6 +63,24 @@ export function AudioEngineSettings({
             delayLevel: vReal
         });
         return vReal * 100;
+    }
+
+    function setVelocitySenseDepth(v: number) {
+        const vReal = Math.max(0, Math.min(127, v));
+        updateSettings({
+            ...settings,
+            velocitySenseDepth: vReal
+        });
+        return vReal;
+    }
+
+    function setVelocitySenseOffset(v: number) {
+        const vReal = Math.max(0, Math.min(127, v));
+        updateSettings({
+            ...settings,
+            velocitySenseOffset: vReal
+        });
+        return vReal;
     }
 
     function setVoiceCap(v: number) {
@@ -140,6 +158,26 @@ export function AudioEngineSettings({
                     maxLength={5}
                     className={"pretty_input monospaced"}
                     value={getSetting("voiceCap", settings)}
+                />
+            </Setting>
+
+            <Setting locale={`${engineT}velocitySenseDepth`}>
+                <WaitingInput
+                    setValue={setVelocitySenseDepth}
+                    type={"text"}
+                    maxLength={5}
+                    className={"pretty_input monospaced"}
+                    value={getSetting("velocitySenseDepth", settings)}
+                />
+            </Setting>
+
+            <Setting locale={`${engineT}velocitySenseOffset`}>
+                <WaitingInput
+                    setValue={setVelocitySenseOffset}
+                    type={"text"}
+                    maxLength={5}
+                    className={"pretty_input monospaced"}
+                    value={getSetting("velocitySenseOffset", settings)}
                 />
             </Setting>
 

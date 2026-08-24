@@ -9,7 +9,7 @@
     "homepage": "https://github.com/spessasus/SpessaFont",
     "repository": "github:spessasus/SpessaFont",
     "private": true,
-    "version": "1.4.15",
+    "version": "1.4.16",
     "type": "module",
     "main": "electron/main.js",
     "scripts": {
@@ -33,7 +33,7 @@
         "react-dom": "^19.1.0",
         "react-hot-toast": "^2.5.2",
         "react-i18next": "^15.5.2",
-        "spessasynth_core": "latest"
+        "spessasynth_core": "^4.3.22"
     },
     "devDependencies": {
         "@electron/typescript-definitions": "^9.1.6",
@@ -84,9 +84,9 @@
         "@swc/core"
     ],
     "allowScripts": {
-        "@swc/core@1.15.21": true,
         "electron@41.3.0": true,
         "electron-winstaller@5.4.0": true,
-        "esbuild@0.25.12": true
+        "esbuild@0.25.12": true,
+        "@swc/core@1.15.47": true
     }
 }
