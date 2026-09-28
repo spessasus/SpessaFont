@@ -5,6 +5,6 @@ export const PresetLocale = {
     bankLSB: "音色组2（LSB）",
     drums: "鼓组",
     programNumber: "程序编号",
-    linkSelectedInstruments: "链接选择的乐器",
+    linkSelectedInstruments: "关联选择的乐器",
     presetWithTheParametersExists: "包含这些参数的预设已存在。"
 };
