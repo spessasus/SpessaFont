@@ -1,3 +1,5 @@
+// Translated by: 迎春心情（Yingchun Soul）
+
 export const SettingsLocale = {
     settings: "设置",
     interface: {
