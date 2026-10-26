@@ -9,7 +9,7 @@
     "homepage": "https://github.com/spessasus/SpessaFont",
     "repository": "github:spessasus/SpessaFont",
     "private": true,
-    "version": "1.4.16",
+    "version": "1.4.17",
     "type": "module",
     "main": "electron/main.js",
     "scripts": {
@@ -33,7 +33,7 @@
         "react-dom": "^19.1.0",
         "react-hot-toast": "^2.5.2",
         "react-i18next": "^15.5.2",
-        "spessasynth_core": "^4.3.22"
+        "spessasynth_core": "latest"
     },
     "devDependencies": {
         "@electron/typescript-definitions": "^9.1.6",

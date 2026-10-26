@@ -13,7 +13,7 @@ import { KeyboardController } from "./keyboard/keyboard_controller.tsx";
 import { DestinationsOptions } from "./utils/translated_options/destination_options.tsx";
 import { ModulableControllerOptions } from "./utils/translated_options/modulable_controller_options.tsx";
 import { BankEditor, type BankEditorRef } from "./bank_editor/bank_editor.tsx";
-import { ACCEPTED_FORMATS } from "./utils/accepted_formats.ts";
+import { ACCEPTED_SOUNDBANK_FORMATS } from "./utils/accepted_formats.ts";
 import { loadSoundBank } from "./core_backend/load_sound_bank.ts";
 import type { BasicSoundBank, GenericRange } from "spessasynth_core";
 import toast, { Toaster } from "react-hot-toast";
@@ -234,7 +234,7 @@ function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
     const openFile = useCallback(() => {
         const input = document.createElement("input");
         input.type = "file";
-        input.accept = ACCEPTED_FORMATS;
+        input.accept = ACCEPTED_SOUNDBANK_FORMATS;
         input.click();
         input.onchange = async () => {
             const file: File | undefined = input.files?.[0];

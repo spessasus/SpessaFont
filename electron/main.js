@@ -11,6 +11,11 @@ const windowIcon = nativeImage.createFromPath(
     path.join(app.getAppPath(), "public", "logo.png")
 );
 
+// Keep in sync with `ACCEPTED_SOUNDBANK_FORMATS` in src/utils/accepted_formats.ts
+// (src is not packaged with the app, so it can't be imported here)
+const ACCEPTED_SOUNDBANK_FORMATS =
+    ".sf2,.dls,.dlp,.sf3,.sf4,.sfogg,.rmi,.xm,.mod,.s3m".split(",");
+
 let fileToOpen = undefined;
 
 /**
@@ -69,13 +74,8 @@ async function createWindow() {
         if (process.platform !== "darwin") {
             fileToOpen = process.argv.find((arg) => {
                 const a = arg.toLowerCase();
-                return (
-                    a.endsWith(".sf2") ||
-                    a.endsWith(".dls") ||
-                    a.endsWith(".dlp") ||
-                    a.endsWith(".sf3") ||
-                    a.endsWith(".sfogg") ||
-                    a.endsWith(".rmi")
+                return ACCEPTED_SOUNDBANK_FORMATS.some((ext) =>
+                    a.endsWith(ext)
                 );
             });
         }

@@ -49,7 +49,7 @@ export function OtherControllers({ ref }: { ref: Ref<OtherCCRef> }) {
     }));
 
     const midiPanic = useCallback(() => {
-        processor.stopAllChannels(true);
+        processor.stopAll(true);
     }, [processor]);
 
     const systemReset = useCallback(() => {

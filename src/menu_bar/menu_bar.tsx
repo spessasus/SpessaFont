@@ -5,7 +5,7 @@ import "./menu_bar.css";
 import { useTranslation } from "react-i18next";
 import { useCallback, useEffect } from "react";
 import type { BankEditorRef } from "../bank_editor/bank_editor.tsx";
-import { ACCEPTED_FORMATS } from "../utils/accepted_formats.ts";
+import { ACCEPTED_SOUNDBANK_FORMATS } from "../utils/accepted_formats.ts";
 import toast from "react-hot-toast";
 import {
     CloseFileIcon,
@@ -53,7 +53,7 @@ export function MenuBar({
     function openFile() {
         const input = document.createElement("input");
         input.type = "file";
-        input.accept = ACCEPTED_FORMATS;
+        input.accept = ACCEPTED_SOUNDBANK_FORMATS;
         input.click();
         input.onchange = () => {
             const file: File | undefined = input.files?.[0];

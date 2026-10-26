@@ -1,23 +1,22 @@
 import {
     BasicMIDI,
     type BasicSoundBank,
-    SoundBankLoader,
-    SpessaSynthCoreUtils
+    SoundBankLoader
 } from "spessasynth_core";
 
 export function loadSoundBank(buf: ArrayBuffer): BasicSoundBank {
-    // check
-    const identifier = buf.slice(8, 12);
-    const text = SpessaSynthCoreUtils.readBinaryString(
-        new Uint8Array(identifier),
-        4
-    );
-    if (text === "RMID") {
-        const mid = BasicMIDI.fromArrayBuffer(buf);
-        if (!mid.embeddedSoundBank) {
-            throw new Error("No embedded sound bank.");
+    try {
+        return SoundBankLoader.fromArrayBuffer(buf);
+    } catch (error) {
+        // Maybe MIDI can parse it?
+        try {
+            const mid = BasicMIDI.fromArrayBuffer(buf);
+            if (!mid.embeddedSoundBank) {
+                throw new Error("No embedded sound bank in this file!");
+            }
+            return SoundBankLoader.fromArrayBuffer(mid.embeddedSoundBank);
+        } catch {
+            throw error;
         }
-        return SoundBankLoader.fromArrayBuffer(mid.embeddedSoundBank);
     }
-    return SoundBankLoader.fromArrayBuffer(buf);
 }

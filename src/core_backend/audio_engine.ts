@@ -154,7 +154,12 @@ export class AudioEngine {
             getSetting("chorusLevel", settings)
         );
         processor.setSystemParameter(
-            "delayGain",
+            "gsDelayGain",
+            getSetting("delayLevel", settings)
+        );
+
+        processor.setSystemParameter(
+            "xgVariationGain",
             getSetting("delayLevel", settings)
         );
 

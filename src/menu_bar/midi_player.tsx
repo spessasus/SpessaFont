@@ -11,6 +11,7 @@ import {
 } from "../utils/icons.tsx";
 import { typedMemo } from "../utils/typed_memo.ts";
 import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
+import { ACCEPTED_MIDI_FORMATS } from "../utils/accepted_formats.ts";
 
 function formatTime(seconds: number): string {
     const min = Math.floor(seconds / 60);
@@ -86,7 +87,7 @@ export function MIDIPlayer() {
     const playMIDI = useCallback(() => {
         const input = document.createElement("input");
         input.type = "file";
-        input.accept = ".mid,.midi,.rmi,.xmf,.mxmf,.smf,.kar";
+        input.accept = ACCEPTED_MIDI_FORMATS;
         input.onchange = async () => {
             if (input.files?.[0] === undefined) {
                 return;

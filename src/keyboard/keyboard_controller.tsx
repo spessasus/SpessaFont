@@ -3,7 +3,6 @@ import { Keyboard, type KeyboardRef } from "./keyboard/keyboard.tsx";
 import * as React from "react";
 import { type JSX, type RefObject, useEffect, useRef, useState } from "react";
 import {
-    CONTROLLER_TABLE_SIZE,
     DEFAULT_MIDI_CONTROLLERS,
     type GenericRange,
     type MIDIController,
@@ -73,7 +72,7 @@ export function KeyboardController({
                     }
 
                     case "reset": {
-                        for (let i = 0; i < CONTROLLER_TABLE_SIZE; i++) {
+                        for (let i = 0; i < 128; i++) {
                             for (const r of knobRefs.current) {
                                 r?.current?.ccUpdate(
                                     i,
