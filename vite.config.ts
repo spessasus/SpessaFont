@@ -14,7 +14,7 @@ export default defineConfig({
     resolve: {
         alias: {
             "sl-web-ogg": path.resolve(
-                __dirname,
+                import.meta.dirname,
                 "externals/sl-web-ogg/dist/index.min.js"
             )
         }
@@ -23,9 +23,6 @@ export default defineConfig({
         __APP_VERSION__: JSON.stringify(process.env.npm_package_version)
     },
     build: {
-        target: "esnext"
-    },
-    esbuild: {
         target: "esnext"
     }
 });

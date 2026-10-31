@@ -80,7 +80,7 @@ export function ModulatorList({
 
     const handleClick = useCallback(
         (e: React.MouseEvent, clickedMod: Modulator) => {
-            if (!e.shiftKey || lastSelectedMod === null) {
+            if (lastSelectedMod === null || !e.shiftKey) {
                 setLastSelectedMod(clickedMod);
                 if (selectedMods.has(clickedMod)) {
                     selectedMods.delete(clickedMod);

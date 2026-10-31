@@ -21,10 +21,7 @@ export function TypeSelector({
 }) {
     const { t } = useTranslation();
     const linkedIndex = useMemo(() => {
-        if (!linkedSample) {
-            return 0;
-        }
-        return samples.indexOf(linkedSample);
+        return linkedSample ? samples.indexOf(linkedSample) : 0;
     }, [linkedSample, samples]);
 
     const availableSamples = useMemo(() => {
@@ -33,8 +30,8 @@ export function TypeSelector({
         for (let i = 0; i < samples.length; i++) {
             const s = samples[i];
             if (
-                (s.linkedSample === undefined || s.linkedSample === sample) &&
-                s !== sample
+                s !== sample &&
+                (s.linkedSample === undefined || s.linkedSample === sample)
             ) {
                 indexedSamples.push({ s, i });
             }

@@ -102,10 +102,10 @@ export const NumberGeneratorRow = typedMemo(function <
                     {zones.map((z, i) => {
                         const linked = linkedZoneMap[i];
 
-                        let span = 1;
                         if (linked.index === 2) {
                             return null;
                         }
+                        let span = 1;
                         if (linked.index === 1) {
                             span = 2;
                         }
@@ -140,10 +140,10 @@ export const NumberGeneratorRow = typedMemo(function <
                     {zones.map((z, i) => {
                         const linked = linkedZoneMap[i];
 
-                        let span = 1;
                         if (linked.index === 2) {
                             return null;
                         }
+                        let span = 1;
                         if (linked.index === 1) {
                             span = 2;
                         }

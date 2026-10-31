@@ -5,9 +5,22 @@ import tseslint from "typescript-eslint";
 import eslintPluginUnicorn from "eslint-plugin-unicorn";
 import eslintConfigPrettier from "eslint-config-prettier";
 import eslint from "@eslint/js";
+import { defineConfig, globalIgnores } from "eslint/config";
 
-export default tseslint.config(
-    { ignores: ["dist", "externals"] },
+// React Compiler rules report problems that need the store from REFACTOR_PLAN.md phase 2.
+// They are warnings until the phase that owns each file lands, and errors again in phase 8.
+const reactCompilerRulesAsWarnings = Object.fromEntries(
+    Object.keys(reactHooks.configs.recommended.rules)
+        .filter(
+            (rule) =>
+                rule !== "react-hooks/rules-of-hooks" &&
+                rule !== "react-hooks/exhaustive-deps"
+        )
+        .map((rule) => [rule, "warn"])
+);
+
+export default defineConfig(
+    globalIgnores(["dist", "externals"]),
     {
         extends: [
             eslint.configs.recommended,
@@ -18,7 +31,7 @@ export default tseslint.config(
         ],
         files: ["**/*.{ts,tsx}"],
         languageOptions: {
-            ecmaVersion: 2020,
+            ecmaVersion: "latest",
             globals: globals.browser,
             parserOptions: {
                 projectService: true,
@@ -33,6 +46,7 @@ export default tseslint.config(
             eqeqeq: "error",
             "no-fallthrough": ["error", { allowEmptyCase: true }],
             ...reactHooks.configs.recommended.rules,
+            ...reactCompilerRulesAsWarnings,
             "react-refresh/only-export-components": [
                 "warn",
                 { allowConstantExport: true }
@@ -60,7 +74,7 @@ export default tseslint.config(
             "unicorn/no-null": "off",
             // Technical stuff like "modulators" or "envelopes" not commonly used
             // TODO add proper rules for this later
-            "unicorn/prevent-abbreviations": "off",
+            "unicorn/name-replacements": "off",
 
             // Need to pass undefined as value sometimes (for example getGenerator)
             "unicorn/no-useless-undefined": "off",
@@ -81,7 +95,14 @@ export default tseslint.config(
 
             // We are targeting es2022
             "unicorn/no-array-reverse": "off",
-            "unicorn/no-array-sort": "off"
+            "unicorn/no-array-sort": "off",
+
+            // Strips the leading asterisks that multi-line JSDoc relies on
+            "unicorn/no-asterisk-prefix-in-documentation-comments": "off",
+
+            // The waveform path changes on every draw, so caching a Path2D buys nothing.
+            // Revisit when wave_view is rewritten (REFACTOR_PLAN.md phase 6)
+            "unicorn/prefer-path2d": "off"
         }
     },
     {

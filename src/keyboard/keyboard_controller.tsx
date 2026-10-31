@@ -47,10 +47,12 @@ export function KeyboardController({
     const [controllers, setControllers] =
         useState<MIDIController[]>(INITIAL_CC_LIST);
     const knobRefs = useRef<RefObject<ControllerKnobRef | null>[]>([]);
-    INITIAL_CC_LIST.map(() => {
-        const reference = React.createRef<ControllerKnobRef>();
-        knobRefs.current.push(reference);
-    });
+    // Lazy initialization, so the refs are created once instead of on every render
+    if (knobRefs.current.length === 0) {
+        knobRefs.current = INITIAL_CC_LIST.map(() =>
+            React.createRef<ControllerKnobRef>()
+        );
+    }
 
     const pitchRef = useRef<OtherCCRef>(null);
     const keyDisplayRef = useRef<HTMLSpanElement>(null);

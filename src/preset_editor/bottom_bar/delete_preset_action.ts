@@ -30,11 +30,11 @@ export class DeletePresetAction implements HistoryAction {
         b.flushAndSortPresets();
         this.setPresets([...b.presets]);
         // check if there are elements to switch to
-        if (b.presets.length > 0) {
-            this.setView(b.presets[Math.max(this.index - 1, 0)]);
-        } else {
-            this.setView("info");
-        }
+        this.setView(
+            b.presets.length > 0
+                ? b.presets[Math.max(this.index - 1, 0)]
+                : "info"
+        );
     }
 
     undo(b: SoundBankManager) {

@@ -1,6 +1,6 @@
 export function getUserLocale(supportedLocales: string[]): string {
     const preferredLocales = (navigator.languages || [navigator.language]).map(
-        (l) => l.split("-")[0].toLowerCase()
+        (l) => l.split("-", 1)[0].toLowerCase()
     );
     for (const locale of preferredLocales)
         if (supportedLocales.includes(locale)) return locale;

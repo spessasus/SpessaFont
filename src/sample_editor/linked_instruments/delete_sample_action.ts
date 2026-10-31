@@ -30,11 +30,11 @@ export class DeleteSampleAction implements HistoryAction {
         b.samples.splice(this.sampleIndex, 1);
         this.setSamples([...b.samples]);
         // check if there are samples to switch to
-        if (b.samples.length > 0) {
-            this.setView(b.samples[Math.max(this.sampleIndex - 1, 0)]);
-        } else {
-            this.setView("info");
-        }
+        this.setView(
+            b.samples.length > 0
+                ? b.samples[Math.max(this.sampleIndex - 1, 0)]
+                : "info"
+        );
     }
 
     undo(b: SoundBankManager) {

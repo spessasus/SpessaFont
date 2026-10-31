@@ -5,10 +5,10 @@ import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import type { HistoryAction } from "../core_backend/history.ts";
 
 class SetBankInfo<K extends keyof SoundBankInfoData> implements HistoryAction {
-    callback: (s: NonNullable<SoundBankInfoData[K]>) => void;
     private readonly oldVal: NonNullable<SoundBankInfoData[K]>;
     private readonly newVal: NonNullable<SoundBankInfoData[K]>;
     private readonly fourCC: K;
+    callback: (s: NonNullable<SoundBankInfoData[K]>) => void;
 
     constructor(
         callback: (s: NonNullable<SoundBankInfoData[K]>) => void,
@@ -57,15 +57,17 @@ export function EditableBankInfo({
     const bank = manager;
 
     useEffect(() => {
-        if (bank !== undefined) {
-            setName(manager.getInfo("name"));
-            setDate(manager.getInfo("creationDate"));
-            setEngineer(manager.getInfo("engineer") ?? "");
-            setProd(manager.getInfo("product") ?? "");
-            setCopy(manager.getInfo("copyright") ?? "");
-            setSubject(manager.getInfo("subject") ?? "");
-            setCmt(manager.getInfo("comment") ?? "");
+        if (bank === undefined) {
+            return;
         }
+
+        setName(manager.getInfo("name"));
+        setDate(manager.getInfo("creationDate"));
+        setEngineer(manager.getInfo("engineer") ?? "");
+        setProd(manager.getInfo("product") ?? "");
+        setCopy(manager.getInfo("copyright") ?? "");
+        setSubject(manager.getInfo("subject") ?? "");
+        setCmt(manager.getInfo("comment") ?? "");
     }, [bank, manager, setName]);
 
     return (

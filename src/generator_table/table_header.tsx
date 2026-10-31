@@ -57,19 +57,19 @@ export const GeneratorTableHeader = typedMemo(function <
                     z instanceof BasicInstrumentZone
                         ? z.sample.name
                         : z.instrument.name;
-                let stereo = false;
+                let isStereo = false;
                 if (linked.index === 2) {
                     span = 2;
                     name = name.replace(STEREO_REGEX, "").trim();
-                    stereo = true;
+                    isStereo = true;
                 }
 
                 return (
                     <th
                         colSpan={span}
-                        className={"header_cell " + (stereo ? "stereo" : "")}
+                        className={"header_cell " + (isStereo ? "stereo" : "")}
                         title={
-                            stereo
+                            isStereo
                                 ? t("soundBankLocale.thisIsAStereoSamplePair")
                                 : ""
                         }

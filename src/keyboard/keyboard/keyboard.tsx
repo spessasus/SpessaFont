@@ -22,7 +22,6 @@ export type KeyboardRef = {
 } | null;
 
 const pressedKeys = new Set<number>();
-let mouseHeld = false;
 
 // most of this code is ported over from spessasynth web app
 export function Keyboard({
@@ -76,11 +75,13 @@ export function Keyboard({
     }));
 
     useEffect(() => {
+        let isMouseHeld = false;
         const userNoteOff = (note: number) => {
             // processor callback will trigger the note release
             audioEngine.noteOffRealTime(KEYBOARD_TARGET_CHANNEL, note);
             // find all splits tha this key belongs to
-            for (const split of matchingSplits[note]) {
+            const splits = matchingSplits[note];
+            for (const split of splits) {
                 for (let i = split.min; i <= split.max; i++) {
                     keysRef?.current?.[i]?.classList?.remove("zone_highlight");
                 }
@@ -90,7 +91,8 @@ export function Keyboard({
         const userNoteOn = (note: number, velocity: number) => {
             audioEngine.noteOnRealTime(KEYBOARD_TARGET_CHANNEL, note, velocity);
 
-            for (const split of matchingSplits[note]) {
+            const splits = matchingSplits[note];
+            for (const split of splits) {
                 for (let i = split.min; i <= split.max; i++) {
                     keysRef?.current?.[i]?.classList?.add("zone_highlight");
                 }
@@ -140,7 +142,7 @@ export function Keyboard({
             }
 
             // Do the latter only for pressed
-            if (!mouseHeld) {
+            if (!isMouseHeld) {
                 return;
             }
 
@@ -153,19 +155,21 @@ export function Keyboard({
                 }
             }
 
-            if (!pressedKeys.has(midiNote)) {
-                userNoteOn(midiNote, velocity);
-                pressedKeys.add(midiNote);
+            if (pressedKeys.has(midiNote)) {
+                return;
             }
+
+            userNoteOn(midiNote, velocity);
+            pressedKeys.add(midiNote);
         };
 
         const onMouseDown = (e: PointerEvent) => {
-            mouseHeld = true;
+            isMouseHeld = true;
             moveHandler(e);
         };
 
         const onMouseUp = () => {
-            mouseHeld = false;
+            isMouseHeld = false;
             for (const note of pressedKeys) userNoteOff(note);
         };
 
@@ -223,20 +227,20 @@ export function Keyboard({
                     className += " sharp_key";
                 } else {
                     className += " flat_key";
-                    let blackNoteLeft = false;
-                    let blackNoteRight = false;
+                    let hasBlackNoteLeft = false;
+                    let hasBlackNoteRight = false;
                     if (midiNote >= 0) {
-                        blackNoteLeft = isBlackNoteNumber(midiNote - 1);
+                        hasBlackNoteLeft = isBlackNoteNumber(midiNote - 1);
                     }
                     if (midiNote < 127) {
-                        blackNoteRight = isBlackNoteNumber(midiNote + 1);
+                        hasBlackNoteRight = isBlackNoteNumber(midiNote + 1);
                     }
 
-                    if (blackNoteLeft && blackNoteRight) {
+                    if (hasBlackNoteLeft && hasBlackNoteRight) {
                         className += " between_sharps";
-                    } else if (blackNoteLeft) {
+                    } else if (hasBlackNoteLeft) {
                         className += " left_sharp";
-                    } else if (blackNoteRight) {
+                    } else if (hasBlackNoteRight) {
                         className += " right_sharp";
                     }
                 }

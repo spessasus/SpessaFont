@@ -73,7 +73,7 @@ export function DropdownHeader({
                     className={"dropdown_triangle"}
                     title={open ? t("collapse") : t("expand")}
                 >
-                    {open ? "\u25B2" : "\u25BC"}
+                    {open ? "\u{25B2}" : "\u{25BC}"}
                 </div>
             </div>
         </div>

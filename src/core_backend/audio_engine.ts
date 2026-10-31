@@ -24,20 +24,15 @@ const MAX_RENDERED_AT_ONCE = 2;
 const dummy = BasicSoundBank.getSampleSoundBankFile();
 
 export class AudioEngine {
+    private readonly currentSampleRate;
+    private worklet: AudioWorkletNode | undefined;
     context: AudioContext;
-
     processor: SpessaSynthProcessor;
     sequencer: SpessaSynthSequencer;
     analyser: AnalyserNode;
-
     targetNode: GainNode;
-
     audioChunksQueued = 0;
-
     readonly maxChunksQueued;
-    private readonly currentSampleRate;
-
-    private worklet: AudioWorkletNode | undefined;
 
     constructor(context: AudioContext, initialSettings: SavedSettingsType) {
         this.context = context;
@@ -168,11 +163,12 @@ export class AudioEngine {
             getSetting("voiceCap", settings)
         );
         const rate = getSetting("sampleRate", settings);
-        if (this.currentSampleRate !== rate) {
-            const url = new URL(globalThis.location.href);
-            url.searchParams.set("samplerate", rate.toString());
-            globalThis.location.replace(url);
+        if (this.currentSampleRate === rate) {
+            return;
         }
+        const url = new URL(location.href);
+        url.searchParams.set("samplerate", rate.toString());
+        location.replace(url);
     }
 
     async resumeContext() {

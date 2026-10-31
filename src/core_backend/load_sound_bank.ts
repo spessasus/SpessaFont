@@ -12,7 +12,9 @@ export function loadSoundBank(buf: ArrayBuffer): BasicSoundBank {
         try {
             const mid = BasicMIDI.fromArrayBuffer(buf);
             if (!mid.embeddedSoundBank) {
-                throw new Error("No embedded sound bank in this file!");
+                throw new Error("No embedded sound bank in this file!", {
+                    cause: error
+                });
             }
             return SoundBankLoader.fromArrayBuffer(mid.embeddedSoundBank);
         } catch {

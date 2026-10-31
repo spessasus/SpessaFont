@@ -17,6 +17,7 @@ export class DeleteZoneAction<
     private readonly zone: BasicZone;
     private readonly el: T;
     private readonly index: number;
+
     private readonly callback: () => unknown;
 
     constructor(element: T, index: number, callback: () => unknown) {
@@ -26,31 +27,25 @@ export class DeleteZoneAction<
         this.zone = element.zones[index];
     }
 
-    do() {
-        this.el.deleteZone(this.index, true);
-        this.applyChanges();
-    }
-
-    undo() {
-        if (this.el instanceof BasicInstrument) {
-            const z = this.el.createZone(
-                (this.zone as BasicInstrumentZone).sample
-            );
-            z.copyFrom(this.zone);
-        } else {
-            const z = this.el.createZone(
-                (this.zone as BasicPresetZone).instrument
-            );
-            z.copyFrom(this.zone);
-        }
-        this.applyChanges();
-    }
-
     private applyChanges() {
         this.el.zones =
             this.el instanceof BasicInstrument
                 ? reorderInstrumentZones(this.el.zones)
                 : this.el.zones.slice().sort(ZONE_SORTING_FUNCTION);
         this.callback();
+    }
+
+    do() {
+        this.el.deleteZone(this.index, true);
+        this.applyChanges();
+    }
+
+    undo() {
+        const z =
+            this.el instanceof BasicInstrument
+                ? this.el.createZone((this.zone as BasicInstrumentZone).sample)
+                : this.el.createZone((this.zone as BasicPresetZone).instrument);
+        z.copyFrom(this.zone);
+        this.applyChanges();
     }
 }

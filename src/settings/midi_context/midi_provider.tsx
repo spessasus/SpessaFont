@@ -19,17 +19,21 @@ export function MIDIProvider({ children }: { children?: React.ReactNode }) {
             return;
         }
 
-        navigator
-            .requestMIDIAccess({ sysex: true, software: true })
-            .then((access) => {
+        const requestAccess = async () => {
+            try {
+                const access = await navigator.requestMIDIAccess({
+                    sysex: true,
+                    software: true
+                });
                 setDevices(Array.from(access.inputs.values()));
                 setAccessStatus("granted");
-            })
-            .catch((error: unknown) => {
+            } catch (error) {
                 console.error(error);
                 setAccessStatus("denied");
                 setMidiError((error as Error).message);
-            });
+            }
+        };
+        void requestAccess();
     }, []);
 
     return (

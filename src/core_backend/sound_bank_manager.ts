@@ -17,6 +17,7 @@ import {
 } from "../utils/reorder_zones.ts";
 import { presetSorter } from "../utils/preset_sorter.ts";
 import { SOFTWARE_NAME } from "../utils/software_name.ts";
+import { nameSorter } from "../utils/name_sorter.ts";
 
 export type BankEditView = "info" | BasicInstrument | BasicSample | BasicPreset;
 
@@ -73,12 +74,8 @@ export default class SoundBankManager extends BasicSoundBank {
 
     sortElements() {
         this.flushAndSortPresets();
-        this.samples.sort((a, b) =>
-            a.name > b.name ? 1 : b.name > a.name ? -1 : 0
-        );
-        this.instruments.sort((a, b) =>
-            a.name > b.name ? 1 : b.name > a.name ? -1 : 0
-        );
+        this.samples.sort(nameSorter);
+        this.instruments.sort(nameSorter);
 
         // sort stereo zones
         for (const i of this.instruments) this.sortInstrumentZones(i);
@@ -125,7 +122,7 @@ export default class SoundBankManager extends BasicSoundBank {
 
     async save(format: SaveFormat, progressFunction?: ProgressFunction) {
         let binary: ArrayBuffer;
-        const saveAs = format !== "auto";
+        const isSaveAs = format !== "auto";
         switch (format) {
             default:
             case "auto": {
@@ -220,7 +217,7 @@ export default class SoundBankManager extends BasicSoundBank {
             await this.saveToDisk(
                 binary,
                 `${this.getBankName("Unnamed")}.${format}`,
-                saveAs
+                isSaveAs
             );
         } catch (error) {
             console.error(error);
@@ -236,19 +233,19 @@ export default class SoundBankManager extends BasicSoundBank {
      * Uses File System Access API on supported browsers and Desktop Edition.
      * @param binary the binary data
      * @param name the suggested file
-     * @param overrideSaveHandle for FSA API only: shows a new file picker window even if we already have a save handle.
+     * @param shouldOverrideSaveHandle for FSA API only: shows a new file picker window even if we already have a save handle.
      */
     async saveToDisk(
         binary: ArrayBuffer,
         name: string,
-        overrideSaveHandle: boolean
+        shouldOverrideSaveHandle: boolean
     ) {
         // get file handle if we don't have it and the browser supports it
         if (
-            (!this.saveHandle || overrideSaveHandle) &&
-            "showSaveFilePicker" in globalThis
+            "showSaveFilePicker" in globalThis &&
+            (shouldOverrideSaveHandle || !this.saveHandle)
         ) {
-            this.saveHandle = await globalThis.showSaveFilePicker({
+            this.saveHandle = await showSaveFilePicker({
                 id: "spessafont-save-file",
                 suggestedName: name
             });

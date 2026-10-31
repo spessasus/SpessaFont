@@ -41,7 +41,7 @@ export function SampleTools({
     setPlayerState: (s: SamplePlayerState) => unknown;
     setPlaybackStart: (s: number) => unknown;
     loading: boolean;
-    setLoading: (l: boolean) => unknown;
+    setLoading: (isLoading: boolean) => unknown;
     zoom: number;
     setZoom: (z: number) => unknown;
     sampleData: Float32Array;
@@ -93,15 +93,17 @@ export function SampleTools({
     const playerRef = useRef<AudioBufferSourceNode | null>(null);
 
     const stopSampleInternal = useCallback(() => {
-        if (playerRef.current) {
-            try {
-                playerRef.current.stop();
-            } catch (error) {
-                console.warn("audio already stopped or invalid", error);
-            }
-            playerRef.current.disconnect();
-            playerRef.current = null;
+        if (!playerRef.current) {
+            return;
         }
+
+        try {
+            playerRef.current.stop();
+        } catch (error) {
+            console.warn("audio already stopped or invalid", error);
+        }
+        playerRef.current.disconnect();
+        playerRef.current = null;
     }, []);
 
     // stop and clean up on unmounting or sample change
@@ -119,10 +121,12 @@ export function SampleTools({
 
     // update loop
     useEffect(() => {
-        if (playerState === "playing_loop" && playerRef.current) {
-            playerRef.current.loopStart = loopStart / sampleRate;
-            playerRef.current.loopEnd = loopEnd / sampleRate;
+        if (!(playerState === "playing_loop" && playerRef.current)) {
+            return;
         }
+
+        playerRef.current.loopStart = loopStart / sampleRate;
+        playerRef.current.loopEnd = loopEnd / sampleRate;
     }, [loopEnd, loopStart, playerState, sampleRate]);
 
     // update detune
@@ -139,14 +143,14 @@ export function SampleTools({
     }, [setPlaybackStart, setPlayerState, stopSampleInternal]);
 
     const playSample = useCallback(
-        (loop: boolean) => {
+        (isLooped: boolean) => {
             stopSampleInternal();
             const player = context.createBufferSource();
             player.detune.value = centCorrection;
             player.buffer = buffer;
             player.onended = stopPlayer;
             playerRef.current = player;
-            if (loop) {
+            if (isLooped) {
                 player.loopStart = loopStart / sampleRate;
                 player.loopEnd = loopEnd / sampleRate;
                 player.loop = true;
@@ -158,7 +162,7 @@ export function SampleTools({
             player.connect(gain).connect(targetNode);
             setPlaybackStart(context.currentTime - 0.1);
             player.start();
-            setPlayerState(loop ? "playing_loop" : "playing");
+            setPlayerState(isLooped ? "playing_loop" : "playing");
         },
         [
             buffer,
@@ -221,9 +225,9 @@ export function SampleTools({
                 const right = audioBuffer.getChannelData(1);
                 // check for linked sample
                 if (
+                    linkedSample &&
                     (sampleType === SampleTypes.leftSample ||
-                        sampleType === SampleTypes.rightSample) &&
-                    linkedSample
+                        sampleType === SampleTypes.rightSample)
                 ) {
                     const linked = linkedSample;
 

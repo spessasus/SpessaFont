@@ -45,12 +45,8 @@ function ControllerWrapper({
     );
 
     const toggleCC = useCallback(
-        (v: boolean) => {
-            if (v) {
-                setCCValue(127);
-            } else {
-                setCCValue(0);
-            }
+        (isOn: boolean) => {
+            setCCValue(isOn ? 127 : 0);
         },
         [setCCValue]
     );

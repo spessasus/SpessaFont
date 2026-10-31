@@ -20,8 +20,7 @@ export function LinkedInstruments({
 }) {
     const { t } = useTranslation();
     const linked = useMemo(() => {
-        const l = new Set<BasicInstrument>();
-        for (const i of sample.linkedTo) l.add(i);
+        const l = new Set<BasicInstrument>(sample.linkedTo);
         return l;
     }, [sample.linkedTo]);
 
@@ -62,7 +61,7 @@ export function LinkedInstruments({
             {sample.linkedTo.length > 0 && (
                 <>
                     <div>{t("sampleLocale.usedBy")}:</div>
-                    {Array.from(linked).map((inst, i) => (
+                    {Array.from(linked, (inst, i) => (
                         <div
                             className={"monospaced"}
                             onClick={() => setView(inst)}

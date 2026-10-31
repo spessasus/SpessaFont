@@ -178,7 +178,7 @@ export const ModulatorView = React.memo(function ({
                             return;
                         }
 
-                        const parsed = Number.parseInt(numericPart, 10);
+                        const parsed = Math.trunc(Number(numericPart));
                         if (
                             !Number.isNaN(parsed) &&
                             parsed >= -32_767 &&

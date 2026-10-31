@@ -25,14 +25,6 @@ export class SetSampleTypeAction implements HistoryAction {
         this.newType = newType;
     }
 
-    do() {
-        this.apply(this.sample, this.newLink, this.newType);
-    }
-
-    undo() {
-        this.apply(this.sample, this.currentLink, this.currentType);
-    }
-
     private apply(
         sample: BasicSample,
         newLink: BasicSample | undefined,
@@ -45,5 +37,13 @@ export class SetSampleTypeAction implements HistoryAction {
             sample.unlinkSample();
         }
         this.callback();
+    }
+
+    do() {
+        this.apply(this.sample, this.newLink, this.newType);
+    }
+
+    undo() {
+        this.apply(this.sample, this.currentLink, this.currentType);
     }
 }

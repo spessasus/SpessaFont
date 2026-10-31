@@ -24,7 +24,7 @@ export function InstrumentDisplay({
     onClick: React.MouseEventHandler<HTMLDivElement>;
     view: BankEditView;
     open: boolean;
-    setOpen: (o: boolean) => unknown;
+    setOpen: (isOpen: boolean) => unknown;
     link: boolean;
     onLink?: () => unknown;
 }) {
@@ -37,7 +37,7 @@ export function InstrumentDisplay({
             >
                 <div className={"left_buttons"}>
                     <span className={"triangle"} onClick={() => setOpen(!open)}>
-                        {open ? "\u25BC" : "\u25B6"}
+                        {open ? "\u{25BC}" : "\u{25B6}"}
                     </span>
                     {link && (
                         <span

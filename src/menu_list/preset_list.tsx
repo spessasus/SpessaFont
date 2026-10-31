@@ -106,8 +106,8 @@ export function PresetList({
                 const presetIndex = presets.indexOf(preset);
                 const start = Math.min(viewIndex, presetIndex);
                 const end = Math.max(viewIndex, presetIndex);
-                for (const i of presets.slice(start, end + 1))
-                    newSet.add(i.preset);
+                const range = presets.slice(start, end + 1);
+                for (const i of range) newSet.add(i.preset);
             } else if (e.ctrlKey && view instanceof BasicPreset) {
                 for (const i of selectedPresets) newSet.add(i);
                 if (selectedPresets.has(preset.preset)) {
@@ -127,13 +127,13 @@ export function PresetList({
         for (const i of selectedInstruments) {
             preset.createZone(i);
         }
-        let found = presets.some((p) => p.preset.matches(preset));
+        let isFound = presets.some((p) => p.preset.matches(preset));
         let i = 0;
-        while (found) {
+        while (isFound) {
             i++;
             preset.bankMSB = i & 0x7f;
             preset.bankLSB = Math.max(i >> 7, 0);
-            found = presets.some((p) => p.preset.matches(preset));
+            isFound = presets.some((p) => p.preset.matches(preset));
         }
         const action = new CreatePresetAction(preset, setPresets, setView);
         manager.modifyBank([action]);
@@ -141,9 +141,9 @@ export function PresetList({
 
     const linkInstruments = useCallback(
         (preset: BasicPreset) => {
-            const actions: HistoryAction[] = [];
-            for (const inst of selectedInstruments)
-                actions.push(
+            const actions: HistoryAction[] = Array.from(
+                selectedInstruments,
+                (inst) =>
                     new CreateZoneAction<BasicPreset, BasicInstrument>(
                         preset,
                         new BasicZone(),
@@ -153,7 +153,7 @@ export function PresetList({
                             setView(preset);
                         }
                     )
-                );
+            );
             manager.modifyBank(actions);
         },
         [manager, selectedInstruments, setPresets, setView]

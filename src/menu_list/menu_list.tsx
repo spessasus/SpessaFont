@@ -17,6 +17,7 @@ import { DeleteSampleAction } from "../sample_editor/linked_instruments/delete_s
 import { DeletePresetAction } from "../preset_editor/bottom_bar/delete_preset_action.ts";
 import toast from "react-hot-toast";
 import { presetSorter } from "../utils/preset_sorter.ts";
+import { nameSorter } from "../utils/name_sorter.ts";
 
 export const ESTIMATED_ROW_HEIGHT = 30;
 export const OVERSCAN = 5;
@@ -167,15 +168,7 @@ export const MenuList = React.memo(function ({
                                 setView
                             );
                             setInstruments(
-                                manager.instruments
-                                    .slice()
-                                    .sort((a, b) =>
-                                        a.name > b.name
-                                            ? 1
-                                            : b.name > a.name
-                                              ? -1
-                                              : 0
-                                    )
+                                manager.instruments.slice().sort(nameSorter)
                             );
                             toast.success(
                                 t("clipboardLocale.pastedInstruments", {
@@ -191,15 +184,7 @@ export const MenuList = React.memo(function ({
                                 setView
                             );
                             setSamples(
-                                manager.samples
-                                    .slice()
-                                    .sort((a, b) =>
-                                        a.name > b.name
-                                            ? 1
-                                            : b.name > a.name
-                                              ? -1
-                                              : 0
-                                    )
+                                manager.samples.slice().sort(nameSorter)
                             );
                             toast.success(
                                 t("clipboardLocale.pastedSamples", {
@@ -296,7 +281,7 @@ export const MenuList = React.memo(function ({
     if (!open) {
         return (
             <div className={"menu_list_closed"} onClick={() => setOpen(true)}>
-                {"\u25B6"}
+                {"\u{25B6}"}
             </div>
         );
     }
@@ -317,7 +302,7 @@ export const MenuList = React.memo(function ({
                                 setOpen(false);
                             }}
                         >
-                            {"\u25C0"}
+                            {"\u{25C0}"}
                         </div>
                     </div>
                 </div>

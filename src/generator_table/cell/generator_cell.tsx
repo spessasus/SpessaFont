@@ -69,13 +69,13 @@ export const NumberGeneratorCell = typedMemo(function <
         }
     }
 
-    const modulated = useMemo(
+    const isModulated = useMemo(
         () => zone.modulators.some((m) => m.destination === generator),
         [generator, zone.modulators]
     );
 
     const style: CSSProperties = {};
-    if (generator === GeneratorTypes.exclusiveClass && value && value > 0) {
+    if (value && generator === GeneratorTypes.exclusiveClass && value > 0) {
         style.color = getDistinctColor(value);
         style.fontWeight = "bold";
     }
@@ -87,7 +87,7 @@ export const NumberGeneratorCell = typedMemo(function <
             }
             let newValue: number | null = null;
             if (typedText !== "") {
-                const num = Number.parseFloat(typedText);
+                const num = Number(typedText);
                 const rawNum = Math.floor(toGenerator(num));
                 newValue = Math.max(min, Math.min(max, rawNum));
             }
@@ -161,7 +161,7 @@ export const NumberGeneratorCell = typedMemo(function <
 
     return (
         <td
-            className={`generator_cell ${modulated ? "modulated" : ""}`}
+            className={`generator_cell ${isModulated ? "modulated" : ""}`}
             colSpan={colSpan}
         >
             <GeneratorCellInput

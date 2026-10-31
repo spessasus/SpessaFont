@@ -24,7 +24,7 @@ export function ModulableControllerOptions({
         return (
             <option key={cc} value={cc}>
                 {"CC#" +
-                    cc.toString().padEnd(padLength, "\u00A0") +
+                    cc.toString().padEnd(padLength, "\u{A0}") +
                     " - " +
                     getCCLocale(cc, t)}
             </option>

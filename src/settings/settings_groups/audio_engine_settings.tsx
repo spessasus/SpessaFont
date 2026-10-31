@@ -84,10 +84,8 @@ export function AudioEngineSettings({
     }
 
     function setVoiceCap(v: number) {
-        const vReal = Math.max(
-            0,
-            Math.min(Math.round(Math.abs(v)), MAX_VOICE_CAP)
-        );
+        const rounded = Math.round(Math.abs(v));
+        const vReal = Math.max(0, Math.min(rounded, MAX_VOICE_CAP));
         updateSettings({
             ...settings,
             voiceCap: vReal

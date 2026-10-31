@@ -15,31 +15,31 @@ const concave = (v: number) => 1 - Math.sqrt(1 - v * v);
 const convex = (v: number) => Math.sqrt(1 - (1 - v) * (1 - v));
 
 // Cache map
-const curveCanvasCache: Record<string, HTMLCanvasElement> = {};
+const curveCanvasCache = new Map<string, HTMLCanvasElement>();
 
 function getCurveValue(
     curve: SpessaFontModulatorCurveType,
     value: number
 ): number {
-    const polarity = curve.bipolar;
+    const isBipolar = curve.bipolar;
     if (!curve.positive) {
         value = 1 - value;
     }
     switch (curve.curveType) {
         default:
         case ModulatorCurveTypes.linear: {
-            return polarity ? value * 2 - 1 : value;
+            return isBipolar ? value * 2 - 1 : value;
         }
         case ModulatorCurveTypes.switch: {
             value = value > 0.5 ? 1 : 0;
-            return polarity ? value * 2 - 1 : value;
+            return isBipolar ? value * 2 - 1 : value;
         }
         case ModulatorCurveTypes.concave: {
-            value = polarity ? value * 2 - 1 : value;
+            value = isBipolar ? value * 2 - 1 : value;
             return value < 0 ? -concave(-value) : concave(value);
         }
         case ModulatorCurveTypes.convex: {
-            value = polarity ? value * 2 - 1 : value;
+            value = isBipolar ? value * 2 - 1 : value;
             return value < 0 ? -convex(-value) : convex(value);
         }
     }
@@ -49,8 +49,9 @@ function getCurveValue(
 function getOrCreateCurveCanvas(
     curve: SpessaFontModulatorCurveType
 ): HTMLCanvasElement {
-    if (curveCanvasCache[curveKey(curve)]) {
-        return curveCanvasCache[curveKey(curve)];
+    const cached = curveCanvasCache.get(curveKey(curve));
+    if (cached) {
+        return cached;
     }
 
     const offscreenCanvas = document.createElement("canvas");
@@ -138,7 +139,7 @@ function getOrCreateCurveCanvas(
 
     ctx.stroke();
 
-    curveCanvasCache[curveKey(curve)] = offscreenCanvas;
+    curveCanvasCache.set(curveKey(curve), offscreenCanvas);
     return offscreenCanvas;
 }
 

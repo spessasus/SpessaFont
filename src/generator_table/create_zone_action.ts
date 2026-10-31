@@ -18,6 +18,7 @@ export class CreateZoneAction<
     private readonly child: ChildType;
     private readonly el: ElementType;
     private clonedZone?: BasicZone;
+
     private readonly callback: () => unknown;
 
     constructor(
@@ -32,15 +33,28 @@ export class CreateZoneAction<
         this.callback = callback;
     }
 
-    do() {
-        const isInst = this.el instanceof BasicInstrument;
-        if (isInst && this.child instanceof BasicSample) {
-            this.clonedZone = this.el.createZone(this.child);
-        } else if (!isInst && this.child instanceof BasicInstrument) {
-            this.clonedZone = this.el.createZone(this.child);
-        } else {
-            throw new Error("Parent and child types do not match.");
+    private applyChanges() {
+        this.el.zones =
+            this.el instanceof BasicInstrument
+                ? reorderInstrumentZones(this.el.zones)
+                : this.el.zones.slice().sort(ZONE_SORTING_FUNCTION);
+        this.callback();
+    }
+
+    private createZone(): BasicZone {
+        // Each branch narrows the pair so the matching createZone overload is used
+        if (this.el instanceof BasicInstrument) {
+            if (this.child instanceof BasicSample) {
+                return this.el.createZone(this.child);
+            }
+        } else if (this.child instanceof BasicInstrument) {
+            return this.el.createZone(this.child);
         }
+        throw new Error("Parent and child types do not match.");
+    }
+
+    do() {
+        this.clonedZone = this.createZone();
         this.clonedZone.copyFrom(this.zone);
         this.applyChanges();
     }
@@ -56,13 +70,5 @@ export class CreateZoneAction<
         }
         this.el.deleteZone(index, true);
         this.applyChanges();
-    }
-
-    private applyChanges() {
-        this.el.zones =
-            this.el instanceof BasicInstrument
-                ? reorderInstrumentZones(this.el.zones)
-                : this.el.zones.slice().sort(ZONE_SORTING_FUNCTION);
-        this.callback();
     }
 }

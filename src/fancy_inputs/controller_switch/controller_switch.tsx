@@ -5,7 +5,7 @@ export function ControllerSwitch({
     onChange
 }: {
     value: boolean;
-    onChange: (c: boolean) => unknown;
+    onChange: (isOn: boolean) => unknown;
 }) {
     return (
         <div className={"controller_switch_wrapper"}>

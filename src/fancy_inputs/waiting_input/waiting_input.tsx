@@ -36,7 +36,7 @@ export function WaitingInput<T extends string | number>({
         let parsedValue: T;
 
         if (isNumber) {
-            let num = Number.parseFloat(v);
+            let num = Number(v);
             if (Number.isNaN(num)) {
                 num = 0;
             }
@@ -75,10 +75,12 @@ export function WaitingInput<T extends string | number>({
                 setVal(stripped);
             }}
             onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                    e.preventDefault();
-                    (e.target as HTMLInputElement).blur();
+                if (e.key !== "Enter") {
+                    return;
                 }
+
+                e.preventDefault();
+                (e.target as HTMLInputElement).blur();
             }}
             onChange={(e) => {
                 const stripped = e.target.value.replaceAll(suffix, "");

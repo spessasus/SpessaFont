@@ -30,6 +30,20 @@ import { SetSampleTypeAction } from "../sample_editor/set_sample_type_action.ts"
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 
+/**
+ * Maps the stereo marker at the end of a sample name
+ * to the marker of its pair and the type of the sample itself.
+ */
+const STEREO_MARKERS = new Map<
+    string,
+    { pairMarker: string; type: SampleType }
+>([
+    ["l", { pairMarker: "r", type: SampleTypes.leftSample }],
+    ["L", { pairMarker: "R", type: SampleTypes.leftSample }],
+    ["r", { pairMarker: "l", type: SampleTypes.rightSample }],
+    ["R", { pairMarker: "L", type: SampleTypes.rightSample }]
+]);
+
 export interface BankEditorProps {
     manager: SoundBankManager;
     clipboardManager: ClipboardManager;
@@ -101,16 +115,18 @@ export function BankEditor({
                 const deletedInstruments = new Set<BasicInstrument>();
                 const instrumentActions = new Array<DeleteInstrumentAction>();
                 for (const instrument of manager.instruments) {
-                    if (instrument.useCount === 0) {
-                        deletedInstruments.add(instrument);
-                        instrumentActions.push(
-                            new DeleteInstrumentAction(
-                                instrument,
-                                setInstruments,
-                                setView
-                            )
-                        );
+                    if (instrument.useCount !== 0) {
+                        continue;
                     }
+
+                    deletedInstruments.add(instrument);
+                    instrumentActions.push(
+                        new DeleteInstrumentAction(
+                            instrument,
+                            setInstruments,
+                            setView
+                        )
+                    );
                 }
 
                 const sampleActions = new Array<DeleteSampleAction>();
@@ -149,43 +165,17 @@ export function BankEditor({
                     const match = /[a-zA-Z!](?=\s*$|\)|$)/.exec(
                         sample.name
                     )?.[0];
-                    if (
-                        match?.toLowerCase() !== "l" &&
-                        match?.toLowerCase() !== "r"
-                    ) {
+                    const marker =
+                        match === undefined
+                            ? undefined
+                            : STEREO_MARKERS.get(match);
+                    if (!marker) {
                         continue;
                     }
-                    let replacement: string;
-                    let type: SampleType;
-                    switch (match) {
-                        default:
-                        case "l": {
-                            replacement = "r";
-                            type = SampleTypes.leftSample;
-                            break;
-                        }
-
-                        case "L": {
-                            replacement = "R";
-                            type = SampleTypes.leftSample;
-                            break;
-                        }
-
-                        case "r": {
-                            replacement = "l";
-                            type = SampleTypes.rightSample;
-                            break;
-                        }
-
-                        case "R": {
-                            replacement = "L";
-                            type = SampleTypes.rightSample;
-                            break;
-                        }
-                    }
+                    const { pairMarker, type } = marker;
                     const linkedName = sample.name.replace(
                         /([a-zA-Z!])(?!.*[a-zA-Z!])/,
-                        replacement
+                        () => pairMarker
                     );
                     const linkedSample = samples.find(
                         (s) =>
@@ -193,22 +183,24 @@ export function BankEditor({
                             !linkedSamples.has(s) &&
                             !s.linkedSample
                     );
-                    if (linkedSample) {
-                        linkedSamples.add(sample);
-                        linkedSamples.add(linkedSample);
-                        actions.push(
-                            new SetSampleTypeAction(
-                                sample,
-                                undefined,
-                                sample.sampleType,
-                                linkedSample,
-                                type,
-                                () => {
-                                    setSamples([...samples]);
-                                }
-                            )
-                        );
+                    if (!linkedSample) {
+                        continue;
                     }
+
+                    linkedSamples.add(sample);
+                    linkedSamples.add(linkedSample);
+                    actions.push(
+                        new SetSampleTypeAction(
+                            sample,
+                            undefined,
+                            sample.sampleType,
+                            linkedSample,
+                            type,
+                            () => {
+                                setSamples([...samples]);
+                            }
+                        )
+                    );
                 }
                 if (actions.length > 0) {
                     toast.success(

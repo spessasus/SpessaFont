@@ -111,17 +111,16 @@ export function MIDIPlayer() {
                 </MenuBarIcon>
             </MenuBarDropdown>
         );
-    } else {
-        let name = midi.getName() ?? "No name";
-        name = name.length > 10 ? name.slice(0, 10) + "..." : name;
-        return (
-            <MenuBarDropdown main={t("menuBarLocale.midi.player")}>
-                <MenuBarIcon text={name} click={playMIDI}>
-                    <MIDINameIcon />
-                </MenuBarIcon>
-                <PauseComponent />
-                <TimeDisplay />
-            </MenuBarDropdown>
-        );
     }
+    let name = midi.getName() ?? "No name";
+    name = name.length > 10 ? name.slice(0, 10) + "..." : name;
+    return (
+        <MenuBarDropdown main={t("menuBarLocale.midi.player")}>
+            <MenuBarIcon text={name} click={playMIDI}>
+                <MIDINameIcon />
+            </MenuBarIcon>
+            <PauseComponent />
+            <TimeDisplay />
+        </MenuBarDropdown>
+    );
 }

@@ -24,6 +24,7 @@ import type { HistoryAction } from "../core_backend/history.ts";
 import { CreateZoneAction } from "../generator_table/create_zone_action.ts";
 import { addAndReorderStereoSamples } from "../utils/add_stereo_samples.ts";
 import toast from "react-hot-toast";
+import { nameSorter } from "../utils/name_sorter.ts";
 
 export function InstrumentList({
     view,
@@ -104,8 +105,8 @@ export function InstrumentList({
                 const instIndex = instruments.indexOf(inst);
                 const start = Math.min(viewIndex, instIndex);
                 const end = Math.max(viewIndex, instIndex);
-                for (const i of instruments.slice(start, end + 1))
-                    newSet.add(i);
+                const range = instruments.slice(start, end + 1);
+                for (const i of range) newSet.add(i);
             } else if (e.ctrlKey && view instanceof BasicInstrument) {
                 for (const i of selectedInstruments) newSet.add(i);
                 if (selectedInstruments.has(inst)) {
@@ -180,7 +181,7 @@ export function InstrumentList({
         [instruments, manager, selectedSamples, setInstruments, setView]
     );
 
-    const link = selectedSamples.size > 0;
+    const canLink = selectedSamples.size > 0;
     return (
         <>
             <DropdownHeader
@@ -203,11 +204,7 @@ export function InstrumentList({
                         setView
                     );
                     setInstruments(
-                        manager.instruments
-                            .slice()
-                            .sort((a, b) =>
-                                a.name > b.name ? 1 : b.name > a.name ? -1 : 0
-                            )
+                        manager.instruments.slice().sort(nameSorter)
                     );
                     toast.success(
                         t("clipboardLocale.pastedInstruments", {
@@ -259,7 +256,7 @@ export function InstrumentList({
                                         instrument={inst}
                                         onClick={(e) => handleClick(e, inst)}
                                         setView={setView}
-                                        link={link}
+                                        link={canLink}
                                         onLink={() => linkSamples(inst)}
                                     ></InstrumentDisplay>
                                 </div>

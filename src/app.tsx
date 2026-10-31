@@ -27,20 +27,8 @@ import { useMIDIAccess } from "./settings/midi_context/midi_context.ts"; // for 
 // shared clipboard
 const clipboardManager = new ClipboardManager();
 
-interface LaunchParams {
-    files: readonly FileSystemFileHandle[];
-}
-
-interface LaunchQueue {
-    setConsumer(consumer: (params: LaunchParams) => void): void;
-}
-
-interface GlobalThisLaunch {
-    launchQueue?: LaunchQueue;
-}
-
 // Service workers are unsafe on electron
-if (navigator.serviceWorker && !IS_ELECTRON) {
+if (!IS_ELECTRON && navigator.serviceWorker) {
     await navigator.serviceWorker.register("service-worker.js");
     console.info("Registered service worker");
 }
@@ -89,8 +77,7 @@ function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
 
     // Pause MIDI when unloading tabs
     useEffect(() => {
-        if (tabs.length > 0 && tabs[activeTab])
-            tabs[activeTab].sendBankToSynth();
+        if (activeTab < tabs.length) tabs[activeTab].sendBankToSynth();
         else audioEngine.pauseMIDI();
     }, [activeTab, audioEngine, tabs]);
 
@@ -115,9 +102,9 @@ function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
             let bank: BasicSoundBank | undefined = undefined;
             if (bankFile instanceof File) {
                 if (
-                    bankFile.size > 2_147_483_648 &&
                     IS_CHROME &&
-                    !IS_ELECTRON
+                    !IS_ELECTRON &&
+                    bankFile.size > 2_147_483_648
                 ) {
                     // this not anti-chrome code,
                     // loading 4GB sound banks throws NotReadable error,
@@ -141,7 +128,7 @@ function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
                         toast.error(t("loadingAndSaving.electronError"));
                     } else {
                         // make so the error appears at the bottom
-                        toast.error(`${error as string}`);
+                        toast.error(String(error));
                         toast.error(
                             t("loadingAndSaving.errorLoadingSoundBank")
                         );
@@ -166,18 +153,19 @@ function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
 
     // Electron ready signal
     useEffect(() => {
-        if (IS_ELECTRON && "electronAPI" in globalThis) {
-            const api = (globalThis as unknown as { electronAPI: ElectronAPI })
-                .electronAPI;
-            api.appReady();
+        if (!(IS_ELECTRON && "electronAPI" in globalThis)) {
+            return;
         }
+
+        const api = (globalThis as unknown as { electronAPI: ElectronAPI })
+            .electronAPI;
+        api.appReady();
     }, []);
 
     // Loading files with electron or launch queue
     useEffect(() => {
-        if ("launchQueue" in globalThis) {
-            const launch = (globalThis as GlobalThisLaunch).launchQueue!;
-            launch.setConsumer(async (launchParams) => {
+        if (typeof launchQueue !== "undefined") {
+            launchQueue.setConsumer(async (launchParams) => {
                 await audioEngine.context.resume();
                 for (const fileHandle of launchParams.files) {
                     console.info(`Opening file ${fileHandle.name}`);
@@ -186,33 +174,34 @@ function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
                 }
             });
         }
-        if ("electronAPI" in globalThis) {
-            const api = (globalThis as unknown as { electronAPI: ElectronAPI })
-                .electronAPI;
-
-            api.onFileOpened(async (path: string) => {
-                try {
-                    await audioEngine.context.resume();
-                    console.info(`Attempting to open ${path}`);
-                    const response = await fetch(`file://${path}`);
-                    const blob = await response.blob();
-
-                    const file = new File(
-                        [blob],
-                        path.split("/").pop() ?? "soundfont"
-                    );
-
-                    await openNewBankTab(file);
-                } catch (error) {
-                    toast.error(
-                        `Failed to open file ${path.split("/").at(-1)}\n` +
-                            `${(error as Error).message}\n` +
-                            "Are you in development mode?"
-                    );
-                }
-            });
-            console.info("Connected to Electron file handlers");
+        if (!("electronAPI" in globalThis)) {
+            return;
         }
+        const api = (globalThis as unknown as { electronAPI: ElectronAPI })
+            .electronAPI;
+
+        api.onFileOpened(async (path: string) => {
+            try {
+                await audioEngine.context.resume();
+                console.info(`Attempting to open ${path}`);
+                const response = await fetch(`file://${path}`);
+                const blob = await response.blob();
+
+                const file = new File(
+                    [blob],
+                    path.split("/").pop() ?? "soundfont"
+                );
+
+                await openNewBankTab(file);
+            } catch (error) {
+                toast.error(
+                    `Failed to open file ${path.split("/").at(-1)}\n` +
+                        `${(error as Error).message}\n` +
+                        "Are you in development mode?"
+                );
+            }
+        });
+        console.info("Connected to Electron file handlers");
     }, [audioEngine.context, openNewBankTab]);
 
     const { selectedDevice } = useMIDIAccess();
@@ -247,7 +236,7 @@ function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
 
     const closeTabLocal = useCallback(
         (index: number) => {
-            if (!tabs[index]) {
+            if (index >= tabs.length) {
                 return;
             }
             setTabs((prevTabs) => {
@@ -264,7 +253,7 @@ function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
 
     const closeTab = useCallback(
         (index: number) => {
-            if (!tabs[index]) {
+            if (index >= tabs.length) {
                 return;
             }
             const tab = tabs[index];
@@ -303,10 +292,11 @@ function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
         [closeTabLocal, t, tabs]
     );
 
-    const showTabList = !settings;
-    const showWelcome = tabs.length === 0 && !settings;
-    const showSettings = settings;
-    const showEditor = !showWelcome && !showSettings && !!currentManager;
+    const isTabListShown = !settings;
+    const isWelcomeShown = tabs.length === 0 && !settings;
+    const areSettingsShown = settings;
+    const isEditorShown =
+        !isWelcomeShown && !areSettingsShown && !!currentManager;
 
     return (
         <div className={`spessafont_main`}>
@@ -320,7 +310,7 @@ function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
                 manager={currentManager}
                 toggleKeyboard={() => setShowKeyboard(!showKeyboard)}
             />
-            {showTabList && (
+            {isTabListShown && (
                 <TabList
                     activeTab={activeTab}
                     closeTab={closeTab}
@@ -329,12 +319,12 @@ function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
                 />
             )}
 
-            {showSettings && <Settings setTheme={setTheme} />}
+            {areSettingsShown && <Settings setTheme={setTheme} />}
 
             {currentManager && (
                 <BankEditor
                     ref={bankEditorRef}
-                    shown={showEditor}
+                    shown={isEditorShown}
                     destinationOptions={destinationOptions}
                     ccOptions={ccOptions}
                     manager={currentManager}
@@ -343,7 +333,7 @@ function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
                 />
             )}
 
-            {showWelcome && (
+            {isWelcomeShown && (
                 <Welcome openFile={openFile} openNewBankTab={openNewBankTab} />
             )}
 

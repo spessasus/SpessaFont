@@ -14,6 +14,7 @@ import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
 import { SampleDisplay } from "./sample_display/sample_display.tsx";
 import toast from "react-hot-toast";
 import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
+import { nameSorter } from "../utils/name_sorter.ts";
 
 export function SampleList({
     samples,
@@ -125,7 +126,8 @@ export function SampleList({
             const sampleIndex = samples.indexOf(sample);
             const start = Math.min(viewIndex, sampleIndex);
             const end = Math.max(viewIndex, sampleIndex);
-            for (const s of samples.slice(start, end + 1)) newSet.add(s);
+            const range = samples.slice(start, end + 1);
+            for (const s of range) newSet.add(s);
         } else if (e.ctrlKey && view instanceof BasicSample) {
             for (const s of selectedSamples) newSet.add(s);
             if (selectedSamples.has(sample)) {
@@ -157,13 +159,7 @@ export function SampleList({
                 paste={clipboard.hasSamples()}
                 onPaste={() => {
                     clipboard.pasteSamples(manager, setSamples, setView);
-                    setSamples(
-                        manager.samples
-                            .slice()
-                            .sort((a, b) =>
-                                a.name > b.name ? 1 : b.name > a.name ? -1 : 0
-                            )
-                    );
+                    setSamples(manager.samples.slice().sort(nameSorter));
                     toast.success(
                         t("clipboardLocale.pastedSamples", {
                             count: clipboard.sampleCount

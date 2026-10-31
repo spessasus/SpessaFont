@@ -33,9 +33,11 @@ interface WaveViewProps {
 }
 
 const getStyle = (v: string) => {
-    return getComputedStyle(
-        document.querySelectorAll(".spessafont_main")[0]
-    ).getPropertyValue(v);
+    const main = document.querySelector(".spessafont_main");
+    if (!main) {
+        throw new Error("Main SpessaFont element not found.");
+    }
+    return getComputedStyle(main).getPropertyValue(v);
 };
 
 export const WaveView = React.memo(function ({
@@ -200,7 +202,7 @@ export const WaveView = React.memo(function ({
             loopStart + LOOP_PREVIEW_POINTS
         );
 
-        let firstPoint = true;
+        let isFirstPoint = true;
         ctx.strokeStyle = "green";
 
         ctx.setLineDash([15, 15]);
@@ -208,9 +210,9 @@ export const WaveView = React.memo(function ({
         for (let i = loopEndPreviewStart; i < loopEndPreviewEnd; i++) {
             const sample = data[i] * amplifier + halfHeight;
             const x = ((i - loopLength) / dataLength) * width;
-            if (firstPoint) {
+            if (isFirstPoint) {
                 ctx.moveTo(x - xOffset, height - sample);
-                firstPoint = false;
+                isFirstPoint = false;
                 continue;
             }
             ctx.lineTo(x - xOffset, height - sample);
@@ -219,13 +221,13 @@ export const WaveView = React.memo(function ({
 
         ctx.strokeStyle = "red";
         ctx.beginPath();
-        firstPoint = true;
+        isFirstPoint = true;
         for (let i = loopStartPreviewStart; i < loopStartPreviewEnd; i++) {
             const sample = data[i] * amplifier + halfHeight;
             const x = ((i + loopLength) / dataLength) * width;
-            if (firstPoint) {
+            if (isFirstPoint) {
                 ctx.moveTo(x - xOffset, height - sample);
-                firstPoint = false;
+                isFirstPoint = false;
                 continue;
             }
             ctx.lineTo(x - xOffset, height - sample);
@@ -292,12 +294,11 @@ export const WaveView = React.memo(function ({
                 const elapsed =
                     (context.currentTime - playbackStartTime) * playbackRate;
                 const percent =
-                    elapsed > loopEndTime &&
+                    (elapsed > loopEndTime &&
                     playerStateRef.current === "playing_loop"
-                        ? (loopStartTime +
-                              ((elapsed - loopStartTime) % loopDuration)) /
-                          sampleLength
-                        : elapsed / sampleLength;
+                        ? loopStartTime +
+                          ((elapsed - loopStartTime) % loopDuration)
+                        : elapsed) / sampleLength;
                 const x = percent * width;
 
                 ctx.strokeStyle = fontColor;
@@ -389,7 +390,7 @@ export const WaveView = React.memo(function ({
     ]);
 
     const setLoopStartClick = (e: React.MouseEvent<HTMLElement>) => {
-        if (!waveformRef.current || disabled) {
+        if (disabled || !waveformRef.current) {
             return;
         }
         const width = size.width * zoom;
@@ -401,7 +402,7 @@ export const WaveView = React.memo(function ({
 
     const setLoopEndClick = (e: React.MouseEvent<HTMLElement>) => {
         e.preventDefault();
-        if (!waveformRef.current || disabled) {
+        if (disabled || !waveformRef.current) {
             return;
         }
         const width = size.width * zoom;

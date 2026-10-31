@@ -19,6 +19,132 @@ export class ClipboardManager {
     private instrumentClipboard = new Set<BasicInstrument>();
     private presetClipboard = new Set<BasicPreset>();
 
+    /**
+     * @param oldSample
+     * @param alreadyCloned sample names
+     * @param actions
+     * @param setSamples
+     * @param setView
+     * @param shouldDuplicate
+     * @returns
+     * @private
+     */
+    private addSample(
+        oldSample: BasicSample,
+        alreadyCloned: BasicSample[],
+        actions: HistoryAction[],
+        setSamples: (s: BasicSample[]) => unknown,
+        setView: SetViewType,
+        shouldDuplicate = true
+    ): BasicSample {
+        const names = new Set(alreadyCloned.map((s) => s.name));
+        const isNameTaken = names.has(oldSample.name);
+        const originalName = oldSample.name.slice(0, 37);
+        let name = oldSample.name;
+        if (isNameTaken) {
+            if (!shouldDuplicate) {
+                const r = alreadyCloned.find((s) => s.name === oldSample.name);
+                if (!r) {
+                    throw new Error(
+                        "This should never happen. If it did, then congrats!"
+                    );
+                }
+                return r;
+            }
+            let count = 1;
+            while (names.has(name)) {
+                name = `${originalName}-${count}`;
+                count++;
+            }
+        }
+        const newSample = new BasicSample(
+            name,
+            oldSample.sampleRate,
+            oldSample.originalKey,
+            oldSample.pitchCorrection,
+            oldSample.sampleType,
+            oldSample.loopStart,
+            oldSample.loopEnd
+        );
+        if (oldSample.isCompressed) {
+            newSample.setCompressedData(oldSample.getRawData(true));
+        } else {
+            newSample.setAudioData(
+                oldSample.getAudioData(),
+                oldSample.sampleRate
+            );
+        }
+        actions.push(new CreateSampleAction(newSample, setSamples, setView));
+        alreadyCloned.push(newSample);
+        if (oldSample.linkedSample) {
+            const newLinked = this.addSample(
+                oldSample.linkedSample,
+                alreadyCloned,
+                actions,
+                setSamples,
+                setView,
+                false
+            );
+            // relink cloned samples
+            newLinked.unlinkSample();
+            newSample.setLinkedSample(newLinked, oldSample.sampleType);
+        }
+        return newSample;
+    }
+
+    private addInstrument(
+        oldInst: BasicInstrument,
+        alreadyCloned: BasicInstrument[],
+        clonedSamples: BasicSample[],
+        actions: HistoryAction[],
+        setInstruments: (i: BasicInstrument[]) => unknown,
+        setSamples: (s: BasicSample[]) => unknown,
+        setView: SetViewType,
+        shouldDuplicate = true
+    ): BasicInstrument {
+        const names = new Set(alreadyCloned.map((i) => i.name));
+        const isNameTaken = names.has(oldInst.name);
+        let name = oldInst.name;
+        const originalName = oldInst.name.slice(0, 37);
+        if (isNameTaken) {
+            if (!shouldDuplicate) {
+                const r = alreadyCloned.find((i) => i.name === oldInst.name);
+                if (!r) {
+                    throw new Error(
+                        "This should never happen. If it did, then congrats!"
+                    );
+                }
+                return r;
+            }
+            let count = 1;
+            while (names.has(name)) {
+                name = `${originalName}-${count}`;
+                count++;
+            }
+        }
+        const newInst = new BasicInstrument();
+        newInst.name = name;
+        newInst.globalZone.copyFrom(oldInst.globalZone);
+        for (const zone of oldInst.zones) {
+            const copiedZone = newInst.createZone(
+                this.addSample(
+                    zone.sample,
+                    clonedSamples,
+                    actions,
+                    setSamples,
+                    setView,
+                    false
+                )
+            );
+            copiedZone.copyFrom(zone);
+        }
+        actions.push(
+            new CreateInstrumentAction(newInst, setInstruments, setView)
+        );
+        alreadyCloned.push(newInst);
+        return newInst;
+    }
+
     get presetCount() {
         return this.presetClipboard.size;
     }
@@ -195,131 +321,5 @@ export class ClipboardManager {
             );
         m.modifyBank(actions);
         return actions.length;
-    }
-
-    /**
-     * @param oldSample
-     * @param alreadyCloned sample names
-     * @param actions
-     * @param setSamples
-     * @param setView
-     * @param duplicate
-     * @returns
-     * @private
-     */
-    private addSample(
-        oldSample: BasicSample,
-        alreadyCloned: BasicSample[],
-        actions: HistoryAction[],
-        setSamples: (s: BasicSample[]) => unknown,
-        setView: SetViewType,
-        duplicate = true
-    ): BasicSample {
-        const names = new Set(alreadyCloned.map((s) => s.name));
-        const exists = names.has(oldSample.name);
-        const originalName = oldSample.name.slice(0, 37);
-        let name = oldSample.name;
-        if (exists) {
-            if (!duplicate) {
-                const r = alreadyCloned.find((s) => s.name === oldSample.name);
-                if (!r) {
-                    throw new Error(
-                        "This should never happen. If it did, then congrats!"
-                    );
-                }
-                return r;
-            }
-            let count = 1;
-            while (names.has(name)) {
-                name = `${originalName}-${count}`;
-                count++;
-            }
-        }
-        const newSample = new BasicSample(
-            name,
-            oldSample.sampleRate,
-            oldSample.originalKey,
-            oldSample.pitchCorrection,
-            oldSample.sampleType,
-            oldSample.loopStart,
-            oldSample.loopEnd
-        );
-        if (oldSample.isCompressed) {
-            newSample.setCompressedData(oldSample.getRawData(true));
-        } else {
-            newSample.setAudioData(
-                oldSample.getAudioData(),
-                oldSample.sampleRate
-            );
-        }
-        actions.push(new CreateSampleAction(newSample, setSamples, setView));
-        alreadyCloned.push(newSample);
-        if (oldSample.linkedSample) {
-            const newLinked = this.addSample(
-                oldSample.linkedSample,
-                alreadyCloned,
-                actions,
-                setSamples,
-                setView,
-                false
-            );
-            // relink cloned samples
-            newLinked.unlinkSample();
-            newSample.setLinkedSample(newLinked, oldSample.sampleType);
-        }
-        return newSample;
-    }
-
-    private addInstrument(
-        oldInst: BasicInstrument,
-        alreadyCloned: BasicInstrument[],
-        clonedSamples: BasicSample[],
-        actions: HistoryAction[],
-        setInstruments: (i: BasicInstrument[]) => unknown,
-        setSamples: (s: BasicSample[]) => unknown,
-        setView: SetViewType,
-        duplicate = true
-    ): BasicInstrument {
-        const names = new Set(alreadyCloned.map((i) => i.name));
-        const exists = names.has(oldInst.name);
-        let name = oldInst.name;
-        const originalName = oldInst.name.slice(0, 37);
-        if (exists) {
-            if (!duplicate) {
-                const r = alreadyCloned.find((i) => i.name === oldInst.name);
-                if (!r) {
-                    throw new Error(
-                        "This should never happen. If it did, then congrats!"
-                    );
-                }
-                return r;
-            }
-            let count = 1;
-            while (names.has(name)) {
-                name = `${originalName}-${count}`;
-                count++;
-            }
-        }
-        const newInst = new BasicInstrument();
-        newInst.name = name;
-        newInst.globalZone.copyFrom(oldInst.globalZone);
-        for (const zone of oldInst.zones) {
-            const copiedZone = newInst.createZone(
-                this.addSample(
-                    zone.sample,
-                    clonedSamples,
-                    actions,
-                    setSamples,
-                    setView,
-                    false
-                )
-            );
-            copiedZone.copyFrom(zone);
-        }
-        actions.push(
-            new CreateInstrumentAction(newInst, setInstruments, setView)
-        );
-        alreadyCloned.push(newInst);
-        return newInst;
     }
 }

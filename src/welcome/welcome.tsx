@@ -35,7 +35,6 @@ export const Welcome = typedMemo(function ({
                     <div
                         className={"action_button"}
                         onClick={async () => {
-                            const dLoc = "downloadDesktop.";
                             const res = await fetch(
                                 "https://api.github.com/repos/spessasus/SpessaFont/releases/latest"
                             );
@@ -51,6 +50,7 @@ export const Welcome = typedMemo(function ({
                                 window.open(defaultUrl);
                                 return;
                             }
+                            const dLoc = "downloadDesktop.";
                             const assets = rel.assets;
                             const windowsInstaller =
                                 assets.find(

@@ -24,8 +24,7 @@ export function LinkedPresets({
 }) {
     const { t } = useTranslation();
     const linked = useMemo(() => {
-        const l = new Set<BasicPreset>();
-        for (const p of instrument.linkedTo) l.add(p);
+        const l = new Set<BasicPreset>(instrument.linkedTo);
         return l;
     }, [instrument]);
 
@@ -73,7 +72,7 @@ export function LinkedPresets({
             {instrument.linkedTo.length > 0 && (
                 <>
                     <div>{t("instrumentLocale.usedBy")}:</div>
-                    {Array.from(linked).map((preset, i) => (
+                    {Array.from(linked, (preset, i) => (
                         <div
                             className={"monospaced"}
                             onClick={() => setView(preset)}

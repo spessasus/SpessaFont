@@ -43,7 +43,7 @@ export function PresetDisplay({
     onLink?: () => unknown;
 }) {
     const { t } = useTranslation();
-    const open = openedData.open;
+    const isOpen = openedData.open;
     const openedInstruments: Record<string, boolean> =
         openedData.openInstruments ?? {};
     return (
@@ -58,18 +58,18 @@ export function PresetDisplay({
                         onClick={() =>
                             setOpenedData({
                                 openInstruments: openedInstruments,
-                                open: !open
+                                open: !isOpen
                             })
                         }
                     >
-                        {open ? "\u25BC" : "\u25B6"}
+                        {isOpen ? "\u{25BC}" : "\u{25B6}"}
                     </span>
                     <span
                         className={"monospaced midi_patch"}
                         onClick={() =>
                             setOpenedData({
                                 openInstruments: openedInstruments,
-                                open: !open
+                                open: !isOpen
                             })
                         }
                     >
@@ -99,7 +99,7 @@ export function PresetDisplay({
                 </span>
             </div>
             <div className={"preset_instruments"}>
-                {open &&
+                {isOpen &&
                     p.preset.zones.map((z, i) => (
                         <InstrumentDisplay
                             open={openedInstruments[z.instrument.name] ?? false}

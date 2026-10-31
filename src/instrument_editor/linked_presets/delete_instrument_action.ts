@@ -29,11 +29,11 @@ export class DeleteInstrumentAction implements HistoryAction {
         b.deleteInstrument(this.instrument);
         this.setInstruments([...b.instruments]);
         // check if there are elements to switch to
-        if (b.instruments.length > 0) {
-            this.setView(b.instruments[Math.max(this.index - 1, 0)]);
-        } else {
-            this.setView("info");
-        }
+        this.setView(
+            b.instruments.length > 0
+                ? b.instruments[Math.max(this.index - 1, 0)]
+                : "info"
+        );
     }
 
     undo(b: SoundBankManager) {
