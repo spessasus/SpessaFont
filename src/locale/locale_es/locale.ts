@@ -35,6 +35,13 @@ export const localeSpanish = {
     discard: "Descartar",
     keep: "Mantener",
 
+    errorBoundary: {
+        title: "Algo salió mal",
+        description:
+            "SpessaFont encontró un error y no pudo continuar. Recargar la página reinicia la aplicación. Los cambios no guardados se perderán.",
+        reload: "Recargar"
+    },
+
     loadingAndSaving: {
         loadingFileFromDisk: "Cargando archivo del disco...",
         parsingSoundBank: "Analizando banco de sonido...",

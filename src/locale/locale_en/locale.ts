@@ -35,6 +35,13 @@ export const localeEnglish = {
     discard: "Discard",
     keep: "Keep",
 
+    errorBoundary: {
+        title: "Something went wrong",
+        description:
+            "SpessaFont ran into an error and could not continue. Reloading the page restarts the app. Unsaved changes will be lost.",
+        reload: "Reload"
+    },
+
     loadingAndSaving: {
         loadingFileFromDisk: "Loading file from disk...",
         parsingSoundBank: "Parsing sound bank...",

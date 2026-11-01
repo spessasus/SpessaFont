@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { audioToWav, type BasicSample, SampleTypes } from "spessasynth_core";
 import toast from "react-hot-toast";
 import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
+import { logInfo, logWarn } from "../utils/core_utils.ts";
 
 const DEFAULT_SAMPLE_GAIN = 0.4;
 
@@ -20,7 +21,7 @@ const exportWavData = (data: Float32Array, rate: number, name: string) => {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = `${name}.wav`;
-    console.info(a);
+    logInfo(`Exporting ${a.download}`);
     a.click();
 };
 
@@ -100,7 +101,7 @@ export function SampleTools({
         try {
             playerRef.current.stop();
         } catch (error) {
-            console.warn("audio already stopped or invalid", error);
+            logWarn("Audio already stopped or invalid.", error);
         }
         playerRef.current.disconnect();
         playerRef.current = null;

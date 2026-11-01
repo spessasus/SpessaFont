@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "node:path";
@@ -24,5 +25,13 @@ export default defineConfig({
     },
     build: {
         target: "esnext"
+    },
+    test: {
+        include: ["src/**/*.test.ts"],
+        setupFiles: ["src/test_utils/setup.ts"],
+        // Restores navigator and other globals that individual tests stub
+        unstubGlobals: true,
+        // History and core logging is noise unless a test fails
+        silent: "passed-only"
     }
 });

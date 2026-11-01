@@ -4,7 +4,7 @@ import { ModulatorList } from "../../modulator_editing/modulator_list/modulator_
 import { type JSX, useCallback, useState } from "react";
 import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
 import type { ClipboardManager } from "../../core_backend/clipboard_manager.ts";
-import { SetDefaultModulators } from "./set_default_modulators.tsx";
+import { SetDefaultModulators } from "./set_default_modulators_action.ts";
 import { useAudioEngine } from "../../core_backend/audio_engine_context.ts";
 
 export function DefaultModulatorList({

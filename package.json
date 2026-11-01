@@ -14,15 +14,16 @@
     "main": "electron/main.js",
     "scripts": {
         "dev": "vite",
-        "build": "npm run test:types && npm run build:fast",
+        "build": "npm run test:types && npm test && npm run build:fast",
         "build:fast": "vite build",
-        "test:types": "eslint . && tsc -b",
+        "test:types": "eslint . && node node_modules/typescript7/bin/tsc -b",
         "preview": "vite preview",
         "debug": "debug_scripts/local_core.sh",
         "release": "debug_scripts/npm_core.sh",
         "prepare": "husky",
         "app:dev": "concurrently \"vite\" \"electron .\"",
-        "app:dist": "vite build && node electron/builder.ts"
+        "app:dist": "vite build && node electron/builder.ts",
+        "test": "vitest run"
     },
     "desktopName": "com.spessasus.SpessaFont",
     "dependencies": {
@@ -59,7 +60,9 @@
         "prettier": "^3.9.10",
         "typescript": "^6.0.3",
         "typescript-eslint": "^8.72.1",
+        "typescript7": "npm:typescript@^7.0.2",
         "vite": "^8.3.5",
+        "vitest": "^5.0.5",
         "wait-on": "^9.5.1"
     },
     "overrides": {
@@ -67,7 +70,7 @@
         "brace-expansion": "^5.0.8",
         "builder-util-runtime": "^9.7.0",
         "fast-uri": "^4.1.1",
-        "minimatch": "^10.2.6",
+        "minimatch": "^11.0.3",
         "postcss": "^8.5.25",
         "shell-quote": "^1.10.0",
         "tar": "^7.5.22"
@@ -84,6 +87,6 @@
     ],
     "allowScripts": {
         "electron-winstaller@5.4.0": true,
-        "@swc/core@1.16.20": true
+        "@swc/core@1.16.21": true
     }
 }

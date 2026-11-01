@@ -16,6 +16,7 @@ import i18next from "i18next";
 import { loadSettings } from "./settings/save_load/load.ts";
 import { initReactI18next } from "react-i18next";
 import { AudioEngineProvider } from "./get_user_input/audio_engine_provider.tsx";
+import { ErrorBoundary } from "./error_boundary/error_boundary.tsx";
 
 // Load settings and get locale
 const initialSettings = loadSettings();
@@ -35,10 +36,12 @@ await i18next.use(initReactI18next).init({
 
 createRoot(document.querySelector("#root")!).render(
     <StrictMode>
-        <MIDIProvider>
-            <AudioEngineProvider settings={initialSettings}>
-                <App initialSettings={initialSettings} />
-            </AudioEngineProvider>
-        </MIDIProvider>
+        <ErrorBoundary>
+            <MIDIProvider>
+                <AudioEngineProvider settings={initialSettings}>
+                    <App initialSettings={initialSettings} />
+                </AudioEngineProvider>
+            </MIDIProvider>
+        </ErrorBoundary>
     </StrictMode>
 );

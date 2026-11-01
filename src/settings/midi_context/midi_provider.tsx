@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { MIDIAccessContext, type MIDIAccessStatus } from "./midi_context";
+import { logWarn, logError } from "../../utils/core_utils.ts";
 
 export function MIDIProvider({ children }: { children?: React.ReactNode }) {
     const [devices, setDevices] = useState<MIDIInput[]>([]);
@@ -13,7 +14,7 @@ export function MIDIProvider({ children }: { children?: React.ReactNode }) {
 
     useEffect(() => {
         if (!("requestMIDIAccess" in navigator)) {
-            console.error("Your browser does not support WebMIDI.");
+            logWarn("Your browser does not support WebMIDI.");
             setAccessStatus("denied");
             setMidiError("Your browser does not support WebMIDI.");
             return;
@@ -28,7 +29,7 @@ export function MIDIProvider({ children }: { children?: React.ReactNode }) {
                 setDevices(Array.from(access.inputs.values()));
                 setAccessStatus("granted");
             } catch (error) {
-                console.error(error);
+                logError("Failed to get MIDI access.", error);
                 setAccessStatus("denied");
                 setMidiError((error as Error).message);
             }

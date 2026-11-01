@@ -1,0 +1,21 @@
+.error_boundary {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--flex-gap);
+    margin: auto;
+    padding: 1rem;
+    max-width: 40rem;
+    color: var(--font-color);
+}
+
+.error_boundary_message {
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 0.5rem;
+    border: 1px solid var(--track-border-color);
+    border-radius: var(--primary-border-radius);
+    background: var(--lighter-color-end);
+    text-align: start;
+    white-space: pre-wrap;
+}

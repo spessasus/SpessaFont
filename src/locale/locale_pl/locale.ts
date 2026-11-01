@@ -35,6 +35,13 @@ export const localePolish = {
     discard: "Odrzuć",
     keep: "Zachowaj",
 
+    errorBoundary: {
+        title: "Coś poszło nie tak",
+        description:
+            "SpessaFont napotkał błąd i nie może kontynuować. Odświeżenie strony uruchomi aplikację ponownie. Niezapisane zmiany zostaną utracone.",
+        reload: "Odśwież"
+    },
+
     loadingAndSaving: {
         loadingFileFromDisk: "Ładowanie pliku z dysku...",
         parsingSoundBank: "Przetwarzanie banku dźwięków...",

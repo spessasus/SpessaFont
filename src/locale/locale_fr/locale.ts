@@ -34,6 +34,13 @@ export const localeFrench = {
     discard: "Ignorer",
     keep: "Garder",
 
+    errorBoundary: {
+        title: "Une erreur est survenue",
+        description:
+            "SpessaFont a rencontré une erreur et ne peut pas continuer. Recharger la page redémarre l'application. Les modifications non enregistrées seront perdues.",
+        reload: "Recharger"
+    },
+
     loadingAndSaving: {
         loadingFileFromDisk: "Chargement d'un fichier depuis le disque...",
         parsingSoundBank: "Analyse de la Banque de Son...",

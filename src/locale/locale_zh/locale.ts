@@ -37,6 +37,13 @@ export const localeChinese = {
     discard: "放弃更改",
     keep: "保留更改",
 
+    errorBoundary: {
+        title: "出现了问题",
+        description:
+            "SpessaFont 遇到错误，无法继续运行。重新加载页面将重启应用，未保存的更改将会丢失。",
+        reload: "重新加载"
+    },
+
     loadingAndSaving: {
         loadingFileFromDisk: "正在从磁盘加载音色库……",
         parsingSoundBank: "正在解析音色库……",

@@ -173,7 +173,7 @@ export class AudioEngine {
 
     async resumeContext() {
         await this.context.resume();
-        console.info("setting up audio loop");
+        logInfo("Setting up audio loop");
         await this.context.audioWorklet.addModule("./audio_worklet.js");
         this.worklet = new AudioWorkletNode(
             this.context,

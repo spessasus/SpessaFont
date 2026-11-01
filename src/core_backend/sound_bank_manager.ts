@@ -18,6 +18,7 @@ import {
 import { presetSorter } from "../utils/preset_sorter.ts";
 import { SOFTWARE_NAME } from "../utils/software_name.ts";
 import { nameSorter } from "../utils/name_sorter.ts";
+import { logInfo, logError } from "../utils/core_utils.ts";
 
 export type BankEditView = "info" | BasicInstrument | BasicSample | BasicPreset;
 
@@ -220,7 +221,7 @@ export default class SoundBankManager extends BasicSoundBank {
                 isSaveAs
             );
         } catch (error) {
-            console.error(error);
+            logError("Failed to save the sound bank.", error);
             return false;
         }
         this.dirty = false;
@@ -283,7 +284,7 @@ export default class SoundBankManager extends BasicSoundBank {
         // clean up the object URL after a short delay
         setTimeout(() => {
             URL.revokeObjectURL(url);
-            console.info("Object URL revoked to free memory");
+            logInfo("Object URL revoked to free memory");
         }, 1000);
     }
 

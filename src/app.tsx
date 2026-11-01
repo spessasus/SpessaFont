@@ -21,6 +21,7 @@ import "./toasts.css";
 import { Welcome } from "./welcome/welcome.tsx";
 import type { ElectronAPI } from "./types/electron.ts";
 import { IS_CHROME, IS_ELECTRON } from "./utils/environment_detection.ts";
+import { logInfo, logError } from "./utils/core_utils.ts";
 import { useAudioEngine } from "./core_backend/audio_engine_context.ts"; // apply locale
 import { useMIDIAccess } from "./settings/midi_context/midi_context.ts"; // for MIDI listener
 
@@ -30,7 +31,7 @@ const clipboardManager = new ClipboardManager();
 // Service workers are unsafe on electron
 if (!IS_ELECTRON && navigator.serviceWorker) {
     await navigator.serviceWorker.register("service-worker.js");
-    console.info("Registered service worker");
+    logInfo("Registered service worker");
 }
 
 function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
@@ -121,7 +122,7 @@ function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
                     await new Promise((r) => setTimeout(r, 100));
                     bank = loadSoundBank(buffer);
                 } catch (error) {
-                    console.error(error);
+                    logError("Failed to load the sound bank.", error);
                     toast.dismiss(id);
                     if ((error as Error).name === "NotReadableError") {
                         // special Electron error
@@ -168,7 +169,7 @@ function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
             launchQueue.setConsumer(async (launchParams) => {
                 await audioEngine.context.resume();
                 for (const fileHandle of launchParams.files) {
-                    console.info(`Opening file ${fileHandle.name}`);
+                    logInfo(`Opening file ${fileHandle.name}`);
                     const file = await fileHandle.getFile();
                     await openNewBankTab(file);
                 }
@@ -183,7 +184,7 @@ function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
         api.onFileOpened(async (path: string) => {
             try {
                 await audioEngine.context.resume();
-                console.info(`Attempting to open ${path}`);
+                logInfo(`Attempting to open ${path}`);
                 const response = await fetch(`file://${path}`);
                 const blob = await response.blob();
 
@@ -201,7 +202,7 @@ function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
                 );
             }
         });
-        console.info("Connected to Electron file handlers");
+        logInfo("Connected to Electron file handlers");
     }, [audioEngine.context, openNewBankTab]);
 
     const { selectedDevice } = useMIDIAccess();
