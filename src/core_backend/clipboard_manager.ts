@@ -6,12 +6,11 @@ import {
     MIDIPatchTools,
     Modulator
 } from "spessasynth_core";
-import type SoundBankManager from "./sound_bank_manager.ts";
 import { CreateSampleAction } from "../menu_list/create_actions/create_sample_action.ts";
-import type { SetViewType } from "../bank_editor/bank_editor.tsx";
 import { CreateInstrumentAction } from "../menu_list/create_actions/create_instrument_action.ts";
 import type { HistoryAction } from "./history.ts";
-import { CreatePresetAction } from "../menu_list/create_actions/create_preset_actions.ts";
+import { CreatePresetAction } from "../menu_list/create_actions/create_preset_action.ts";
+import type { BankDocument } from "./bank_document.ts";
 
 export class ClipboardManager {
     private modulatorClipboard: Modulator[] = [];
@@ -20,21 +19,16 @@ export class ClipboardManager {
     private presetClipboard = new Set<BasicPreset>();
 
     /**
-     * @param oldSample
-     * @param alreadyCloned sample names
-     * @param actions
-     * @param setSamples
-     * @param setView
-     * @param shouldDuplicate
-     * @returns
-     * @private
+     * Clones a sample (and its stereo pair) into new create actions.
+     * @param oldSample the sample to clone
+     * @param alreadyCloned the bank's samples plus the ones cloned so far, used for unique names
+     * @param actions receives the create actions
+     * @param shouldDuplicate when false, an existing sample with the same name is reused instead
      */
     private addSample(
         oldSample: BasicSample,
         alreadyCloned: BasicSample[],
         actions: HistoryAction[],
-        setSamples: (s: BasicSample[]) => unknown,
-        setView: SetViewType,
         shouldDuplicate = true
     ): BasicSample {
         const names = new Set(alreadyCloned.map((s) => s.name));
@@ -74,15 +68,13 @@ export class ClipboardManager {
                 oldSample.sampleRate
             );
         }
-        actions.push(new CreateSampleAction(newSample, setSamples, setView));
+        actions.push(new CreateSampleAction(newSample));
         alreadyCloned.push(newSample);
         if (oldSample.linkedSample) {
             const newLinked = this.addSample(
                 oldSample.linkedSample,
                 alreadyCloned,
                 actions,
-                setSamples,
-                setView,
                 false
             );
             // relink cloned samples
@@ -97,9 +89,6 @@ export class ClipboardManager {
         alreadyCloned: BasicInstrument[],
         clonedSamples: BasicSample[],
         actions: HistoryAction[],
-        setInstruments: (i: BasicInstrument[]) => unknown,
-        setSamples: (s: BasicSample[]) => unknown,
-        setView: SetViewType,
         shouldDuplicate = true
     ): BasicInstrument {
         const names = new Set(alreadyCloned.map((i) => i.name));
@@ -127,20 +116,11 @@ export class ClipboardManager {
         newInst.globalZone.copyFrom(oldInst.globalZone);
         for (const zone of oldInst.zones) {
             const copiedZone = newInst.createZone(
-                this.addSample(
-                    zone.sample,
-                    clonedSamples,
-                    actions,
-                    setSamples,
-                    setView,
-                    false
-                )
+                this.addSample(zone.sample, clonedSamples, actions, false)
             );
             copiedZone.copyFrom(zone);
         }
-        actions.push(
-            new CreateInstrumentAction(newInst, setInstruments, setView)
-        );
+        actions.push(new CreateInstrumentAction(newInst));
         alreadyCloned.push(newInst);
         return newInst;
     }
@@ -195,24 +175,19 @@ export class ClipboardManager {
         this.modulatorClipboard = mods.map(Modulator.copyFrom.bind(Modulator));
     }
 
-    // returns the count of pasted elements
-    pastePresets(
-        m: SoundBankManager,
-        setPresets: (p: BasicPreset[]) => unknown,
-        setInstruments: (i: BasicInstrument[]) => unknown,
-        setSamples: (s: BasicSample[]) => unknown,
-        setView: SetViewType
-    ): number {
+    /**
+     * Builds the actions that paste the copied presets with their instruments and samples.
+     * Pasted presets move to the next free MIDI patch.
+     */
+    pastePresets(document: BankDocument) {
+        const actions = new Array<HistoryAction>();
         if (this.presetClipboard.size === 0) {
-            return 0;
+            return actions;
         }
-        // clone manually so it works with our history system
-        const clonedInstruments = [...m.instruments];
-        const clonedSamples = [...m.samples];
-        const clonedPresets = [...m.presets];
-        const actions: HistoryAction[] = [];
+        const clonedInstruments = [...document.instruments];
+        const clonedSamples = [...document.samples];
         const presetNumbers = new Set<string>();
-        for (const p of m.presets) {
+        for (const p of document.presets) {
             presetNumbers.add(p.toMIDIString());
         }
         for (const oldPreset of this.presetClipboard) {
@@ -234,7 +209,7 @@ export class ClipboardManager {
                     );
                 }
             }
-            const newPreset = new BasicPreset(m);
+            const newPreset = new BasicPreset(document.bank);
             newPreset.name = oldPreset.name;
             newPreset.program = patch.program;
             newPreset.bankMSB = patch.bankMSB;
@@ -253,73 +228,44 @@ export class ClipboardManager {
                         clonedInstruments,
                         clonedSamples,
                         actions,
-                        setInstruments,
-                        setSamples,
-                        setView,
                         false
                     )
                 );
                 newZone.copyFrom(zone);
             }
-            actions.push(
-                new CreatePresetAction(newPreset, setPresets, setView)
-            );
-            clonedPresets.push(newPreset);
+            actions.push(new CreatePresetAction(newPreset));
             presetNumbers.add(newPreset.toMIDIString());
         }
-        m.modifyBank(actions);
-        return actions.length;
+        return actions;
     }
 
-    // returns the count of pasted elements
-    pasteInstruments(
-        m: SoundBankManager,
-        setSamples: (s: BasicSample[]) => unknown,
-        setInstruments: (i: BasicInstrument[]) => unknown,
-        setView: SetViewType
-    ): number {
-        if (this.instrumentClipboard.size === 0) {
-            return 0;
-        }
-        // clone manually so it works with our history system
-        const clonedInstruments = [...m.instruments];
-        const clonedSamples = [...m.samples];
-        const actions: HistoryAction[] = [];
-        for (const oldInst of this.instrumentClipboard)
+    /**
+     * Builds the actions that paste the copied instruments with their samples.
+     */
+    pasteInstruments(document: BankDocument) {
+        const clonedInstruments = [...document.instruments];
+        const clonedSamples = [...document.samples];
+        const actions = new Array<HistoryAction>();
+        for (const oldInst of this.instrumentClipboard) {
             this.addInstrument(
                 oldInst,
                 clonedInstruments,
                 clonedSamples,
-                actions,
-                setInstruments,
-                setSamples,
-                setView
+                actions
             );
-        m.modifyBank(actions);
-        return actions.length;
+        }
+        return actions;
     }
 
-    // returns the count of pasted elements
-    pasteSamples(
-        m: SoundBankManager,
-        setSamples: (s: BasicSample[]) => unknown,
-        setView: SetViewType
-    ): number {
-        if (this.sampleClipboard.size === 0) {
-            return 0;
+    /**
+     * Builds the actions that paste the copied samples.
+     */
+    pasteSamples(document: BankDocument) {
+        const alreadyCloned = [...document.samples];
+        const actions = new Array<HistoryAction>();
+        for (const oldSample of this.sampleClipboard) {
+            this.addSample(oldSample, alreadyCloned, actions);
         }
-        // clone manually so it works with our history system
-        const alreadyCloned = [...m.samples];
-        const actions: CreateSampleAction[] = [];
-        for (const oldSample of this.sampleClipboard)
-            this.addSample(
-                oldSample,
-                alreadyCloned,
-                actions,
-                setSamples,
-                setView
-            );
-        m.modifyBank(actions);
-        return actions.length;
+        return actions;
     }
 }

@@ -8,7 +8,7 @@ import {
     SpessaSynthSequencer
 } from "spessasynth_core";
 import { expect } from "vitest";
-import SoundBankManager from "../core_backend/sound_bank_manager.ts";
+import { BankSession } from "../core_backend/bank_session.ts";
 import type { HistoryActionGroup } from "../core_backend/history.ts";
 
 /**
@@ -18,14 +18,15 @@ import type { HistoryActionGroup } from "../core_backend/history.ts";
 export const SECOND_COPY_SUFFIX = " 2";
 
 /**
- * Creates a manager holding two copies of the spessasynth_core sample bank.
+ * Creates a session holding two copies of the spessasynth_core sample bank.
  * The result has two presets, two instruments and two mono samples,
  * which is enough to exercise linking, deleting and reordering.
  */
-export function createTestManager() {
+export function createTestSession() {
     const processor = new SpessaSynthProcessor(44_100);
     const sequencer = new SpessaSynthSequencer(processor);
-    const manager = new SoundBankManager(processor, sequencer);
+    const session = new BankSession(processor, sequencer);
+    const bank = session.document.bank;
 
     const secondCopy = SoundBankLoader.fromArrayBuffer(
         BasicSoundBank.getSampleSoundBankFile()
@@ -39,10 +40,10 @@ export function createTestManager() {
         element.name += SECOND_COPY_SUFFIX;
     }
     for (const preset of secondCopy.presets) {
-        manager.clonePreset(preset);
+        bank.clonePreset(preset);
     }
-    manager.sortElements();
-    return manager;
+    session.document.sortElements();
+    return session;
 }
 
 function sourceSnapshot(source: ModulatorSource) {
@@ -124,23 +125,28 @@ export function snapshotBank(bank: BasicSoundBank) {
 }
 
 /**
- * Applies the actions through the manager, then checks that undo restores the
+ * Applies the actions through the history, then checks that undo restores the
  * original bank and redo restores the edited one.
- * Returns both snapshots so the caller can assert what the edit changed.
+ * Returns both snapshots so the caller can assert what the edit changed,
+ * and the focus hint of each step.
+ * Pass a function when building the actions changes the bank already,
+ * for example because new zones link their children on creation.
  */
 export function expectRoundTrip(
-    manager: SoundBankManager,
-    actions: HistoryActionGroup
+    session: BankSession,
+    actions: HistoryActionGroup | (() => HistoryActionGroup)
 ) {
-    const before = snapshotBank(manager);
-    manager.modifyBank(actions);
-    const after = snapshotBank(manager);
+    const bank = session.document.bank;
+    const before = snapshotBank(bank);
+    const group = typeof actions === "function" ? actions() : actions;
+    const doFocus = session.history.do(group);
+    const after = snapshotBank(bank);
     expect(after).not.toEqual(before);
 
-    manager.undo();
-    expect(snapshotBank(manager)).toEqual(before);
+    const undoFocus = session.history.undo();
+    expect(snapshotBank(bank)).toEqual(before);
 
-    manager.redo();
-    expect(snapshotBank(manager)).toEqual(after);
-    return { before, after };
+    const redoFocus = session.history.redo();
+    expect(snapshotBank(bank)).toEqual(after);
+    return { before, after, doFocus, undoFocus, redoFocus };
 }

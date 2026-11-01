@@ -1,62 +1,70 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-    createTestManager,
-    expectRoundTrip,
-    snapshotBank
+    createTestSession,
+    expectRoundTrip
 } from "../../test_utils/bank_fixture.ts";
 import { EditPresetAction } from "./edit_preset_action.ts";
 import { DeletePresetAction } from "./delete_preset_action.ts";
 
-const noop = () => undefined;
-
 describe("EditPresetAction", () => {
-    it("changes a preset property", () => {
-        const manager = createTestManager();
-        const preset = manager.presets[0];
+    it("renames a preset", () => {
+        const session = createTestSession();
+        const preset = session.document.presets[0];
 
-        expectRoundTrip(manager, [
-            new EditPresetAction(preset, "name", preset.name, "Renamed", noop)
+        expectRoundTrip(session, [
+            new EditPresetAction(preset, "name", preset.name, "Renamed")
         ]);
         expect(preset.name).toBe("Renamed");
+    });
+
+    it("re-sorts the presets when the program changes", () => {
+        const session = createTestSession();
+        const [first, second] = session.document.presets;
+        second.program = 1;
+        session.document.sortPresets();
+
+        expectRoundTrip(session, [
+            new EditPresetAction(first, "program", first.program, 2)
+        ]);
+        expect(session.document.presets).toEqual([second, first]);
     });
 });
 
 describe("DeletePresetAction", () => {
-    it("removes a preset and selects its neighbor, then restores and selects it on undo", () => {
-        const manager = createTestManager();
-        const [first, second] = manager.presets;
-        const presetsBefore = snapshotBank(manager).presets;
-        const setView = vi.fn();
+    it("removes a preset and focuses its neighbor, then restores and focuses it on undo", () => {
+        const session = createTestSession();
+        const [first, second] = session.document.presets;
 
-        manager.modifyBank([new DeletePresetAction(second, noop, setView)]);
-        expect(manager.presets).toEqual([first]);
-        expect(setView).toHaveBeenLastCalledWith(first);
-
-        manager.undo();
-        expect(snapshotBank(manager).presets).toEqual(presetsBefore);
-        expect(setView).toHaveBeenLastCalledWith(second);
-    });
-
-    // Known bug: deleting unlinks the preset from its instruments and undo does not
-    // relink them, so the instruments look unused and "remove unused elements"
-    // would delete instruments that the restored preset still plays.
-    it.fails("relinks the instruments of a restored preset on undo", () => {
-        const manager = createTestManager();
-
-        expectRoundTrip(manager, [
-            new DeletePresetAction(manager.presets[1], noop, noop)
+        const { doFocus, undoFocus } = expectRoundTrip(session, [
+            new DeletePresetAction(second)
         ]);
+        expect(doFocus).toBe(first);
+        expect(undoFocus).toBe(second);
     });
 
-    it("selects the info view when the last preset is deleted", () => {
-        const manager = createTestManager();
-        const setView = vi.fn();
+    it("relinks the instruments of a restored preset on undo", () => {
+        const session = createTestSession();
+        const preset = session.document.presets[1];
+        const instrument = preset.zones[0].instrument;
 
-        manager.modifyBank(
-            manager.presets.map((p) => new DeletePresetAction(p, noop, setView))
+        session.history.do([new DeletePresetAction(preset)]);
+        expect(instrument.linkedTo).not.toContain(preset);
+
+        session.history.undo();
+        expect(instrument.linkedTo).toEqual([preset]);
+        session.history.redo();
+        session.history.undo();
+        expect(instrument.linkedTo).toEqual([preset]);
+    });
+
+    it("focuses the overview when the last preset is deleted", () => {
+        const session = createTestSession();
+
+        const focus = session.history.do(
+            session.document.presets.map((p) => new DeletePresetAction(p))
         );
 
-        expect(manager.presets).toHaveLength(0);
-        expect(setView).toHaveBeenLastCalledWith("info");
+        expect(session.document.presets).toHaveLength(0);
+        expect(focus).toBe("info");
     });
 });

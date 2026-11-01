@@ -19,6 +19,24 @@ const reactCompilerRulesAsWarnings = Object.fromEntries(
         .map((rule) => [rule, "warn"])
 );
 
+// Folders whose refactor phase has landed. The compiler rules are errors there again.
+// useVirtualizer returns a mutable object by design, so incompatible-library stays a warning.
+const REFACTORED_FILES = [
+    "src/bank_editor/**",
+    "src/core_backend/**",
+    "src/generator_table/**",
+    "src/hooks/**",
+    "src/info_view/**",
+    "src/tab_list/**",
+    "src/test_utils/**"
+];
+const reactCompilerRulesAsErrors = Object.fromEntries(
+    Object.keys(reactCompilerRulesAsWarnings).map((rule) => [
+        rule,
+        rule === "react-hooks/incompatible-library" ? "warn" : "error"
+    ])
+);
+
 export default defineConfig(
     globalIgnores(["dist", "externals"]),
     {
@@ -104,6 +122,10 @@ export default defineConfig(
             // Revisit when wave_view is rewritten (REFACTOR_PLAN.md phase 6)
             "unicorn/prefer-path2d": "off"
         }
+    },
+    {
+        files: REFACTORED_FILES,
+        rules: reactCompilerRulesAsErrors
     },
     {
         files: ["src/vite-env.d.ts"],

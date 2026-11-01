@@ -16,7 +16,7 @@ export function TypeSelector({
     sampleType: SampleType;
     linkedSample: BasicSample | undefined;
     setLinkedSample: (type: SampleType, s?: BasicSample) => void;
-    samples: BasicSample[];
+    samples: readonly BasicSample[];
     sample: BasicSample;
 }) {
     const { t } = useTranslation();

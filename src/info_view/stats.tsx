@@ -1,17 +1,19 @@
 import { useTranslation } from "react-i18next";
-import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import "./stats.css";
 import { EditIcon } from "../utils/icons.tsx";
+import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
+import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
 
 export function BankInfoStats({
-    manager,
     toggleDefaultModulators
 }: {
-    manager: SoundBankManager;
     toggleDefaultModulators: () => void;
 }) {
     const { t } = useTranslation();
-    const bank = manager;
+    const { session } = useBankEditor();
+    // The counts below read the mutable bank, so re-render on every change
+    useBankSnapshot(session.store, (s) => s.revision);
+    const bank = session.document.bank;
 
     // count generators and modulators
     let instrumentGens = 0;
@@ -37,7 +39,7 @@ export function BankInfoStats({
 
     // count compressed samples
     const compressed = bank.samples.filter((s) => s.isCompressed).length;
-    const version = manager.getInfo("version");
+    const version = bank.soundBankInfo.version;
     const versionString = `${version.major}.${version.minor.toString().padStart(2, "0")}`;
     return (
         <div className={"stats"}>
@@ -49,13 +51,13 @@ export function BankInfoStats({
             <span className={"single_stat stat_span"}>
                 <label>{t("bankInfo.engine")}</label>
                 <pre className={"monospaced"}>
-                    {manager.getInfo("soundEngine")}
+                    {bank.soundBankInfo.soundEngine}
                 </pre>
             </span>
             <span className={"single_stat stat_span"}>
                 <label>{t("bankInfo.software")}</label>
                 <pre className={"monospaced"}>
-                    {manager.getInfo("software")}
+                    {bank.soundBankInfo.software}
                 </pre>
             </span>
 

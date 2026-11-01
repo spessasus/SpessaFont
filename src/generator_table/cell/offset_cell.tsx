@@ -7,7 +7,7 @@ import {
 import { GeneratorCellInput } from "./generator_cell_input.tsx";
 import { useCallback } from "react";
 import { SetGeneratorAction } from "./set_generator_action.ts";
-import { typedMemo } from "../../utils/typed_memo.ts";
+import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 
 export type OffsetGenerator =
     | typeof GeneratorTypes.startAddrsOffset
@@ -21,12 +21,11 @@ export type CoarseOffsetGenerator =
     | typeof GeneratorTypes.startloopAddrsCoarseOffset
     | typeof GeneratorTypes.endloopAddrsCoarseOffset;
 
-export const OffsetGeneratorCell = typedMemo(function ({
+export function OffsetGeneratorCell({
     zone,
     linkedZone,
     generatorType,
-    callback,
-    manager,
+    element,
     colSpan
 }: Omit<GeneratorProps, "generator"> & {
     zone: BasicZone;
@@ -34,6 +33,7 @@ export const OffsetGeneratorCell = typedMemo(function ({
     generatorType: OffsetGenerator;
     colSpan: number;
 }) {
+    const { apply } = useBankEditor();
     let coarseGeneratorType: CoarseOffsetGenerator;
     switch (generatorType) {
         case GeneratorTypes.startAddrsOffset: {
@@ -87,35 +87,35 @@ export const OffsetGeneratorCell = typedMemo(function ({
             if (newOffset === null) {
                 actions.push(
                     new SetGeneratorAction(
+                        element,
                         zone,
                         generatorType,
                         currentFineOffset,
-                        null,
-                        callback
+                        null
                     ),
                     new SetGeneratorAction(
+                        element,
                         zone,
                         coarseGeneratorType,
                         currentCoarseOffset,
-                        null,
-                        callback
+                        null
                     )
                 );
                 if (linkedZone) {
                     actions.push(
                         new SetGeneratorAction(
+                            element,
                             linkedZone,
                             generatorType,
                             linkedZone.getGenerator(generatorType, null),
-                            null,
-                            callback
+                            null
                         ),
                         new SetGeneratorAction(
+                            element,
                             linkedZone,
                             coarseGeneratorType,
                             linkedZone.getGenerator(coarseGeneratorType, null),
-                            null,
-                            callback
+                            null
                         )
                     );
                 }
@@ -125,49 +125,49 @@ export const OffsetGeneratorCell = typedMemo(function ({
                 const coarseTarget = coarse || null;
                 actions.push(
                     new SetGeneratorAction(
+                        element,
                         zone,
                         generatorType,
                         currentFineOffset,
-                        fine,
-                        callback
+                        fine
                     ),
                     new SetGeneratorAction(
+                        element,
                         zone,
                         coarseGeneratorType,
                         currentCoarseOffset,
-                        coarseTarget,
-                        callback
+                        coarseTarget
                     )
                 );
                 if (linkedZone) {
                     actions.push(
                         new SetGeneratorAction(
+                            element,
                             linkedZone,
                             generatorType,
                             linkedZone.getGenerator(generatorType, null),
-                            fine,
-                            callback
+                            fine
                         ),
                         new SetGeneratorAction(
+                            element,
                             linkedZone,
                             coarseGeneratorType,
-                            linkedZone.getGenerator(generatorType, null),
-                            coarseTarget,
-                            callback
+                            linkedZone.getGenerator(coarseGeneratorType, null),
+                            coarseTarget
                         )
                     );
                 }
             }
-            manager.modifyBank(actions);
+            apply(actions);
             return newOffset?.toString() ?? "";
         },
         [
             textValue,
-            manager,
+            apply,
+            element,
             zone,
             generatorType,
             currentFineOffset,
-            callback,
             coarseGeneratorType,
             currentCoarseOffset,
             linkedZone
@@ -185,4 +185,4 @@ export const OffsetGeneratorCell = typedMemo(function ({
             />
         </td>
     );
-});
+}

@@ -1,29 +1,24 @@
+import type { Modulator } from "spessasynth_core";
 import type { HistoryAction } from "../../core_backend/history.ts";
-import { Modulator } from "spessasynth_core";
-import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
+import type { BankDocument } from "../../core_backend/bank_document.ts";
+import type { ChangeSet } from "../../core_backend/change_set.ts";
 
-export class SetDefaultModulators implements HistoryAction {
-    private readonly callback: () => void;
-    private readonly oldVal: Modulator[];
-    private readonly newVal: Modulator[];
+export class SetDefaultModulatorsAction implements HistoryAction {
+    private readonly oldModulators: Modulator[];
+    private readonly newModulators: Modulator[];
 
-    constructor(
-        callback: () => void,
-        newVal: Modulator[],
-        oldVal: Modulator[]
-    ) {
-        this.callback = callback;
-        this.oldVal = oldVal;
-        this.newVal = newVal;
+    public constructor(oldModulators: Modulator[], newModulators: Modulator[]) {
+        this.oldModulators = [...oldModulators];
+        this.newModulators = [...newModulators];
     }
 
-    do(b: SoundBankManager) {
-        b.defaultModulators = [...this.newVal];
-        this.callback();
+    public do(document: BankDocument, changes: ChangeSet) {
+        document.bank.defaultModulators = [...this.newModulators];
+        changes.touchBankInfo();
     }
 
-    undo(b: SoundBankManager) {
-        b.defaultModulators = [...this.oldVal];
-        this.callback();
+    public undo(document: BankDocument, changes: ChangeSet) {
+        document.bank.defaultModulators = [...this.oldModulators];
+        changes.touchBankInfo();
     }
 }

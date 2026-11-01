@@ -10,18 +10,22 @@ import "./sample_editor.css";
 import * as React from "react";
 import { useCallback, useEffect, useState } from "react";
 import { WaveView } from "./wave_view/wave_view.tsx";
-import SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import { useTranslation } from "react-i18next";
 import { KEYBOARD_TARGET_CHANNEL } from "../keyboard/target_channel.ts";
 import { WaitingInput } from "../fancy_inputs/waiting_input/waiting_input.tsx";
 import { LinkedInstruments } from "./linked_instruments/linked_instruments.tsx";
 import { TypeSelector } from "./type_selector/type_selector.tsx";
-import type { SetViewType } from "../bank_editor/bank_editor.tsx";
 import { SetSampleTypeAction } from "./set_sample_type_action.ts";
-import { EditSampleAction } from "./edit_sample_action.ts";
+import {
+    EditSampleAction,
+    type EditableSampleProperty
+} from "./edit_sample_action.ts";
 import { SampleTools } from "./sample_tools.tsx";
 import { midiNoteToPitchClass } from "../utils/note_name.ts";
 import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
+import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
+import { useEntityRevision } from "../hooks/use_entity_revision.ts";
+import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
 
 const MIN_SAMPLE_RATE = 8000;
 const MAX_SAMPLE_RATE = 192_000;
@@ -29,24 +33,21 @@ const MAX_SAMPLE_RATE = 192_000;
 export type SamplePlayerState = "stopped" | "playing" | "playing_loop";
 
 interface SampleEditorProps {
-    manager: SoundBankManager;
     sample: BasicSample;
-    setView: SetViewType;
-    setSamples: (s: BasicSample[]) => void;
-    samples: BasicSample[];
 }
 
 export const SampleEditor = React.memo(function ({
-    sample,
-    setView,
-    manager,
-    setSamples,
-    samples
+    sample
 }: SampleEditorProps) {
     const { t } = useTranslation();
     const {
         audioEngine: { processor }
     } = useAudioEngine();
+    const { session, apply } = useBankEditor();
+    const samples = useBankSnapshot(session.store, (s) => s.samples);
+    // Re-render when the sample's properties or links change
+    useEntityRevision(session.store, sample);
+    const bank = session.document.bank;
     const [sampleData, setSampleDataLocal] = useState(sample.getAudioData());
 
     useEffect(() => {
@@ -61,14 +62,9 @@ export const SampleEditor = React.memo(function ({
         sample.loopEnd = data.length;
     };
 
-    const updateSamples = useCallback(
-        () => setSamples([...samples]),
-        [samples, setSamples]
-    );
-
     // make the sample playable
     useEffect(() => {
-        const preset = new BasicPreset(manager);
+        const preset = new BasicPreset(bank);
         preset.name = "Sample Dummy Preset";
         const instrument = new BasicInstrument();
         instrument.name = "Sample Dummy Instrument";
@@ -85,44 +81,28 @@ export const SampleEditor = React.memo(function ({
         processor.clearCache();
         return () => {
             processor.clearCache();
-            if (manager?.presets?.length > 0) {
+            if (bank.presets.length > 0) {
                 processor.programChange(KEYBOARD_TARGET_CHANNEL, 0);
             }
         };
-    }, [processor, processor.midiChannels, manager, sample]);
+    }, [processor, bank, sample]);
 
     const sampleType = sample.sampleType;
     const linkedSample = sample.linkedSample;
 
     const setLinkedSample = (type: SampleType, s?: BasicSample) => {
         // no need to use two actions a setSampleType automatically adjusts the second sample
-        const action = [
-            new SetSampleTypeAction(
-                sample,
-                sample.linkedSample,
-                sample.sampleType,
-                s,
-                type,
-                () => setSamples([...samples])
-            )
-        ];
-        manager.modifyBank(action);
+        apply([new SetSampleTypeAction(sample, { linkedSample: s, type })]);
     };
 
     const changeSampleProp = useCallback(
-        function <K extends keyof BasicSample>(
+        function <K extends EditableSampleProperty>(
             prop: K,
             oldValue: BasicSample[K],
             newValue: BasicSample[K]
         ) {
             const actions = [
-                new EditSampleAction(
-                    sample,
-                    prop,
-                    oldValue,
-                    newValue,
-                    updateSamples
-                )
+                new EditSampleAction(sample, prop, oldValue, newValue)
             ];
             if (linkedSample) {
                 actions.push(
@@ -130,14 +110,13 @@ export const SampleEditor = React.memo(function ({
                         linkedSample,
                         prop,
                         linkedSample[prop],
-                        newValue,
-                        updateSamples
+                        newValue
                     )
                 );
             }
-            manager.modifyBank(actions);
+            apply(actions);
         },
-        [linkedSample, manager, sample, updateSamples]
+        [apply, linkedSample, sample]
     );
 
     const loopStart = sample.loopStart;
@@ -183,13 +162,7 @@ export const SampleEditor = React.memo(function ({
         }
 
         const actions = [
-            new EditSampleAction(
-                sample,
-                "name",
-                sampleName,
-                newName,
-                updateSamples
-            )
+            new EditSampleAction(sample, "name", sampleName, newName)
         ];
         if (linkedSample) {
             let secondNewName = n;
@@ -203,13 +176,12 @@ export const SampleEditor = React.memo(function ({
                     linkedSample,
                     "name",
                     linkedSample.name,
-                    secondNewName,
-                    updateSamples
+                    secondNewName
                 )
             );
         }
 
-        manager.modifyBank(actions);
+        apply(actions);
         return newName;
     };
 
@@ -347,7 +319,7 @@ export const SampleEditor = React.memo(function ({
                                 setLinkedSample={setLinkedSample}
                                 linkedSample={linkedSample}
                                 sample={sample}
-                                samples={manager.samples}
+                                samples={samples}
                             ></TypeSelector>
                         </div>
                     </div>
@@ -364,12 +336,7 @@ export const SampleEditor = React.memo(function ({
                         setSampleData={setSampleData}
                     />
                 </div>
-                <LinkedInstruments
-                    manager={manager}
-                    setSamples={setSamples}
-                    sample={sample}
-                    setView={setView}
-                ></LinkedInstruments>
+                <LinkedInstruments sample={sample} />
             </div>
         </div>
     );

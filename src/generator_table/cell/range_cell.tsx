@@ -1,5 +1,4 @@
 import {
-    type BasicInstrument,
     type BasicZone,
     GeneratorTypes,
     type GenericRange
@@ -7,20 +6,16 @@ import {
 import { GeneratorCellInput } from "./generator_cell_input.tsx";
 import type { GeneratorProps } from "../generator_row.tsx";
 import { SetRangeAction } from "./set_range_action.ts";
-import { typedMemo } from "../../utils/typed_memo.ts";
+import type { RangeGenerator } from "./range_generator.ts";
+import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 
-export type RangeGenerator =
-    typeof GeneratorTypes.keyRange | typeof GeneratorTypes.velRange;
-
-export const RangeGeneratorCell = typedMemo(function ({
+export function RangeGeneratorCell({
     zone,
     keyRange,
     velRange,
     linkedZone,
     generator,
-    callback,
-    manager,
-    instrument,
+    element,
     colSpan
 }: Omit<GeneratorProps, "generator"> & {
     zone: BasicZone;
@@ -29,8 +24,8 @@ export const RangeGeneratorCell = typedMemo(function ({
     linkedZone?: BasicZone;
     generator: RangeGenerator;
     colSpan: number;
-    instrument?: BasicInstrument;
 }) {
+    const { apply } = useBankEditor();
     const isKeyRange = generator === GeneratorTypes.keyRange;
     const range = isKeyRange ? keyRange : velRange;
 
@@ -60,21 +55,8 @@ export const RangeGeneratorCell = typedMemo(function ({
             newRange.min = newRange.max = key;
         }
 
-        const callbackReal = () => {
-            if (instrument) {
-                manager.sortInstrumentZones(instrument);
-            }
-            callback();
-        };
-
         const actions = [
-            new SetRangeAction(
-                zone,
-                generator,
-                { ...range },
-                { ...newRange },
-                callbackReal
-            )
+            new SetRangeAction(element, zone, generator, range, newRange)
         ];
 
         if (linkedZone) {
@@ -83,16 +65,16 @@ export const RangeGeneratorCell = typedMemo(function ({
                 : linkedZone.velRange;
             actions.push(
                 new SetRangeAction(
+                    element,
                     linkedZone,
                     generator,
-                    { ...oldLinked },
-                    { ...newRange },
-                    callbackReal
+                    oldLinked,
+                    newRange
                 )
             );
         }
 
-        manager.modifyBank(actions);
+        apply(actions);
 
         let newRangeText = "";
         if (range.min !== -1) {
@@ -115,4 +97,4 @@ export const RangeGeneratorCell = typedMemo(function ({
             />
         </td>
     );
-});
+}

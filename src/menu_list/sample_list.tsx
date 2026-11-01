@@ -5,38 +5,31 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ESTIMATED_ROW_HEIGHT, OVERSCAN } from "./menu_list.tsx";
 import { useTranslation } from "react-i18next";
-import SoundBankManager, {
-    type BankEditView
-} from "../core_backend/sound_bank_manager.ts";
 import { CreateSampleAction } from "./create_actions/create_sample_action.ts";
-import type { SetViewType } from "../bank_editor/bank_editor.tsx";
+import type { BankEditView } from "../core_backend/bank_view.ts";
+import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
 import { SampleDisplay } from "./sample_display/sample_display.tsx";
 import toast from "react-hot-toast";
 import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
-import { nameSorter } from "../utils/name_sorter.ts";
+import { logError } from "../utils/core_utils.ts";
 
 export function SampleList({
     samples,
     view,
-    setView,
-    manager,
-    setSamples,
     clipboard,
     selectedSamples,
     setSelectedSamples
 }: {
-    samples: BasicSample[];
+    samples: readonly BasicSample[];
     view: BankEditView;
-    setView: SetViewType;
-    manager: SoundBankManager;
-    setSamples: (s: BasicSample[]) => unknown;
     clipboard: ClipboardManager;
     selectedSamples: Set<BasicSample>;
     setSelectedSamples: (s: Set<BasicSample>) => unknown;
 }) {
     const { t } = useTranslation();
     const { audioEngine } = useAudioEngine();
+    const { session, apply, setView } = useBankEditor();
     const [showSamples, setShowSamples] = useState(view instanceof BasicSample);
     const samplesParentRef = useRef<HTMLDivElement>(null);
     const samplesVirtualizer = useVirtualizer({
@@ -80,7 +73,8 @@ export function SampleList({
             let audioBuffer: AudioBuffer;
             try {
                 audioBuffer = await audioEngine.context.decodeAudioData(buffer);
-            } catch {
+            } catch (error) {
+                logError("Failed to decode the audio file.", error);
                 toast.error(t("sampleLocale.tools.invalidAudioFile"));
                 return;
             }
@@ -96,9 +90,7 @@ export function SampleList({
             sample.name =
                 sampleName + (audioBuffer.numberOfChannels > 1 ? "L" : "");
             sample.setAudioData(out, audioBuffer.sampleRate);
-            const actions = [
-                new CreateSampleAction(sample, setSamples, setView)
-            ];
+            const actions = [new CreateSampleAction(sample)];
             // add the stereo sample if more channels
             if (audioBuffer.numberOfChannels > 1) {
                 const otherOut = audioBuffer.getChannelData(1);
@@ -106,15 +98,13 @@ export function SampleList({
                 sample2.name = sampleName + "R";
                 sample2.setAudioData(otherOut, audioBuffer.sampleRate);
                 sample2.setLinkedSample(sample, SampleTypes.rightSample);
-                actions.push(
-                    new CreateSampleAction(sample2, setSamples, setView)
-                );
+                actions.push(new CreateSampleAction(sample2));
             }
-            manager.modifyBank(actions);
+            apply(actions);
             setShowSamples(true);
         };
         input.click();
-    }, [audioEngine.context, manager, setSamples, setView, t]);
+    }, [apply, audioEngine.context, t]);
 
     const handleClick = (
         e: React.MouseEvent<HTMLDivElement, MouseEvent>,
@@ -149,7 +139,8 @@ export function SampleList({
                 copy={selectedSamples.size > 0}
                 onCopy={() => {
                     clipboard.copySamples(selectedSamples);
-                    setSamples([...manager.samples]);
+                    // The clipboard is not observable yet, so a new selection set re-renders the paste button
+                    setSelectedSamples(new Set(selectedSamples));
                     toast.success(
                         t("clipboardLocale.copiedSamples", {
                             count: selectedSamples.size
@@ -158,8 +149,7 @@ export function SampleList({
                 }}
                 paste={clipboard.hasSamples()}
                 onPaste={() => {
-                    clipboard.pasteSamples(manager, setSamples, setView);
-                    setSamples(manager.samples.slice().sort(nameSorter));
+                    apply(clipboard.pasteSamples(session.document));
                     toast.success(
                         t("clipboardLocale.pastedSamples", {
                             count: clipboard.sampleCount

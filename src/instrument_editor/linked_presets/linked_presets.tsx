@@ -1,37 +1,21 @@
-import { type BasicInstrument, BasicPreset } from "spessasynth_core";
+import type { BasicInstrument } from "spessasynth_core";
 import "../../bank_editor/bottom_bar.css";
-import type { SetViewType } from "../../bank_editor/bank_editor.tsx";
 import { useTranslation } from "react-i18next";
-import { useMemo } from "react";
 
 import { DeleteInstrumentAction } from "./delete_instrument_action.ts";
-import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
 import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
-import { EditInstrumentAction } from "./edit_instrument_action.ts";
+import { EditInstrumentNameAction } from "./edit_instrument_name_action.ts";
+import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
+import { getObjectId } from "../../utils/object_id.ts";
 
-export function LinkedPresets({
-    instrument,
-    setView,
-    setInstruments,
-    instruments,
-    manager
-}: {
-    manager: SoundBankManager;
-    instrument: BasicInstrument;
-    setView: SetViewType;
-    setInstruments: (s: BasicInstrument[]) => void;
-    instruments: BasicInstrument[];
-}) {
+export function LinkedPresets({ instrument }: { instrument: BasicInstrument }) {
     const { t } = useTranslation();
-    const linked = useMemo(() => {
-        const l = new Set<BasicPreset>(instrument.linkedTo);
-        return l;
-    }, [instrument]);
+    const { apply, setView } = useBankEditor();
+    // A preset with several zones of this instrument is listed once
+    const linked = new Set(instrument.linkedTo);
 
     const deleteInstrument = () =>
-        manager.modifyBank([
-            new DeleteInstrumentAction(instrument, setInstruments, setView)
-        ]);
+        apply([new DeleteInstrumentAction(instrument)]);
 
     return (
         <div className={"bottom_bar"}>
@@ -41,14 +25,13 @@ export function LinkedPresets({
                     type={"text"}
                     value={instrument.name}
                     setValue={(v) => {
-                        const action = new EditInstrumentAction(
-                            instrument,
-                            "name",
-                            instrument.name,
-                            v,
-                            () => setInstruments([...instruments])
-                        );
-                        manager.modifyBank([action]);
+                        apply([
+                            new EditInstrumentNameAction(
+                                instrument,
+                                instrument.name,
+                                v
+                            )
+                        ]);
                         return v;
                     }}
                     maxLength={40}
@@ -72,11 +55,11 @@ export function LinkedPresets({
             {instrument.linkedTo.length > 0 && (
                 <>
                     <div>{t("instrumentLocale.usedBy")}:</div>
-                    {Array.from(linked, (preset, i) => (
+                    {Array.from(linked, (preset) => (
                         <div
                             className={"monospaced"}
                             onClick={() => setView(preset)}
-                            key={i}
+                            key={getObjectId(preset)}
                         >
                             {preset.name}
                         </div>

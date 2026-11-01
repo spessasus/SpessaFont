@@ -1,4 +1,9 @@
-import { type BasicZone, Modulator } from "spessasynth_core";
+import type {
+    BasicInstrument,
+    BasicPreset,
+    BasicZone,
+    Modulator
+} from "spessasynth_core";
 import {
     ModulatorList,
     type ModulatorListGlobals
@@ -7,7 +12,7 @@ import "./modulator_edit.css";
 import { useTranslation } from "react-i18next";
 import { useCallback } from "react";
 import { EditModulatorsAction } from "./edit_modulators_action.ts";
-import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
+import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 
 export function ModulatorEditor({
     name,
@@ -16,8 +21,7 @@ export function ModulatorEditor({
     ccOptions,
     destinationOptions,
     onClose,
-    callback,
-    manager,
+    element,
     linkedZone,
     defaultModulators
 }: {
@@ -25,24 +29,24 @@ export function ModulatorEditor({
     zone: BasicZone;
     linkedZone: BasicZone | undefined;
     onClose: () => unknown;
-    callback: () => unknown;
-    manager: SoundBankManager;
-    defaultModulators: Modulator[];
+    element: BasicPreset | BasicInstrument;
+    defaultModulators: readonly Modulator[];
 } & ModulatorListGlobals) {
     const { t } = useTranslation();
+    const { apply } = useBankEditor();
 
     const setModulators = useCallback(
         (mods: Modulator[]) => {
-            const actions = [new EditModulatorsAction(zone, mods, callback)];
+            const actions = [new EditModulatorsAction(element, zone, mods)];
             // linked sample
             if (linkedZone) {
                 actions.push(
-                    new EditModulatorsAction(linkedZone, mods, callback)
+                    new EditModulatorsAction(element, linkedZone, mods)
                 );
             }
-            manager.modifyBank(actions);
+            apply(actions);
         },
-        [callback, linkedZone, manager, zone]
+        [apply, element, linkedZone, zone]
     );
 
     return (

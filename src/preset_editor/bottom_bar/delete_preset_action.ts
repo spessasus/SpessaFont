@@ -1,49 +1,30 @@
-import type { HistoryAction } from "../../core_backend/history.ts";
 import type { BasicPreset } from "spessasynth_core";
-import type { SetViewType } from "../../bank_editor/bank_editor.tsx";
-import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
+import type { HistoryAction } from "../../core_backend/history.ts";
+import type { BankDocument } from "../../core_backend/bank_document.ts";
+import type { ChangeSet } from "../../core_backend/change_set.ts";
+import { neighborOrInfo } from "../../core_backend/neighbor_or_info.ts";
 
 export class DeletePresetAction implements HistoryAction {
     private readonly preset: BasicPreset;
-    private index?: number;
-    private readonly setPresets: (s: BasicPreset[]) => void;
-    private readonly setView: SetViewType;
 
-    constructor(
-        preset: BasicPreset,
-        setPresets: (s: BasicPreset[]) => void,
-        setView: SetViewType
-    ) {
+    public constructor(preset: BasicPreset) {
         this.preset = preset;
-        this.setPresets = setPresets;
-        this.setView = setView;
     }
 
-    do(b: SoundBankManager) {
-        this.index = b.presets.indexOf(this.preset);
-        if (this.index < 0) {
-            throw new Error(
-                `${this.preset.name} does not exist in ${b.soundBankInfo.name}`
-            );
-        }
-        b.deletePreset(this.preset);
-        b.flushAndSortPresets();
-        this.setPresets([...b.presets]);
-        // check if there are elements to switch to
-        this.setView(
-            b.presets.length > 0
-                ? b.presets[Math.max(this.index - 1, 0)]
-                : "info"
+    public do(document: BankDocument, changes: ChangeSet) {
+        const index = document.removePreset(this.preset);
+        changes.touchList("presets");
+        changes.touch(...this.preset.zones.map((z) => z.instrument));
+        changes.focusOn(neighborOrInfo(document.presets, index));
+    }
+
+    public undo(document: BankDocument, changes: ChangeSet) {
+        document.addPreset(this.preset);
+        changes.touchList("presets");
+        changes.touch(
+            this.preset,
+            ...this.preset.zones.map((z) => z.instrument)
         );
-    }
-
-    undo(b: SoundBankManager) {
-        if (this.index === undefined) {
-            return;
-        }
-        b.presets.splice(this.index, 0, this.preset);
-        b.flushAndSortPresets();
-        this.setPresets([...b.presets]);
-        this.setView(this.preset);
+        changes.focusOn(this.preset);
     }
 }

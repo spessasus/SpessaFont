@@ -5,35 +5,28 @@ import {
     type BasicPresetZone
 } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
-import type { SetViewType } from "../bank_editor/bank_editor.tsx";
 import type { LinkedZoneMap } from "./generator_table.tsx";
 import "./header_cell.css";
 import { DeleteZoneAction } from "./delete_zone_action.ts";
-import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import { STEREO_REGEX } from "../utils/stereo_regex.ts";
-import { typedMemo } from "../utils/typed_memo.ts";
+import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
+import { getObjectId } from "../utils/object_id.ts";
 
-export const GeneratorTableHeader = typedMemo(function <
-    ZoneType extends BasicPresetZone | BasicInstrumentZone,
-    ElementType extends BasicInstrument | BasicPreset
+export function GeneratorTableHeader<
+    ZoneType extends BasicPresetZone | BasicInstrumentZone
 >({
     zones,
     element,
-    setView,
     name,
-    linkedZoneMap,
-    callback,
-    manager
+    linkedZoneMap
 }: {
     name: string;
-    element: ElementType;
+    element: BasicInstrument | BasicPreset;
     zones: ZoneType[];
-    setView: SetViewType;
     linkedZoneMap: LinkedZoneMap<ZoneType>;
-    callback: () => unknown;
-    manager: SoundBankManager;
 }) {
     const { t } = useTranslation();
+    const { apply, setView } = useBankEditor();
     return (
         <tr className={"header_row"}>
             <th
@@ -73,7 +66,7 @@ export const GeneratorTableHeader = typedMemo(function <
                                 ? t("soundBankLocale.thisIsAStereoSamplePair")
                                 : ""
                         }
-                        key={i}
+                        key={getObjectId(z)}
                         onClick={() =>
                             setView(
                                 z instanceof BasicInstrumentZone
@@ -89,34 +82,17 @@ export const GeneratorTableHeader = typedMemo(function <
                                 e.preventDefault();
                                 e.stopPropagation();
                                 const actions = [
-                                    new DeleteZoneAction<ElementType>(
-                                        element,
-                                        i,
-                                        callback
-                                    )
+                                    new DeleteZoneAction(element, z)
                                 ];
-                                if (
-                                    z instanceof BasicInstrumentZone &&
-                                    z.sample.linkedSample
-                                ) {
-                                    const link = z.sample.linkedSample;
-                                    const linkedIndex = zones.findIndex(
-                                        (zon) =>
-                                            zon instanceof
-                                                BasicInstrumentZone &&
-                                            zon.sample === link
+                                if (linked.linkedZone) {
+                                    actions.push(
+                                        new DeleteZoneAction(
+                                            element,
+                                            linked.linkedZone
+                                        )
                                     );
-                                    if (linkedIndex !== -1) {
-                                        actions.push(
-                                            new DeleteZoneAction<ElementType>(
-                                                element,
-                                                linkedIndex,
-                                                callback
-                                            )
-                                        );
-                                    }
                                 }
-                                manager.modifyBank(actions);
+                                apply(actions);
                             }}
                         >
                             ✖
@@ -126,4 +102,4 @@ export const GeneratorTableHeader = typedMemo(function <
             })}
         </tr>
     );
-});
+}

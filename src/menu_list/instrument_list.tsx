@@ -1,7 +1,5 @@
-import SoundBankManager, {
-    type BankEditView
-} from "../core_backend/sound_bank_manager.ts";
-import type { SetViewType } from "../bank_editor/bank_editor.tsx";
+import type { BankEditView } from "../core_backend/bank_view.ts";
+import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import {
     BasicInstrument,
     type BasicSample,
@@ -24,32 +22,24 @@ import type { HistoryAction } from "../core_backend/history.ts";
 import { CreateZoneAction } from "../generator_table/create_zone_action.ts";
 import { addAndReorderStereoSamples } from "../utils/add_stereo_samples.ts";
 import toast from "react-hot-toast";
-import { nameSorter } from "../utils/name_sorter.ts";
 
 export function InstrumentList({
     view,
-    setView,
     clipboard,
     instruments,
-    setSamples,
-    setInstruments,
-    manager,
     setSelectedInstruments,
     selectedInstruments,
     selectedSamples
 }: {
     view: BankEditView;
-    setView: SetViewType;
     clipboard: ClipboardManager;
-    instruments: BasicInstrument[];
-    setSamples: (s: BasicSample[]) => unknown;
-    setInstruments: (i: BasicInstrument[]) => unknown;
-    manager: SoundBankManager;
+    instruments: readonly BasicInstrument[];
     selectedInstruments: Set<BasicInstrument>;
     selectedSamples: Set<BasicSample>;
     setSelectedInstruments: (i: Set<BasicInstrument>) => unknown;
 }) {
     const { t } = useTranslation();
+    const { session, apply, setView } = useBankEditor();
     const [showInstruments, setShowInstruments] = useState(
         view instanceof BasicInstrument
     );
@@ -145,13 +135,8 @@ export function InstrumentList({
                 zone.setGenerator(GeneratorTypes.pan, 500);
             }
         }
-        const action = new CreateInstrumentAction(
-            instrument,
-            setInstruments,
-            setView
-        );
-        manager.modifyBank([action]);
-    }, [manager, selectedSamples, setInstruments, setView]);
+        apply([new CreateInstrumentAction(instrument)]);
+    }, [apply, selectedSamples]);
 
     const linkSamples = useCallback(
         (inst: BasicInstrument) => {
@@ -164,21 +149,11 @@ export function InstrumentList({
                 } else if (sample.sampleType === SampleTypes.rightSample) {
                     zone.setGenerator(GeneratorTypes.pan, 500);
                 }
-                actions.push(
-                    new CreateZoneAction<BasicInstrument, BasicSample>(
-                        inst,
-                        zone,
-                        sample,
-                        () => {
-                            setInstruments([...instruments]);
-                            setView(inst);
-                        }
-                    )
-                );
+                actions.push(new CreateZoneAction(inst, zone, sample));
             }
-            manager.modifyBank(actions);
+            apply(actions);
         },
-        [instruments, manager, selectedSamples, setInstruments, setView]
+        [apply, selectedSamples]
     );
 
     const canLink = selectedSamples.size > 0;
@@ -189,7 +164,8 @@ export function InstrumentList({
                 copy={selectedInstruments.size > 0}
                 onCopy={() => {
                     clipboard.copyInstruments(selectedInstruments);
-                    setInstruments([...manager.instruments]);
+                    // The clipboard is not observable yet, so a new selection set re-renders the paste button
+                    setSelectedInstruments(new Set(selectedInstruments));
                     toast.success(
                         t("clipboardLocale.copiedInstruments", {
                             count: selectedInstruments.size
@@ -197,15 +173,7 @@ export function InstrumentList({
                     );
                 }}
                 onPaste={() => {
-                    clipboard.pasteInstruments(
-                        manager,
-                        setSamples,
-                        setInstruments,
-                        setView
-                    );
-                    setInstruments(
-                        manager.instruments.slice().sort(nameSorter)
-                    );
+                    apply(clipboard.pasteInstruments(session.document));
                     toast.success(
                         t("clipboardLocale.pastedInstruments", {
                             count: clipboard.instrumentCount

@@ -1,14 +1,7 @@
-import SoundBankManager, {
-    type BankEditView
-} from "../core_backend/sound_bank_manager.ts";
-import type { SetViewType } from "../bank_editor/bank_editor.tsx";
+import type { BankEditView } from "../core_backend/bank_view.ts";
+import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
-import {
-    type BasicInstrument,
-    BasicPreset,
-    BasicSample,
-    BasicZone
-} from "spessasynth_core";
+import { type BasicInstrument, BasicPreset, BasicZone } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import * as React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -23,38 +16,28 @@ import {
     type OpenPresetDisplayType,
     PresetDisplay
 } from "./preset_display/preset_display.tsx";
-import { CreatePresetAction } from "./create_actions/create_preset_actions.ts";
+import { CreatePresetAction } from "./create_actions/create_preset_action.ts";
 import type { HistoryAction } from "../core_backend/history.ts";
 import { CreateZoneAction } from "../generator_table/create_zone_action.ts";
 import toast from "react-hot-toast";
-import { presetSorter } from "../utils/preset_sorter.ts";
 
 export function PresetList({
     view,
-    setView,
     clipboard,
     presets,
-    setPresets,
-    manager,
     selectedInstruments,
-    setInstruments,
-    setSamples,
     selectedPresets,
     setSelectedPresets
 }: {
     view: BankEditView;
-    setView: SetViewType;
     clipboard: ClipboardManager;
     presets: MappedPresetType[];
-    setPresets: (i: BasicPreset[]) => unknown;
-    setInstruments: (i: BasicInstrument[]) => unknown;
-    setSamples: (s: BasicSample[]) => unknown;
     selectedInstruments: Set<BasicInstrument>;
     selectedPresets: Set<BasicPreset>;
     setSelectedPresets: (p: Set<BasicPreset>) => unknown;
-    manager: SoundBankManager;
 }) {
     const { t } = useTranslation();
+    const { session, apply, setView } = useBankEditor();
     const [showPresets, setShowPresets] = useState(view instanceof BasicPreset);
     // keep open states for instruments and presets
     const [openPresets, setOpenPresets] = useState<
@@ -122,7 +105,7 @@ export function PresetList({
     );
 
     const createPreset = useCallback(() => {
-        const preset = new BasicPreset(manager);
+        const preset = new BasicPreset(session.document.bank);
         preset.name = [...selectedInstruments][0].name;
         for (const i of selectedInstruments) {
             preset.createZone(i);
@@ -135,28 +118,18 @@ export function PresetList({
             preset.bankLSB = Math.max(i >> 7, 0);
             isFound = presets.some((p) => p.preset.matches(preset));
         }
-        const action = new CreatePresetAction(preset, setPresets, setView);
-        manager.modifyBank([action]);
-    }, [manager, presets, selectedInstruments, setPresets, setView]);
+        apply([new CreatePresetAction(preset)]);
+    }, [apply, presets, selectedInstruments, session.document.bank]);
 
     const linkInstruments = useCallback(
         (preset: BasicPreset) => {
             const actions: HistoryAction[] = Array.from(
                 selectedInstruments,
-                (inst) =>
-                    new CreateZoneAction<BasicPreset, BasicInstrument>(
-                        preset,
-                        new BasicZone(),
-                        inst,
-                        () => {
-                            setPresets([...manager.presets]);
-                            setView(preset);
-                        }
-                    )
+                (inst) => new CreateZoneAction(preset, new BasicZone(), inst)
             );
-            manager.modifyBank(actions);
+            apply(actions);
         },
-        [manager, selectedInstruments, setPresets, setView]
+        [apply, selectedInstruments]
     );
 
     return (
@@ -167,7 +140,8 @@ export function PresetList({
                 paste={clipboard.hasPresets()}
                 onCopy={() => {
                     clipboard.copyPresets(selectedPresets);
-                    setPresets([...manager.presets]);
+                    // The clipboard is not observable yet, so a new selection set re-renders the paste button
+                    setSelectedPresets(new Set(selectedPresets));
                     toast.success(
                         t("clipboardLocale.copiedPresets", {
                             count: selectedPresets.size
@@ -175,14 +149,7 @@ export function PresetList({
                     );
                 }}
                 onPaste={() => {
-                    clipboard.pastePresets(
-                        manager,
-                        setPresets,
-                        setInstruments,
-                        setSamples,
-                        setView
-                    );
-                    setPresets(manager.presets.slice().sort(presetSorter));
+                    apply(clipboard.pastePresets(session.document));
                     toast.success(
                         t("clipboardLocale.pastedPresets", {
                             count: clipboard.presetCount

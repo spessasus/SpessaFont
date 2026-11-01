@@ -10,7 +10,7 @@ import { SetGeneratorAction } from "./set_generator_action.ts";
 import { midiNoteToPitchClass } from "../../utils/note_name.ts";
 import { GeneratorCellInput } from "./generator_cell_input.tsx";
 import { useTranslation } from "react-i18next";
-import { typedMemo } from "../../utils/typed_memo.ts";
+import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 
 function getDistinctColor(index: number, total = 10) {
     const hue = ((index - 1) * (360 / total)) % 360;
@@ -28,12 +28,11 @@ type NumberGeneratorCellProps<T> = NumberGeneratorProps & {
     def: number;
 };
 
-export const NumberGeneratorCell = typedMemo(function <
+export function NumberGeneratorCell<
     T extends BasicPresetZone | BasicInstrumentZone
 >({
     zone,
-    callback,
-    manager,
+    element,
     generator,
     min,
     max,
@@ -45,6 +44,7 @@ export const NumberGeneratorCell = typedMemo(function <
     colSpan
 }: NumberGeneratorCellProps<T>) {
     const { t } = useTranslation();
+    const { apply } = useBankEditor();
     const value = zone.getGenerator(generator, null);
     const v2txt = useCallback(
         (v: number | null) =>
@@ -93,34 +93,34 @@ export const NumberGeneratorCell = typedMemo(function <
             }
             const actions = [
                 new SetGeneratorAction(
+                    element,
                     zone,
                     generator,
                     value,
-                    newValue,
-                    callback
+                    newValue
                 )
             ];
             if (linkedZone) {
                 actions.push(
                     new SetGeneratorAction(
+                        element,
                         linkedZone,
                         generator,
-                        value,
-                        newValue,
-                        callback
+                        linkedZone.getGenerator(generator, null),
+                        newValue
                     )
                 );
             }
-            manager.modifyBank(actions);
+            apply(actions);
             return v2txt(newValue);
         },
         [
-            callback,
+            apply,
+            element,
             generator,
             max,
             min,
             linkedZone,
-            manager,
             textValue,
             toGenerator,
             v2txt,
@@ -175,4 +175,4 @@ export const NumberGeneratorCell = typedMemo(function <
             />
         </td>
     );
-});
+}

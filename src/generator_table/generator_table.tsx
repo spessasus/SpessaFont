@@ -8,14 +8,13 @@ import {
 import type { GeneratorRowType } from "../instrument_editor/instrument_editor.tsx";
 import { GeneratorTableHeader } from "./table_header.tsx";
 import { NumberGeneratorRow } from "./generator_row.tsx";
-import type { SetViewType } from "../bank_editor/bank_editor.tsx";
-import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import "./generator_table.css";
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { GeneratorTableModulatorRow } from "./modulator_row.tsx";
 import { type ModulatorListGlobals } from "../modulator_editing/modulator_list/modulator_list.tsx";
 import { ModulatorEditor } from "./modulator_edit/modulator_edit.tsx";
-import { typedMemo } from "../utils/typed_memo.ts";
+import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
+import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
 
 /**
  * 0 - no link
@@ -27,17 +26,65 @@ export type LinkedZoneMap<T extends BasicPresetZone | BasicInstrumentZone> = {
     linkedZone: T | undefined;
 }[];
 
-export const GeneratorTable = typedMemo(function <
+/**
+ * Pairs each zone with its stereo partner, if the partner is the zone right before or after it.
+ */
+function getLinkedZoneMap<
+    ZoneType extends BasicPresetZone | BasicInstrumentZone
+>(zones: ZoneType[]): LinkedZoneMap<ZoneType> {
+    const linkedZones = new Set<BasicZone>();
+    return zones.map((z, i) => {
+        let linkedZoneIndex = -1;
+        if (z instanceof BasicInstrumentZone) {
+            const linkedSample = z.sample.linkedSample;
+            if (linkedSample) {
+                linkedZoneIndex = zones.findIndex(
+                    (z) =>
+                        !linkedZones.has(z) &&
+                        z instanceof BasicInstrumentZone &&
+                        z.sample === linkedSample
+                );
+            }
+        }
+        if (linkedZoneIndex < 0) {
+            return {
+                index: 0,
+                linkedZone: undefined
+            };
+        }
+        const linkedZone = zones[linkedZoneIndex];
+        if (linkedZoneIndex === i + 1) {
+            return {
+                index: 1,
+                linkedZone: linkedZone
+            };
+        }
+        if (linkedZoneIndex === i - 1) {
+            linkedZones.add(linkedZone);
+            linkedZones.add(z);
+            return {
+                index: 2,
+                linkedZone: linkedZone
+            };
+        }
+        return {
+            index: 0,
+            linkedZone: linkedZone
+        };
+    });
+}
+
+/**
+ * Rendered with a key per element, so the modulator editor closes when the element changes.
+ */
+export function GeneratorTable<
     ZoneType extends BasicPresetZone | BasicInstrumentZone,
     ElementType extends BasicPreset | BasicInstrument
 >({
     name,
     zones,
     global,
-    callback,
-    manager,
     rows,
-    setView,
     element,
     clipboardManager,
     ccOptions,
@@ -47,64 +94,19 @@ export const GeneratorTable = typedMemo(function <
     element: ElementType;
     zones: ZoneType[];
     global: BasicZone;
-    callback: () => unknown;
     rows: GeneratorRowType[];
-    setView: SetViewType;
-    manager: SoundBankManager;
 } & ModulatorListGlobals) {
+    const { session } = useBankEditor();
+    const defaultModulators = useBankSnapshot(
+        session.store,
+        (s) => s.defaultModulators
+    );
     const [editedModulatorsZone, setEditedModulatorsZone] = useState<{
         zone: ZoneType;
         name: string;
     } | null>(null);
 
-    // reset on element change
-    useEffect(() => {
-        setEditedModulatorsZone(null);
-    }, [element]);
-
-    // 0 means no link; 1 means that the next sample is a link; 2 means that the previous sample is a link!
-    const linkedZoneMap: LinkedZoneMap<ZoneType> = useMemo(() => {
-        const linkedZones = new Set<BasicZone>();
-        return zones.map((z, i) => {
-            let linkedZoneIndex = -1;
-            if (z instanceof BasicInstrumentZone) {
-                const linkedSample = z.sample.linkedSample;
-                if (linkedSample) {
-                    linkedZoneIndex = zones.findIndex(
-                        (z) =>
-                            !linkedZones.has(z) &&
-                            z instanceof BasicInstrumentZone &&
-                            z.sample === linkedSample
-                    );
-                }
-            }
-            if (linkedZoneIndex < 0) {
-                return {
-                    index: 0,
-                    linkedZone: undefined
-                };
-            }
-            const linkedZone = zones[linkedZoneIndex];
-            if (linkedZoneIndex === i + 1) {
-                return {
-                    index: 1,
-                    linkedZone: linkedZone
-                };
-            }
-            if (linkedZoneIndex === i - 1) {
-                linkedZones.add(linkedZone);
-                linkedZones.add(z);
-                return {
-                    index: 2,
-                    linkedZone: linkedZone
-                };
-            }
-            return {
-                index: 0,
-                linkedZone: linkedZone
-            };
-        });
-    }, [zones]);
+    const linkedZoneMap = getLinkedZoneMap(zones);
 
     if (editedModulatorsZone?.zone) {
         return (
@@ -119,12 +121,9 @@ export const GeneratorTable = typedMemo(function <
                 clipboardManager={clipboardManager}
                 destinationOptions={destinationOptions}
                 onClose={() => setEditedModulatorsZone(null)}
-                callback={callback}
-                manager={manager}
+                element={element}
                 defaultModulators={
-                    element instanceof BasicInstrument
-                        ? manager.defaultModulators
-                        : []
+                    element instanceof BasicInstrument ? defaultModulators : []
                 }
             />
         );
@@ -199,13 +198,10 @@ export const GeneratorTable = typedMemo(function <
                 >
                     <thead>
                         <GeneratorTableHeader
-                            callback={callback}
                             linkedZoneMap={linkedZoneMap}
                             name={name}
                             zones={zones}
                             element={element}
-                            manager={manager}
-                            setView={setView}
                         />
                         <GeneratorTableModulatorRow
                             editModulators={(z, name) =>
@@ -221,21 +217,15 @@ export const GeneratorTable = typedMemo(function <
                             <NumberGeneratorRow<ZoneType>
                                 key={row.generator}
                                 generator={row.generator}
-                                manager={manager}
+                                element={element}
                                 zones={zones}
                                 linkedZoneMap={linkedZoneMap}
-                                callback={callback}
                                 global={global}
                                 fromGenerator={row.fromGenerator}
                                 toGenerator={row.toGenerator}
                                 unit={row.unit}
                                 precision={row.precision}
                                 highlight={row.highlight}
-                                instrument={
-                                    element instanceof BasicInstrument
-                                        ? element
-                                        : undefined
-                                }
                             />
                         ))}
                     </tbody>
@@ -243,4 +233,4 @@ export const GeneratorTable = typedMemo(function <
             </div>
         </>
     );
-});
+}

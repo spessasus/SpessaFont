@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { GeneratorTypes, Modulator } from "spessasynth_core";
+import { BasicZone, GeneratorTypes, Modulator } from "spessasynth_core";
 import {
-    createTestManager,
+    createTestSession,
     expectRoundTrip,
     snapshotBank
 } from "../test_utils/bank_fixture.ts";
@@ -11,33 +11,39 @@ import { CreateZoneAction } from "./create_zone_action.ts";
 import { DeleteZoneAction } from "./delete_zone_action.ts";
 import { EditModulatorsAction } from "./modulator_edit/edit_modulators_action.ts";
 
-const noop = () => undefined;
-
 describe("SetGeneratorAction", () => {
     it("sets a generator", () => {
-        const manager = createTestManager();
-        const zone = manager.instruments[0].zones[0];
+        const session = createTestSession();
+        const instrument = session.document.instruments[0];
+        const zone = instrument.zones[0];
         const previous = zone.getGenerator(GeneratorTypes.pan, null);
 
-        expectRoundTrip(manager, [
+        expectRoundTrip(session, [
             new SetGeneratorAction(
+                instrument,
                 zone,
                 GeneratorTypes.pan,
                 previous,
-                250,
-                noop
+                250
             )
         ]);
         expect(zone.getGenerator(GeneratorTypes.pan, null)).toBe(250);
     });
 
     it("unsets a generator with null", () => {
-        const manager = createTestManager();
-        const zone = manager.instruments[0].zones[0];
+        const session = createTestSession();
+        const instrument = session.document.instruments[0];
+        const zone = instrument.zones[0];
         zone.setGenerator(GeneratorTypes.pan, 250, false);
 
-        expectRoundTrip(manager, [
-            new SetGeneratorAction(zone, GeneratorTypes.pan, 250, null, noop)
+        expectRoundTrip(session, [
+            new SetGeneratorAction(
+                instrument,
+                zone,
+                GeneratorTypes.pan,
+                250,
+                null
+            )
         ]);
         expect(zone.getGenerator(GeneratorTypes.pan, null)).toBeNull();
     });
@@ -45,32 +51,34 @@ describe("SetGeneratorAction", () => {
 
 describe("SetRangeAction", () => {
     it("sets the key range", () => {
-        const manager = createTestManager();
-        const zone = manager.instruments[0].zones[0];
+        const session = createTestSession();
+        const instrument = session.document.instruments[0];
+        const zone = instrument.zones[0];
 
-        expectRoundTrip(manager, [
+        expectRoundTrip(session, [
             new SetRangeAction(
+                instrument,
                 zone,
                 GeneratorTypes.keyRange,
-                { ...zone.keyRange },
-                { min: 10, max: 20 },
-                noop
+                zone.keyRange,
+                { min: 10, max: 20 }
             )
         ]);
         expect(zone.keyRange).toEqual({ min: 10, max: 20 });
     });
 
     it("sets the velocity range", () => {
-        const manager = createTestManager();
-        const zone = manager.instruments[0].zones[0];
+        const session = createTestSession();
+        const instrument = session.document.instruments[0];
+        const zone = instrument.zones[0];
 
-        expectRoundTrip(manager, [
+        expectRoundTrip(session, [
             new SetRangeAction(
+                instrument,
                 zone,
                 GeneratorTypes.velRange,
-                { ...zone.velRange },
-                { min: 30, max: 40 },
-                noop
+                zone.velRange,
+                { min: 30, max: 40 }
             )
         ]);
         expect(zone.velRange).toEqual({ min: 30, max: 40 });
@@ -78,27 +86,28 @@ describe("SetRangeAction", () => {
 });
 
 describe("CreateZoneAction", () => {
-    it("adds a sample zone to an instrument", () => {
-        const manager = createTestManager();
-        const [instrument, template] = manager.instruments;
-        const sample = manager.samples[1];
+    it("adds a sample zone to an instrument and focuses the instrument", () => {
+        const session = createTestSession();
+        const [instrument, template] = session.document.instruments;
+        const sample = session.document.samples[1];
 
-        const { before, after } = expectRoundTrip(manager, [
-            new CreateZoneAction(instrument, template.zones[0], sample, noop)
+        const { before, after, doFocus } = expectRoundTrip(session, [
+            new CreateZoneAction(instrument, template.zones[0], sample)
         ]);
         expect(after.instruments[0].zones).toHaveLength(
             before.instruments[0].zones.length + 1
         );
         expect(sample.linkedTo).toContain(instrument);
+        expect(doFocus).toBe(instrument);
     });
 
     it("adds an instrument zone to a preset", () => {
-        const manager = createTestManager();
-        const [preset, template] = manager.presets;
-        const instrument = manager.instruments[1];
+        const session = createTestSession();
+        const [preset, template] = session.document.presets;
+        const instrument = session.document.instruments[1];
 
-        const { before, after } = expectRoundTrip(manager, [
-            new CreateZoneAction(preset, template.zones[0], instrument, noop)
+        const { before, after } = expectRoundTrip(session, [
+            new CreateZoneAction(preset, template.zones[0], instrument)
         ]);
         expect(after.presets[0].zones).toHaveLength(
             before.presets[0].zones.length + 1
@@ -106,53 +115,92 @@ describe("CreateZoneAction", () => {
         expect(instrument.linkedTo).toContain(preset);
     });
 
-    it("rejects a child that does not fit the parent", () => {
-        const manager = createTestManager();
-        const [instrument, otherInstrument] = manager.instruments;
+    it("restores the same zone object on redo, so later edits to it can still be undone", () => {
+        const session = createTestSession();
+        const instrument = session.document.instruments[0];
+        const sample = session.document.samples[1];
+        session.history.do([
+            new CreateZoneAction(instrument, new BasicZone(), sample)
+        ]);
+        const zone = instrument.zones.find((z) => z.sample === sample);
+        if (!zone) throw new Error("The zone was not created.");
+        session.history.do([
+            new SetGeneratorAction(
+                instrument,
+                zone,
+                GeneratorTypes.pan,
+                null,
+                100
+            )
+        ]);
 
-        const action = new CreateZoneAction(
-            instrument,
-            otherInstrument.zones[0],
-            otherInstrument,
-            noop
-        );
-        expect(() => action.do()).toThrow(
-            "Parent and child types do not match."
-        );
+        session.history.undo();
+        session.history.undo();
+        session.history.redo();
+        session.history.redo();
+
+        expect(instrument.zones).toContain(zone);
+        expect(zone.getGenerator(GeneratorTypes.pan, null)).toBe(100);
+    });
+
+    it("rejects a child that does not fit the parent", () => {
+        const session = createTestSession();
+        const [instrument, otherInstrument] = session.document.instruments;
+
+        expect(() =>
+            session.history.do([
+                new CreateZoneAction(
+                    instrument,
+                    otherInstrument.zones[0],
+                    otherInstrument
+                )
+            ])
+        ).toThrow("Parent and child types do not match.");
     });
 });
 
 describe("DeleteZoneAction", () => {
-    it("removes a zone from an instrument and restores its contents on undo", () => {
-        const manager = createTestManager();
-        const instrument = manager.instruments[0];
-        const zonesBefore = snapshotBank(manager).instruments[0].zones;
+    it("removes a zone from an instrument and restores it at its original position", () => {
+        const session = createTestSession();
+        const instrument = session.document.instruments[0];
+        const zone = instrument.zones[0];
 
-        manager.modifyBank([new DeleteZoneAction(instrument, 0, noop)]);
-        expect(instrument.zones).toHaveLength(zonesBefore.length - 1);
-
-        manager.undo();
-        const zonesAfter = snapshotBank(manager).instruments[0].zones;
-        expect(zonesAfter).toHaveLength(zonesBefore.length);
-        expect(zonesAfter).toEqual(expect.arrayContaining(zonesBefore));
+        expectRoundTrip(session, [new DeleteZoneAction(instrument, zone)]);
+        session.history.undo();
+        expect(instrument.zones[0]).toBe(zone);
+        expect(zone.sample.linkedTo).toContain(instrument);
     });
 
-    // Known bug: undo appends the recreated zone and the re-sort only orders by
-    // key and velocity range, so zones with equal ranges come back in a different order.
-    it.fails("restores the zone at its original position", () => {
-        const manager = createTestManager();
-
-        expectRoundTrip(manager, [
-            new DeleteZoneAction(manager.instruments[0], 0, noop)
+    it("removes both zones of a stereo pair and restores them", () => {
+        const session = createTestSession();
+        const [instrument, other] = session.document.instruments;
+        session.history.do([
+            new CreateZoneAction(
+                instrument,
+                other.zones[0],
+                other.zones[0].sample
+            )
         ]);
+        const zonesBefore = snapshotBank(session.document.bank).instruments[0]
+            .zones;
+        const [first, second] = instrument.zones;
+
+        expectRoundTrip(session, [
+            new DeleteZoneAction(instrument, first),
+            new DeleteZoneAction(instrument, second)
+        ]);
+        session.history.undo();
+        expect(
+            snapshotBank(session.document.bank).instruments[0].zones
+        ).toEqual(zonesBefore);
     });
 
     it("removes a zone from a preset", () => {
-        const manager = createTestManager();
-        const preset = manager.presets[0];
+        const session = createTestSession();
+        const preset = session.document.presets[0];
 
-        const { after } = expectRoundTrip(manager, [
-            new DeleteZoneAction(preset, 0, noop)
+        const { after } = expectRoundTrip(session, [
+            new DeleteZoneAction(preset, preset.zones[0])
         ]);
         expect(after.presets[0].zones).toHaveLength(0);
     });
@@ -160,12 +208,15 @@ describe("DeleteZoneAction", () => {
 
 describe("EditModulatorsAction", () => {
     it("replaces the zone modulators", () => {
-        const manager = createTestManager();
-        const zone = manager.instruments[0].zones[0];
-        const modulator = Modulator.copyFrom(manager.defaultModulators[0]);
+        const session = createTestSession();
+        const instrument = session.document.instruments[0];
+        const zone = instrument.zones[0];
+        const modulator = Modulator.copyFrom(
+            session.document.bank.defaultModulators[0]
+        );
 
-        expectRoundTrip(manager, [
-            new EditModulatorsAction(zone, [modulator], noop)
+        expectRoundTrip(session, [
+            new EditModulatorsAction(instrument, zone, [modulator])
         ]);
         expect(zone.modulators).toEqual([modulator]);
     });

@@ -2,8 +2,9 @@ import "./instrument_display.css";
 import type { BasicInstrument } from "spessasynth_core";
 import * as React from "react";
 import { SampleDisplay } from "../sample_display/sample_display.tsx";
-import { type BankEditView } from "../../core_backend/sound_bank_manager.ts";
-import type { SetViewType } from "../../bank_editor/bank_editor.tsx";
+import type { BankEditView } from "../../core_backend/bank_view.ts";
+import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
+import { useEntityRevision } from "../../hooks/use_entity_revision.ts";
 import { useTranslation } from "react-i18next";
 import { LinkIcon } from "../../utils/icons.tsx";
 
@@ -20,7 +21,7 @@ export function InstrumentDisplay({
 }: {
     instrument: BasicInstrument;
     selected: boolean;
-    setView: SetViewType;
+    setView: (view: BankEditView) => void;
     onClick: React.MouseEventHandler<HTMLDivElement>;
     view: BankEditView;
     open: boolean;
@@ -29,6 +30,9 @@ export function InstrumentDisplay({
     onLink?: () => unknown;
 }) {
     const { t } = useTranslation();
+    const { session } = useBankEditor();
+    // Re-render when the instrument's zones or sample names change
+    useEntityRevision(session.store, instrument);
     return (
         <div className={"instrument_item_wrapper"}>
             <div

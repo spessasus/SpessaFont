@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { createTestManager, snapshotBank } from "./bank_fixture.ts";
+import { createTestSession, snapshotBank } from "./bank_fixture.ts";
 
-describe("createTestManager", () => {
+describe("createTestSession", () => {
     it("holds two copies of the sample bank", () => {
-        const snapshot = snapshotBank(createTestManager());
+        const snapshot = snapshotBank(createTestSession().document.bank);
         expect(snapshot.presets.map((p) => p.name)).toEqual([
             "Saw Wave",
             "Saw Wave 2"

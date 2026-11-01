@@ -1,36 +1,49 @@
-import type { HistoryAction } from "../core_backend/history.ts";
 import type { BasicSample } from "spessasynth_core";
+import type { HistoryAction } from "../core_backend/history.ts";
+import type { BankDocument } from "../core_backend/bank_document.ts";
+import type { ChangeSet } from "../core_backend/change_set.ts";
+
+export type EditableSampleProperty =
+    | "name"
+    | "sampleRate"
+    | "originalKey"
+    | "pitchCorrection"
+    | "loopStart"
+    | "loopEnd";
 
 export class EditSampleAction<
-    K extends keyof BasicSample
+    K extends EditableSampleProperty
 > implements HistoryAction {
     private readonly sample: BasicSample;
     private readonly propertyName: K;
     private readonly before: BasicSample[K];
     private readonly after: BasicSample[K];
-    private readonly callback: () => unknown;
 
-    constructor(
+    public constructor(
         sample: BasicSample,
         propertyName: K,
         before: BasicSample[K],
-        after: BasicSample[K],
-        callback: () => unknown
+        after: BasicSample[K]
     ) {
         this.sample = sample;
+        this.propertyName = propertyName;
         this.before = before;
         this.after = after;
-        this.propertyName = propertyName;
-        this.callback = callback;
     }
 
-    do() {
-        this.sample[this.propertyName] = this.after;
-        this.callback();
+    private apply(changes: ChangeSet, value: BasicSample[K]) {
+        this.sample[this.propertyName] = value;
+        changes.touch(this.sample);
+        if (this.propertyName === "name") {
+            changes.touchList("samples");
+        }
     }
 
-    undo() {
-        this.sample[this.propertyName] = this.before;
-        this.callback();
+    public do(_document: BankDocument, changes: ChangeSet) {
+        this.apply(changes, this.after);
+    }
+
+    public undo(_document: BankDocument, changes: ChangeSet) {
+        this.apply(changes, this.before);
     }
 }

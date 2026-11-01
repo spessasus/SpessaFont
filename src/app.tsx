@@ -4,15 +4,16 @@ import {
     type SavedSettingsType
 } from "./settings/save_load/settings_typedef.ts";
 import { useTranslation } from "react-i18next";
-import SoundBankManager from "./core_backend/sound_bank_manager.ts";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ClipboardManager } from "./core_backend/clipboard_manager.ts";
 import { Settings } from "./settings/settings.tsx";
 import { TabList } from "./tab_list/tab_list.tsx";
 import { KeyboardController } from "./keyboard/keyboard_controller.tsx";
 import { DestinationsOptions } from "./utils/translated_options/destination_options.tsx";
 import { ModulableControllerOptions } from "./utils/translated_options/modulable_controller_options.tsx";
-import { BankEditor, type BankEditorRef } from "./bank_editor/bank_editor.tsx";
+import { BankEditor } from "./bank_editor/bank_editor.tsx";
+import { BankSession } from "./core_backend/bank_session.ts";
+import type { BankEditView } from "./core_backend/bank_view.ts";
 import { ACCEPTED_SOUNDBANK_FORMATS } from "./utils/accepted_formats.ts";
 import { loadSoundBank } from "./core_backend/load_sound_bank.ts";
 import type { BasicSoundBank, GenericRange } from "spessasynth_core";
@@ -37,17 +38,30 @@ if (!IS_ELECTRON && navigator.serviceWorker) {
 function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
     const { t } = useTranslation();
     const { audioEngine } = useAudioEngine();
-    const [tabs, setTabs] = useState<SoundBankManager[]>([]);
+    const [tabs, setTabs] = useState<BankSession[]>([]);
+    // The selected element of each tab, by session id
+    const [views, setViews] = useState<ReadonlyMap<number, BankEditView>>(
+        () => new Map()
+    );
     const [showKeyboard, setShowKeyboard] = useState(false);
     const [settings, setSettings] = useState(false);
     const [theme, setTheme] = useState(getSetting("theme", initialSettings));
     const [activeTab, setActiveTab] = useState<number>(0); // index in tabs[]
-    const bankEditorRef: BankEditorRef = useRef(null);
     const [splits, setSplits] = useState<GenericRange[]>([]);
 
-    const currentManager: SoundBankManager | undefined = useMemo(
-        () => tabs[activeTab],
-        [activeTab, tabs]
+    const currentSession: BankSession | undefined = tabs[activeTab];
+    const currentView = currentSession
+        ? (views.get(currentSession.id) ?? "info")
+        : "info";
+
+    const setCurrentView = useCallback(
+        (view: BankEditView) => {
+            if (!currentSession) {
+                return;
+            }
+            setViews((prev) => new Map(prev).set(currentSession.id, view));
+        },
+        [currentSession]
     );
 
     // cached translated options
@@ -76,17 +90,17 @@ function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
         }
     });
 
-    // Pause MIDI when unloading tabs
+    // Play the active tab's bank, pause MIDI when no tab is open
     useEffect(() => {
-        if (activeTab < tabs.length) tabs[activeTab].sendBankToSynth();
+        if (currentSession) currentSession.synth.attach();
         else audioEngine.pauseMIDI();
-    }, [activeTab, audioEngine, tabs]);
+    }, [audioEngine, currentSession]);
 
     const toggleSettings = () => setSettings(!settings);
 
     useEffect(() => {
         function handleUnload(e: BeforeUnloadEvent) {
-            if (tabs.some((t) => t.dirty)) {
+            if (tabs.some((t) => t.history.isDirty)) {
                 e.preventDefault();
             }
         }
@@ -139,14 +153,13 @@ function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
             }
 
             // will automatically create an empty bank if not provided
-            const newManager = new SoundBankManager(
+            const newSession = new BankSession(
                 audioEngine.processor,
                 audioEngine.sequencer,
                 bank
             );
             toast.dismiss(id);
-            newManager.sendBankToSynth();
-            setTabs((prev) => [newManager, ...prev]);
+            setTabs((prev) => [newSession, ...prev]);
             setActiveTab(0); // newly added tab
         },
         [audioEngine.processor, audioEngine.sequencer, t]
@@ -240,10 +253,13 @@ function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
             if (index >= tabs.length) {
                 return;
             }
-            setTabs((prevTabs) => {
-                const tab = prevTabs[index];
-                tab.close();
-                return prevTabs.filter((_, i) => i !== index);
+            const tab = tabs[index];
+            tab.close();
+            setTabs((prevTabs) => prevTabs.filter((t) => t !== tab));
+            setViews((prev) => {
+                const next = new Map(prev);
+                next.delete(tab.id);
+                return next;
             });
             if (activeTab === index) {
                 setActiveTab(0);
@@ -258,7 +274,7 @@ function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
                 return;
             }
             const tab = tabs[index];
-            if (!tab.dirty) {
+            if (!tab.history.isDirty) {
                 closeTabLocal(index);
                 return;
             }
@@ -297,18 +313,18 @@ function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
     const isWelcomeShown = tabs.length === 0 && !settings;
     const areSettingsShown = settings;
     const isEditorShown =
-        !isWelcomeShown && !areSettingsShown && !!currentManager;
+        !isWelcomeShown && !areSettingsShown && !!currentSession;
 
     return (
         <div className={`spessafont_main`}>
             <Toaster toastOptions={{ className: "toasts" }} />
             <MenuBar
-                bankEditorRef={bankEditorRef}
                 showMidiPlayer={tabs.length > 0}
                 toggleSettings={toggleSettings}
                 openTab={openNewBankTab}
                 closeTab={() => closeTab(activeTab)}
-                manager={currentManager}
+                session={currentSession}
+                setView={setCurrentView}
                 toggleKeyboard={() => setShowKeyboard(!showKeyboard)}
             />
             {isTabListShown && (
@@ -322,13 +338,15 @@ function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
 
             {areSettingsShown && <Settings setTheme={setTheme} />}
 
-            {currentManager && (
+            {currentSession && (
                 <BankEditor
-                    ref={bankEditorRef}
+                    key={currentSession.id}
+                    session={currentSession}
+                    view={currentView}
+                    setView={setCurrentView}
                     shown={isEditorShown}
                     destinationOptions={destinationOptions}
                     ccOptions={ccOptions}
-                    manager={currentManager}
                     clipboardManager={clipboardManager}
                     setSplits={setSplits}
                 />

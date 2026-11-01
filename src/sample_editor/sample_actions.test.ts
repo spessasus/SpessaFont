@@ -1,28 +1,20 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { EmptySample, SampleTypes } from "spessasynth_core";
 import {
-    createTestManager,
+    createTestSession,
     expectRoundTrip
 } from "../test_utils/bank_fixture.ts";
 import { EditSampleAction } from "./edit_sample_action.ts";
 import { SetSampleTypeAction } from "./set_sample_type_action.ts";
 import { DeleteSampleAction } from "./linked_instruments/delete_sample_action.ts";
 
-const noop = () => undefined;
-
 describe("EditSampleAction", () => {
     it("changes a sample property", () => {
-        const manager = createTestManager();
-        const sample = manager.samples[0];
+        const session = createTestSession();
+        const sample = session.document.samples[0];
 
-        expectRoundTrip(manager, [
-            new EditSampleAction(
-                sample,
-                "originalKey",
-                sample.originalKey,
-                72,
-                noop
-            )
+        expectRoundTrip(session, [
+            new EditSampleAction(sample, "originalKey", sample.originalKey, 72)
         ]);
         expect(sample.originalKey).toBe(72);
     });
@@ -30,18 +22,14 @@ describe("EditSampleAction", () => {
 
 describe("SetSampleTypeAction", () => {
     it("links two mono samples as a stereo pair", () => {
-        const manager = createTestManager();
-        const [left, right] = manager.samples;
+        const session = createTestSession();
+        const [left, right] = session.document.samples;
 
-        const { after } = expectRoundTrip(manager, [
-            new SetSampleTypeAction(
-                left,
-                undefined,
-                left.sampleType,
-                right,
-                SampleTypes.leftSample,
-                noop
-            )
+        const { after } = expectRoundTrip(session, [
+            new SetSampleTypeAction(left, {
+                linkedSample: right,
+                type: SampleTypes.leftSample
+            })
         ]);
         expect(after.samples[0]).toMatchObject({
             sampleType: SampleTypes.leftSample,
@@ -54,19 +42,15 @@ describe("SetSampleTypeAction", () => {
     });
 
     it("unlinks a stereo pair back to mono", () => {
-        const manager = createTestManager();
-        const [left, right] = manager.samples;
+        const session = createTestSession();
+        const [left, right] = session.document.samples;
         left.setLinkedSample(right, SampleTypes.leftSample);
 
-        const { after } = expectRoundTrip(manager, [
-            new SetSampleTypeAction(
-                left,
-                right,
-                SampleTypes.leftSample,
-                undefined,
-                SampleTypes.monoSample,
-                noop
-            )
+        const { after } = expectRoundTrip(session, [
+            new SetSampleTypeAction(left, {
+                linkedSample: undefined,
+                type: SampleTypes.monoSample
+            })
         ]);
         expect(after.samples[0].linkedSample).toBeUndefined();
         expect(after.samples[1].linkedSample).toBeUndefined();
@@ -74,34 +58,30 @@ describe("SetSampleTypeAction", () => {
 });
 
 describe("DeleteSampleAction", () => {
-    it("removes an unused sample and selects its neighbor, then restores and selects it on undo", () => {
-        const manager = createTestManager();
+    it("removes an unused sample and focuses its neighbor, then restores and focuses it on undo", () => {
+        const session = createTestSession();
         const unused = new EmptySample();
         unused.name = "Unused";
-        manager.addSamples(unused);
-        const neighbor = manager.samples.at(-2);
-        const setView = vi.fn();
+        session.document.addSample(unused);
+        const neighbor = session.document.samples.at(-2);
 
-        const { after } = expectRoundTrip(manager, [
-            new DeleteSampleAction(unused, noop, setView)
+        const { after, doFocus, undoFocus } = expectRoundTrip(session, [
+            new DeleteSampleAction(unused)
         ]);
         expect(after.samples.map((s) => s.name)).not.toContain("Unused");
-
-        manager.undo();
-        expect(setView).toHaveBeenLastCalledWith(unused);
-        manager.redo();
-        expect(setView).toHaveBeenLastCalledWith(neighbor);
+        expect(doFocus).toBe(neighbor);
+        expect(undoFocus).toBe(unused);
     });
 
     it("keeps the stereo link of a deleted sample so undo restores the pair", () => {
-        const manager = createTestManager();
-        const [left, right] = manager.samples;
+        const session = createTestSession();
+        const [left, right] = session.document.samples;
         left.setLinkedSample(right, SampleTypes.leftSample);
 
-        manager.modifyBank([new DeleteSampleAction(left, noop, noop)]);
+        session.history.do([new DeleteSampleAction(left)]);
         expect(right.linkedSample).toBe(left);
 
-        manager.undo();
+        session.history.undo();
         expect(left.linkedSample).toBe(right);
     });
 });

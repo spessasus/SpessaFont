@@ -5,17 +5,18 @@ import {
     type GenericRange
 } from "spessasynth_core";
 import "./preset_editor.css";
-import type { SetViewType } from "../bank_editor/bank_editor.tsx";
 import { useEffect } from "react";
 import { cb2db, db2cb } from "../utils/conversion_helpers.ts";
 import { BottomPresetBar } from "./bottom_bar/bottom_bar.tsx";
-import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import type { GeneratorRowType } from "../instrument_editor/instrument_editor.tsx";
 import { GeneratorTable } from "../generator_table/generator_table.tsx";
 import { KEYBOARD_TARGET_CHANNEL } from "../keyboard/target_channel.ts";
 import { getZoneSplits } from "../utils/get_instrument_clickable_keys.ts";
 import type { ModulatorListGlobals } from "../modulator_editing/modulator_list/modulator_list.tsx";
 import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
+import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
+import { useEntityRevision } from "../hooks/use_entity_revision.ts";
+import { getObjectId } from "../utils/object_id.ts";
 
 const presetRows: GeneratorRowType[] = [
     {
@@ -205,30 +206,19 @@ const presetRows: GeneratorRowType[] = [
 
 export function PresetEditor({
     preset,
-    presets,
-    setPresets,
-    setView,
-    manager,
     setSplits,
     destinationOptions,
     ccOptions,
     clipboardManager
 }: {
     preset: BasicPreset;
-    presets: BasicPreset[];
-    setPresets: (p: BasicPreset[]) => unknown;
-    setView: SetViewType;
-    manager: SoundBankManager;
     setSplits: (s: GenericRange[]) => unknown;
 } & ModulatorListGlobals) {
     const {
         audioEngine: { processor }
     } = useAudioEngine();
-    const update = () => {
-        preset.zones = [...preset.zones];
-        setPresets([...presets]);
-        processor.clearCache();
-    };
+    const { session } = useBankEditor();
+    const revision = useEntityRevision(session.store, preset);
     const presetZones = preset.zones;
     const global = preset.globalZone;
 
@@ -260,36 +250,23 @@ export function PresetEditor({
         }
 
         setSplits(splits);
-    }, [
-        global.keyRange,
-        global.keyRange.max,
-        global.keyRange.min,
-        setSplits,
-        presetZones
-    ]);
+        // The zones are mutable, so the revision tells when they changed
+    }, [global, setSplits, presetZones, revision]);
 
     return (
         <div className={"preset_editor"}>
             <GeneratorTable<BasicPresetZone, BasicPreset>
+                key={getObjectId(preset)}
                 name={preset.name}
                 zones={presetZones}
                 element={preset}
                 global={global}
-                callback={update}
                 rows={presetRows}
-                setView={setView}
-                manager={manager}
                 ccOptions={ccOptions}
                 clipboardManager={clipboardManager}
                 destinationOptions={destinationOptions}
             />
-            <BottomPresetBar
-                manager={manager}
-                setPresets={setPresets}
-                presets={presets}
-                preset={preset}
-                setView={setView}
-            />
+            <BottomPresetBar preset={preset} />
         </div>
     );
 }

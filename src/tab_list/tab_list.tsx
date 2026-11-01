@@ -1,13 +1,41 @@
 import "./tab_list.css";
-import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import type { BankSession } from "../core_backend/bank_session.ts";
+import { useHistoryState } from "../hooks/use_history_state.ts";
+import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
 
 export interface TabListProps {
-    tabs: SoundBankManager[];
+    tabs: BankSession[];
     closeTab: (t: number) => void;
     activeTab: number;
     setActiveTab: (t: number) => void;
+}
+
+interface TabProps {
+    session: BankSession;
+    isActive: boolean;
+    onSelect: () => void;
+    onClose: () => void;
+}
+
+function Tab({ session, isActive, onSelect, onClose }: TabProps) {
+    const { t } = useTranslation();
+    const { isDirty } = useHistoryState(session.store);
+    const name = useBankSnapshot(session.store, (s) => s.info.name);
+    const displayName = name.length > 0 ? name : t("bankInfo.unnamed");
+    return (
+        <div className={`tab ${isActive ? "active" : ""}`} onClick={onSelect}>
+            {isDirty ? `* ${displayName}` : displayName}
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onClose();
+                }}
+            >
+                ×
+            </button>
+        </div>
+    );
 }
 
 export function TabList({
@@ -16,32 +44,17 @@ export function TabList({
     setActiveTab,
     closeTab
 }: TabListProps) {
-    const { t } = useTranslation();
-
-    // This evil little code causes a re-render here, and only here. Doing change callback in-app re-renders the bank editor too
-    const [v, setV] = useState(0);
     return (
         <div className="tab_list">
-            {tabs.map((tab, i) => {
-                tab.changeCallback = () => setV(v + 1);
-                return (
-                    <div
-                        key={i}
-                        className={`tab ${i === activeTab ? "active" : ""}`}
-                        onClick={() => setActiveTab(i)}
-                    >
-                        {tab.getTabName(t("bankInfo.unnamed"))}
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                closeTab(i);
-                            }}
-                        >
-                            ×
-                        </button>
-                    </div>
-                );
-            })}
+            {tabs.map((session, i) => (
+                <Tab
+                    key={session.id}
+                    session={session}
+                    isActive={i === activeTab}
+                    onSelect={() => setActiveTab(i)}
+                    onClose={() => closeTab(i)}
+                />
+            ))}
         </div>
     );
 }

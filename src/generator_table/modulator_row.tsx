@@ -7,9 +7,9 @@ import {
 import type { LinkedZoneMap } from "./generator_table.tsx";
 import { useTranslation } from "react-i18next";
 import { STEREO_REGEX } from "../utils/stereo_regex.ts";
-import { typedMemo } from "../utils/typed_memo.ts";
+import { getObjectId } from "../utils/object_id.ts";
 
-export const GeneratorTableModulatorRow = typedMemo(function <
+export function GeneratorTableModulatorRow<
     ZoneType extends BasicPresetZone | BasicInstrumentZone,
     ElementType extends BasicInstrument | BasicPreset
 >({
@@ -58,7 +58,7 @@ export const GeneratorTableModulatorRow = typedMemo(function <
                 const modLength = z.modulators.length;
                 return (
                     <th
-                        key={i}
+                        key={getObjectId(z)}
                         colSpan={span}
                         className={`modulator_cell ${modLength > 0 ? "modulated" : ""}`}
                         onClick={() => editModulators(z, name)}
@@ -69,4 +69,4 @@ export const GeneratorTableModulatorRow = typedMemo(function <
             })}
         </tr>
     );
-});
+}

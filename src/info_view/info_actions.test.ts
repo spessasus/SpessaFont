@@ -1,50 +1,48 @@
 import { describe, expect, it } from "vitest";
 import { Modulator } from "spessasynth_core";
 import {
-    createTestManager,
+    createTestSession,
     expectRoundTrip
 } from "../test_utils/bank_fixture.ts";
-import { SetBankInfo } from "./set_bank_info_action.ts";
-import { SetDefaultModulators } from "./default_modulators/set_default_modulators_action.ts";
+import { SetBankInfoAction } from "./set_bank_info_action.ts";
+import { SetDefaultModulatorsAction } from "./default_modulators/set_default_modulators_action.ts";
 
-const noop = () => undefined;
+describe("SetBankInfoAction", () => {
+    it("changes a text field and restores a missing one on undo", () => {
+        const session = createTestSession();
+        const info = session.document.bank.soundBankInfo;
+        delete info.engineer;
 
-describe("SetBankInfo", () => {
-    it("changes a text field", () => {
-        const manager = createTestManager();
-        manager.soundBankInfo.engineer = "Original";
-
-        expectRoundTrip(manager, [
-            new SetBankInfo(noop, "Original", "Someone", "engineer")
+        expectRoundTrip(session, [
+            new SetBankInfoAction("engineer", undefined, "Someone")
         ]);
-        expect(manager.getInfo("engineer")).toBe("Someone");
+        expect(info.engineer).toBe("Someone");
+        session.history.undo();
+        expect(info.engineer).toBeUndefined();
     });
 
     it("changes the creation date", () => {
-        const manager = createTestManager();
+        const session = createTestSession();
+        const info = session.document.bank.soundBankInfo;
         const date = new Date("2020-01-02T03:04:00Z");
 
-        expectRoundTrip(manager, [
-            new SetBankInfo(
-                noop,
-                manager.getInfo("creationDate"),
-                date,
-                "creationDate"
-            )
+        expectRoundTrip(session, [
+            new SetBankInfoAction("creationDate", info.creationDate, date)
         ]);
-        expect(manager.getInfo("creationDate")).toBe(date);
+        expect(info.creationDate).toBe(date);
     });
 });
 
-describe("SetDefaultModulators", () => {
+describe("SetDefaultModulatorsAction", () => {
     it("replaces the default modulators", () => {
-        const manager = createTestManager();
-        const old = manager.defaultModulators;
+        const session = createTestSession();
+        const bank = session.document.bank;
+        const old = bank.defaultModulators;
         const replacement = [Modulator.copyFrom(old[0])];
 
-        expectRoundTrip(manager, [
-            new SetDefaultModulators(noop, replacement, old)
+        expectRoundTrip(session, [
+            new SetDefaultModulatorsAction(old, replacement)
         ]);
-        expect(manager.defaultModulators).toEqual(replacement);
+        expect(bank.defaultModulators).toEqual(replacement);
     });
 });

@@ -1,7 +1,8 @@
 import "./cell/generator_cell.css";
 import {
-    type BasicInstrument,
+    BasicInstrument,
     BasicInstrumentZone,
+    type BasicPreset,
     type BasicPresetZone,
     type BasicZone,
     type GeneratorType,
@@ -10,17 +11,18 @@ import {
 import { useTranslation } from "react-i18next";
 import { generatorLocaleMap } from "../utils/translated_options/generator_to_locale_map.ts";
 import { NumberGeneratorCell } from "./cell/generator_cell.tsx";
-import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
 import { RangeGeneratorCell } from "./cell/range_cell.tsx";
 import type { LinkedZoneMap } from "./generator_table.tsx";
 import { OffsetGeneratorCell } from "./cell/offset_cell.tsx";
-import { typedMemo } from "../utils/typed_memo.ts";
+import { getObjectId } from "../utils/object_id.ts";
 import { GeneratorLimits } from "../core_backend/generator_limits.ts";
 
 export interface GeneratorProps {
     generator: GeneratorType;
-    manager: SoundBankManager;
-    callback: () => unknown;
+    /**
+     * The preset or instrument that owns the zones.
+     */
+    element: BasicPreset | BasicInstrument;
 }
 
 export type NumberGeneratorProps = GeneratorProps & {
@@ -29,14 +31,12 @@ export type NumberGeneratorProps = GeneratorProps & {
     precision?: number;
 };
 
-export const NumberGeneratorRow = typedMemo(function <
+export function NumberGeneratorRow<
     T extends BasicPresetZone | BasicInstrumentZone
 >({
-    callback,
-    manager,
+    element,
     global,
     generator,
-    instrument,
     zones,
     linkedZoneMap,
     unit = "",
@@ -50,7 +50,6 @@ export const NumberGeneratorRow = typedMemo(function <
     highlight?: boolean;
     zones: T[];
     linkedZoneMap: LinkedZoneMap<T>;
-    instrument?: BasicInstrument;
 }) {
     const { t } = useTranslation();
     const isRange =
@@ -65,7 +64,7 @@ export const NumberGeneratorRow = typedMemo(function <
     let min, max, def;
     if (isRange || isOffset) {
         min = max = def = 0;
-    } else if (instrument) {
+    } else if (element instanceof BasicInstrument) {
         // Instrument level
         min = l.min;
         max = l.max;
@@ -92,8 +91,7 @@ export const NumberGeneratorRow = typedMemo(function <
                 <>
                     <RangeGeneratorCell
                         colSpan={1}
-                        manager={manager}
-                        callback={callback}
+                        element={element}
                         generator={generator}
                         zone={global}
                         keyRange={global.keyRange}
@@ -113,15 +111,13 @@ export const NumberGeneratorRow = typedMemo(function <
                         return (
                             <RangeGeneratorCell
                                 colSpan={span}
-                                manager={manager}
+                                element={element}
                                 linkedZone={linked.linkedZone}
-                                callback={callback}
                                 generator={generator}
                                 zone={z}
                                 keyRange={z.keyRange}
                                 velRange={z.velRange}
-                                key={i}
-                                instrument={instrument}
+                                key={getObjectId(z)}
                             />
                         );
                     })}
@@ -130,8 +126,7 @@ export const NumberGeneratorRow = typedMemo(function <
             {isOffset && (
                 <>
                     <OffsetGeneratorCell
-                        manager={manager}
-                        callback={callback}
+                        element={element}
                         zone={global}
                         generatorType={generator}
                         colSpan={1}
@@ -151,12 +146,11 @@ export const NumberGeneratorRow = typedMemo(function <
                         return (
                             <OffsetGeneratorCell
                                 colSpan={span}
-                                manager={manager}
+                                element={element}
                                 linkedZone={linked.linkedZone}
-                                callback={callback}
                                 generatorType={generator}
                                 zone={z}
-                                key={i}
+                                key={getObjectId(z)}
                             />
                         );
                     })}
@@ -166,8 +160,7 @@ export const NumberGeneratorRow = typedMemo(function <
                 <>
                     <NumberGeneratorCell
                         colSpan={1}
-                        manager={manager}
-                        callback={callback}
+                        element={element}
                         generator={generator}
                         min={min}
                         max={max}
@@ -192,15 +185,14 @@ export const NumberGeneratorRow = typedMemo(function <
                         return (
                             <NumberGeneratorCell
                                 colSpan={span}
-                                manager={manager}
+                                element={element}
                                 linkedZone={linked.linkedZone}
-                                callback={callback}
                                 generator={generator}
                                 min={min}
                                 max={max}
                                 def={def}
                                 zone={z}
-                                key={i}
+                                key={getObjectId(z)}
                                 fromGenerator={fromGenerator}
                                 toGenerator={toGenerator}
                                 precision={precision}
@@ -211,4 +203,4 @@ export const NumberGeneratorRow = typedMemo(function <
             )}
         </tr>
     );
-});
+}

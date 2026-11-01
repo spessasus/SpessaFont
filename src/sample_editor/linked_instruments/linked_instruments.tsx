@@ -1,38 +1,24 @@
-import { BasicInstrument, type BasicSample } from "spessasynth_core";
+import type { BasicSample } from "spessasynth_core";
 import "../../bank_editor/bottom_bar.css";
-import type { SetViewType } from "../../bank_editor/bank_editor.tsx";
 import { useTranslation } from "react-i18next";
-import { useMemo } from "react";
 
 import { DeleteSampleAction } from "./delete_sample_action.ts";
-import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
+import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
+import { getObjectId } from "../../utils/object_id.ts";
 
-export function LinkedInstruments({
-    sample,
-    setView,
-    setSamples,
-    manager
-}: {
-    manager: SoundBankManager;
-    sample: BasicSample;
-    setView: SetViewType;
-    setSamples: (s: BasicSample[]) => void;
-}) {
+export function LinkedInstruments({ sample }: { sample: BasicSample }) {
     const { t } = useTranslation();
-    const linked = useMemo(() => {
-        const l = new Set<BasicInstrument>(sample.linkedTo);
-        return l;
-    }, [sample.linkedTo]);
+    const { apply, setView } = useBankEditor();
+    // An instrument with several zones of this sample is listed once
+    const linked = new Set(sample.linkedTo);
 
     const deleteSample = () => {
-        const actions = [new DeleteSampleAction(sample, setSamples, setView)];
+        const actions = [new DeleteSampleAction(sample)];
         // delete the other one too if linked and unused
-        if (sample?.linkedSample?.useCount === 0) {
-            actions.push(
-                new DeleteSampleAction(sample.linkedSample, setSamples, setView)
-            );
+        if (sample.linkedSample?.useCount === 0) {
+            actions.push(new DeleteSampleAction(sample.linkedSample));
         }
-        manager.modifyBank(actions);
+        apply(actions);
     };
 
     return (
@@ -61,11 +47,11 @@ export function LinkedInstruments({
             {sample.linkedTo.length > 0 && (
                 <>
                     <div>{t("sampleLocale.usedBy")}:</div>
-                    {Array.from(linked, (inst, i) => (
+                    {Array.from(linked, (inst) => (
                         <div
                             className={"monospaced"}
                             onClick={() => setView(inst)}
-                            key={i}
+                            key={getObjectId(inst)}
                         >
                             {inst.name}
                         </div>

@@ -1,33 +1,21 @@
-import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
-import { BasicPreset } from "spessasynth_core";
+import type { BasicPreset } from "spessasynth_core";
 import "../../bank_editor/bottom_bar.css";
 import { useTranslation } from "react-i18next";
 import { DeletePresetAction } from "./delete_preset_action.ts";
-import type { SetViewType } from "../../bank_editor/bank_editor.tsx";
 import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
 import { EditPresetAction } from "./edit_preset_action.ts";
 import { ControllerSwitch } from "../../fancy_inputs/controller_switch/controller_switch.tsx";
 import toast from "react-hot-toast";
+import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
+import { useBankSnapshot } from "../../hooks/use_bank_snapshot.ts";
 
-export function BottomPresetBar({
-    manager,
-    setPresets,
-    preset,
-    presets,
-    setView
-}: {
-    manager: SoundBankManager;
-    setPresets: (p: BasicPreset[]) => unknown;
-    presets: BasicPreset[];
-    preset: BasicPreset;
-    setView: SetViewType;
-}) {
+export function BottomPresetBar({ preset }: { preset: BasicPreset }) {
     const { t } = useTranslation();
+    const { session, apply } = useBankEditor();
+    const presets = useBankSnapshot(session.store, (s) => s.presets);
 
     const deletePreset = () => {
-        manager.modifyBank([
-            new DeletePresetAction(preset, setPresets, setView)
-        ]);
+        apply([new DeletePresetAction(preset)]);
     };
     return (
         <div className={"bottom_bar"}>
@@ -36,14 +24,9 @@ export function BottomPresetBar({
                     type={"text"}
                     value={preset.name}
                     setValue={(v) => {
-                        const action = new EditPresetAction(
-                            preset,
-                            "name",
-                            preset.name,
-                            v,
-                            () => setPresets([...presets])
-                        );
-                        manager.modifyBank([action]);
+                        apply([
+                            new EditPresetAction(preset, "name", preset.name, v)
+                        ]);
                         return v;
                     }}
                     maxLength={40}
@@ -74,17 +57,14 @@ export function BottomPresetBar({
                                     );
                                     return preset.bankLSB;
                                 }
-                                const action = new EditPresetAction(
-                                    preset,
-                                    "bankLSB",
-                                    preset.bankLSB,
-                                    v,
-                                    () => {
-                                        manager.flushAndSortPresets();
-                                        setPresets([...presets]);
-                                    }
-                                );
-                                manager.modifyBank([action]);
+                                apply([
+                                    new EditPresetAction(
+                                        preset,
+                                        "bankLSB",
+                                        preset.bankLSB,
+                                        v
+                                    )
+                                ]);
                                 return v;
                             }}
                         />
@@ -111,17 +91,14 @@ export function BottomPresetBar({
                                     );
                                     return preset.bankMSB;
                                 }
-                                const action = new EditPresetAction(
-                                    preset,
-                                    "bankMSB",
-                                    preset.bankMSB,
-                                    v,
-                                    () => {
-                                        manager.flushAndSortPresets();
-                                        setPresets([...presets]);
-                                    }
-                                );
-                                manager.modifyBank([action]);
+                                apply([
+                                    new EditPresetAction(
+                                        preset,
+                                        "bankMSB",
+                                        preset.bankMSB,
+                                        v
+                                    )
+                                ]);
                                 return v;
                             }}
                         />
@@ -151,17 +128,14 @@ export function BottomPresetBar({
                             );
                             return preset.program;
                         }
-                        const action = new EditPresetAction(
-                            preset,
-                            "program",
-                            preset.program,
-                            v,
-                            () => {
-                                manager.flushAndSortPresets();
-                                setPresets([...presets]);
-                            }
-                        );
-                        manager.modifyBank([action]);
+                        apply([
+                            new EditPresetAction(
+                                preset,
+                                "program",
+                                preset.program,
+                                v
+                            )
+                        ]);
                         return v;
                     }}
                 />
@@ -186,30 +160,26 @@ export function BottomPresetBar({
                             return;
                         }
                         // Set banks to 0
-                        const actions = [
+                        apply([
                             new EditPresetAction(
                                 preset,
                                 "isGMGSDrum",
                                 preset.isGMGSDrum,
-                                v,
-                                () => void 0
+                                v
                             ),
                             new EditPresetAction(
                                 preset,
                                 "bankLSB",
                                 preset.bankLSB,
-                                0,
-                                () => void 0
+                                0
                             ),
                             new EditPresetAction(
                                 preset,
                                 "bankMSB",
                                 preset.bankMSB,
-                                0,
-                                () => setPresets([...presets])
+                                0
                             )
-                        ];
-                        manager.modifyBank(actions);
+                        ]);
                     }}
                 />
             </div>

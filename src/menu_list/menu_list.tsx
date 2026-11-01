@@ -1,13 +1,12 @@
 import { BasicInstrument, BasicPreset, BasicSample } from "spessasynth_core";
 import * as React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./menu_list.css";
-import SoundBankManager, {
-    type BankEditView
-} from "../core_backend/sound_bank_manager.ts";
-import type { SetViewType } from "../bank_editor/bank_editor.tsx";
 import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
+import type { BankEditView } from "../core_backend/bank_view.ts";
+import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
+import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
 import { SampleList } from "./sample_list.tsx";
 import { InstrumentList } from "./instrument_list.tsx";
 import { PresetList } from "./preset_list.tsx";
@@ -16,8 +15,6 @@ import { DeleteInstrumentAction } from "../instrument_editor/linked_presets/dele
 import { DeleteSampleAction } from "../sample_editor/linked_instruments/delete_sample_action.ts";
 import { DeletePresetAction } from "../preset_editor/bottom_bar/delete_preset_action.ts";
 import toast from "react-hot-toast";
-import { presetSorter } from "../utils/preset_sorter.ts";
-import { nameSorter } from "../utils/name_sorter.ts";
 
 export const ESTIMATED_ROW_HEIGHT = 30;
 export const OVERSCAN = 5;
@@ -28,31 +25,19 @@ export interface MappedPresetType {
 }
 
 interface MenuListProps {
-    manager: SoundBankManager;
     view: BankEditView;
-    sv: SetViewType;
-    samples: BasicSample[];
-    setSamples: (s: BasicSample[]) => unknown;
-    instruments: BasicInstrument[];
-    setInstruments: (i: BasicInstrument[]) => unknown;
-    presets: BasicPreset[];
-    setPresets: (p: BasicPreset[]) => unknown;
     clipboard: ClipboardManager;
 }
 
 export const MenuList = React.memo(function ({
     view,
-    sv,
-    manager,
-    setSamples,
-    samples,
-    instruments,
-    setInstruments,
-    presets,
-    setPresets,
     clipboard
 }: MenuListProps) {
     const { t } = useTranslation();
+    const { session, apply, setView } = useBankEditor();
+    const samples = useBankSnapshot(session.store, (s) => s.samples);
+    const instruments = useBankSnapshot(session.store, (s) => s.instruments);
+    const presets = useBankSnapshot(session.store, (s) => s.presets);
     const [open, setOpen] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedSamples, setSelectedSamples] = useState(
@@ -64,17 +49,6 @@ export const MenuList = React.memo(function ({
     const [selectedPresets, setSelectedPresets] = useState(
         new Set<BasicPreset>()
     );
-
-    const setView = useCallback(
-        (v: BankEditView) => {
-            sv(v);
-        },
-        [sv]
-    );
-
-    useEffect(() => {
-        setSearchQuery("");
-    }, [manager]);
 
     // useeffect for delete, copy and paste
     useEffect(() => {
@@ -91,30 +65,18 @@ export const MenuList = React.memo(function ({
                             if (view.useCount > 0) {
                                 return;
                             }
-                            action = new DeleteInstrumentAction(
-                                view,
-                                setInstruments,
-                                setView
-                            );
+                            action = new DeleteInstrumentAction(view);
                         } else if (view instanceof BasicSample) {
                             if (view.useCount > 0) {
                                 return;
                             }
-                            action = new DeleteSampleAction(
-                                view,
-                                setSamples,
-                                setView
-                            );
+                            action = new DeleteSampleAction(view);
                         } else if (view instanceof BasicPreset) {
-                            action = new DeletePresetAction(
-                                view,
-                                setPresets,
-                                setView
-                            );
+                            action = new DeletePresetAction(view);
                         } else {
                             return;
                         }
-                        manager.modifyBank([action]);
+                        apply([action]);
                     }
                     break;
                 }
@@ -142,16 +104,7 @@ export const MenuList = React.memo(function ({
                 case "v": {
                     if (e.ctrlKey) {
                         if (clipboard.hasPresets()) {
-                            clipboard.pastePresets(
-                                manager,
-                                setPresets,
-                                setInstruments,
-                                setSamples,
-                                setView
-                            );
-                            setPresets(
-                                manager.presets.slice().sort(presetSorter)
-                            );
+                            apply(clipboard.pastePresets(session.document));
 
                             toast.success(
                                 t("clipboardLocale.pastedPresets", {
@@ -161,15 +114,7 @@ export const MenuList = React.memo(function ({
                         }
 
                         if (clipboard.hasInstruments()) {
-                            clipboard.pasteInstruments(
-                                manager,
-                                setSamples,
-                                setInstruments,
-                                setView
-                            );
-                            setInstruments(
-                                manager.instruments.slice().sort(nameSorter)
-                            );
+                            apply(clipboard.pasteInstruments(session.document));
                             toast.success(
                                 t("clipboardLocale.pastedInstruments", {
                                     count: clipboard.instrumentCount
@@ -178,14 +123,7 @@ export const MenuList = React.memo(function ({
                         }
 
                         if (clipboard.hasSamples()) {
-                            clipboard.pasteSamples(
-                                manager,
-                                setSamples,
-                                setView
-                            );
-                            setSamples(
-                                manager.samples.slice().sort(nameSorter)
-                            );
+                            apply(clipboard.pasteSamples(session.document));
                             toast.success(
                                 t("clipboardLocale.pastedSamples", {
                                     count: clipboard.sampleCount
@@ -201,15 +139,12 @@ export const MenuList = React.memo(function ({
             document.removeEventListener("keydown", onKeyDown);
         };
     }, [
+        apply,
         clipboard,
-        manager,
         selectedInstruments,
         selectedPresets,
         selectedSamples,
-        setInstruments,
-        setPresets,
-        setSamples,
-        setView,
+        session.document,
         t,
         view
     ]);
@@ -310,9 +245,6 @@ export const MenuList = React.memo(function ({
                 <SampleList
                     samples={filteredSamples}
                     view={view}
-                    manager={manager}
-                    setSamples={setSamples}
-                    setView={setView}
                     clipboard={clipboard}
                     selectedSamples={selectedSamples}
                     setSelectedSamples={setSelectedSamples}
@@ -321,11 +253,7 @@ export const MenuList = React.memo(function ({
                 <InstrumentList
                     clipboard={clipboard}
                     instruments={filteredInstruments}
-                    setSamples={setSamples}
-                    setInstruments={setInstruments}
-                    setView={setView}
                     view={view}
-                    manager={manager}
                     selectedInstruments={selectedInstruments}
                     setSelectedInstruments={setSelectedInstruments}
                     selectedSamples={selectedSamples}
@@ -333,13 +261,8 @@ export const MenuList = React.memo(function ({
 
                 <PresetList
                     view={view}
-                    setView={setView}
                     clipboard={clipboard}
                     presets={filteredPresets}
-                    setSamples={setSamples}
-                    setInstruments={setInstruments}
-                    setPresets={setPresets}
-                    manager={manager}
                     selectedInstruments={selectedInstruments}
                     selectedPresets={selectedPresets}
                     setSelectedPresets={setSelectedPresets}

@@ -9,8 +9,6 @@ import {
 import "./instrument_editor.css";
 import { useEffect } from "react";
 import { KEYBOARD_TARGET_CHANNEL } from "../keyboard/target_channel.ts";
-import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
-import type { SetViewType } from "../bank_editor/bank_editor.tsx";
 import {
     ac2hz,
     cb2db,
@@ -24,13 +22,12 @@ import { GeneratorTable } from "../generator_table/generator_table.tsx";
 import { getZoneSplits } from "../utils/get_instrument_clickable_keys.ts";
 import type { ModulatorListGlobals } from "../modulator_editing/modulator_list/modulator_list.tsx";
 import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
+import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
+import { useEntityRevision } from "../hooks/use_entity_revision.ts";
+import { getObjectId } from "../utils/object_id.ts";
 
 interface InstrumentEditorProps {
-    manager: SoundBankManager;
     instrument: BasicInstrument;
-    setView: SetViewType;
-    setInstruments: (s: BasicInstrument[]) => void;
-    instruments: BasicInstrument[];
     setSplits: (s: GenericRange[]) => unknown;
 }
 export interface GeneratorRowType {
@@ -301,10 +298,6 @@ const instrumentRows: GeneratorRowType[] = [
 
 export function InstrumentEditor({
     instrument,
-    manager,
-    setInstruments,
-    instruments,
-    setView,
     setSplits,
     clipboardManager,
     ccOptions,
@@ -314,18 +307,16 @@ export function InstrumentEditor({
         audioEngine: { processor }
     } = useAudioEngine();
 
-    const update = () => {
-        instrument.zones = [...instrument.zones];
-        setInstruments([...instruments]);
-        processor.clearCache();
-    };
+    const { session } = useBankEditor();
+    const revision = useEntityRevision(session.store, instrument);
+    const bank = session.document.bank;
 
     const zones = instrument.zones;
 
     const global = instrument.globalZone;
     useEffect(() => {
         // do some hacky stuff to get the zones to play
-        const preset = new BasicPreset(manager);
+        const preset = new BasicPreset(bank);
         // screaming name so it's easier to spot errors
         preset.name = "INSTRUMENT PLAYBACK PRESET";
 
@@ -341,12 +332,13 @@ export function InstrumentEditor({
             processor.clearCache();
             processor.programChange(KEYBOARD_TARGET_CHANNEL, 0);
         };
-    }, [processor, instrument, manager]);
+    }, [processor, instrument, bank]);
 
     // set up splits
     useEffect(() => {
         setSplits(getZoneSplits(zones, global.keyRange));
-    }, [zones, setSplits, global.keyRange]);
+        // The zones are mutable, so the revision tells when they changed
+    }, [zones, setSplits, global, revision]);
 
     // cleanup, set no splits
     useEffect(() => {
@@ -358,25 +350,17 @@ export function InstrumentEditor({
     return (
         <div className={"instrument_editor"}>
             <GeneratorTable<BasicInstrumentZone, BasicInstrument>
-                manager={manager}
-                callback={update}
+                key={getObjectId(instrument)}
                 rows={instrumentRows}
                 element={instrument}
                 zones={zones}
                 global={global}
                 name={instrument.name}
-                setView={setView}
                 clipboardManager={clipboardManager}
                 ccOptions={ccOptions}
                 destinationOptions={destinationOptions}
             />
-            <LinkedPresets
-                instrument={instrument}
-                manager={manager}
-                setInstruments={setInstruments}
-                instruments={instruments}
-                setView={setView}
-            />
+            <LinkedPresets instrument={instrument} />
         </div>
     );
 }

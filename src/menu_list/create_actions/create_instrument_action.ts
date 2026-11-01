@@ -1,32 +1,29 @@
-import type { HistoryAction } from "../../core_backend/history.ts";
 import type { BasicInstrument } from "spessasynth_core";
-import type { SetViewType } from "../../bank_editor/bank_editor.tsx";
-import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
+import type { HistoryAction } from "../../core_backend/history.ts";
+import type { BankDocument } from "../../core_backend/bank_document.ts";
+import type { ChangeSet } from "../../core_backend/change_set.ts";
 
 export class CreateInstrumentAction implements HistoryAction {
     private readonly instrument: BasicInstrument;
-    private readonly setInstruments: (s: BasicInstrument[]) => void;
-    private readonly setView: SetViewType;
 
-    constructor(
-        instrument: BasicInstrument,
-        setInstruments: (s: BasicInstrument[]) => void,
-        setView: SetViewType
-    ) {
+    public constructor(instrument: BasicInstrument) {
         this.instrument = instrument;
-        this.setInstruments = setInstruments;
-        this.setView = setView;
     }
 
-    do(b: SoundBankManager) {
-        b.instruments = [...b.instruments, this.instrument];
-        this.setInstruments(b.instruments);
-        this.setView(this.instrument);
+    public do(document: BankDocument, changes: ChangeSet) {
+        document.addInstrument(this.instrument);
+        changes.touchList("instruments");
+        changes.touch(
+            this.instrument,
+            ...this.instrument.zones.map((z) => z.sample)
+        );
+        changes.focusOn(this.instrument);
     }
 
-    undo(b: SoundBankManager) {
-        b.instruments = b.instruments.filter((i) => i !== this.instrument);
-        this.setInstruments(b.instruments);
-        this.setView(b.instruments?.[0] ?? "info");
+    public undo(document: BankDocument, changes: ChangeSet) {
+        document.removeInstrument(this.instrument);
+        changes.touchList("instruments");
+        changes.touch(...this.instrument.zones.map((z) => z.sample));
+        changes.focusOn(document.instruments[0] ?? "info");
     }
 }

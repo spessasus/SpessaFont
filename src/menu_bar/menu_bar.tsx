@@ -4,7 +4,6 @@ import { VoiceDisplay } from "./voice_display.tsx";
 import "./menu_bar.css";
 import { useTranslation } from "react-i18next";
 import { useCallback, useEffect } from "react";
-import type { BankEditorRef } from "../bank_editor/bank_editor.tsx";
 import { ACCEPTED_SOUNDBANK_FORMATS } from "../utils/accepted_formats.ts";
 import toast from "react-hot-toast";
 import {
@@ -22,10 +21,15 @@ import {
     SaveFileIcon,
     UndoIcon
 } from "../utils/icons.tsx";
-import SoundBankManager, {
-    type SaveFormat
-} from "../core_backend/sound_bank_manager.ts";
 import { IS_CHROME, IS_ELECTRON } from "../utils/environment_detection.ts";
+import type { BankSession } from "../core_backend/bank_session.ts";
+import type { SaveFormat } from "../core_backend/persistence.ts";
+import type { BankEditView } from "../core_backend/bank_view.ts";
+import {
+    createAutoLinkActions,
+    createRemoveUnusedActions
+} from "../core_backend/bank_maintenance.ts";
+import { logError } from "../utils/core_utils.ts";
 
 const waitForRefresh = () => new Promise((r) => setTimeout(r, 200));
 
@@ -33,18 +37,21 @@ export function MenuBar({
     toggleSettings,
     openTab,
     closeTab,
-    manager,
+    session,
+    setView,
     showMidiPlayer,
-    toggleKeyboard,
-    bankEditorRef
+    toggleKeyboard
 }: {
     toggleSettings: () => void;
     openTab: (b?: File) => void;
     closeTab: () => void;
-    manager: SoundBankManager | undefined;
+    session: BankSession | undefined;
+    /**
+     * Selects an element in the active tab, used for the focus hints of undo and redo.
+     */
+    setView: (view: BankEditView) => void;
     showMidiPlayer: boolean;
     toggleKeyboard: () => void;
-    bankEditorRef: BankEditorRef;
 }) {
     const fLoc = "menuBarLocale.file.";
     const eLoc = "menuBarLocale.edit.";
@@ -70,26 +77,34 @@ export function MenuBar({
 
     const performSave = useCallback(
         async (format: SaveFormat) => {
-            if (!manager) return;
+            if (!session) return;
             const id = toast.loading(t("loadingAndSaving.savingSoundBank"));
             await waitForRefresh();
             try {
-                const isSaved = await manager.save(format, (progress) => {
-                    toast.loading(
-                        `${t("loadingAndSaving.writingSamples")} (${
-                            Math.floor(progress * 10_000) / 100 + "%"
-                        })`,
-                        {
-                            id
-                        }
-                    );
-                });
-                if (!isSaved) {
-                    // don't show success
+                await session.save(
+                    format,
+                    t("bankInfo.unnamed"),
+                    (progress) => {
+                        toast.loading(
+                            `${t("loadingAndSaving.writingSamples")} (${
+                                Math.floor(progress * 10_000) / 100 + "%"
+                            })`,
+                            {
+                                id
+                            }
+                        );
+                    }
+                );
+            } catch (error) {
+                if (
+                    error instanceof DOMException &&
+                    error.name === "AbortError"
+                ) {
+                    // the user closed the file picker
                     toast.dismiss(id);
                     return;
                 }
-            } catch (error) {
+                logError("Failed to save the sound bank.", error);
                 // make so the error appears at the bottom
                 toast.error(String(error));
                 toast.error(t("loadingAndSaving.writingFailed"), { id });
@@ -97,15 +112,64 @@ export function MenuBar({
             }
             toast.success(t("loadingAndSaving.savedSuccessfully"), { id });
         },
-        [manager, t]
+        [session, t]
     );
+
+    const undo = useCallback(() => {
+        if (!session) return;
+        if (!session.history.canUndo) {
+            toast(t(eLoc + "nothingToUndo"));
+            return;
+        }
+        const focus = session.history.undo();
+        if (focus) setView(focus);
+    }, [eLoc, session, setView, t]);
+
+    const redo = useCallback(() => {
+        if (!session) return;
+        if (!session.history.canRedo) {
+            toast(t(eLoc + "nothingToRedo"));
+            return;
+        }
+        const focus = session.history.redo();
+        if (focus) setView(focus);
+    }, [eLoc, session, setView, t]);
+
+    const removeUnusedElements = () => {
+        if (!session) return;
+        const { actions, instrumentCount, sampleCount } =
+            createRemoveUnusedActions(session.document);
+        // The selection only changes if the selected element was removed
+        session.history.do(actions);
+        toast.success(
+            t("soundBankLocale.removedElements", {
+                instruments: instrumentCount,
+                samples: sampleCount
+            })
+        );
+    };
+
+    const autoLinkSamples = () => {
+        if (!session) return;
+        const actions = createAutoLinkActions(session.document.samples);
+        if (actions.length === 0) {
+            toast(t("soundBankLocale.noSamplesWereChanged"));
+            return;
+        }
+        session.history.do(actions);
+        toast.success(
+            t("soundBankLocale.modifiedSamples", {
+                count: actions.length
+            })
+        );
+    };
 
     const saveWithToasts = useCallback(
         (format: SaveFormat) => {
-            if (!manager) return;
+            if (!session) return;
             if (
                 format === "sf2" &&
-                manager.samples.some((s) => s.isCompressed)
+                session.document.samples.some((s) => s.isCompressed)
             ) {
                 toast(
                     (tost) => (
@@ -134,26 +198,26 @@ export function MenuBar({
                 );
             } else void performSave(format);
         },
-        [manager, performSave, t]
+        [session, performSave, t]
     );
 
     // keybinds
 
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
-            if (!manager) {
+            if (!session) {
                 return;
             }
             if (e.ctrlKey || e.metaKey) {
                 switch (e.key) {
                     case "z": {
                         e.preventDefault();
-                        manager.undo();
+                        undo();
                         break;
                     }
                     case "y": {
                         e.preventDefault();
-                        manager.redo();
+                        redo();
                         break;
                     }
                     case "s": {
@@ -173,7 +237,7 @@ export function MenuBar({
         return () => {
             document.removeEventListener("keydown", handleKeyDown);
         };
-    }, [manager, saveWithToasts]);
+    }, [redo, saveWithToasts, session, undo]);
 
     const about = useCallback(() => {
         toast(
@@ -207,7 +271,7 @@ export function MenuBar({
                 <MenuBarIcon click={openFile} text={t(fLoc + "open")}>
                     <OpenFileIcon />
                 </MenuBarIcon>
-                {manager && (
+                {session && (
                     <>
                         <MenuBarIcon click={closeTab} text={t(fLoc + "close")}>
                             <CloseFileIcon />
@@ -255,44 +319,24 @@ export function MenuBar({
                     <InfoIcon />
                 </MenuBarIcon>
             </MenuBarDropdown>
-            {manager && (
+            {session && (
                 <>
                     <MenuBarDropdown main={t(eLoc + "edit")}>
-                        <MenuBarIcon
-                            click={() => {
-                                if (manager.history.length === 0) {
-                                    toast(t(eLoc + "nothingToUndo"));
-                                }
-                                manager.undo();
-                            }}
-                            text={t(eLoc + "undo")}
-                        >
+                        <MenuBarIcon click={undo} text={t(eLoc + "undo")}>
                             <UndoIcon />
                         </MenuBarIcon>
-                        <MenuBarIcon
-                            click={() => {
-                                if (manager.history.undoLength < 1) {
-                                    toast(t(eLoc + "nothingToRedo"));
-                                }
-                                manager.redo();
-                            }}
-                            text={t(eLoc + "redo")}
-                        >
+                        <MenuBarIcon click={redo} text={t(eLoc + "redo")}>
                             <RedoIcon />
                         </MenuBarIcon>
                         <MenuBarIcon
-                            click={() =>
-                                bankEditorRef?.current?.removeUnusedElements()
-                            }
+                            click={removeUnusedElements}
                             text={t(eLoc + "removeUnusedElements")}
                         >
                             <DeleteIcon />
                         </MenuBarIcon>
                         <MenuBarIcon
                             text={t(eLoc + "autoLinkSamples")}
-                            click={() =>
-                                bankEditorRef?.current?.autoLinkSamples()
-                            }
+                            click={autoLinkSamples}
                         >
                             <LinkIcon />
                         </MenuBarIcon>

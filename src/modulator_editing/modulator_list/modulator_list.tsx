@@ -14,9 +14,9 @@ export interface ModulatorListGlobals {
 }
 
 type ModulatorListProps = ModulatorListGlobals & {
-    modulatorList: Modulator[];
+    modulatorList: readonly Modulator[];
     setModulatorList: (l: Modulator[]) => void;
-    defaultModulators: Modulator[];
+    defaultModulators: readonly Modulator[];
 };
 
 export function ModulatorList({

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { type HistoryAction, HistoryManager } from "./history.ts";
-import { createTestManager } from "../test_utils/bank_fixture.ts";
+import type { HistoryAction } from "./history.ts";
+import { createTestSession } from "../test_utils/bank_fixture.ts";
 
 /**
  * An action that only records when it runs, so tests can check ordering.
@@ -16,126 +16,154 @@ function recordingAction(name: string, log: string[]): HistoryAction {
     };
 }
 
+function failingAction(): HistoryAction {
+    return {
+        do: () => {
+            throw new Error("Failed on purpose.");
+        },
+        undo: () => undefined
+    };
+}
+
 describe("HistoryManager", () => {
     it("runs a group in order, records it and clears the synth cache once", () => {
-        const manager = createTestManager();
-        const clearCache = vi.spyOn(manager, "clearCache");
-        const history = new HistoryManager();
+        const session = createTestSession();
+        const clearCache = vi.spyOn(session.synth, "clearCache");
         const log = new Array<string>();
 
-        history.do(manager, [
+        session.history.do([
             recordingAction("a", log),
             recordingAction("b", log)
         ]);
 
         expect(log).toEqual(["do a", "do b"]);
-        expect(history.length).toBe(1);
+        expect(session.history.canUndo).toBe(true);
         expect(clearCache).toHaveBeenCalledTimes(1);
     });
 
     it("ignores an empty group", () => {
-        const manager = createTestManager();
-        const clearCache = vi.spyOn(manager, "clearCache");
-        const history = new HistoryManager();
+        const session = createTestSession();
+        const clearCache = vi.spyOn(session.synth, "clearCache");
 
-        history.do(manager, []);
+        session.history.do([]);
 
-        expect(history.length).toBe(0);
+        expect(session.history.canUndo).toBe(false);
         expect(clearCache).not.toHaveBeenCalled();
     });
 
     it("undoes a group in reverse order and redoes it in the original order", () => {
-        const manager = createTestManager();
-        const history = new HistoryManager();
+        const session = createTestSession();
         const log = new Array<string>();
-        history.do(manager, [
+        session.history.do([
             recordingAction("a", log),
             recordingAction("b", log)
         ]);
         log.length = 0;
 
-        history.undo(manager);
+        session.history.undo();
         expect(log).toEqual(["undo b", "undo a"]);
-        expect(history.length).toBe(0);
-        expect(history.undoLength).toBe(1);
+        expect(session.history.canUndo).toBe(false);
+        expect(session.history.canRedo).toBe(true);
 
         log.length = 0;
-        history.redo(manager);
+        session.history.redo();
         expect(log).toEqual(["do a", "do b"]);
-        expect(history.length).toBe(1);
-        expect(history.undoLength).toBe(0);
+        expect(session.history.canUndo).toBe(true);
+        expect(session.history.canRedo).toBe(false);
     });
 
     it("discards the redo stack when a new group is done", () => {
-        const manager = createTestManager();
-        const history = new HistoryManager();
+        const session = createTestSession();
         const log = new Array<string>();
-        history.do(manager, [recordingAction("a", log)]);
-        history.undo(manager);
+        session.history.do([recordingAction("a", log)]);
+        session.history.undo();
 
-        history.do(manager, [recordingAction("b", log)]);
+        session.history.do([recordingAction("b", log)]);
 
-        expect(history.undoLength).toBe(0);
+        expect(session.history.canRedo).toBe(false);
         log.length = 0;
-        history.redo(manager);
+        session.history.redo();
         expect(log).toEqual([]);
     });
 
     it("does nothing when there is nothing to undo or redo", () => {
-        const manager = createTestManager();
-        const clearCache = vi.spyOn(manager, "clearCache");
-        const history = new HistoryManager();
+        const session = createTestSession();
+        const clearCache = vi.spyOn(session.synth, "clearCache");
 
-        history.undo(manager);
-        history.redo(manager);
+        expect(session.history.undo()).toBeUndefined();
+        expect(session.history.redo()).toBeUndefined();
 
         expect(clearCache).not.toHaveBeenCalled();
     });
+
+    it("undoes the completed actions of a failing group and does not record it", () => {
+        const session = createTestSession();
+        const log = new Array<string>();
+
+        expect(() =>
+            session.history.do([recordingAction("a", log), failingAction()])
+        ).toThrow("Failed on purpose.");
+
+        expect(log).toEqual(["do a", "undo a"]);
+        expect(session.history.canUndo).toBe(false);
+    });
 });
 
-describe("SoundBankManager dirty flag", () => {
-    it("is set by an edit and notifies the change callback", () => {
-        const manager = createTestManager();
-        const changeCallback = vi.fn();
-        manager.changeCallback = changeCallback;
+describe("HistoryManager dirty state", () => {
+    it("is set by an edit and published to the store", () => {
+        const session = createTestSession();
+        const listener = vi.fn();
+        session.store.subscribe(listener);
 
-        manager.modifyBank([recordingAction("a", [])]);
+        session.history.do([recordingAction("a", [])]);
 
-        expect(manager.dirty).toBe(true);
-        expect(changeCallback).toHaveBeenCalledTimes(1);
+        expect(session.history.isDirty).toBe(true);
+        expect(session.store.getSnapshot().history.isDirty).toBe(true);
+        expect(listener).toHaveBeenCalledTimes(1);
     });
 
     it("is cleared by undoing back to the opened file and set again by redo", () => {
-        const manager = createTestManager();
-        manager.modifyBank([recordingAction("a", [])]);
+        const session = createTestSession();
+        session.history.do([recordingAction("a", [])]);
 
-        manager.undo();
-        expect(manager.dirty).toBe(false);
+        session.history.undo();
+        expect(session.history.isDirty).toBe(false);
 
-        manager.redo();
-        expect(manager.dirty).toBe(true);
+        session.history.redo();
+        expect(session.history.isDirty).toBe(true);
     });
 
-    // Known bug, fixed in REFACTOR_PLAN.md phase 2 by tracking the saved history position.
-    // Saving is simulated by clearing the flag, which is what save() does after writing.
-    it.fails("stays dirty when undoing past the last save", () => {
-        const manager = createTestManager();
-        manager.modifyBank([recordingAction("a", [])]);
-        manager.dirty = false;
+    it("stays dirty when undoing past the last save", () => {
+        const session = createTestSession();
+        session.history.do([recordingAction("a", [])]);
+        session.history.markSaved();
+        expect(session.history.isDirty).toBe(false);
 
-        manager.undo();
+        session.history.undo();
 
-        expect(manager.dirty).toBe(true);
+        expect(session.history.isDirty).toBe(true);
     });
 
-    it.fails("is clean when undoing back to the last save", () => {
-        const manager = createTestManager();
-        manager.modifyBank([recordingAction("a", [])]);
-        manager.dirty = false;
-        manager.modifyBank([recordingAction("b", [])]);
+    it("is clean when undoing back to the last save", () => {
+        const session = createTestSession();
+        session.history.do([recordingAction("a", [])]);
+        session.history.markSaved();
+        session.history.do([recordingAction("b", [])]);
 
-        manager.undo();
+        session.history.undo();
 
-        expect(manager.dirty).toBe(false);
+        expect(session.history.isDirty).toBe(false);
+    });
+
+    it("stays dirty for good once the saved state is discarded from the redo stack", () => {
+        const session = createTestSession();
+        session.history.do([recordingAction("a", [])]);
+        session.history.markSaved();
+        session.history.undo();
+        session.history.do([recordingAction("b", [])]);
+
+        session.history.undo();
+
+        expect(session.history.isDirty).toBe(true);
     });
 });
