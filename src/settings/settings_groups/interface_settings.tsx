@@ -1,61 +1,34 @@
 import type { GroupSettingsProps } from "./audio_engine_settings.tsx";
 import { Setting } from "../setting.tsx";
 import { LocaleList } from "../../locale/locale_list.ts";
-import {
-    getSetting,
-    type ThemeType,
-    UNSET_LANGUAGE
-} from "../save_load/settings_typedef.ts";
+import type { ThemeType } from "../save_load/settings_typedef.ts";
 import { useTranslation } from "react-i18next";
-import { getUserLocale } from "../save_load/get_user_locale.ts";
-import { logInfo } from "../../utils/core_utils.ts";
+import { resolveLocale } from "../save_load/get_user_locale.ts";
 
-type interfaceSettingsProps = GroupSettingsProps & {
-    setTheme: (t: ThemeType) => void;
-};
+const THEME_OPTIONS = {
+    dark: "settingsLocale.interface.dark",
+    light: "settingsLocale.interface.light"
+} as const satisfies Record<ThemeType, string>;
 
-export function InterfaceSettings({
-    settings,
-    updateSettings,
-    setTheme
-}: interfaceSettingsProps) {
-    const { t, i18n } = useTranslation();
+function isTheme(value: string): value is ThemeType {
+    return Object.hasOwn(THEME_OPTIONS, value);
+}
 
-    let language = getSetting("lang", settings);
-    if (language === UNSET_LANGUAGE) {
-        language = getUserLocale(Object.keys(LocaleList));
-    }
-
-    function setLanguage(code: string) {
-        logInfo(`Changing language to: ${code}`);
-        void i18n.changeLanguage(code).then(() => {
-            updateSettings({
-                ...settings,
-                lang: code
-            });
-        });
-    }
-
-    function setAppTheme(t: ThemeType) {
-        updateSettings({
-            ...settings,
-            theme: t
-        });
-        setTheme(t);
-    }
+export function InterfaceSettings({ settings, onChange }: GroupSettingsProps) {
+    const { t } = useTranslation();
 
     return (
         <div className={"settings_group hover_brightness"}>
             <h2>{t("settingsLocale.interface.title")}</h2>
             <Setting locale={"settingsLocale.interface.language"}>
                 <select
-                    onChange={(e) => setLanguage(e.target.value)}
+                    onChange={(e) => onChange({ lang: e.target.value })}
                     className={"pretty_input monospaced"}
-                    value={language}
+                    value={resolveLocale(settings.lang)}
                 >
-                    {Object.keys(LocaleList).map((code, i) => (
-                        <option key={i} value={code}>
-                            {LocaleList[code].name}
+                    {Object.entries(LocaleList).map(([code, locale]) => (
+                        <option key={code} value={code}>
+                            {locale.name}
                         </option>
                     ))}
                 </select>
@@ -63,16 +36,19 @@ export function InterfaceSettings({
 
             <Setting locale={"settingsLocale.interface.theme"}>
                 <select
-                    onChange={(e) => setAppTheme(e.target.value as ThemeType)}
+                    onChange={(e) => {
+                        if (isTheme(e.target.value)) {
+                            onChange({ theme: e.target.value });
+                        }
+                    }}
                     className={"pretty_input monospaced"}
-                    value={getSetting("theme", settings)}
+                    value={settings.theme}
                 >
-                    <option value={"dark"}>
-                        {t("settingsLocale.interface.dark")}
-                    </option>
-                    <option value={"light"}>
-                        {t("settingsLocale.interface.light")}
-                    </option>
+                    {Object.entries(THEME_OPTIONS).map(([theme, key]) => (
+                        <option key={theme} value={theme}>
+                            {t(key)}
+                        </option>
+                    ))}
                 </select>
             </Setting>
         </div>

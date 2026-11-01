@@ -9,6 +9,11 @@
     color: var(--font-color);
 }
 
+/* The fallback replaces .spessafont_main, which sets the font for the app */
+.error_boundary :not(pre) {
+    font-family: var(--main-font);
+}
+
 .error_boundary_message {
     max-width: 100%;
     overflow-x: auto;

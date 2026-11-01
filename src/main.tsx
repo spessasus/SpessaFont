@@ -1,47 +1,40 @@
 import { createRoot } from "react-dom/client";
 import "./index.css";
-import App from "./app.tsx";
+import { App } from "./app.tsx";
 import { StrictMode } from "react";
 import { MIDIProvider } from "./settings/midi_context/midi_provider.tsx";
-import { LocaleList } from "./locale/locale_list.ts";
-import {
-    getSetting,
-    UNSET_LANGUAGE
-} from "./settings/save_load/settings_typedef.ts";
-import {
-    DEFAULT_LOCALE,
-    getUserLocale
-} from "./settings/save_load/get_user_locale.ts";
-import i18next from "i18next";
-import { loadSettings } from "./settings/save_load/load.ts";
-import { initReactI18next } from "react-i18next";
 import { AudioEngineProvider } from "./get_user_input/audio_engine_provider.tsx";
 import { ErrorBoundary } from "./error_boundary/error_boundary.tsx";
+import { SettingsProvider } from "./settings/settings_provider.tsx";
+import { ClipboardProvider } from "./clipboard/clipboard_provider.tsx";
+import { init } from "./init.ts";
+import { logError } from "./utils/core_utils.ts";
+import type { SavedSettingsType } from "./settings/save_load/settings_typedef.ts";
 
-// Load settings and get locale
-const initialSettings = loadSettings();
-const supportedLocales = Object.keys(LocaleList);
-
-let targetLocale = getSetting("lang", initialSettings);
-if (targetLocale === UNSET_LANGUAGE) {
-    targetLocale = getUserLocale(supportedLocales);
+function render(settings: SavedSettingsType) {
+    const root = document.querySelector("#root");
+    if (!(root instanceof HTMLElement)) {
+        throw new TypeError("The #root element is missing from index.html.");
+    }
+    createRoot(root).render(
+        <StrictMode>
+            <ErrorBoundary>
+                <SettingsProvider initialSettings={settings}>
+                    <MIDIProvider>
+                        <AudioEngineProvider>
+                            <ClipboardProvider>
+                                <App />
+                            </ClipboardProvider>
+                        </AudioEngineProvider>
+                    </MIDIProvider>
+                </SettingsProvider>
+            </ErrorBoundary>
+        </StrictMode>
+    );
 }
 
-// Init i18n (for AudioEngineProvider)
-await i18next.use(initReactI18next).init({
-    resources: LocaleList,
-    lng: targetLocale,
-    fallbackLng: DEFAULT_LOCALE
-});
-
-createRoot(document.querySelector("#root")!).render(
-    <StrictMode>
-        <ErrorBoundary>
-            <MIDIProvider>
-                <AudioEngineProvider settings={initialSettings}>
-                    <App initialSettings={initialSettings} />
-                </AudioEngineProvider>
-            </MIDIProvider>
-        </ErrorBoundary>
-    </StrictMode>
-);
+try {
+    render(await init());
+} catch (error) {
+    logError("SpessaFont failed to start.", error);
+}

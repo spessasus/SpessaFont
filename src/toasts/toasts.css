@@ -20,3 +20,13 @@
 .toasts .pretty_outline {
     cursor: pointer;
 }
+
+.toast_button {
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--font-color);
+}
+
+.toast_button:focus-visible {
+    outline: 2px solid var(--light-primary-color);
+}

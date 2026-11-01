@@ -1,5 +1,3 @@
 export const IS_ELECTRON = navigator.userAgent.includes("Electron");
-export const IS_CHROME =
-    !IS_ELECTRON &&
-    // @ts-expect-error chromium check is here
-    globalThis.chrome !== undefined;
+// Chromium-based browsers define a `chrome` global
+export const IS_CHROME = !IS_ELECTRON && "chrome" in globalThis;

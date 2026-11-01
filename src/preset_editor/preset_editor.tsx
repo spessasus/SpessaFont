@@ -208,8 +208,7 @@ export function PresetEditor({
     preset,
     setSplits,
     destinationOptions,
-    ccOptions,
-    clipboardManager
+    ccOptions
 }: {
     preset: BasicPreset;
     setSplits: (s: GenericRange[]) => unknown;
@@ -263,7 +262,6 @@ export function PresetEditor({
                 global={global}
                 rows={presetRows}
                 ccOptions={ccOptions}
-                clipboardManager={clipboardManager}
                 destinationOptions={destinationOptions}
             />
             <BottomPresetBar preset={preset} />

@@ -1,4 +1,3 @@
-import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
 import { type JSX, useEffect, useMemo } from "react";
 import { MenuList } from "../menu_list/menu_list.tsx";
 import "./bank_editor.css";
@@ -25,7 +24,6 @@ export interface BankEditorProps {
     session: BankSession;
     view: BankEditView;
     setView: (view: BankEditView) => void;
-    clipboardManager: ClipboardManager;
     destinationOptions: JSX.Element;
     ccOptions: JSX.Element;
     shown: boolean;
@@ -56,7 +54,6 @@ export function BankEditor({
     session,
     view: selectedView,
     setView,
-    clipboardManager,
     destinationOptions,
     ccOptions,
     shown,
@@ -98,20 +95,18 @@ export function BankEditor({
     return (
         <BankEditorContext value={context}>
             <div className={"main_content" + (shown ? "" : " hidden")}>
-                <MenuList view={view} clipboard={clipboardManager} />
+                <MenuList view={view} />
                 <div className={"main_content_window"}>
                     {view === "info" && (
                         <SoundBankInfo
                             destinationOptions={destinationOptions}
                             ccOptions={ccOptions}
-                            clipboard={clipboardManager}
                         />
                     )}
                     {view instanceof BasicPreset && (
                         <PresetEditor
                             preset={view}
                             setSplits={setSplits}
-                            clipboardManager={clipboardManager}
                             ccOptions={ccOptions}
                             destinationOptions={destinationOptions}
                         />
@@ -120,7 +115,6 @@ export function BankEditor({
                         <InstrumentEditor
                             instrument={view}
                             setSplits={setSplits}
-                            clipboardManager={clipboardManager}
                             ccOptions={ccOptions}
                             destinationOptions={destinationOptions}
                         />

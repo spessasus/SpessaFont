@@ -26,6 +26,7 @@
     );
 
     --font-color: oklch(95% 0 0);
+    --main-font: system-ui, "Noto Sans", "Open Sans", sans-serif;
     --top-index: 100;
 
     --darker-color-start: #000;
@@ -58,7 +59,7 @@
 }
 
 /* Light theme */
-#root.light_mode * {
+:root[data-theme="light"] #root * {
     --lighter-color-start: #efefef;
     --lighter-color-end: #eee;
 
@@ -82,7 +83,7 @@
 .spessafont_main * {
     /*global styles*/
     color: var(--font-color);
-    font-family: system-ui, "Noto Sans", "Open Sans", sans-serif;
+    font-family: var(--main-font);
     transition: all 0.2s ease;
 }
 

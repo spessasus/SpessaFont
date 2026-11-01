@@ -40,9 +40,34 @@ export const DEFAULT_SETTINGS: SavedSettingsType = {
     sampleRate: readSampleRateParam()
 };
 
-export function getSetting<K extends keyof SavedSettingsType>(
-    key: K,
-    settings: SavedSettingsType
-): SavedSettingsType[K] {
-    return settings[key] ?? DEFAULT_SETTINGS[key];
+type NumericSettingKey = {
+    [K in keyof SavedSettingsType]: SavedSettingsType[K] extends number
+        ? K
+        : never;
+}[keyof SavedSettingsType];
+
+/**
+ * The accepted range of every numeric setting, shared by the settings UI and the parser.
+ * The sample rate range is the one `AudioContext` accepts.
+ */
+export const SETTING_LIMITS: Record<
+    Exclude<NumericSettingKey, "interpolation">,
+    { min: number; max: number }
+> = {
+    volume: { min: 0, max: 10 },
+    velocitySenseDepth: { min: 0, max: 127 },
+    velocitySenseOffset: { min: 0, max: 127 },
+    reverbLevel: { min: 0, max: 10 },
+    chorusLevel: { min: 0, max: 10 },
+    delayLevel: { min: 0, max: 10 },
+    voiceCap: { min: 0, max: 2048 },
+    sampleRate: { min: 3000, max: 768_000 }
+};
+
+/**
+ * Clamps a value to the accepted range of a numeric setting.
+ */
+export function clampSetting(key: keyof typeof SETTING_LIMITS, value: number) {
+    const { min, max } = SETTING_LIMITS[key];
+    return Math.max(min, Math.min(max, value));
 }

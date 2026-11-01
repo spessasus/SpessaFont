@@ -17,7 +17,6 @@ import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 export function ModulatorEditor({
     name,
     zone,
-    clipboardManager,
     ccOptions,
     destinationOptions,
     onClose,
@@ -62,7 +61,6 @@ export function ModulatorEditor({
             <ModulatorList
                 modulatorList={zone.modulators}
                 setModulatorList={setModulators}
-                clipboardManager={clipboardManager}
                 ccOptions={ccOptions}
                 destinationOptions={destinationOptions}
                 defaultModulators={defaultModulators}

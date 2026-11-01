@@ -10,10 +10,7 @@ import {
     SpessaSynthSequencer
 } from "spessasynth_core";
 import { KEYBOARD_TARGET_CHANNEL } from "../keyboard/target_channel.ts";
-import {
-    getSetting,
-    type SavedSettingsType
-} from "../settings/save_load/settings_typedef.ts";
+import { type SavedSettingsType } from "../settings/save_load/settings_typedef.ts";
 import { logInfo } from "../utils/core_utils.ts";
 
 // audio worklet processor operates at that
@@ -98,10 +95,10 @@ export class AudioEngine {
 
     applySettings(settings: SavedSettingsType) {
         const processor = this.processor;
-        this.setVolume(getSetting("volume", settings));
+        this.setVolume(settings.volume);
         processor.setSystemParameter(
             "interpolationType",
-            getSetting("interpolation", settings)
+            settings.interpolation
         );
 
         processor.midiChannels[KEYBOARD_TARGET_CHANNEL].lockMIDIParameter(
@@ -114,7 +111,7 @@ export class AudioEngine {
                 KEYBOARD_TARGET_CHANNEL,
                 DEFAULT_SYNTH_MODE,
                 "velocitySenseDepth",
-                getSetting("velocitySenseDepth", settings)
+                settings.velocitySenseDepth
             )
         );
         processor.midiChannels[KEYBOARD_TARGET_CHANNEL].lockMIDIParameter(
@@ -132,7 +129,7 @@ export class AudioEngine {
                 KEYBOARD_TARGET_CHANNEL,
                 DEFAULT_SYNTH_MODE,
                 "velocitySenseOffset",
-                getSetting("velocitySenseOffset", settings)
+                settings.velocitySenseOffset
             )
         );
         processor.midiChannels[KEYBOARD_TARGET_CHANNEL].lockMIDIParameter(
@@ -140,29 +137,14 @@ export class AudioEngine {
             true
         );
 
-        processor.setSystemParameter(
-            "reverbGain",
-            getSetting("reverbLevel", settings)
-        );
-        processor.setSystemParameter(
-            "chorusGain",
-            getSetting("chorusLevel", settings)
-        );
-        processor.setSystemParameter(
-            "gsDelayGain",
-            getSetting("delayLevel", settings)
-        );
+        processor.setSystemParameter("reverbGain", settings.reverbLevel);
+        processor.setSystemParameter("chorusGain", settings.chorusLevel);
+        processor.setSystemParameter("gsDelayGain", settings.delayLevel);
 
-        processor.setSystemParameter(
-            "xgVariationGain",
-            getSetting("delayLevel", settings)
-        );
+        processor.setSystemParameter("xgVariationGain", settings.delayLevel);
 
-        processor.setSystemParameter(
-            "voiceCap",
-            getSetting("voiceCap", settings)
-        );
-        const rate = getSetting("sampleRate", settings);
+        processor.setSystemParameter("voiceCap", settings.voiceCap);
+        const rate = settings.sampleRate;
         if (this.currentSampleRate === rate) {
             return;
         }

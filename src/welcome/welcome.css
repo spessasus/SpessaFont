@@ -30,25 +30,6 @@
     gap: 1rem;
 }
 
-.welcome .grouped {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: var(--lighter-color-start);
-    border-radius: var(--primary-border-radius);
-    padding: 1rem;
-    border: var(--lighter-color-end) 1px solid;
-    gap: 1rem;
-}
-
-.welcome .flex {
-    display: flex;
-    flex-wrap: wrap;
-    width: 100%;
-    justify-content: center;
-    gap: 1rem;
-}
-
 .action_button {
     border: var(--track-border-color) 1px solid;
     background: var(--lighter-color-end);
@@ -58,6 +39,13 @@
     gap: 0.5rem;
     justify-content: space-around;
     cursor: pointer;
+    padding: 0;
+    font-family: inherit;
+    color: var(--font-color);
+}
+
+.action_button:focus-visible {
+    outline: 2px solid var(--light-primary-color);
 }
 
 .action_button:hover {
@@ -76,10 +64,6 @@
     border-right: solid 1px var(--track-border-color);
     height: 100%;
     width: 2rem;
-}
-
-.action_button:hover {
-    filter: brightness(1.2);
 }
 
 .welcome h2 {

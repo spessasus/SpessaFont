@@ -25,6 +25,7 @@ let nextSessionId = 1;
 export class BankSession {
     private saveHandle: FileSystemFileHandle | undefined;
     private writeFormat: WriteFormat;
+    private isClosed = false;
     public readonly id = nextSessionId++;
     public readonly document: BankDocument;
     public readonly store: BankStore;
@@ -79,7 +80,14 @@ export class BankSession {
         this.history.markSaved();
     }
 
+    /**
+     * Releases the bank. Safe to call more than once, for example from two close prompts.
+     */
     public close() {
+        if (this.isClosed) {
+            return;
+        }
+        this.isClosed = true;
         this.synth.detach();
         this.document.bank.destroySoundBank();
     }

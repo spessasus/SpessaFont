@@ -32,6 +32,7 @@ export const localePolish = {
     getUserInput: "Kliknij gdziekolwiek, aby uruchomić aplikację",
 
     unsavedChanges: "Ten plik ma niezapisane zmiany.",
+    closeTab: "Zamknij {{name}}",
     discard: "Odrzuć",
     keep: "Zachowaj",
 
@@ -50,6 +51,8 @@ export const localePolish = {
             "Plik zbyt duży, aby być otwarty w przeglądarkach opartych na Chromium.",
         electronError:
             "Ten plik może zostać otwarty jedynie na SpessaFont Web w Firefoxie.",
+        electronOpenError:
+            "Nie udało się otworzyć {{name}}. Czy jesteś w trybie deweloperskim?",
 
         savingSoundBank: "Zapisywanie banku dźwięków...",
         savedSuccessfully: "Zapisano pomyślnie!",

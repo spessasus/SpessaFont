@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import { CreateSampleAction } from "./create_actions/create_sample_action.ts";
 import type { BankEditView } from "../core_backend/bank_view.ts";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
-import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
+import { useClipboard } from "../clipboard/clipboard_context.ts";
 import { SampleDisplay } from "./sample_display/sample_display.tsx";
 import toast from "react-hot-toast";
 import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
@@ -17,19 +17,18 @@ import { logError } from "../utils/core_utils.ts";
 export function SampleList({
     samples,
     view,
-    clipboard,
     selectedSamples,
     setSelectedSamples
 }: {
     samples: readonly BasicSample[];
     view: BankEditView;
-    clipboard: ClipboardManager;
     selectedSamples: Set<BasicSample>;
     setSelectedSamples: (s: Set<BasicSample>) => unknown;
 }) {
     const { t } = useTranslation();
     const { audioEngine } = useAudioEngine();
     const { session, apply, setView } = useBankEditor();
+    const { clipboard, contents } = useClipboard();
     const [showSamples, setShowSamples] = useState(view instanceof BasicSample);
     const samplesParentRef = useRef<HTMLDivElement>(null);
     const samplesVirtualizer = useVirtualizer({
@@ -139,15 +138,13 @@ export function SampleList({
                 copy={selectedSamples.size > 0}
                 onCopy={() => {
                     clipboard.copySamples(selectedSamples);
-                    // The clipboard is not observable yet, so a new selection set re-renders the paste button
-                    setSelectedSamples(new Set(selectedSamples));
                     toast.success(
                         t("clipboardLocale.copiedSamples", {
                             count: selectedSamples.size
                         })
                     );
                 }}
-                paste={clipboard.hasSamples()}
+                paste={contents.samples > 0}
                 onPaste={() => {
                     apply(clipboard.pasteSamples(session.document));
                     toast.success(

@@ -31,6 +31,7 @@ export const localeFrench = {
     getUserInput: "Appuyez n'importe où pour démmarrer l'application",
 
     unsavedChanges: "Ce fichier a des modifications non enregistrées.",
+    closeTab: "Fermer {{name}}",
     discard: "Ignorer",
     keep: "Garder",
 
@@ -48,6 +49,10 @@ export const localeFrench = {
             "Il y a eu une erreur lors du chargement de la Banque de Son!",
         chromeError:
             "Le fichier est trop lourd pour être ouvert sur des navigateurs basés sur Chromium.",
+        electronError:
+            "Ce fichier ne peut être ouvert que dans SpessaFont Web sur Firefox.",
+        electronOpenError:
+            "Impossible d'ouvrir {{name}}. Êtes-vous en mode développement ?",
 
         savingSoundBank: "En train d'enregistrer la banque sonore...",
         savedSuccessfully: "Enregistré avec succès!",

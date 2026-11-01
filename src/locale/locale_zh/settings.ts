@@ -31,6 +31,8 @@ export const SettingsLocale = {
         title: "MIDI设置",
         waitingForAccess: "等待MIDI访问权限……",
         midiInput: "MIDI输入",
-        noInput: "无MIDI输入"
+        noInput: "无MIDI输入",
+        notSupported: "你的浏览器不支持WebMIDI。",
+        accessError: "MIDI访问错误。"
     }
 };

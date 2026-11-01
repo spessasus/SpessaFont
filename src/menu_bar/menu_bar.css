@@ -78,12 +78,13 @@
     height: 100%;
 }
 
-.menu_bar:hover .menu_bar_contents {
+.menu_bar:hover .menu_bar_contents,
+.menu_bar:focus-within .menu_bar_contents {
     opacity: 1;
     visibility: visible;
 }
 
-.menu_bar_contents div:last-child {
+.menu_bar_contents .menu_bar_icon:last-child {
     border-radius: 0 0 0.2rem 0.2rem;
 }
 
@@ -165,4 +166,30 @@
 .menu_bar_button .gear {
     height: calc(var(--menu-bar-height) * 2 / 3);
     width: min-content;
+}
+
+.menu_bar_main button {
+    font-family: inherit;
+    color: var(--font-color);
+}
+
+.menu_bar_main button:focus-visible {
+    outline: 2px solid var(--light-primary-color);
+    outline-offset: -2px;
+}
+
+button.menu_bar_button {
+    border: none;
+}
+
+button.menu_bar_icon {
+    width: 100%;
+    padding: 0;
+    border-left: none;
+    border-right: none;
+    text-align: start;
+}
+
+.menu_bar_spacer {
+    flex: 1;
 }

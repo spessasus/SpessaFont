@@ -1,36 +1,32 @@
-import * as React from "react";
-import { typedMemo } from "../utils/typed_memo.ts";
+import type { ReactNode } from "react";
 
-interface MenuBarProps {
-    main: string;
-    children?: React.ReactNode;
+interface MenuBarIconProps {
+    text: string;
+    onClick?: () => void;
+    children?: ReactNode;
 }
 
-export const MenuBarIcon = typedMemo(
-    ({
-        text,
-        click,
-        children
-    }: {
-        text: string;
-        click?: () => void;
-        children?: React.ReactNode;
-    }) => {
-        return (
-            <div onClick={click} className={"menu_bar_icon"}>
-                {children}
-                <span>{text}</span>
-            </div>
-        );
-    }
-);
+export function MenuBarIcon({ text, onClick, children }: MenuBarIconProps) {
+    return (
+        <button type={"button"} onClick={onClick} className={"menu_bar_icon"}>
+            {children}
+            <span>{text}</span>
+        </button>
+    );
+}
 
-export function MenuBarDropdown({ main, children }: MenuBarProps) {
+interface MenuBarDropdownProps {
+    main: string;
+    children?: ReactNode;
+}
+
+export function MenuBarDropdown({ main, children }: MenuBarDropdownProps) {
     return (
         <div className={"menu_bar"}>
-            <div className={"menu_bar_button"} title={main}>
+            {/* Focusing the button opens the menu (CSS focus-within) for keyboard users */}
+            <button type={"button"} className={"menu_bar_button"}>
                 {main}
-            </div>
+            </button>
             <div className={"menu_bar_contents"}>{children}</div>
         </div>
     );

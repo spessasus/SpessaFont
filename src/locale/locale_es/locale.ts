@@ -32,6 +32,7 @@ export const localeSpanish = {
     getUserInput: "Presiona en cualquier lugar para iniciar la aplicación",
 
     unsavedChanges: "Este archivo tiene cambios sin guardar.",
+    closeTab: "Cerrar {{name}}",
     discard: "Descartar",
     keep: "Mantener",
 
@@ -50,6 +51,8 @@ export const localeSpanish = {
             "Archivo demasiado grande para ser abierto en navegadores basados en Chromium.",
         electronError:
             "Este archivo solo se puede abrir en SpessaFont Web en Firefox.",
+        electronOpenError:
+            "No se pudo abrir {{name}}. ¿Estás en modo de desarrollo?",
 
         savingSoundBank: "Guardando banco de sonido...",
         savedSuccessfully: "¡Guardado correctamente!",

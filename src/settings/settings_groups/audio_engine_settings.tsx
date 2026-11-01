@@ -2,103 +2,71 @@ import { useTranslation } from "react-i18next";
 import { type InterpolationType, InterpolationTypes } from "spessasynth_core";
 import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
 import {
-    getSetting,
+    clampSetting,
     type SavedSettingsType
 } from "../save_load/settings_typedef.ts";
 import { Setting } from "../setting.tsx";
 
 export interface GroupSettingsProps {
     settings: SavedSettingsType;
-    updateSettings: (s: SavedSettingsType) => void;
+    onChange: (changes: Partial<SavedSettingsType>) => void;
 }
 
-const MAX_GAIN = 10;
-const MAX_REVERB = 10;
-const MAX_CHORUS = 10;
-const MAX_DELAY = 10;
-const MAX_VOICE_CAP = 2048;
-
 export function AudioEngineSettings({
-    updateSettings,
+    onChange,
     settings
 }: GroupSettingsProps) {
     function setInterpolation(t: InterpolationType) {
-        updateSettings({
-            ...settings,
-            interpolation: t
-        });
+        onChange({ interpolation: t });
     }
 
+    // The percentage inputs show the gain times 100
     function setVolume(v: number) {
-        const vol = Math.max(0, Math.min(MAX_GAIN, v / 100));
-        updateSettings({
-            ...settings,
-            volume: vol
-        });
-        return vol * 100;
+        const volume = clampSetting("volume", v / 100);
+        onChange({ volume });
+        return volume * 100;
     }
 
     function setReverb(v: number) {
-        const vReal = Math.max(0, Math.min(MAX_REVERB, v / 100));
-        updateSettings({
-            ...settings,
-            reverbLevel: vReal
-        });
-        return vReal * 100;
+        const reverbLevel = clampSetting("reverbLevel", v / 100);
+        onChange({ reverbLevel });
+        return reverbLevel * 100;
     }
 
     function setChorus(v: number) {
-        const vReal = Math.max(0, Math.min(MAX_CHORUS, v / 100));
-        updateSettings({
-            ...settings,
-            chorusLevel: vReal
-        });
-        return vReal * 100;
+        const chorusLevel = clampSetting("chorusLevel", v / 100);
+        onChange({ chorusLevel });
+        return chorusLevel * 100;
     }
 
     function setDelay(v: number) {
-        const vReal = Math.max(0, Math.min(MAX_DELAY, v / 100));
-        updateSettings({
-            ...settings,
-            delayLevel: vReal
-        });
-        return vReal * 100;
+        const delayLevel = clampSetting("delayLevel", v / 100);
+        onChange({ delayLevel });
+        return delayLevel * 100;
     }
 
     function setVelocitySenseDepth(v: number) {
-        const vReal = Math.max(0, Math.min(127, v));
-        updateSettings({
-            ...settings,
-            velocitySenseDepth: vReal
-        });
-        return vReal;
+        const velocitySenseDepth = clampSetting("velocitySenseDepth", v);
+        onChange({ velocitySenseDepth });
+        return velocitySenseDepth;
     }
 
     function setVelocitySenseOffset(v: number) {
-        const vReal = Math.max(0, Math.min(127, v));
-        updateSettings({
-            ...settings,
-            velocitySenseOffset: vReal
-        });
-        return vReal;
+        const velocitySenseOffset = clampSetting("velocitySenseOffset", v);
+        onChange({ velocitySenseOffset });
+        return velocitySenseOffset;
     }
 
     function setVoiceCap(v: number) {
-        const rounded = Math.round(Math.abs(v));
-        const vReal = Math.max(0, Math.min(rounded, MAX_VOICE_CAP));
-        updateSettings({
-            ...settings,
-            voiceCap: vReal
-        });
-        return vReal;
+        const voiceCap = clampSetting("voiceCap", Math.round(Math.abs(v)));
+        onChange({ voiceCap });
+        return voiceCap;
     }
 
     function setSampleRate(v: number) {
-        updateSettings({
-            ...settings,
-            sampleRate: v
-        });
-        return v;
+        const sampleRate = clampSetting("sampleRate", Math.round(v));
+        onChange({ sampleRate });
+        return sampleRate;
     }
 
     const { t } = useTranslation();
@@ -113,7 +81,7 @@ export function AudioEngineSettings({
                     maxLength={8}
                     className={"pretty_input monospaced"}
                     suffix={"Hz"}
-                    value={getSetting("sampleRate", settings)}
+                    value={settings.sampleRate}
                 />
             </Setting>
             <Setting locale={`${engineT}volume`}>
@@ -123,7 +91,7 @@ export function AudioEngineSettings({
                     maxLength={5}
                     className={"pretty_input monospaced"}
                     suffix={"%"}
-                    value={Math.floor(getSetting("volume", settings) * 100)}
+                    value={Math.floor(settings.volume * 100)}
                 />
             </Setting>
 
@@ -135,7 +103,7 @@ export function AudioEngineSettings({
                         )
                     }
                     className={"pretty_input monospaced"}
-                    value={getSetting("interpolation", settings)}
+                    value={settings.interpolation}
                 >
                     <option value={InterpolationTypes.nearestNeighbor}>
                         {t(`${engineT}interpolation.nearestNeighbor`)}
@@ -155,7 +123,7 @@ export function AudioEngineSettings({
                     type={"text"}
                     maxLength={5}
                     className={"pretty_input monospaced"}
-                    value={getSetting("voiceCap", settings)}
+                    value={settings.voiceCap}
                 />
             </Setting>
 
@@ -165,7 +133,7 @@ export function AudioEngineSettings({
                     type={"text"}
                     maxLength={5}
                     className={"pretty_input monospaced"}
-                    value={getSetting("velocitySenseDepth", settings)}
+                    value={settings.velocitySenseDepth}
                 />
             </Setting>
 
@@ -175,7 +143,7 @@ export function AudioEngineSettings({
                     type={"text"}
                     maxLength={5}
                     className={"pretty_input monospaced"}
-                    value={getSetting("velocitySenseOffset", settings)}
+                    value={settings.velocitySenseOffset}
                 />
             </Setting>
 
@@ -185,9 +153,7 @@ export function AudioEngineSettings({
                     type={"text"}
                     maxLength={5}
                     className={"pretty_input monospaced"}
-                    value={Math.floor(
-                        getSetting("reverbLevel", settings) * 100
-                    )}
+                    value={Math.floor(settings.reverbLevel * 100)}
                     suffix={`%`}
                 />
             </Setting>
@@ -195,9 +161,7 @@ export function AudioEngineSettings({
             <Setting locale={`${engineT}chorusLevel`}>
                 <WaitingInput
                     setValue={setChorus}
-                    value={Math.floor(
-                        getSetting("chorusLevel", settings) * 100
-                    )}
+                    value={Math.floor(settings.chorusLevel * 100)}
                     type={"text"}
                     maxLength={5}
                     className={"pretty_input monospaced"}
@@ -208,7 +172,7 @@ export function AudioEngineSettings({
             <Setting locale={`${engineT}delayLevel`}>
                 <WaitingInput
                     setValue={setDelay}
-                    value={Math.floor(getSetting("delayLevel", settings) * 100)}
+                    value={Math.floor(settings.delayLevel * 100)}
                     type={"text"}
                     maxLength={5}
                     className={"pretty_input monospaced"}

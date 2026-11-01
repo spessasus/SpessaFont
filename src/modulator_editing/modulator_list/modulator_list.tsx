@@ -4,11 +4,10 @@ import "./modulator_list.css";
 import { useTranslation } from "react-i18next";
 import * as React from "react";
 import { type JSX, useCallback, useState } from "react";
-import type { ClipboardManager } from "../../core_backend/clipboard_manager.ts";
+import { useClipboard } from "../../clipboard/clipboard_context.ts";
 import toast from "react-hot-toast";
 
 export interface ModulatorListGlobals {
-    clipboardManager: ClipboardManager;
     ccOptions: JSX.Element;
     destinationOptions: JSX.Element;
 }
@@ -22,16 +21,13 @@ type ModulatorListProps = ModulatorListGlobals & {
 export function ModulatorList({
     modulatorList,
     setModulatorList,
-    clipboardManager,
     ccOptions,
     destinationOptions,
     defaultModulators
 }: ModulatorListProps) {
     const { t } = useTranslation();
     const [selectedMods, setSelectedMods] = useState(new Set<Modulator>());
-    const [clipboard, setClipboard] = useState(
-        clipboardManager.getModulators()
-    );
+    const { clipboard, contents } = useClipboard();
     const [lastSelectedMod, setLastSelectedMod] = useState<Modulator | null>(
         null
     );
@@ -56,20 +52,17 @@ export function ModulatorList({
 
     const copyToClipboard = () => {
         const toCopy = Array.from(selectedMods);
-        clipboardManager.copyModulators(toCopy);
-        setClipboard(toCopy);
+        clipboard.copyModulators(toCopy);
         toast.success(
             t("clipboardLocale.copiedModulators", { count: toCopy.length })
         );
     };
 
     const pasteFromClipboard = () => {
-        const newList = [
-            ...clipboard.map(Modulator.copyFrom.bind(Modulator)),
-            ...modulatorList
-        ];
+        const pasted = clipboard.getModulators();
+        const newList = [...pasted, ...modulatorList];
         toast.success(
-            t("clipboardLocale.pastedModulators", { count: clipboard.length })
+            t("clipboardLocale.pastedModulators", { count: pasted.length })
         );
         setModulatorList(newList);
     };
@@ -130,7 +123,7 @@ export function ModulatorList({
                 >
                     {t("menuBarLocale.file.new")}
                 </div>
-                {clipboard.length > 0 && (
+                {contents.modulators > 0 && (
                     <div
                         className={
                             "modulator_main modulator_list_button hover_brightness"

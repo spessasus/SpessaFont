@@ -27,7 +27,7 @@ export default defineConfig({
         target: "esnext"
     },
     test: {
-        include: ["src/**/*.test.ts"],
+        include: ["src/**/*.test.{ts,tsx}"],
         setupFiles: ["src/test_utils/setup.ts"],
         // Restores navigator and other globals that individual tests stub
         unstubGlobals: true,

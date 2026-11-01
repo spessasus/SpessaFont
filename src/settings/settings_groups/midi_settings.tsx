@@ -20,12 +20,14 @@ export function MidiSettings() {
             </div>
         );
 
-    if (accessStatus === "denied")
+    if (accessStatus === "denied" || accessStatus === "unsupported")
         return (
             <div className="settings_group hover_brightness">
                 <h2>{t("settingsLocale.midi.title")}</h2>
                 <p className={"warning"}>
-                    {accessError ?? "MIDI Access error."}
+                    {accessStatus === "unsupported"
+                        ? t("settingsLocale.midi.notSupported")
+                        : (accessError ?? t("settingsLocale.midi.accessError"))}
                 </p>
             </div>
         );

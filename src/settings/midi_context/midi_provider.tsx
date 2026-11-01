@@ -1,53 +1,85 @@
-import * as React from "react";
-import { useEffect, useState } from "react";
-import { MIDIAccessContext, type MIDIAccessStatus } from "./midi_context";
-import { logWarn, logError } from "../../utils/core_utils.ts";
+import type { ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { MIDIAccessContext, type MIDIAccessStatus } from "./midi_context.ts";
+import { logError, logWarn } from "../../utils/core_utils.ts";
 
-export function MIDIProvider({ children }: { children?: React.ReactNode }) {
-    const [devices, setDevices] = useState<MIDIInput[]>([]);
+interface MIDIAccessState {
+    status: MIDIAccessStatus;
+    error: string | null;
+    devices: MIDIInput[];
+}
+
+function getInitialAccessState(): MIDIAccessState {
+    const isSupported = "requestMIDIAccess" in navigator;
+    if (!isSupported) {
+        logWarn("Your browser does not support WebMIDI.");
+    }
+    return {
+        status: isSupported ? "waiting" : "unsupported",
+        error: null,
+        devices: []
+    };
+}
+
+interface MIDIProviderProps {
+    children?: ReactNode;
+}
+
+export function MIDIProvider({ children }: MIDIProviderProps) {
+    const [access, setAccess] = useState(getInitialAccessState);
     const [selectedDevice, setSelectedDevice] = useState<MIDIInput | null>(
         null
     );
-    const [midiError, setMidiError] = useState<string | null>(null);
-    const [accessStatus, setAccessStatus] =
-        useState<MIDIAccessStatus>("waiting");
+    const isWaiting = access.status === "waiting";
 
     useEffect(() => {
-        if (!("requestMIDIAccess" in navigator)) {
-            logWarn("Your browser does not support WebMIDI.");
-            setAccessStatus("denied");
-            setMidiError("Your browser does not support WebMIDI.");
+        if (!isWaiting) {
             return;
         }
-
+        let isIgnored = false;
         const requestAccess = async () => {
             try {
-                const access = await navigator.requestMIDIAccess({
+                const midiAccess = await navigator.requestMIDIAccess({
                     sysex: true,
                     software: true
                 });
-                setDevices(Array.from(access.inputs.values()));
-                setAccessStatus("granted");
+                if (!isIgnored) {
+                    setAccess({
+                        status: "granted",
+                        error: null,
+                        devices: Array.from(midiAccess.inputs.values())
+                    });
+                }
             } catch (error) {
                 logError("Failed to get MIDI access.", error);
-                setAccessStatus("denied");
-                setMidiError((error as Error).message);
+                if (!isIgnored) {
+                    setAccess({
+                        status: "denied",
+                        error:
+                            error instanceof Error
+                                ? error.message
+                                : String(error),
+                        devices: []
+                    });
+                }
             }
         };
         void requestAccess();
-    }, []);
+        return () => {
+            isIgnored = true;
+        };
+    }, [isWaiting]);
 
-    return (
-        <MIDIAccessContext.Provider
-            value={{
-                accessStatus,
-                accessError: midiError,
-                devices,
-                selectedDevice,
-                setSelectedDevice
-            }}
-        >
-            {children}
-        </MIDIAccessContext.Provider>
+    const value = useMemo(
+        () => ({
+            accessStatus: access.status,
+            accessError: access.error,
+            devices: access.devices,
+            selectedDevice,
+            setSelectedDevice
+        }),
+        [access, selectedDevice]
     );
+
+    return <MIDIAccessContext value={value}>{children}</MIDIAccessContext>;
 }

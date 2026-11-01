@@ -22,13 +22,21 @@ const reactCompilerRulesAsWarnings = Object.fromEntries(
 // Folders whose refactor phase has landed. The compiler rules are errors there again.
 // useVirtualizer returns a mutable object by design, so incompatible-library stays a warning.
 const REFACTORED_FILES = [
+    "src/app.tsx",
+    "src/init.ts",
+    "src/main.tsx",
     "src/bank_editor/**",
+    "src/clipboard/**",
     "src/core_backend/**",
     "src/generator_table/**",
+    "src/get_user_input/**",
     "src/hooks/**",
     "src/info_view/**",
+    "src/settings/**",
     "src/tab_list/**",
-    "src/test_utils/**"
+    "src/test_utils/**",
+    "src/toasts/**",
+    "src/welcome/**"
 ];
 const reactCompilerRulesAsErrors = Object.fromEntries(
     Object.keys(reactCompilerRulesAsWarnings).map((rule) => [

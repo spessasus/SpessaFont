@@ -1,6 +1,6 @@
 import type { BankEditView } from "../core_backend/bank_view.ts";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
-import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
+import { useClipboard } from "../clipboard/clipboard_context.ts";
 import { type BasicInstrument, BasicPreset, BasicZone } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import * as React from "react";
@@ -23,14 +23,12 @@ import toast from "react-hot-toast";
 
 export function PresetList({
     view,
-    clipboard,
     presets,
     selectedInstruments,
     selectedPresets,
     setSelectedPresets
 }: {
     view: BankEditView;
-    clipboard: ClipboardManager;
     presets: MappedPresetType[];
     selectedInstruments: Set<BasicInstrument>;
     selectedPresets: Set<BasicPreset>;
@@ -38,6 +36,7 @@ export function PresetList({
 }) {
     const { t } = useTranslation();
     const { session, apply, setView } = useBankEditor();
+    const { clipboard, contents } = useClipboard();
     const [showPresets, setShowPresets] = useState(view instanceof BasicPreset);
     // keep open states for instruments and presets
     const [openPresets, setOpenPresets] = useState<
@@ -137,11 +136,9 @@ export function PresetList({
             <DropdownHeader
                 add={selectedInstruments.size > 0}
                 copy={selectedPresets.size > 0}
-                paste={clipboard.hasPresets()}
+                paste={contents.presets > 0}
                 onCopy={() => {
                     clipboard.copyPresets(selectedPresets);
-                    // The clipboard is not observable yet, so a new selection set re-renders the paste button
-                    setSelectedPresets(new Set(selectedPresets));
                     toast.success(
                         t("clipboardLocale.copiedPresets", {
                             count: selectedPresets.size

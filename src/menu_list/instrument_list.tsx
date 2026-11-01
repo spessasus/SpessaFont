@@ -1,5 +1,6 @@
 import type { BankEditView } from "../core_backend/bank_view.ts";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
+import { useClipboard } from "../clipboard/clipboard_context.ts";
 import {
     BasicInstrument,
     type BasicSample,
@@ -7,7 +8,6 @@ import {
     GeneratorTypes,
     SampleTypes
 } from "spessasynth_core";
-import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
 import { DropdownHeader } from "./dropdown_header/dropdown_header.tsx";
 import { InstrumentDisplay } from "./instrument_display/instrument_display.tsx";
 
@@ -25,14 +25,12 @@ import toast from "react-hot-toast";
 
 export function InstrumentList({
     view,
-    clipboard,
     instruments,
     setSelectedInstruments,
     selectedInstruments,
     selectedSamples
 }: {
     view: BankEditView;
-    clipboard: ClipboardManager;
     instruments: readonly BasicInstrument[];
     selectedInstruments: Set<BasicInstrument>;
     selectedSamples: Set<BasicSample>;
@@ -40,6 +38,7 @@ export function InstrumentList({
 }) {
     const { t } = useTranslation();
     const { session, apply, setView } = useBankEditor();
+    const { clipboard, contents } = useClipboard();
     const [showInstruments, setShowInstruments] = useState(
         view instanceof BasicInstrument
     );
@@ -164,8 +163,6 @@ export function InstrumentList({
                 copy={selectedInstruments.size > 0}
                 onCopy={() => {
                     clipboard.copyInstruments(selectedInstruments);
-                    // The clipboard is not observable yet, so a new selection set re-renders the paste button
-                    setSelectedInstruments(new Set(selectedInstruments));
                     toast.success(
                         t("clipboardLocale.copiedInstruments", {
                             count: selectedInstruments.size
@@ -180,7 +177,7 @@ export function InstrumentList({
                         })
                     );
                 }}
-                paste={clipboard.hasInstruments()}
+                paste={contents.instruments > 0}
                 onAdd={createInstrument}
                 onClick={() => setShowInstruments(!showInstruments)}
                 open={showInstruments}

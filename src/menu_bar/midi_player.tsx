@@ -37,7 +37,7 @@ const TimeDisplay = typedMemo(() => {
 
     return (
         <MenuBarIcon
-            click={() => (sequencer.currentTime -= 0.1)}
+            onClick={() => (sequencer.currentTime -= 0.1)}
             text={`${formatTime(currentTime)} / ${formatTime(duration)}`}
         >
             <TimeIcon />
@@ -53,7 +53,7 @@ const PauseComponent = typedMemo(() => {
     return paused ? (
         <MenuBarIcon
             text={t("menuBarLocale.midi.resume")}
-            click={() => {
+            onClick={() => {
                 audioEngine.toggleMIDI();
                 setPaused(audioEngine.MIDIPaused);
             }}
@@ -63,7 +63,7 @@ const PauseComponent = typedMemo(() => {
     ) : (
         <MenuBarIcon
             text={t("menuBarLocale.midi.pause")}
-            click={() => {
+            onClick={() => {
                 audioEngine.toggleMIDI();
                 setPaused(audioEngine.MIDIPaused);
             }}
@@ -105,7 +105,7 @@ export function MIDIPlayer() {
             <MenuBarDropdown main={t("menuBarLocale.midi.player")}>
                 <MenuBarIcon
                     text={t("menuBarLocale.midi.play")}
-                    click={playMIDI}
+                    onClick={playMIDI}
                 >
                     <PlayMIDIIcon />
                 </MenuBarIcon>
@@ -116,7 +116,7 @@ export function MIDIPlayer() {
     name = name.length > 10 ? name.slice(0, 10) + "..." : name;
     return (
         <MenuBarDropdown main={t("menuBarLocale.midi.player")}>
-            <MenuBarIcon text={name} click={playMIDI}>
+            <MenuBarIcon text={name} onClick={playMIDI}>
                 <MIDINameIcon />
             </MenuBarIcon>
             <PauseComponent />

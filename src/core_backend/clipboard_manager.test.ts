@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
     createTestSession,
     expectRoundTrip
@@ -48,5 +48,48 @@ describe("ClipboardManager", () => {
         expect(new ClipboardManager().pasteSamples(session.document)).toEqual(
             []
         );
+    });
+
+    it("notifies subscribers and replaces the snapshot on every copy", () => {
+        const session = createTestSession();
+        const clipboard = new ClipboardManager();
+        const listener = vi.fn();
+        const unsubscribe = clipboard.subscribe(listener);
+        const empty = clipboard.getSnapshot();
+        expect(clipboard.getSnapshot()).toBe(empty);
+
+        clipboard.copySamples(new Set(session.document.samples));
+        expect(listener).toHaveBeenCalledTimes(1);
+        expect(clipboard.getSnapshot()).toEqual({
+            presets: 0,
+            instruments: 0,
+            samples: 2,
+            modulators: 0
+        });
+
+        // Copying elements of another kind replaces them, modulators are separate
+        clipboard.copyPresets(new Set([session.document.presets[0]]));
+        clipboard.copyModulators(
+            session.document.presets[0].globalZone.modulators
+        );
+        expect(clipboard.getSnapshot()).toMatchObject({
+            presets: 1,
+            samples: 0
+        });
+
+        unsubscribe();
+        clipboard.copyInstruments(new Set(session.document.instruments));
+        expect(listener).toHaveBeenCalledTimes(3);
+    });
+
+    it("keeps its own copy of the copied selection", () => {
+        const session = createTestSession();
+        const clipboard = new ClipboardManager();
+        const selection = new Set([session.document.samples[0]]);
+        clipboard.copySamples(selection);
+
+        selection.add(session.document.samples[1]);
+
+        expect(clipboard.sampleCount).toBe(1);
     });
 });

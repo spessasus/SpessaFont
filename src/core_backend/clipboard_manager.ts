@@ -12,11 +12,41 @@ import type { HistoryAction } from "./history.ts";
 import { CreatePresetAction } from "../menu_list/create_actions/create_preset_action.ts";
 import type { BankDocument } from "./bank_document.ts";
 
+/**
+ * How many items of each kind the clipboard holds. A new object is created on every copy.
+ */
+export interface ClipboardContents {
+    readonly presets: number;
+    readonly instruments: number;
+    readonly samples: number;
+    readonly modulators: number;
+}
+
+/**
+ * Copied elements and modulators, shared by all tabs.
+ * Observable with `subscribe` and `getSnapshot` for `useSyncExternalStore`.
+ */
 export class ClipboardManager {
     private modulatorClipboard: Modulator[] = [];
     private sampleClipboard = new Set<BasicSample>();
     private instrumentClipboard = new Set<BasicInstrument>();
     private presetClipboard = new Set<BasicPreset>();
+    private readonly listeners = new Set<() => void>();
+    private contents: ClipboardContents = {
+        presets: 0,
+        instruments: 0,
+        samples: 0,
+        modulators: 0
+    };
+
+    public readonly subscribe = (listener: () => void) => {
+        this.listeners.add(listener);
+        return () => {
+            this.listeners.delete(listener);
+        };
+    };
+
+    public readonly getSnapshot = () => this.contents;
 
     /**
      * Clones a sample (and its stereo pair) into new create actions.
@@ -125,6 +155,18 @@ export class ClipboardManager {
         return newInst;
     }
 
+    private notify() {
+        this.contents = {
+            presets: this.presetClipboard.size,
+            instruments: this.instrumentClipboard.size,
+            samples: this.sampleClipboard.size,
+            modulators: this.modulatorClipboard.length
+        };
+        for (const listener of this.listeners) {
+            listener();
+        }
+    }
+
     get presetCount() {
         return this.presetClipboard.size;
     }
@@ -153,26 +195,31 @@ export class ClipboardManager {
         return this.presetClipboard.size > 0;
     }
 
-    copyPresets(p: Set<BasicPreset>) {
-        this.presetClipboard = p;
-        this.sampleClipboard.clear();
-        this.instrumentClipboard.clear();
+    // Copies keep their own sets, so later selection changes do not alter the clipboard
+    copyPresets(p: ReadonlySet<BasicPreset>) {
+        this.presetClipboard = new Set(p);
+        this.sampleClipboard = new Set();
+        this.instrumentClipboard = new Set();
+        this.notify();
     }
 
-    copyInstruments(i: Set<BasicInstrument>) {
-        this.instrumentClipboard = i;
-        this.sampleClipboard.clear();
-        this.presetClipboard.clear();
+    copyInstruments(i: ReadonlySet<BasicInstrument>) {
+        this.instrumentClipboard = new Set(i);
+        this.sampleClipboard = new Set();
+        this.presetClipboard = new Set();
+        this.notify();
     }
 
-    copySamples(s: Set<BasicSample>) {
-        this.sampleClipboard = s;
-        this.instrumentClipboard.clear();
-        this.presetClipboard.clear();
+    copySamples(s: ReadonlySet<BasicSample>) {
+        this.sampleClipboard = new Set(s);
+        this.instrumentClipboard = new Set();
+        this.presetClipboard = new Set();
+        this.notify();
     }
 
-    copyModulators(mods: Modulator[]) {
+    copyModulators(mods: readonly Modulator[]) {
         this.modulatorClipboard = mods.map(Modulator.copyFrom.bind(Modulator));
+        this.notify();
     }
 
     /**

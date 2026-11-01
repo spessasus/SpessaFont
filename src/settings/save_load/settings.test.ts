@@ -1,9 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_LOCALE, getUserLocale } from "./get_user_locale.ts";
-import { loadSettings } from "./load.ts";
+import { loadSettings, parseSettings } from "./load.ts";
 import {
     DEFAULT_SETTINGS,
-    getSetting,
     SPESSAFONT_SETTINGS_KEY
 } from "./settings_typedef.ts";
 
@@ -24,9 +23,7 @@ describe("getUserLocale", () => {
         expect(getUserLocale(SUPPORTED)).toBe("zh");
     });
 
-    // Known bug: it returns the raw browser language (for example "de-DE"),
-    // which the language picker has no option for.
-    it.fails("falls back to the default locale when nothing matches", () => {
+    it("falls back to the default locale when nothing matches", () => {
         stubLanguages(["de-DE"]);
         expect(getUserLocale(SUPPORTED)).toBe(DEFAULT_LOCALE);
     });
@@ -48,27 +45,60 @@ describe("loadSettings", () => {
         expect(loadSettings()).toEqual(saved);
     });
 
-    it("lets getSetting fill in keys missing from older saves", () => {
+    it("fills in keys missing from older saves", () => {
         localStorage.setItem(
             SPESSAFONT_SETTINGS_KEY,
             JSON.stringify({ volume: 0.5 })
         );
-        const settings = loadSettings();
 
-        expect(getSetting("volume", settings)).toBe(0.5);
-        expect(getSetting("voiceCap", settings)).toBe(
-            DEFAULT_SETTINGS.voiceCap
-        );
+        expect(loadSettings()).toEqual({ ...DEFAULT_SETTINGS, volume: 0.5 });
     });
 
-    // Known bug: corrupt data throws from JSON.parse before the app renders, which
-    // leaves a blank page. REFACTOR_PLAN.md phase 3 adds a validating parser.
-    it.fails(
-        "falls back to the defaults when the saved data is corrupt",
-        () => {
-            localStorage.setItem(SPESSAFONT_SETTINGS_KEY, "{not json");
+    it("falls back to the defaults when the saved data is corrupt", () => {
+        localStorage.setItem(SPESSAFONT_SETTINGS_KEY, "{not json");
 
-            expect(loadSettings()).toEqual(DEFAULT_SETTINGS);
+        expect(loadSettings()).toEqual(DEFAULT_SETTINGS);
+    });
+});
+
+describe("parseSettings", () => {
+    it("returns the defaults for data that is not an object", () => {
+        for (const data of [null, 5, "text", [1, 2]]) {
+            expect(parseSettings(data)).toEqual(DEFAULT_SETTINGS);
         }
-    );
+    });
+
+    it("drops unknown keys", () => {
+        expect(parseSettings({ unknown: true, volume: 2 })).toEqual({
+            ...DEFAULT_SETTINGS,
+            volume: 2
+        });
+    });
+
+    it("replaces values of the wrong type or out of range", () => {
+        const parsed = parseSettings({
+            volume: "loud",
+            voiceCap: -1,
+            sampleRate: 1,
+            reverbLevel: NaN,
+            theme: "blue",
+            interpolation: 99,
+            lang: "xx"
+        });
+
+        expect(parsed).toEqual(DEFAULT_SETTINGS);
+    });
+
+    it("keeps valid values", () => {
+        const valid = {
+            ...DEFAULT_SETTINGS,
+            lang: "pl",
+            theme: "light",
+            volume: 10,
+            voiceCap: 0,
+            sampleRate: 44_100
+        };
+
+        expect(parseSettings(valid)).toEqual(valid);
+    });
 });

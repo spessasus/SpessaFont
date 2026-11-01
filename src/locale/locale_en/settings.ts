@@ -29,6 +29,8 @@ export const SettingsLocale = {
         title: "MIDI Settings",
         waitingForAccess: "Waiting for MIDI Access...",
         midiInput: "MIDI Input",
-        noInput: "No Input"
+        noInput: "No Input",
+        notSupported: "Your browser does not support WebMIDI.",
+        accessError: "MIDI access error."
     }
 };

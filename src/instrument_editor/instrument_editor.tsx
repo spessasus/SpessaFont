@@ -299,7 +299,6 @@ const instrumentRows: GeneratorRowType[] = [
 export function InstrumentEditor({
     instrument,
     setSplits,
-    clipboardManager,
     ccOptions,
     destinationOptions
 }: InstrumentEditorProps & ModulatorListGlobals) {
@@ -356,7 +355,6 @@ export function InstrumentEditor({
                 zones={zones}
                 global={global}
                 name={instrument.name}
-                clipboardManager={clipboardManager}
                 ccOptions={ccOptions}
                 destinationOptions={destinationOptions}
             />

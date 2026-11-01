@@ -3,7 +3,7 @@ import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./menu_list.css";
-import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
+import { useClipboard } from "../clipboard/clipboard_context.ts";
 import type { BankEditView } from "../core_backend/bank_view.ts";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
@@ -26,15 +26,12 @@ export interface MappedPresetType {
 
 interface MenuListProps {
     view: BankEditView;
-    clipboard: ClipboardManager;
 }
 
-export const MenuList = React.memo(function ({
-    view,
-    clipboard
-}: MenuListProps) {
+export const MenuList = React.memo(function ({ view }: MenuListProps) {
     const { t } = useTranslation();
     const { session, apply, setView } = useBankEditor();
+    const { clipboard } = useClipboard();
     const samples = useBankSnapshot(session.store, (s) => s.samples);
     const instruments = useBankSnapshot(session.store, (s) => s.instruments);
     const presets = useBankSnapshot(session.store, (s) => s.presets);
@@ -86,15 +83,12 @@ export const MenuList = React.memo(function ({
                         if (e.ctrlKey) {
                             if (selectedSamples.size > 0) {
                                 clipboard.copySamples(selectedSamples);
-                                setSelectedSamples(new Set(selectedSamples));
                             }
                             if (selectedPresets.size > 0) {
                                 clipboard.copyPresets(selectedPresets);
-                                setSelectedPresets(new Set(selectedPresets));
                             }
                             if (selectedInstruments.size > 0) {
                                 clipboard.copyInstruments(selectedInstruments);
-                                setSelectedInstruments(selectedInstruments);
                             }
                         }
                     }
@@ -245,13 +239,11 @@ export const MenuList = React.memo(function ({
                 <SampleList
                     samples={filteredSamples}
                     view={view}
-                    clipboard={clipboard}
                     selectedSamples={selectedSamples}
                     setSelectedSamples={setSelectedSamples}
                 />
 
                 <InstrumentList
-                    clipboard={clipboard}
                     instruments={filteredInstruments}
                     view={view}
                     selectedInstruments={selectedInstruments}
@@ -261,7 +253,6 @@ export const MenuList = React.memo(function ({
 
                 <PresetList
                     view={view}
-                    clipboard={clipboard}
                     presets={filteredPresets}
                     selectedInstruments={selectedInstruments}
                     selectedPresets={selectedPresets}

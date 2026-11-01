@@ -4,14 +4,11 @@ import "./sound_bank_info.css";
 import "./default_modulators/default_modulators.css";
 import { type JSX, useState } from "react";
 import { DefaultModulatorList } from "./default_modulators/default_modulators.tsx";
-import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
 
 export function SoundBankInfo({
-    clipboard,
     ccOptions,
     destinationOptions
 }: {
-    clipboard: ClipboardManager;
     ccOptions: JSX.Element;
     destinationOptions: JSX.Element;
 }) {
@@ -28,7 +25,6 @@ export function SoundBankInfo({
                 <DefaultModulatorList
                     destinationOptions={destinationOptions}
                     ccOptions={ccOptions}
-                    clipboard={clipboard}
                 />
             ) : (
                 <EditableBankInfo />

@@ -34,6 +34,7 @@ export const localeChinese = {
     getUserInput: "点击任意处启动应用。",
 
     unsavedChanges: "该文件有未保存的更改。",
+    closeTab: "关闭{{name}}",
     discard: "放弃更改",
     keep: "保留更改",
 
@@ -50,6 +51,7 @@ export const localeChinese = {
         errorLoadingSoundBank: "加载音色库出错！",
         chromeError: "文件过大，Chromium内核的浏览器不受支持。",
         electronError: "该文件只能通过火狐浏览器使用网页版的SpessaFont打开。",
+        electronOpenError: "无法打开{{name}}。你是否处于开发模式？",
 
         savingSoundBank: "正在保存音色库……",
         savedSuccessfully: "保存完毕！",

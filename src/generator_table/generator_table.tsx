@@ -86,7 +86,6 @@ export function GeneratorTable<
     global,
     rows,
     element,
-    clipboardManager,
     ccOptions,
     destinationOptions
 }: {
@@ -118,7 +117,6 @@ export function GeneratorTable<
                         ?.linkedZone
                 }
                 ccOptions={ccOptions}
-                clipboardManager={clipboardManager}
                 destinationOptions={destinationOptions}
                 onClose={() => setEditedModulatorsZone(null)}
                 element={element}
