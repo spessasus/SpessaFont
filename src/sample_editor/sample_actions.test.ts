@@ -7,6 +7,8 @@ import {
 import { EditSampleAction } from "./edit_sample_action.ts";
 import { SetSampleTypeAction } from "./set_sample_type_action.ts";
 import { DeleteSampleAction } from "./linked_instruments/delete_sample_action.ts";
+import { ReplaceSampleAudioAction } from "./replace_sample_audio_action.ts";
+import { createReplaceAudioActions, normalizeAudio } from "./sample_audio.ts";
 
 describe("EditSampleAction", () => {
     it("changes a sample property", () => {
@@ -83,5 +85,96 @@ describe("DeleteSampleAction", () => {
 
         session.history.undo();
         expect(left.linkedSample).toBe(right);
+    });
+});
+
+describe("ReplaceSampleAudioAction", () => {
+    it("replaces the audio and loop points, and undo restores them", () => {
+        const session = createTestSession();
+        const sample = session.document.samples[0];
+        const before = {
+            data: sample.getAudioData(),
+            sampleRate: sample.sampleRate,
+            loopStart: sample.loopStart,
+            loopEnd: sample.loopEnd
+        };
+        const data = new Float32Array([0, 0.5, -0.5, 0.25]);
+
+        session.history.do([
+            new ReplaceSampleAudioAction(sample, { data, sampleRate: 22_050 })
+        ]);
+        expect(sample.getAudioData()).toBe(data);
+        expect(sample).toMatchObject({
+            sampleRate: 22_050,
+            loopStart: 0,
+            loopEnd: 4
+        });
+        expect(session.history.isDirty).toBe(true);
+
+        session.history.undo();
+        expect(sample.getAudioData()).toEqual(before.data);
+        expect(sample).toMatchObject({
+            sampleRate: before.sampleRate,
+            loopStart: before.loopStart,
+            loopEnd: before.loopEnd
+        });
+
+        session.history.redo();
+        expect(sample.getAudioData()).toBe(data);
+    });
+
+    it("restores the compressed stream of a compressed sample", () => {
+        const session = createTestSession();
+        const sample = session.document.samples[0];
+        const stream = new Uint8Array([1, 2, 3, 4]);
+        sample.setCompressedData(stream);
+
+        session.history.do([
+            new ReplaceSampleAudioAction(sample, {
+                data: new Float32Array(8),
+                sampleRate: 44_100
+            })
+        ]);
+        expect(sample.isCompressed).toBe(false);
+
+        session.history.undo();
+        expect(sample.isCompressed).toBe(true);
+        expect(sample.getRawData(true)).toBe(stream);
+    });
+});
+
+describe("sample audio helpers", () => {
+    it("normalizes to full scale and leaves silence alone", () => {
+        expect([...normalizeAudio(new Float32Array([0.25, -0.5]))]).toEqual([
+            0.5, -1
+        ]);
+        const silence = new Float32Array(3);
+        expect(normalizeAudio(silence)).toBe(silence);
+    });
+
+    it("splits stereo audio over a stereo pair and mixes it for a mono sample", () => {
+        const session = createTestSession();
+        const [left, right] = session.document.samples;
+        const channels = [new Float32Array([1, 1]), new Float32Array([0, 0])];
+
+        const mono = createReplaceAudioActions(left, channels, 44_100);
+        session.history.do(mono ?? []);
+        expect([...left.getAudioData()]).toEqual([0.5, 0.5]);
+        session.history.undo();
+
+        session.history.do([
+            new SetSampleTypeAction(left, {
+                linkedSample: right,
+                type: SampleTypes.leftSample
+            })
+        ]);
+        session.history.do(
+            createReplaceAudioActions(right, channels, 44_100) ?? []
+        );
+        expect([...right.getAudioData()]).toEqual([0, 0]);
+        expect([...left.getAudioData()]).toEqual([1, 1]);
+        expect(
+            createReplaceAudioActions(left, [...channels, ...channels], 1)
+        ).toBeUndefined();
     });
 });

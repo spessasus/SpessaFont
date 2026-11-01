@@ -28,14 +28,22 @@ const REFACTORED_FILES = [
     "src/bank_editor/**",
     "src/clipboard/**",
     "src/core_backend/**",
+    "src/error_boundary/**",
+    "src/fancy_inputs/waiting_input/**",
     "src/generator_table/**",
     "src/get_user_input/**",
     "src/hooks/**",
     "src/info_view/**",
+    "src/instrument_editor/**",
+    "src/menu_list/**",
+    "src/modulator_editing/**",
+    "src/preset_editor/**",
+    "src/sample_editor/**",
     "src/settings/**",
     "src/tab_list/**",
     "src/test_utils/**",
     "src/toasts/**",
+    "src/utils/translated_options/**",
     "src/welcome/**"
 ];
 const reactCompilerRulesAsErrors = Object.fromEntries(

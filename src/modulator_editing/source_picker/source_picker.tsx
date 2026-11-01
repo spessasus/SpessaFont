@@ -3,24 +3,29 @@ import {
     type ModulatorSourceIndex
 } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
-import type { ChangeEvent, JSX } from "react";
+import type { ChangeEvent } from "react";
 import "./source_picker.css";
+import { OptionList } from "../../utils/translated_options/option_list.tsx";
+import { useTranslatedOptions } from "../../utils/translated_options/translated_options_context.ts";
 
 export interface SpessaFontModulatorSource {
     usesCC: boolean;
     sourceIndex: ModulatorSourceIndex;
 }
 
-export function ModulatorSourcePicker({
-    source,
-    setSource,
-    ccOptions
-}: {
+interface ModulatorSourcePickerProps {
+    label: string;
     source: SpessaFontModulatorSource;
-    setSource: (s: SpessaFontModulatorSource) => void;
-    ccOptions: JSX.Element;
-}) {
+    onChange: (s: SpessaFontModulatorSource) => void;
+}
+
+export function ModulatorSourcePicker({
+    label,
+    source,
+    onChange
+}: ModulatorSourcePickerProps) {
     const { t } = useTranslation();
+    const { controllers } = useTranslatedOptions();
     const isCC = source.usesCC;
     const selectValue = isCC
         ? source.sourceIndex.toString()
@@ -30,9 +35,9 @@ export function ModulatorSourcePicker({
         const num = Number.parseInt(e.target.value) as ModulatorSourceIndex;
 
         if (num >= 0) {
-            setSource({ usesCC: true, sourceIndex: num });
+            onChange({ usesCC: true, sourceIndex: num });
         } else {
-            setSource({
+            onChange({
                 usesCC: false,
                 sourceIndex: -num as ModulatorSourceIndex
             });
@@ -42,6 +47,7 @@ export function ModulatorSourcePicker({
     return (
         <select
             className="source_picker pretty_outline monospaced"
+            aria-label={label}
             onChange={handleSelectChange}
             value={selectValue}
         >
@@ -66,7 +72,7 @@ export function ModulatorSourcePicker({
             <option value={-ModulatorControllerSources.pitchWheelRange}>
                 {t("modulatorLocale.sources.pitchWheelRange")}
             </option>
-            {ccOptions}
+            <OptionList options={controllers} />
         </select>
     );
 }

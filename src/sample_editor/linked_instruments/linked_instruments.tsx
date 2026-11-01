@@ -6,7 +6,11 @@ import { DeleteSampleAction } from "./delete_sample_action.ts";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 import { getObjectId } from "../../utils/object_id.ts";
 
-export function LinkedInstruments({ sample }: { sample: BasicSample }) {
+interface LinkedInstrumentsProps {
+    sample: BasicSample;
+}
+
+export function LinkedInstruments({ sample }: LinkedInstrumentsProps) {
     const { t } = useTranslation();
     const { apply, setView } = useBankEditor();
     // An instrument with several zones of this sample is listed once
@@ -39,22 +43,27 @@ export function LinkedInstruments({ sample }: { sample: BasicSample }) {
                             {t("sampleLocale.notLinkedToInstrument")}
                         </strong>
                     </div>
-                    <div onClick={deleteSample} className={"warning"}>
+                    <button
+                        type={"button"}
+                        onClick={deleteSample}
+                        className={"plain_button warning"}
+                    >
                         {t("sampleLocale.deleteSample")}
-                    </div>
+                    </button>
                 </>
             )}
             {sample.linkedTo.length > 0 && (
                 <>
                     <div>{t("sampleLocale.usedBy")}:</div>
                     {Array.from(linked, (inst) => (
-                        <div
-                            className={"monospaced"}
+                        <button
+                            type={"button"}
+                            className={"plain_button monospaced"}
                             onClick={() => setView(inst)}
                             key={getObjectId(inst)}
                         >
                             {inst.name}
-                        </div>
+                        </button>
                     ))}
                 </>
             )}

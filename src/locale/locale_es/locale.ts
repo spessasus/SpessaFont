@@ -40,7 +40,10 @@ export const localeSpanish = {
         title: "Algo salió mal",
         description:
             "SpessaFont encontró un error y no pudo continuar. Recargar la página reinicia la aplicación. Los cambios no guardados se perderán.",
-        reload: "Recargar"
+        reload: "Recargar",
+        paneTitle: "Este editor encontró un error",
+        paneDescription:
+            "El resto de SpessaFont sigue funcionando. Selecciona otro elemento, o deshaz el último cambio y vuelve a seleccionar este."
     },
 
     loadingAndSaving: {

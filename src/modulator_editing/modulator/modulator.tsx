@@ -1,4 +1,5 @@
-import { type GeneratorType, Modulator } from "spessasynth_core";
+import { Modulator } from "spessasynth_core";
+import type * as React from "react";
 import "./modulator.css";
 import { useTranslation } from "react-i18next";
 import {
@@ -11,189 +12,183 @@ import {
 } from "../curve_picker/curve_picker.tsx";
 import { ModulatorDiagram } from "../diagram.tsx";
 import { DestinationPicker } from "../destination_picker.tsx";
-import * as React from "react";
-import { type JSX } from "react";
+import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
 
-interface ModulatorProps {
+const MAX_AMOUNT = 32_767;
+
+export type ModulatorSourceSlot = "primary" | "secondary";
+
+interface ModulatorViewProps {
     mod: Modulator;
-    setModulator: (m: Modulator) => void;
-    deleteModulator: () => void;
     modulatorNumber: number;
-    activeModPickerId: string | null;
-    setActiveModPickerId: (i: string) => void;
-    onClick: (e: React.MouseEvent) => unknown;
-    selected: boolean;
-    destinationList: JSX.Element;
-    ccList: JSX.Element;
-    overridingDefaultModulator: boolean;
+    isSelected: boolean;
+    isOverridingDefault: boolean;
+    /**
+     * Which curve picker of this modulator is open, if any.
+     */
+    openCurvePicker: ModulatorSourceSlot | null;
+    onOpenCurvePickerChange: (slot: ModulatorSourceSlot | null) => void;
+    /**
+     * Receives an edited copy. The modulator itself is never changed.
+     */
+    onChange: (mod: Modulator) => void;
+    onDelete: () => void;
+    onSelect: (e: React.MouseEvent) => void;
 }
 
-const AMOUNT_PREFIX = "× ";
-
-export const ModulatorView = React.memo(function ({
+export function ModulatorView({
     mod,
-    setModulator,
-    deleteModulator,
     modulatorNumber,
-    activeModPickerId,
-    setActiveModPickerId,
-    onClick,
-    selected,
-    destinationList,
-    ccList,
-    overridingDefaultModulator
-}: ModulatorProps) {
+    isSelected,
+    isOverridingDefault,
+    openCurvePicker,
+    onOpenCurvePickerChange,
+    onChange,
+    onDelete,
+    onSelect
+}: ModulatorViewProps) {
     const { t } = useTranslation();
 
-    function setDestination(dest: GeneratorType) {
-        mod.destination = dest;
-        setModulator(mod);
-    }
+    const update = (change: (copy: Modulator) => void) => {
+        const copy = Modulator.copyFrom(mod);
+        change(copy);
+        onChange(copy);
+    };
 
-    function setAmount(amount: number) {
-        mod.transformAmount = amount;
-        setModulator(mod);
-    }
+    const getSourceSetter =
+        (slot: ModulatorSourceSlot) => (s: SpessaFontModulatorSource) =>
+            update((copy) => {
+                const source =
+                    slot === "primary"
+                        ? copy.primarySource
+                        : copy.secondarySource;
+                source.index = s.sourceIndex;
+                source.isCC = s.usesCC;
+            });
 
-    function setTransformType(t: number) {
-        if (t !== 0 && t !== 2) {
-            return;
+    const getCurveSetter =
+        (slot: ModulatorSourceSlot) => (c: SpessaFontModulatorCurveType) =>
+            update((copy) => {
+                const source =
+                    slot === "primary"
+                        ? copy.primarySource
+                        : copy.secondarySource;
+                source.curveType = c.curveType;
+                source.isBipolar = c.bipolar;
+                source.isNegative = !c.positive;
+            });
+
+    const sources = [
+        {
+            slot: "primary",
+            source: mod.primarySource,
+            sourceLabel: t("modulatorLocale.primarySource"),
+            curveLabel: t("modulatorLocale.primaryCurve")
+        },
+        {
+            slot: "secondary",
+            source: mod.secondarySource,
+            sourceLabel: t("modulatorLocale.secondarySource"),
+            curveLabel: t("modulatorLocale.secondaryCurve")
         }
-
-        mod.transformType = t;
-        setModulator(mod);
-    }
-
-    function setSource(s: SpessaFontModulatorSource) {
-        mod.primarySource.index = s.sourceIndex;
-        mod.primarySource.isCC = s.usesCC;
-        setModulator(mod);
-    }
-
-    function setSecSource(s: SpessaFontModulatorSource) {
-        mod.secondarySource.index = s.sourceIndex;
-        mod.secondarySource.isCC = s.usesCC;
-        setModulator(mod);
-    }
-
-    function setCurveType(c: SpessaFontModulatorCurveType) {
-        mod.primarySource.curveType = c.curveType;
-        mod.primarySource.isBipolar = c.bipolar;
-        mod.primarySource.isNegative = !c.positive;
-        setModulator(mod);
-    }
-
-    function setSecCurveType(c: SpessaFontModulatorCurveType) {
-        mod.secondarySource.curveType = c.curveType;
-        mod.secondarySource.isBipolar = c.bipolar;
-        mod.secondarySource.isNegative = !c.positive;
-        setModulator(mod);
-    }
+    ] as const;
 
     return (
         <div
+            // Clicking the empty area of the card selects it, like the number button does
             onClick={(e) => {
                 if (e.target === e.currentTarget) {
-                    onClick(e);
+                    onSelect(e);
                 }
             }}
-            className={`modulator_main ${selected ? "selected" : ""}`}
-            title={
-                overridingDefaultModulator
-                    ? t("modulatorLocale.overriding")
-                    : ""
-            }
+            className={`modulator_main ${isSelected ? "selected" : ""}`}
+            title={isOverridingDefault ? t("modulatorLocale.overriding") : ""}
         >
-            <h4
-                className={`modulator_title_left ${overridingDefaultModulator ? "overriding_modulator" : ""}`}
+            <button
+                type={"button"}
+                aria-pressed={isSelected}
+                className={`plain_button modulator_title_left ${isOverridingDefault ? "overriding_modulator" : ""}`}
+                aria-label={t("modulatorLocale.modulatorNumber", {
+                    number: modulatorNumber
+                })}
+                onClick={onSelect}
             >
                 #{modulatorNumber}
-            </h4>
-            <h2 className={"modulator_title_right"} onClick={deleteModulator}>
+            </button>
+            <button
+                type={"button"}
+                className={"plain_button modulator_title_right"}
+                aria-label={t("modulatorLocale.deleteModulator", {
+                    number: modulatorNumber
+                })}
+                title={t("modulatorLocale.deleteModulator", {
+                    number: modulatorNumber
+                })}
+                onClick={onDelete}
+            >
                 &times;
-            </h2>
+            </button>
             <div className={"source_pair"}>
-                <ModulatorSourcePicker
-                    ccOptions={ccList}
-                    setSource={setSource}
-                    source={{
-                        usesCC: mod.primarySource.isCC,
-                        sourceIndex: mod.primarySource.index
-                    }}
-                ></ModulatorSourcePicker>
-                <ModulatorSourcePicker
-                    ccOptions={ccList}
-                    setSource={setSecSource}
-                    source={{
-                        usesCC: mod.secondarySource.isCC,
-                        sourceIndex: mod.secondarySource.index
-                    }}
-                ></ModulatorSourcePicker>
+                {sources.map(({ slot, source, sourceLabel }) => (
+                    <ModulatorSourcePicker
+                        key={slot}
+                        label={sourceLabel}
+                        onChange={getSourceSetter(slot)}
+                        source={{
+                            usesCC: source.isCC,
+                            sourceIndex: source.index
+                        }}
+                    />
+                ))}
             </div>
             <div className={"source_pair"}>
-                <ModulatorCurvePicker
-                    id={`${modulatorNumber}-1`}
-                    isActive={activeModPickerId === `${modulatorNumber}-1`}
-                    setActive={() =>
-                        setActiveModPickerId(`${modulatorNumber}-1`)
-                    }
-                    setNotActive={() => setActiveModPickerId("")}
-                    curveType={{
-                        curveType: mod.primarySource.curveType,
-                        bipolar: mod.primarySource.isBipolar,
-                        positive: !mod.primarySource.isNegative
-                    }}
-                    setCurveType={setCurveType}
-                ></ModulatorCurvePicker>
-                <ModulatorCurvePicker
-                    id={`${modulatorNumber}-2`}
-                    isActive={activeModPickerId === `${modulatorNumber}-2`}
-                    setNotActive={() => setActiveModPickerId("")}
-                    setActive={() =>
-                        setActiveModPickerId(`${modulatorNumber}-2`)
-                    }
-                    curveType={{
-                        curveType: mod.secondarySource.curveType,
-                        bipolar: mod.secondarySource.isBipolar,
-                        positive: !mod.secondarySource.isNegative
-                    }}
-                    setCurveType={setSecCurveType}
-                ></ModulatorCurvePicker>
+                {sources.map(({ slot, source, curveLabel }) => (
+                    <ModulatorCurvePicker
+                        key={slot}
+                        label={curveLabel}
+                        isOpen={openCurvePicker === slot}
+                        onOpenChange={(isOpen) =>
+                            onOpenCurvePickerChange(isOpen ? slot : null)
+                        }
+                        curveType={{
+                            curveType: source.curveType,
+                            bipolar: source.isBipolar,
+                            positive: !source.isNegative
+                        }}
+                        onChange={getCurveSetter(slot)}
+                    />
+                ))}
             </div>
-            <ModulatorDiagram></ModulatorDiagram>
+            <ModulatorDiagram />
             <div className={"pretty_input"}>
-                <input
-                    type="text"
-                    className=" amount_input monospaced"
-                    placeholder={`${AMOUNT_PREFIX} ${t("modulatorLocale.amount")}`}
-                    value={`${AMOUNT_PREFIX}${mod.transformAmount}`}
-                    onChange={(e) => {
-                        const rawValue = e.target.value;
-                        const numericPart = rawValue
-                            .replace(AMOUNT_PREFIX, "")
-                            .trim();
-
-                        if (numericPart === "") {
-                            setAmount(0);
-                            return;
-                        }
-
-                        const parsed = Math.trunc(Number(numericPart));
-                        if (
-                            !Number.isNaN(parsed) &&
-                            parsed >= -32_767 &&
-                            parsed <= 32_767
-                        ) {
-                            setAmount(parsed);
-                        }
+                <span aria-hidden={true}>×</span>
+                <WaitingInput
+                    type={"text"}
+                    className={"amount_input monospaced"}
+                    aria-label={t("modulatorLocale.amount")}
+                    placeholder={t("modulatorLocale.amount")}
+                    min={-MAX_AMOUNT}
+                    max={MAX_AMOUNT}
+                    value={mod.transformAmount}
+                    setValue={(amount) => {
+                        const transformAmount = Math.trunc(amount);
+                        update((copy) => {
+                            copy.transformAmount = transformAmount;
+                        });
+                        return transformAmount;
                     }}
                 />
                 <select
                     className={"transform_selector monospaced"}
+                    aria-label={t("modulatorLocale.transform")}
                     value={mod.transformType}
-                    onChange={(e) =>
-                        setTransformType(Number.parseInt(e.target.value) || 0)
-                    }
+                    onChange={(e) => {
+                        const transformType =
+                            Number.parseInt(e.target.value) === 2 ? 2 : 0;
+                        update((copy) => {
+                            copy.transformType = transformType;
+                        });
+                    }}
                 >
                     <option value={0}>
                         {t("modulatorLocale.transforms.noOperation")}
@@ -205,10 +200,13 @@ export const ModulatorView = React.memo(function ({
             </div>
 
             <DestinationPicker
-                destinationList={destinationList}
                 destination={mod.destination}
-                setDestination={setDestination}
-            ></DestinationPicker>
+                onChange={(destination) =>
+                    update((copy) => {
+                        copy.destination = destination;
+                    })
+                }
+            />
         </div>
     );
-});
+}

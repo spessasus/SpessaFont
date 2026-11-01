@@ -1,13 +1,8 @@
-import { type JSX, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { MenuList } from "../menu_list/menu_list.tsx";
 import "./bank_editor.css";
 import { SoundBankInfo } from "../info_view/sound_bank_info.tsx";
-import {
-    BasicInstrument,
-    BasicPreset,
-    BasicSample,
-    type GenericRange
-} from "spessasynth_core";
+import { BasicInstrument, BasicPreset, BasicSample } from "spessasynth_core";
 import { PresetEditor } from "../preset_editor/preset_editor.tsx";
 import { InstrumentEditor } from "../instrument_editor/instrument_editor.tsx";
 import { SampleEditor } from "../sample_editor/sample_editor.tsx";
@@ -19,15 +14,20 @@ import {
     BankEditorContext,
     type BankEditorContextType
 } from "./bank_editor_context.ts";
+import { usePreviewTarget } from "./use_preview_target.ts";
+import { ErrorBoundary } from "../error_boundary/error_boundary.tsx";
+import { PaneErrorFallback } from "../error_boundary/pane_error_fallback.tsx";
+import { getObjectId } from "../utils/object_id.ts";
+
+function renderPaneError(error: unknown) {
+    return <PaneErrorFallback error={error} />;
+}
 
 export interface BankEditorProps {
     session: BankSession;
     view: BankEditView;
     setView: (view: BankEditView) => void;
-    destinationOptions: JSX.Element;
-    ccOptions: JSX.Element;
     shown: boolean;
-    setSplits: (s: GenericRange[]) => unknown;
 }
 
 /**
@@ -35,31 +35,21 @@ export interface BankEditorProps {
  * for example after undoing its creation.
  */
 function useResolvedView(session: BankSession, view: BankEditView) {
-    const presets = useBankSnapshot(session.store, (s) => s.presets);
-    const instruments = useBankSnapshot(session.store, (s) => s.instruments);
-    const samples = useBankSnapshot(session.store, (s) => s.samples);
-    if (view instanceof BasicPreset) {
-        return presets.includes(view) ? view : "info";
-    }
-    if (view instanceof BasicInstrument) {
-        return instruments.includes(view) ? view : "info";
-    }
-    if (view instanceof BasicSample) {
-        return samples.includes(view) ? view : "info";
-    }
-    return view;
+    // Subscribing to the lists re-renders when an element is added or removed
+    useBankSnapshot(session.store, (s) => s.presets);
+    useBankSnapshot(session.store, (s) => s.instruments);
+    useBankSnapshot(session.store, (s) => s.samples);
+    return view !== "info" && session.document.contains(view) ? view : "info";
 }
 
 export function BankEditor({
     session,
     view: selectedView,
     setView,
-    destinationOptions,
-    ccOptions,
-    shown,
-    setSplits
+    shown
 }: BankEditorProps) {
     const view = useResolvedView(session, selectedView);
+    usePreviewTarget(session, view);
 
     const context: BankEditorContextType = useMemo(
         () => ({
@@ -75,53 +65,27 @@ export function BankEditor({
         [session, setView]
     );
 
-    useEffect(() => {
-        if (
-            !shown ||
-            (!(view instanceof BasicInstrument) &&
-                !(view instanceof BasicPreset))
-        ) {
-            setSplits([]);
-        }
-    }, [setSplits, shown, view]);
-
-    // cleanup, set no splits
-    useEffect(() => {
-        return () => {
-            setSplits([]);
-        };
-    }, [setSplits]);
-
     return (
         <BankEditorContext value={context}>
             <div className={"main_content" + (shown ? "" : " hidden")}>
                 <MenuList view={view} />
                 <div className={"main_content_window"}>
-                    {view === "info" && (
-                        <SoundBankInfo
-                            destinationOptions={destinationOptions}
-                            ccOptions={ccOptions}
-                        />
-                    )}
-                    {view instanceof BasicPreset && (
-                        <PresetEditor
-                            preset={view}
-                            setSplits={setSplits}
-                            ccOptions={ccOptions}
-                            destinationOptions={destinationOptions}
-                        />
-                    )}
-                    {view instanceof BasicInstrument && (
-                        <InstrumentEditor
-                            instrument={view}
-                            setSplits={setSplits}
-                            ccOptions={ccOptions}
-                            destinationOptions={destinationOptions}
-                        />
-                    )}
-                    {view instanceof BasicSample && (
-                        <SampleEditor sample={view} />
-                    )}
+                    {/* A failing editor resets when another element is shown */}
+                    <ErrorBoundary
+                        key={view === "info" ? "info" : getObjectId(view)}
+                        fallback={renderPaneError}
+                    >
+                        {view === "info" && <SoundBankInfo />}
+                        {view instanceof BasicPreset && (
+                            <PresetEditor preset={view} />
+                        )}
+                        {view instanceof BasicInstrument && (
+                            <InstrumentEditor instrument={view} />
+                        )}
+                        {view instanceof BasicSample && (
+                            <SampleEditor sample={view} />
+                        )}
+                    </ErrorBoundary>
                 </div>
             </div>
         </BankEditorContext>

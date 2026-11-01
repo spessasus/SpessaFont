@@ -1,4 +1,5 @@
 export const InstrumentLocale = {
+    instrumentName: "Nazwa instrumentu",
     notLinkedToPreset: "Jeszcze nie użyty.",
     usedBy: "Użyty przez",
     linkSelectedSamples: "Połącz wybrane próbki",

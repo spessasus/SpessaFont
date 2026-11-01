@@ -1,143 +1,119 @@
 import {
+    BasicInstrument,
     BasicInstrumentZone,
-    type BasicPresetZone,
-    BasicZone,
+    type BasicPreset,
     GeneratorTypes
 } from "spessasynth_core";
-import type { NumberGeneratorProps } from "../generator_row.tsx";
-import { type CSSProperties, useCallback, useMemo } from "react";
 import { SetGeneratorAction } from "./set_generator_action.ts";
 import { midiNoteToPitchClass } from "../../utils/note_name.ts";
 import { GeneratorCellInput } from "./generator_cell_input.tsx";
 import { useTranslation } from "react-i18next";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
+import { GeneratorLimits } from "../../core_backend/generator_limits.ts";
+import type { GeneratorRowType } from "../generator_row_type.ts";
+import type { ZoneColumn } from "../zone_columns.ts";
+import { getColumnZones } from "./column_zones.ts";
 
-function getDistinctColor(index: number, total = 10) {
-    const hue = ((index - 1) * (360 / total)) % 360;
-    const saturation = 255;
-    const lightness = 50;
-    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+const EXCLUSIVE_CLASS_COLORS = 10;
+
+function getExclusiveClassColor(exclusiveClass: number) {
+    const hue = ((exclusiveClass - 1) * (360 / EXCLUSIVE_CLASS_COLORS)) % 360;
+    return `hsl(${hue}, 100%, 50%)`;
 }
 
-type NumberGeneratorCellProps<T> = NumberGeneratorProps & {
-    zone: BasicZone;
-    linkedZone?: T;
-    colSpan: number;
-    min: number;
-    max: number;
-    def: number;
-};
+const identity = (v: number) => v;
 
-export function NumberGeneratorCell<
-    T extends BasicPresetZone | BasicInstrumentZone
->({
-    zone,
+interface NumberGeneratorCellProps {
+    element: BasicPreset | BasicInstrument;
+    column: ZoneColumn;
+    row: GeneratorRowType;
+    label: string;
+}
+
+export function NumberGeneratorCell({
     element,
-    generator,
-    min,
-    max,
-    def,
-    linkedZone,
-    fromGenerator = (v) => v,
-    toGenerator = (v) => v,
-    precision = 0,
-    colSpan
-}: NumberGeneratorCellProps<T>) {
+    column,
+    row,
+    label
+}: NumberGeneratorCellProps) {
     const { t } = useTranslation();
     const { apply } = useBankEditor();
+    const {
+        generator,
+        fromGenerator = identity,
+        toGenerator = identity,
+        precision = 0
+    } = row;
+    const { zone, colSpan } = column;
     const value = zone.getGenerator(generator, null);
-    const v2txt = useCallback(
-        (v: number | null) =>
-            v === null ? "" : fromGenerator(v).toFixed(precision),
-        [fromGenerator, precision]
-    );
+    const toText = (v: number | null) =>
+        v === null ? "" : fromGenerator(v).toFixed(precision);
+    const textValue = toText(value);
 
-    const textValue = v2txt(value);
+    const limits = GeneratorLimits[generator];
+    const isInstrument = element instanceof BasicInstrument;
+    const min = isInstrument ? limits.min : (limits.pMin ?? limits.min);
+    const max = isInstrument ? limits.max : (limits.pMax ?? limits.max);
 
-    let placeholder = "";
+    let placeholder = toText(limits.def);
     if (
         zone instanceof BasicInstrumentZone &&
         generator === GeneratorTypes.overridingRootKey
     ) {
-        placeholder = `${zone.sample.originalKey} (${midiNoteToPitchClass(
-            zone.sample.originalKey
-        )})`;
-    } else if (zone instanceof BasicZone) {
-        placeholder = v2txt(def);
-        if (placeholder === "-1") {
-            placeholder = "-";
-        }
+        const key = zone.sample.originalKey;
+        placeholder = `${key} (${midiNoteToPitchClass(key)})`;
+    } else if (placeholder === "-1") {
+        placeholder = "-";
     }
 
-    const isModulated = useMemo(
-        () => zone.modulators.some((m) => m.destination === generator),
-        [generator, zone.modulators]
-    );
-
-    const style: CSSProperties = {};
-    if (value && generator === GeneratorTypes.exclusiveClass && value > 0) {
-        style.color = getDistinctColor(value);
-        style.fontWeight = "bold";
-    }
-
-    const setValue = useCallback(
-        (typedText: string) => {
-            if (textValue === typedText) {
-                return textValue;
-            }
-            let newValue: number | null = null;
-            if (typedText !== "") {
-                const num = Number(typedText);
-                const rawNum = Math.floor(toGenerator(num));
-                newValue = Math.max(min, Math.min(max, rawNum));
-            }
-            const actions = [
-                new SetGeneratorAction(
-                    element,
-                    zone,
-                    generator,
-                    value,
-                    newValue
-                )
-            ];
-            if (linkedZone) {
-                actions.push(
+    const setGenerator = (newValue: number | null) =>
+        apply(
+            getColumnZones(column).map(
+                (z) =>
                     new SetGeneratorAction(
                         element,
-                        linkedZone,
+                        z,
                         generator,
-                        linkedZone.getGenerator(generator, null),
+                        z.getGenerator(generator, null),
                         newValue
                     )
-                );
-            }
-            apply(actions);
-            return v2txt(newValue);
-        },
-        [
-            apply,
-            element,
-            generator,
-            max,
-            min,
-            linkedZone,
-            textValue,
-            toGenerator,
-            v2txt,
-            value,
-            zone
-        ]
-    );
+            )
+        );
 
-    // loop playback special case
+    const commitText = (typedText: string) => {
+        if (typedText === textValue) {
+            return textValue;
+        }
+        if (typedText === "") {
+            setGenerator(null);
+            return "";
+        }
+        const typed = Number(typedText);
+        if (Number.isNaN(typed)) {
+            return textValue;
+        }
+        const raw = Math.floor(toGenerator(typed));
+        const newValue = Math.max(min, Math.min(max, raw));
+        setGenerator(newValue);
+        return toText(newValue);
+    };
+
+    const isModulated = zone.modulators.some(
+        (m) => m.destination === generator
+    );
+    const className = `generator_cell ${isModulated ? "modulated" : ""}`;
+
     if (generator === GeneratorTypes.sampleModes) {
         return (
-            <td className={`generator_cell`} colSpan={colSpan}>
+            <td className={className} colSpan={colSpan}>
                 <select
-                    value={value ?? "none"}
+                    aria-label={label}
+                    value={value ?? "null"}
                     onChange={(e) =>
-                        setValue(
-                            e.target.value === "null" ? "" : e.target.value
+                        setGenerator(
+                            e.target.value === "null"
+                                ? null
+                                : Number(e.target.value)
                         )
                     }
                 >
@@ -159,19 +135,27 @@ export function NumberGeneratorCell<
         );
     }
 
+    const hasExclusiveClass =
+        generator === GeneratorTypes.exclusiveClass &&
+        value !== null &&
+        value > 0;
+
     return (
-        <td
-            className={`generator_cell ${isModulated ? "modulated" : ""}`}
-            colSpan={colSpan}
-        >
+        <td className={className} colSpan={colSpan}>
             <GeneratorCellInput
+                aria-label={label}
                 regex={/[^0-9-.]/g}
                 type={"text"}
                 maxLength={10}
-                style={style}
+                className={hasExclusiveClass ? "exclusive_class" : undefined}
+                style={
+                    hasExclusiveClass
+                        ? { color: getExclusiveClassColor(value) }
+                        : undefined
+                }
                 placeholder={placeholder}
                 value={textValue}
-                onBlur={setValue}
+                onBlur={commitText}
             />
         </td>
     );

@@ -4,7 +4,6 @@
 
 .header_cell {
     padding: 0.5rem;
-    cursor: pointer;
     max-width: 15ch;
     min-width: 10ch;
     position: relative;
@@ -31,13 +30,14 @@
     font-weight: bold;
 }
 
-.header_cell span {
+.header_cell .header_cell_name {
+    cursor: pointer;
     word-break: break-word;
     white-space: break-spaces;
     margin-right: 1rem;
 }
 
-.header_cell.stereo span:first-child {
+.header_cell.stereo .header_cell_name {
     font-style: italic;
     cursor: help;
 }
@@ -46,7 +46,7 @@
     cursor: pointer;
     filter: brightness(0.8);
     position: absolute;
-    right: -0.8rem;
+    right: 0.2rem;
     top: 0;
 }
 

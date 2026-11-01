@@ -4,49 +4,40 @@ import type {
     BasicZone,
     Modulator
 } from "spessasynth_core";
-import {
-    ModulatorList,
-    type ModulatorListGlobals
-} from "../../modulator_editing/modulator_list/modulator_list.tsx";
+import { ModulatorList } from "../../modulator_editing/modulator_list/modulator_list.tsx";
 import "./modulator_edit.css";
 import { useTranslation } from "react-i18next";
-import { useCallback } from "react";
 import { EditModulatorsAction } from "./edit_modulators_action.ts";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
+
+interface ModulatorEditorProps {
+    name: string;
+    zone: BasicZone;
+    linkedZone: BasicZone | undefined;
+    onClose: () => void;
+    element: BasicPreset | BasicInstrument;
+    defaultModulators: readonly Modulator[];
+}
 
 export function ModulatorEditor({
     name,
     zone,
-    ccOptions,
-    destinationOptions,
     onClose,
     element,
     linkedZone,
     defaultModulators
-}: {
-    name: string;
-    zone: BasicZone;
-    linkedZone: BasicZone | undefined;
-    onClose: () => unknown;
-    element: BasicPreset | BasicInstrument;
-    defaultModulators: readonly Modulator[];
-} & ModulatorListGlobals) {
+}: ModulatorEditorProps) {
     const { t } = useTranslation();
     const { apply } = useBankEditor();
 
-    const setModulators = useCallback(
-        (mods: Modulator[]) => {
-            const actions = [new EditModulatorsAction(element, zone, mods)];
-            // linked sample
-            if (linkedZone) {
-                actions.push(
-                    new EditModulatorsAction(element, linkedZone, mods)
-                );
-            }
-            apply(actions);
-        },
-        [apply, element, linkedZone, zone]
-    );
+    const setModulators = (mods: Modulator[]) => {
+        const actions = [new EditModulatorsAction(element, zone, mods)];
+        // The stereo partner gets the same modulators
+        if (linkedZone) {
+            actions.push(new EditModulatorsAction(element, linkedZone, mods));
+        }
+        apply(actions);
+    };
 
     return (
         <div className={"zone_modulators"}>
@@ -55,14 +46,18 @@ export function ModulatorEditor({
                     name
                 })}
             </h2>
-            <h1 onClick={onClose} className={"close"}>
+            <button
+                type={"button"}
+                onClick={onClose}
+                className={"plain_button close"}
+                aria-label={t("modulatorLocale.closeEditor")}
+                title={t("modulatorLocale.closeEditor")}
+            >
                 &times;
-            </h1>
+            </button>
             <ModulatorList
                 modulatorList={zone.modulators}
                 setModulatorList={setModulators}
-                ccOptions={ccOptions}
-                destinationOptions={destinationOptions}
                 defaultModulators={defaultModulators}
             />
         </div>

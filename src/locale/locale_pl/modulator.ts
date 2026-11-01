@@ -1,4 +1,25 @@
 export const ModulatorLocale = {
+    modulatorNumber: "Modulator #{{number}}",
+    deleteModulator: "Usuń modulator #{{number}}",
+    primarySource: "Źródło główne",
+    secondarySource: "Źródło dodatkowe",
+    primaryCurve: "Krzywa źródła głównego",
+    secondaryCurve: "Krzywa źródła dodatkowego",
+    transform: "Przekształcenie",
+    destination: "Cel",
+    curves: {
+        linear: "Liniowa",
+        concave: "Wklęsła",
+        convex: "Wypukła",
+        switch: "Przełącznik",
+        unipolar: "jednobiegunowa",
+        bipolar: "dwubiegunowa",
+        positive: "dodatnia",
+        negative: "ujemna",
+        label: "{{shape}}, {{polarity}}, {{direction}}"
+    },
+    editModulators: "Edytuj modulatory dla {{name}}",
+    closeEditor: "Zamknij edytor modulatorów",
     modulators: "Modulatory", // plural
     editingModulators: "Edytowanie modulatorów dla {{name}}",
     overriding: "Nadpisywanie domyślnego modulatora",

@@ -1,9 +1,9 @@
 import {
     BasicInstrument,
     BasicInstrumentZone,
-    type BasicPreset,
+    BasicPreset,
     BasicPresetZone,
-    type BasicSample,
+    BasicSample,
     BasicSoundBank,
     SoundBankLoader
 } from "spessasynth_core";
@@ -14,6 +14,7 @@ import {
 import { presetSorter } from "../utils/preset_sorter.ts";
 import { nameSorter } from "../utils/name_sorter.ts";
 import { SOFTWARE_NAME } from "../utils/software_name.ts";
+import type { BankEntity } from "./bank_view.ts";
 
 const SAMPLE_BANK_FILE = BasicSoundBank.getSampleSoundBankFile();
 
@@ -132,6 +133,19 @@ export class BankDocument {
 
     public get samples() {
         return this.bank.samples;
+    }
+
+    /**
+     * Whether the element is part of the bank (it may have been removed while selected).
+     */
+    public contains(entity: BankEntity) {
+        if (entity instanceof BasicPreset) {
+            return this.presets.includes(entity);
+        }
+        if (entity instanceof BasicInstrument) {
+            return this.instruments.includes(entity);
+        }
+        return entity instanceof BasicSample && this.samples.includes(entity);
     }
 
     public getBankName(unnamed: string) {

@@ -1,365 +1,187 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { SamplePlayerState } from "./sample_editor.tsx";
-import { ControllerRange } from "../fancy_inputs/controller_range/controller_range.tsx";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { audioToWav, type BasicSample, SampleTypes } from "spessasynth_core";
 import toast from "react-hot-toast";
+import { audioToWav, type BasicSample } from "spessasynth_core";
+import { ControllerRange } from "../fancy_inputs/controller_range/controller_range.tsx";
 import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
-import { logInfo, logWarn } from "../utils/core_utils.ts";
-
-const DEFAULT_SAMPLE_GAIN = 0.4;
+import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
+import { logError } from "../utils/core_utils.ts";
+import { pickFile } from "../utils/pick_file.ts";
+import { downloadBlob } from "../utils/download_blob.ts";
+import type { useSamplePlayer } from "./use_sample_player.ts";
+import { ReplaceSampleAudioAction } from "./replace_sample_audio_action.ts";
+import { createReplaceAudioActions, normalizeAudio } from "./sample_audio.ts";
 
 const ZOOM_PER_SAMPLE = 50_000 / 6_000_000;
+const MIN_MAX_ZOOM = 5;
+/**
+ * The zoom slider maps to the zoom exponentially, so small zooms get most of its range.
+ */
+const ZOOM_CURVE = 5;
 
-const exportWavData = (data: Float32Array, rate: number, name: string) => {
-    const buf = audioToWav([data], rate, {
-        normalizeAudio: false
-    });
-    const blob = new Blob([buf], {
-        type: "audio/wav"
-    });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `${name}.wav`;
-    logInfo(`Exporting ${a.download}`);
-    a.click();
-};
+function exportWav(data: Float32Array, sampleRate: number, name: string) {
+    const wav = audioToWav([data], sampleRate, { normalizeAudio: false });
+    downloadBlob(new Blob([wav], { type: "audio/wav" }), `${name}.wav`);
+}
 
+interface SampleToolsProps {
+    sample: BasicSample;
+    player: ReturnType<typeof useSamplePlayer>;
+    zoom: number;
+    onZoomChange: (zoom: number) => void;
+}
+
+/**
+ * Playback, WAV export, normalize, audio replacement, and the waveform zoom.
+ */
 export function SampleTools({
     sample,
-    playerState,
-    setPlayerState,
-    setPlaybackStart,
-    loading,
-    setLoading,
+    player,
     zoom,
-    setZoom,
-    sampleData,
-    setSampleData
-}: {
-    sample: BasicSample;
-    playerState: SamplePlayerState;
-    setPlayerState: (s: SamplePlayerState) => unknown;
-    setPlaybackStart: (s: number) => unknown;
-    loading: boolean;
-    setLoading: (isLoading: boolean) => unknown;
-    zoom: number;
-    setZoom: (z: number) => unknown;
-    sampleData: Float32Array;
-    setSampleData: (d: Float32Array, rate: number) => unknown;
-}) {
+    onZoomChange
+}: SampleToolsProps) {
     const { t } = useTranslation();
-    const {
-        audioEngine: { context, targetNode }
-    } = useAudioEngine();
-    const sampleName = sample.name;
-    const sampleRate = sample.sampleRate;
-    const centCorrection = sample.pitchCorrection;
-    const loopStart = sample.loopStart;
-    const loopEnd = sample.loopEnd;
-    const sampleType = sample.sampleType;
-    const linkedSample = sample.linkedSample;
-    const audioData = sample.getAudioData();
+    const { audioEngine } = useAudioEngine();
+    const { apply } = useBankEditor();
+    const [isLoading, setIsLoading] = useState(false);
+    const [sliderValue, setSliderValue] = useState(100);
+    const length = sample.getAudioData().length;
+    const { buffer } = player;
 
-    const [inputZoom, setInputZoom] = useState(100);
-
-    const buffer = useMemo(() => {
-        // resample if sample range is ridiculous
-        // test case: Calm 4 with a whopping 384 kHz
-        let bufferRate = sampleRate;
-        // Audio data is grabbed outside to reflect updates, such as "normalize"
-        let targetData = audioData;
-        if (sampleRate < 8000 || sampleRate > 96_000) {
-            // resample to 48kHz
-            const ratio = 48_000 / sampleRate;
-            const resampled = new Float32Array(
-                Math.floor(audioData.length * ratio)
-            );
-            for (let i = 0; i < resampled.length; i++) {
-                resampled[i] = audioData[Math.floor(i * (1 / ratio))];
-            }
-            targetData = resampled;
-            bufferRate = 48_000;
-        }
-
-        const buf = context.createBuffer(
-            1,
-            Math.max(targetData.length, 2),
-            bufferRate
-        );
-        buf.getChannelData(0).set(targetData);
-        return buf;
-    }, [sampleRate, audioData, context]);
-
-    const playerRef = useRef<AudioBufferSourceNode | null>(null);
-
-    const stopSampleInternal = useCallback(() => {
-        if (!playerRef.current) {
+    const replaceAudio = async () => {
+        const file = await pickFile("audio/*");
+        if (!file) {
             return;
         }
-
+        player.stop();
+        setIsLoading(true);
+        let decoded: AudioBuffer;
         try {
-            playerRef.current.stop();
+            decoded = await audioEngine.context.decodeAudioData(
+                await file.arrayBuffer()
+            );
         } catch (error) {
-            logWarn("Audio already stopped or invalid.", error);
-        }
-        playerRef.current.disconnect();
-        playerRef.current = null;
-    }, []);
-
-    // stop and clean up on unmounting or sample change
-    useEffect(() => {
-        return () => {
-            // don't stop the sample automatically
-            if (playerRef.current) {
-                playerRef.current.onended = null;
-            }
-            stopSampleInternal();
-            setZoom(1);
-            setInputZoom(100);
-        };
-    }, [sample, setZoom, stopSampleInternal]);
-
-    // update loop
-    useEffect(() => {
-        if (!(playerState === "playing_loop" && playerRef.current)) {
+            logError("Failed to decode the audio file.", error);
+            toast.error(t("sampleLocale.tools.invalidAudioFile"));
             return;
+        } finally {
+            setIsLoading(false);
         }
-
-        playerRef.current.loopStart = loopStart / sampleRate;
-        playerRef.current.loopEnd = loopEnd / sampleRate;
-    }, [loopEnd, loopStart, playerState, sampleRate]);
-
-    // update detune
-    useEffect(() => {
-        if (playerState !== "stopped" && playerRef.current) {
-            playerRef.current.detune.value = centCorrection;
+        const channels = Array.from(
+            { length: decoded.numberOfChannels },
+            (_, i) => decoded.getChannelData(i)
+        );
+        const actions = createReplaceAudioActions(
+            sample,
+            channels,
+            decoded.sampleRate
+        );
+        if (actions) {
+            apply(actions);
+        } else {
+            toast.error(t("sampleLocale.tools.tooManyChannels"));
         }
-    }, [centCorrection, playerState]);
-
-    const stopPlayer = useCallback(() => {
-        stopSampleInternal();
-        setPlaybackStart(-1);
-        setPlayerState("stopped");
-    }, [setPlaybackStart, setPlayerState, stopSampleInternal]);
-
-    const playSample = useCallback(
-        (isLooped: boolean) => {
-            stopSampleInternal();
-            const player = context.createBufferSource();
-            player.detune.value = centCorrection;
-            player.buffer = buffer;
-            player.onended = stopPlayer;
-            playerRef.current = player;
-            if (isLooped) {
-                player.loopStart = loopStart / sampleRate;
-                player.loopEnd = loopEnd / sampleRate;
-                player.loop = true;
-            }
-
-            const gain = new GainNode(context, {
-                gain: DEFAULT_SAMPLE_GAIN
-            });
-            player.connect(gain).connect(targetNode);
-            setPlaybackStart(context.currentTime - 0.1);
-            player.start();
-            setPlayerState(isLooped ? "playing_loop" : "playing");
-        },
-        [
-            buffer,
-            centCorrection,
-            context,
-            targetNode,
-            loopEnd,
-            loopStart,
-            sampleRate,
-            setPlaybackStart,
-            setPlayerState,
-            stopPlayer,
-            stopSampleInternal
-        ]
-    );
-
-    // restart loop playback
-    useEffect(() => {
-        if (playerState === "playing_loop" && !playerRef.current) {
-            playSample(true);
-        } else if (!playerRef.current) {
-            stopPlayer();
-        }
-    }, [playSample, playerState, stopPlayer]);
-
-    const exportWav = () => {
-        exportWavData(buffer.getChannelData(0), buffer.sampleRate, sampleName);
     };
 
-    const exportWavLoop = () => {
-        const loopData = buffer.getChannelData(0).slice(loopStart, loopEnd);
-        exportWavData(loopData, buffer.sampleRate, `${sampleName}_loop`);
+    const normalize = () => {
+        player.stop();
+        // The length does not change, so the loop points stay
+        const data = normalizeAudio(sample.getAudioData());
+        apply([
+            new ReplaceSampleAudioAction(sample, {
+                data,
+                sampleRate: sample.sampleRate,
+                loopStart: sample.loopStart,
+                loopEnd: sample.loopEnd
+            })
+        ]);
     };
 
-    const replaceData = () => {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = "audio/*";
-        input.onchange = async () => {
-            const file = input?.files?.[0];
-            if (!file) {
-                return;
-            }
-            stopSampleInternal();
-            setLoading(true);
-            let audioBuffer: AudioBuffer;
-            try {
-                audioBuffer = await context.decodeAudioData(
-                    await file.arrayBuffer()
-                );
-            } catch {
-                toast.error(t("sampleLocale.tools.invalidAudioFile"));
-                return;
-            } finally {
-                setLoading(false);
-            }
-
-            if (audioBuffer.numberOfChannels === 2) {
-                const left = audioBuffer.getChannelData(0);
-                const right = audioBuffer.getChannelData(1);
-                // check for linked sample
-                if (
-                    linkedSample &&
-                    (sampleType === SampleTypes.leftSample ||
-                        sampleType === SampleTypes.rightSample)
-                ) {
-                    const linked = linkedSample;
-
-                    if (sampleType === SampleTypes.leftSample) {
-                        linked.setAudioData(right, audioBuffer.sampleRate);
-                        linked.loopStart = 0;
-                        linked.loopEnd = right.length;
-
-                        setSampleData(left, audioBuffer.sampleRate);
-                    } else {
-                        linked.setAudioData(left, audioBuffer.sampleRate);
-                        linked.loopStart = 0;
-                        linked.loopEnd = left.length;
-
-                        setSampleData(right, audioBuffer.sampleRate);
-                    }
-                } else {
-                    const finalData = new Float32Array(audioBuffer.length);
-                    // mix down to mono
-                    for (let i = 0; i < audioBuffer.length; i++) {
-                        finalData[i] = (left[i] + right[i]) / 2;
-                    }
-                    setSampleData(finalData, audioBuffer.sampleRate);
-                }
-            } else if (audioBuffer.numberOfChannels === 1) {
-                const data = audioBuffer.getChannelData(0);
-                setSampleData(data, audioBuffer.sampleRate);
-            } else {
-                toast.error(t("sampleLocale.tools.tooManyChannels"));
-            }
-        };
-        input.click();
+    const exportLoop = () => {
+        const loop = buffer
+            .getChannelData(0)
+            .slice(sample.loopStart, sample.loopEnd);
+        exportWav(loop, buffer.sampleRate, `${sample.name}_loop`);
     };
 
-    const normalizeAudio = () => {
-        let maxSample = 0;
-
-        for (const cur of sampleData) {
-            const abs = Math.abs(cur);
-            if (abs > maxSample) {
-                maxSample = abs;
-            }
-        }
-        const gain = 1 / maxSample;
-        const newData = new Float32Array(sampleData);
-        for (let i = 0; i < newData.length; i++) {
-            newData[i] *= gain;
-        }
-        setSampleData(newData, sampleRate);
-    };
-
-    const maxZoom = Math.max(5, ZOOM_PER_SAMPLE * sampleData.length + 1);
+    const maxZoom = Math.max(MIN_MAX_ZOOM, ZOOM_PER_SAMPLE * length + 1);
+    const buttonClass = `pretty_button monospaced ${isLoading ? "" : "responsive_button hover_brightness"}`;
+    const isStopped = player.state === "stopped";
     return (
-        <div className={`info_column ${loading ? "disabled" : ""} tools`}>
-            <div
-                className={`pretty_button monospaced ${loading ? "" : "responsive_button hover_brightness"}`}
-                onClick={exportWav}
+        <div className={`info_column ${isLoading ? "disabled" : ""} tools`}>
+            <button
+                type={"button"}
+                className={buttonClass}
+                onClick={() =>
+                    exportWav(
+                        buffer.getChannelData(0),
+                        buffer.sampleRate,
+                        sample.name
+                    )
+                }
             >
                 {t("sampleLocale.tools.wavExport")}
-            </div>
-            <div
-                className={`pretty_button monospaced ${loading ? "" : "responsive_button hover_brightness"}`}
-                onClick={exportWavLoop}
+            </button>
+            <button
+                type={"button"}
+                className={buttonClass}
+                onClick={exportLoop}
             >
                 {t("sampleLocale.tools.wavExportLoop")}
-            </div>
-            {playerState === "stopped" && (
-                <>
-                    <div
-                        className={`pretty_button monospaced ${loading ? "" : "responsive_button hover_brightness"}`}
-                        onClick={() => playSample(false)}
-                    >
-                        {t("sampleLocale.tools.play")}
-                    </div>
-
-                    <div
-                        className={`pretty_button monospaced ${loading ? "" : "responsive_button hover_brightness"}`}
-                        onClick={() => playSample(true)}
-                    >
-                        {t("sampleLocale.tools.playLooped")}
-                    </div>
-                </>
-            )}
-            {playerState !== "stopped" && (
-                // duplicated to match the count of play buttons
-                <>
-                    <div
-                        className={`pretty_button monospaced ${loading ? "" : "responsive_button hover_brightness"}`}
-                        onClick={stopPlayer}
-                    >
-                        {t("sampleLocale.tools.stop")}
-                    </div>
-                    <div
-                        className={`pretty_button monospaced ${loading ? "" : "responsive_button hover_brightness"}`}
-                        onClick={stopPlayer}
-                    >
-                        {t("sampleLocale.tools.stop")}
-                    </div>
-                </>
-            )}
-            <div
-                onClick={normalizeAudio}
-                className={`pretty_button monospaced ${loading ? "" : "responsive_button hover_brightness"}`}
+            </button>
+            {/* Two stop buttons keep the layout when playback starts */}
+            <button
+                type={"button"}
+                className={buttonClass}
+                onClick={() => (isStopped ? player.play(false) : player.stop())}
+            >
+                {isStopped
+                    ? t("sampleLocale.tools.play")
+                    : t("sampleLocale.tools.stop")}
+            </button>
+            <button
+                type={"button"}
+                className={buttonClass}
+                onClick={() => (isStopped ? player.play(true) : player.stop())}
+            >
+                {isStopped
+                    ? t("sampleLocale.tools.playLooped")
+                    : t("sampleLocale.tools.stop")}
+            </button>
+            <button
+                type={"button"}
+                className={buttonClass}
+                disabled={isLoading}
+                onClick={normalize}
             >
                 {t("sampleLocale.tools.normalize")}
-            </div>
-
-            <div
-                onClick={replaceData}
-                className={`pretty_button monospaced ${loading ? "" : "responsive_button hover_brightness"}`}
+            </button>
+            <button
+                type={"button"}
+                className={buttonClass}
+                disabled={isLoading}
+                onClick={() => void replaceAudio()}
             >
-                {loading
+                {isLoading
                     ? t("sampleLocale.tools.loading")
                     : t("sampleLocale.tools.replaceAudio")}
-            </div>
+            </button>
 
             <ControllerRange
                 max={(maxZoom - 1) * 100}
                 min={100}
-                onChange={(n) => {
-                    n /= 100;
-                    const mapped = (n - 1) / (maxZoom - 1);
-                    const exponent = Math.pow(mapped, 5);
-                    setZoom(exponent * (maxZoom - 1) + 1);
-                    setInputZoom(n * 100);
+                onChange={(value) => {
+                    const mapped = (value / 100 - 1) / (maxZoom - 1);
+                    onZoomChange(
+                        Math.pow(mapped, ZOOM_CURVE) * (maxZoom - 1) + 1
+                    );
+                    setSliderValue(value);
                 }}
-                value={inputZoom}
+                value={sliderValue}
                 text={`${t("sampleLocale.waveZoom")}: ${
                     Math.floor(zoom * 10_000) / 100
                 }%`}
-            ></ControllerRange>
+            />
         </div>
     );
 }

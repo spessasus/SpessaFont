@@ -1,4 +1,5 @@
 export const PresetLocale = {
+    presetName: "Nazwa presetu",
     deletePreset: "Usuń preset",
     bankMSB: "MSB banku",
     bankLSB: "LSB banku",

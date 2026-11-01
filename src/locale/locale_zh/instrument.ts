@@ -1,5 +1,6 @@
 // Translated by: 迎春心情（Yingchun Soul）
 export const InstrumentLocale = {
+    instrumentName: "乐器名称",
     notLinkedToPreset: "该乐器未关联任何预设。",
     usedBy: "关联预设",
     linkSelectedSamples: "关联选择的采样",

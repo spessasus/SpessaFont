@@ -13,3 +13,11 @@ export function getObjectId(object: object) {
     }
     return id;
 }
+
+/**
+ * Gives an edited copy the id of the object it replaces in a list,
+ * so React keeps the row mounted (and focused) across the edit.
+ */
+export function shareObjectId(original: object, copy: object) {
+    ids.set(copy, getObjectId(original));
+}

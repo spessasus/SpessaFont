@@ -4,7 +4,7 @@ import type { BasicSample } from "spessasynth_core";
  * Adds linked samples to the list if needed, and reorders, making sure that they are in pairs
  */
 export function addAndReorderStereoSamples(
-    samples: BasicSample[] | Set<BasicSample>
+    samples: Iterable<BasicSample>
 ): BasicSample[] {
     const samples1 = new Set<BasicSample>();
 

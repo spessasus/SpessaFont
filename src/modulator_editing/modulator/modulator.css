@@ -41,6 +41,7 @@
 }
 
 .modulator_title_left {
+    font-weight: bold;
     position: absolute;
     left: 0.3rem;
     top: 0.3rem;
@@ -53,6 +54,7 @@
     line-height: 1rem;
     top: 0.3rem;
     height: min-content;
+    font-size: 1.5em;
     font-weight: bolder;
 }
 

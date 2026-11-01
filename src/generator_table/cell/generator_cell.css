@@ -47,6 +47,10 @@
     outline: outset var(--border-color) 0.15rem;
 }
 
+.generator_cell input.exclusive_class {
+    font-weight: bold;
+}
+
 .generator_cell input::placeholder {
     opacity: 0.5;
     font-size: calc(var(--generator-table-font-size) * 0.9);
@@ -75,8 +79,10 @@
     border-radius: 0 0 0 var(--primary-border-radius);
 }
 
-.modulator_cell span {
+.modulator_cell .modulator_count {
     display: block;
+    box-sizing: border-box;
+    text-align: center;
     width: 100%;
     height: 100%;
     cursor: pointer;
@@ -85,7 +91,7 @@
     border-radius: 2px;
 }
 
-.modulator_cell.modulated span {
+.modulator_cell.modulated .modulator_count {
     font-weight: bold;
     opacity: 1;
     font-style: unset;

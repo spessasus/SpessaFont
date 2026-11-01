@@ -1,25 +1,28 @@
 import "./sample_display.css";
-import * as React from "react";
-import { BasicSample } from "spessasynth_core";
+import type { MouseEvent } from "react";
+import type { BasicSample } from "spessasynth_core";
 import { SpeakerIcon } from "../../utils/icons.tsx";
 
-export const SampleDisplay = React.memo(function ({
-    sample,
-    onClick,
-    selected
-}: {
+interface SampleDisplayProps {
     sample: BasicSample;
-    onClick: React.MouseEventHandler<HTMLDivElement>;
-    selected: boolean;
-}) {
+    isSelected: boolean;
+    onClick: (event: MouseEvent) => void;
+}
+
+export function SampleDisplay({
+    sample,
+    isSelected,
+    onClick
+}: SampleDisplayProps) {
     return (
-        <div
-            className={`sample_display  ${selected ? "selected" : ""}`}
+        <button
+            type={"button"}
+            className={`plain_button sample_display ${isSelected ? "selected" : ""}`}
             onClick={onClick}
             title={sample.name}
         >
             <SpeakerIcon />
             <span className={"monospaced"}>{sample.name}</span>
-        </div>
+        </button>
     );
-});
+}

@@ -6,7 +6,7 @@ import {
     useRef,
     useState
 } from "react";
-import type { SamplePlayerState } from "../sample_editor.tsx";
+import type { SamplePlayerState } from "../use_sample_player.ts";
 import "./wave_view.css";
 import { useAudioEngine } from "../../core_backend/audio_engine_context.ts";
 import { useTranslation } from "react-i18next";

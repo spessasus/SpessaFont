@@ -12,6 +12,8 @@ import {
 import { KEYBOARD_TARGET_CHANNEL } from "../keyboard/target_channel.ts";
 import { type SavedSettingsType } from "../settings/save_load/settings_typedef.ts";
 import { logInfo } from "../utils/core_utils.ts";
+import type { BankEntity } from "./bank_view.ts";
+import { createPreviewPreset } from "./preview_preset.ts";
 
 // audio worklet processor operates at that
 const BLOCK_SIZE = 128;
@@ -232,6 +234,22 @@ export class AudioEngine {
     playMIDI(mid: BasicMIDI) {
         this.sequencer.loadNewSongList([mid]);
         this.sequencer.play();
+    }
+
+    /**
+     * Plays the element on the keyboard's channel, or the bank's first preset without one.
+     */
+    public setPreviewTarget(
+        target: BankEntity | undefined,
+        bank: BasicSoundBank
+    ) {
+        if (target) {
+            this.processor.midiChannels[KEYBOARD_TARGET_CHANNEL].preset =
+                createPreviewPreset(target, bank);
+        } else if (bank.presets.length > 0) {
+            this.processor.programChange(KEYBOARD_TARGET_CHANNEL, 0);
+        }
+        this.processor.clearCache();
     }
 
     pauseMIDI() {

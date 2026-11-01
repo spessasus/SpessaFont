@@ -1,4 +1,25 @@
 export const ModulatorLocale = {
+    modulatorNumber: "Modulator #{{number}}",
+    deleteModulator: "Delete modulator #{{number}}",
+    primarySource: "Primary source",
+    secondarySource: "Secondary source",
+    primaryCurve: "Primary source curve",
+    secondaryCurve: "Secondary source curve",
+    transform: "Transform",
+    destination: "Destination",
+    curves: {
+        linear: "Linear",
+        concave: "Concave",
+        convex: "Convex",
+        switch: "Switch",
+        unipolar: "unipolar",
+        bipolar: "bipolar",
+        positive: "positive",
+        negative: "negative",
+        label: "{{shape}}, {{polarity}}, {{direction}}"
+    },
+    editModulators: "Edit modulators for {{name}}",
+    closeEditor: "Close the modulator editor",
     modulators: "Modulators", // plural
     editingModulators: "Editing Modulators for {{name}}",
     overriding: "Overriding Default Modulator",

@@ -31,4 +31,6 @@
 .modulator_list .modulator_list_button {
     padding: 0.5rem;
     cursor: pointer;
+    font: inherit;
+    color: inherit;
 }

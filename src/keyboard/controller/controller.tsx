@@ -2,7 +2,6 @@ import { type MIDIController, MIDIControllers } from "spessasynth_core";
 import "./controller.css";
 import { CC_TOGGLES } from "../../utils/midi_constants.ts";
 import {
-    type JSX,
     type Ref,
     useCallback,
     useImperativeHandle,
@@ -13,6 +12,8 @@ import { ControllerKnob } from "../../fancy_inputs/controller_knob/controller_kn
 import { KEYBOARD_TARGET_CHANNEL } from "../target_channel.ts";
 import { ControllerSwitch } from "../../fancy_inputs/controller_switch/controller_switch.tsx";
 import { useAudioEngine } from "../../core_backend/audio_engine_context.ts";
+import { OptionList } from "../../utils/translated_options/option_list.tsx";
+import { useTranslatedOptions } from "../../utils/translated_options/translated_options_context.ts";
 
 export interface ControllerKnobRef {
     ccUpdate(c: number, value: number): void;
@@ -81,14 +82,13 @@ function ControllerWrapper({
 export function Controller({
     cc,
     setCC,
-    ccOptions,
     ref
 }: {
     cc: MIDIController;
     setCC: (cc: MIDIController) => void;
     ref: Ref<ControllerKnobRef>;
-    ccOptions: JSX.Element;
 }) {
+    const { controllers } = useTranslatedOptions();
     return (
         <div className={"controller_wrapper"}>
             <select
@@ -105,7 +105,7 @@ export function Controller({
                     )
                 }
             >
-                {ccOptions}
+                <OptionList options={controllers} />
             </select>
             <ControllerWrapper cc={cc} ref={ref}></ControllerWrapper>
         </div>

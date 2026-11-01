@@ -40,7 +40,10 @@ export const localeEnglish = {
         title: "Something went wrong",
         description:
             "SpessaFont ran into an error and could not continue. Reloading the page restarts the app. Unsaved changes will be lost.",
-        reload: "Reload"
+        reload: "Reload",
+        paneTitle: "This editor ran into an error",
+        paneDescription:
+            "The rest of SpessaFont still works. Select another element, or undo the last change and select this one again."
     },
 
     loadingAndSaving: {

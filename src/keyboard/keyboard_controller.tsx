@@ -1,10 +1,9 @@
 import "./keyboard_controller.css";
 import { Keyboard, type KeyboardRef } from "./keyboard/keyboard.tsx";
 import * as React from "react";
-import { type JSX, type RefObject, useEffect, useRef, useState } from "react";
+import { type RefObject, useEffect, useRef, useState } from "react";
 import {
     DEFAULT_MIDI_CONTROLLERS,
-    type GenericRange,
     type MIDIController,
     MIDIControllers
 } from "spessasynth_core";
@@ -18,6 +17,9 @@ import {
     OtherControllers
 } from "./controller/other_controllers.tsx";
 import { useTranslation } from "react-i18next";
+import type { BankSession } from "../core_backend/bank_session.ts";
+import type { BankEditView } from "../core_backend/bank_view.ts";
+import { useViewSplits } from "./use_view_splits.ts";
 import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
 
 const INITIAL_CC_LIST: MIDIController[] = [
@@ -33,14 +35,17 @@ const INITIAL_CC_LIST: MIDIController[] = [
     MIDIControllers.chorusDepth
 ];
 
-export function KeyboardController({
-    ccOptions,
-    splits
-}: {
-    ccOptions: JSX.Element;
-    splits: GenericRange[];
-}) {
+interface KeyboardControllerProps {
+    /**
+     * The tab whose shown element decides the highlighted key ranges, if any.
+     */
+    session: BankSession | undefined;
+    view: BankEditView;
+}
+
+export function KeyboardController({ session, view }: KeyboardControllerProps) {
     const { t } = useTranslation();
+    const splits = useViewSplits(session, view);
     const {
         audioEngine: { processor }
     } = useAudioEngine();
@@ -141,7 +146,6 @@ export function KeyboardController({
                                 };
                                 return (
                                     <Controller
-                                        ccOptions={ccOptions}
                                         cc={cc}
                                         setCC={setCC}
                                         key={i}

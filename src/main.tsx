@@ -8,6 +8,7 @@ import { ErrorBoundary } from "./error_boundary/error_boundary.tsx";
 import { SettingsProvider } from "./settings/settings_provider.tsx";
 import { ClipboardProvider } from "./clipboard/clipboard_provider.tsx";
 import { init } from "./init.ts";
+import { TranslatedOptionsProvider } from "./utils/translated_options/translated_options_provider.tsx";
 import { logError } from "./utils/core_utils.ts";
 import type { SavedSettingsType } from "./settings/save_load/settings_typedef.ts";
 
@@ -20,13 +21,15 @@ function render(settings: SavedSettingsType) {
         <StrictMode>
             <ErrorBoundary>
                 <SettingsProvider initialSettings={settings}>
-                    <MIDIProvider>
-                        <AudioEngineProvider>
-                            <ClipboardProvider>
-                                <App />
-                            </ClipboardProvider>
-                        </AudioEngineProvider>
-                    </MIDIProvider>
+                    <TranslatedOptionsProvider>
+                        <MIDIProvider>
+                            <AudioEngineProvider>
+                                <ClipboardProvider>
+                                    <App />
+                                </ClipboardProvider>
+                            </AudioEngineProvider>
+                        </MIDIProvider>
+                    </TranslatedOptionsProvider>
                 </SettingsProvider>
             </ErrorBoundary>
         </StrictMode>

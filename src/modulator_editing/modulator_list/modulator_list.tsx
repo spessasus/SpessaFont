@@ -1,38 +1,47 @@
 import { GeneratorTypes, Modulator, ModulatorSource } from "spessasynth_core";
-import { ModulatorView } from "../modulator/modulator.tsx";
+import type * as React from "react";
+import {
+    ModulatorView,
+    type ModulatorSourceSlot
+} from "../modulator/modulator.tsx";
 import "./modulator_list.css";
 import { useTranslation } from "react-i18next";
-import * as React from "react";
-import { type JSX, useCallback, useState } from "react";
+import { useState } from "react";
 import { useClipboard } from "../../clipboard/clipboard_context.ts";
 import toast from "react-hot-toast";
+import { getObjectId, shareObjectId } from "../../utils/object_id.ts";
 
-export interface ModulatorListGlobals {
-    ccOptions: JSX.Element;
-    destinationOptions: JSX.Element;
-}
-
-type ModulatorListProps = ModulatorListGlobals & {
+interface ModulatorListProps {
     modulatorList: readonly Modulator[];
     setModulatorList: (l: Modulator[]) => void;
     defaultModulators: readonly Modulator[];
-};
+}
 
+/**
+ * Selection and the open curve picker are kept by modulator id, and an edited modulator keeps
+ * the id of the one it replaces, so both survive edits.
+ */
 export function ModulatorList({
     modulatorList,
     setModulatorList,
-    ccOptions,
-    destinationOptions,
     defaultModulators
 }: ModulatorListProps) {
     const { t } = useTranslation();
-    const [selectedMods, setSelectedMods] = useState(new Set<Modulator>());
     const { clipboard, contents } = useClipboard();
-    const [lastSelectedMod, setLastSelectedMod] = useState<Modulator | null>(
-        null
+    const [selectedIds, setSelectedIds] = useState<ReadonlySet<number>>(
+        new Set()
+    );
+    const [anchorId, setAnchorId] = useState<number | null>(null);
+    const [openCurvePicker, setOpenCurvePicker] = useState<{
+        id: number;
+        slot: ModulatorSourceSlot;
+    } | null>(null);
+
+    const selectedMods = modulatorList.filter((m) =>
+        selectedIds.has(getObjectId(m))
     );
 
-    const newModulator = () => {
+    const addModulator = () => {
         const mod = new Modulator(
             new ModulatorSource(),
             new ModulatorSource(),
@@ -40,150 +49,150 @@ export function ModulatorList({
             0,
             0
         );
-        const newList = [mod, ...modulatorList];
-        setModulatorList(newList);
+        setModulatorList([mod, ...modulatorList]);
     };
 
     const deleteSelected = () => {
-        const newList = modulatorList.filter((m) => !selectedMods.has(m));
-        setModulatorList(newList);
-        setSelectedMods(new Set<Modulator>());
+        setModulatorList(
+            modulatorList.filter((m) => !selectedIds.has(getObjectId(m)))
+        );
+        setSelectedIds(new Set());
     };
 
-    const copyToClipboard = () => {
-        const toCopy = Array.from(selectedMods);
-        clipboard.copyModulators(toCopy);
+    const copySelected = () => {
+        clipboard.copyModulators(selectedMods);
         toast.success(
-            t("clipboardLocale.copiedModulators", { count: toCopy.length })
+            t("clipboardLocale.copiedModulators", {
+                count: selectedMods.length
+            })
         );
     };
 
-    const pasteFromClipboard = () => {
+    const paste = () => {
         const pasted = clipboard.getModulators();
-        const newList = [...pasted, ...modulatorList];
+        setModulatorList([...pasted, ...modulatorList]);
         toast.success(
             t("clipboardLocale.pastedModulators", { count: pasted.length })
         );
-        setModulatorList(newList);
     };
 
-    const [activeModPickerId, setActiveModPickerId] = useState<string | null>(
-        null
-    );
-
-    const handleClick = useCallback(
-        (e: React.MouseEvent, clickedMod: Modulator) => {
-            if (lastSelectedMod === null || !e.shiftKey) {
-                setLastSelectedMod(clickedMod);
-                if (selectedMods.has(clickedMod)) {
-                    selectedMods.delete(clickedMod);
-                } else {
-                    selectedMods.add(clickedMod);
-                }
-                setSelectedMods(new Set(selectedMods));
-                return;
-            }
-            const index = modulatorList.indexOf(lastSelectedMod);
-            const selIndex = modulatorList.indexOf(clickedMod);
-            const start = Math.min(index, selIndex);
-            const end = Math.max(index, selIndex) + 1;
-            if (selectedMods.has(clickedMod)) {
-                for (let i = start; i < end; i++) {
-                    const m = modulatorList[i];
-                    selectedMods.delete(m);
-                }
+    const handleSelect = (e: React.MouseEvent, mod: Modulator) => {
+        const id = getObjectId(mod);
+        const anchorIndex = modulatorList.findIndex(
+            (m) => getObjectId(m) === anchorId
+        );
+        setAnchorId(id);
+        const next = new Set(selectedIds);
+        const shouldDeselect = selectedIds.has(id);
+        if (anchorIndex === -1 || !e.shiftKey) {
+            if (shouldDeselect) {
+                next.delete(id);
             } else {
-                for (let i = start; i < end; i++) {
-                    const m = modulatorList[i];
-                    selectedMods.add(m);
-                }
+                next.add(id);
             }
-            setLastSelectedMod(clickedMod);
-            setSelectedMods(new Set(selectedMods));
-        },
-        [lastSelectedMod, modulatorList, selectedMods]
-    );
+            setSelectedIds(next);
+            return;
+        }
+        // Shift-click selects (or deselects) everything between the last click and this one
+        const index = modulatorList.indexOf(mod);
+        const range = modulatorList.slice(
+            Math.min(index, anchorIndex),
+            Math.max(index, anchorIndex) + 1
+        );
+        for (const m of range) {
+            if (shouldDeselect) {
+                next.delete(getObjectId(m));
+            } else {
+                next.add(getObjectId(m));
+            }
+        }
+        setSelectedIds(next);
+    };
 
-    const hasSelectedMods = selectedMods.size > 0;
+    const replaceModulator = (original: Modulator, edited: Modulator) => {
+        shareObjectId(original, edited);
+        setModulatorList(
+            modulatorList.map((m) => (m === original ? edited : m))
+        );
+    };
 
     return (
         <div className={"modulator_list"}>
             <div className={"action_buttons"}>
-                <div
-                    style={{ cursor: "default" }}
-                    className={"modulator_main modulator_list_button"}
-                >
+                <span className={"modulator_main modulator_list_button"}>
                     {t("modulatorLocale.modulators")}: {modulatorList.length}
-                </div>
-                <div
-                    onClick={newModulator}
+                </span>
+                <button
+                    type={"button"}
+                    onClick={addModulator}
                     className={
                         "modulator_main modulator_list_button hover_brightness"
                     }
                 >
                     {t("menuBarLocale.file.new")}
-                </div>
+                </button>
                 {contents.modulators > 0 && (
-                    <div
+                    <button
+                        type={"button"}
                         className={
                             "modulator_main modulator_list_button hover_brightness"
                         }
-                        onClick={pasteFromClipboard}
+                        onClick={paste}
                     >
                         {t("paste")}
-                    </div>
+                    </button>
                 )}
-                {hasSelectedMods && (
-                    <div
-                        onClick={copyToClipboard}
-                        className={
-                            "modulator_main modulator_list_button hover_brightness"
-                        }
-                    >
-                        {t("copy")}
-                    </div>
-                )}
-                {hasSelectedMods && (
-                    <div
-                        onClick={deleteSelected}
-                        className={
-                            "modulator_main modulator_list_button hover_brightness"
-                        }
-                    >
-                        {t("delete")}
-                    </div>
+                {selectedMods.length > 0 && (
+                    <>
+                        <button
+                            type={"button"}
+                            onClick={copySelected}
+                            className={
+                                "modulator_main modulator_list_button hover_brightness"
+                            }
+                        >
+                            {t("copy")}
+                        </button>
+                        <button
+                            type={"button"}
+                            onClick={deleteSelected}
+                            className={
+                                "modulator_main modulator_list_button hover_brightness"
+                            }
+                        >
+                            {t("delete")}
+                        </button>
+                    </>
                 )}
             </div>
             <div className={"list_contents"}>
                 {modulatorList.map((mod, i) => {
-                    const setMod = (m: Modulator) => {
-                        const newList = [...modulatorList];
-                        newList[i] = Modulator.copyFrom(m);
-                        setModulatorList(newList);
-                    };
-
-                    const deleteMod = () => {
-                        const newList = modulatorList.filter((m) => m !== mod);
-                        setModulatorList(newList);
-                    };
-
+                    const id = getObjectId(mod);
                     return (
                         <ModulatorView
-                            destinationList={destinationOptions}
-                            ccList={ccOptions}
-                            key={i}
+                            key={id}
                             modulatorNumber={i + 1}
-                            mod={Modulator.copyFrom(mod)}
-                            setModulator={setMod}
-                            deleteModulator={deleteMod}
-                            setActiveModPickerId={setActiveModPickerId}
-                            activeModPickerId={activeModPickerId}
-                            selected={selectedMods.has(mod)}
-                            onClick={(e) => handleClick(e, mod)}
-                            overridingDefaultModulator={defaultModulators.some(
-                                (m) => Modulator.isIdentical(m, mod)
+                            mod={mod}
+                            onChange={(edited) => replaceModulator(mod, edited)}
+                            onDelete={() =>
+                                setModulatorList(
+                                    modulatorList.filter((m) => m !== mod)
+                                )
+                            }
+                            openCurvePicker={
+                                openCurvePicker?.id === id
+                                    ? openCurvePicker.slot
+                                    : null
+                            }
+                            onOpenCurvePickerChange={(slot) =>
+                                setOpenCurvePicker(slot ? { id, slot } : null)
+                            }
+                            isSelected={selectedIds.has(id)}
+                            onSelect={(e) => handleSelect(e, mod)}
+                            isOverridingDefault={defaultModulators.some((m) =>
+                                Modulator.isIdentical(m, mod)
                             )}
-                        ></ModulatorView>
+                        />
                     );
                 })}
             </div>

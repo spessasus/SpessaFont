@@ -1,14 +1,11 @@
 import { MenuBar } from "./menu_bar/menu_bar.tsx";
 import { useTranslation } from "react-i18next";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Settings } from "./settings/settings.tsx";
 import { TabList } from "./tab_list/tab_list.tsx";
 import { KeyboardController } from "./keyboard/keyboard_controller.tsx";
-import { DestinationsOptions } from "./utils/translated_options/destination_options.tsx";
-import { ModulableControllerOptions } from "./utils/translated_options/modulable_controller_options.tsx";
 import { BankEditor } from "./bank_editor/bank_editor.tsx";
 import { ACCEPTED_SOUNDBANK_FORMATS } from "./utils/accepted_formats.ts";
-import type { GenericRange } from "spessasynth_core";
 import toast, { Toaster } from "react-hot-toast";
 import "./toasts/toasts.css";
 import { Welcome } from "./welcome/welcome.tsx";
@@ -38,18 +35,6 @@ export function App() {
     const openBankFile = useBankFileOpener(openSession);
     const [isKeyboardShown, setIsKeyboardShown] = useState(false);
     const [areSettingsShown, setAreSettingsShown] = useState(false);
-    const [splits, setSplits] = useState<GenericRange[]>([]);
-
-    // cached translated options
-    // note: I can't use JSX here as it calls MCO 9 times for some reason?
-    const ccOptions = useMemo(
-        () => ModulableControllerOptions({ t: t, padLength: 5 }),
-        [t]
-    );
-    const destinationOptions = useMemo(
-        () => <>{DestinationsOptions({ t: t })}</>,
-        [t]
-    );
 
     // Files opened by the OS arrive without a user gesture on the page
     const openFileFromOS = async (file: File) => {
@@ -116,9 +101,6 @@ export function App() {
                     view={activeView}
                     setView={setActiveView}
                     shown={isEditorShown}
-                    destinationOptions={destinationOptions}
-                    ccOptions={ccOptions}
-                    setSplits={setSplits}
                 />
             )}
 
@@ -130,7 +112,10 @@ export function App() {
             )}
 
             {isKeyboardShown && (
-                <KeyboardController splits={splits} ccOptions={ccOptions} />
+                <KeyboardController
+                    session={isEditorShown ? activeSession : undefined}
+                    view={activeView}
+                />
             )}
         </div>
     );

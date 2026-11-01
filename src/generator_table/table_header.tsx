@@ -5,31 +5,27 @@ import {
     type BasicPresetZone
 } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
-import type { LinkedZoneMap } from "./generator_table.tsx";
 import "./header_cell.css";
 import { DeleteZoneAction } from "./delete_zone_action.ts";
-import { STEREO_REGEX } from "../utils/stereo_regex.ts";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { getObjectId } from "../utils/object_id.ts";
+import type { ZoneColumn } from "./zone_columns.ts";
 
-export function GeneratorTableHeader<
-    ZoneType extends BasicPresetZone | BasicInstrumentZone
->({
-    zones,
-    element,
-    name,
-    linkedZoneMap
-}: {
-    name: string;
+interface GeneratorTableHeaderProps {
     element: BasicInstrument | BasicPreset;
-    zones: ZoneType[];
-    linkedZoneMap: LinkedZoneMap<ZoneType>;
-}) {
+    columns: readonly ZoneColumn<BasicPresetZone | BasicInstrumentZone>[];
+}
+
+export function GeneratorTableHeader({
+    element,
+    columns
+}: GeneratorTableHeaderProps) {
     const { t } = useTranslation();
     const { apply, setView } = useBankEditor();
     return (
         <tr className={"header_row"}>
             <th
+                scope={"col"}
                 className={
                     "header_cell " +
                     (element instanceof BasicInstrument
@@ -37,58 +33,55 @@ export function GeneratorTableHeader<
                         : "preset")
                 }
             >
-                {name}
+                {element.name}
             </th>
-            <th className={"header_cell"}>{t("soundBankLocale.globalZone")}</th>
-            {zones.map((z, i) => {
-                const linked = linkedZoneMap[i];
-                if (linked.index === 1) {
-                    return null;
-                }
-                let span = 1;
-                let name =
-                    z instanceof BasicInstrumentZone
-                        ? z.sample.name
-                        : z.instrument.name;
-                let isStereo = false;
-                if (linked.index === 2) {
-                    span = 2;
-                    name = name.replace(STEREO_REGEX, "").trim();
-                    isStereo = true;
-                }
-
+            <th scope={"col"} className={"header_cell"}>
+                {t("soundBankLocale.globalZone")}
+            </th>
+            {columns.map((column) => {
+                const { zone, linkedZone, name, isStereo } = column;
+                const zoneLabel = t("soundBankLocale.deleteZone", { name });
                 return (
                     <th
-                        colSpan={span}
+                        scope={"col"}
+                        colSpan={column.colSpan}
                         className={"header_cell " + (isStereo ? "stereo" : "")}
-                        title={
-                            isStereo
-                                ? t("soundBankLocale.thisIsAStereoSamplePair")
-                                : ""
-                        }
-                        key={getObjectId(z)}
-                        onClick={() =>
-                            setView(
-                                z instanceof BasicInstrumentZone
-                                    ? z.sample
-                                    : z.instrument
-                            )
-                        }
+                        key={getObjectId(zone)}
                     >
-                        <span>{name}</span>
-                        <span
-                            className={"delete_zone"}
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
+                        <button
+                            type={"button"}
+                            className={"plain_button header_cell_name"}
+                            title={
+                                isStereo
+                                    ? t(
+                                          "soundBankLocale.thisIsAStereoSamplePair"
+                                      )
+                                    : undefined
+                            }
+                            onClick={() =>
+                                setView(
+                                    zone instanceof BasicInstrumentZone
+                                        ? zone.sample
+                                        : zone.instrument
+                                )
+                            }
+                        >
+                            {name}
+                        </button>
+                        <button
+                            type={"button"}
+                            className={"plain_button delete_zone"}
+                            aria-label={zoneLabel}
+                            title={zoneLabel}
+                            onClick={() => {
                                 const actions = [
-                                    new DeleteZoneAction(element, z)
+                                    new DeleteZoneAction(element, zone)
                                 ];
-                                if (linked.linkedZone) {
+                                if (linkedZone) {
                                     actions.push(
                                         new DeleteZoneAction(
                                             element,
-                                            linked.linkedZone
+                                            linkedZone
                                         )
                                     );
                                 }
@@ -96,7 +89,7 @@ export function GeneratorTableHeader<
                             }}
                         >
                             ✖
-                        </span>
+                        </button>
                     </th>
                 );
             })}

@@ -1,7 +1,7 @@
 import type { BasicSoundBank, ProgressFunction } from "spessasynth_core";
 import { encodeVorbis } from "./encode_vorbis.ts";
 import { SOFTWARE_NAME } from "../utils/software_name.ts";
-import { logInfo } from "../utils/core_utils.ts";
+import { downloadBlob } from "../utils/download_blob.ts";
 
 /**
  * "auto" saves in the format the bank was last written in (or loaded from).
@@ -116,15 +116,6 @@ export async function writeFile(
         return handle;
     }
 
-    const a = document.createElement("a");
-    const url = URL.createObjectURL(createBlob(binary));
-    a.href = url;
-    a.download = name;
-    a.click();
-    // The download starts asynchronously, so the URL must outlive this call
-    setTimeout(() => {
-        URL.revokeObjectURL(url);
-        logInfo("Object URL revoked to free memory");
-    }, 1000);
+    downloadBlob(createBlob(binary), name);
     return undefined;
 }

@@ -1,75 +1,83 @@
 import "./instrument_display.css";
+import type { MouseEvent } from "react";
 import type { BasicInstrument } from "spessasynth_core";
-import * as React from "react";
 import { SampleDisplay } from "../sample_display/sample_display.tsx";
 import type { BankEditView } from "../../core_backend/bank_view.ts";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 import { useEntityRevision } from "../../hooks/use_entity_revision.ts";
 import { useTranslation } from "react-i18next";
 import { LinkIcon } from "../../utils/icons.tsx";
+import { getObjectId } from "../../utils/object_id.ts";
+import { ExpandButton } from "../expand_button.tsx";
+
+interface InstrumentDisplayProps {
+    instrument: BasicInstrument;
+    view: BankEditView;
+    isSelected: boolean;
+    isOpen: boolean;
+    onToggle: () => void;
+    onClick: (event: MouseEvent) => void;
+    /**
+     * Shows the "link selected samples" button when set.
+     */
+    onLink?: () => void;
+}
 
 export function InstrumentDisplay({
     instrument,
-    setView,
-    onClick,
     view,
-    open,
-    setOpen,
-    selected,
-    link,
+    isSelected,
+    isOpen,
+    onToggle,
+    onClick,
     onLink
-}: {
-    instrument: BasicInstrument;
-    selected: boolean;
-    setView: (view: BankEditView) => void;
-    onClick: React.MouseEventHandler<HTMLDivElement>;
-    view: BankEditView;
-    open: boolean;
-    setOpen: (isOpen: boolean) => unknown;
-    link: boolean;
-    onLink?: () => unknown;
-}) {
+}: InstrumentDisplayProps) {
     const { t } = useTranslation();
-    const { session } = useBankEditor();
+    const { session, setView } = useBankEditor();
     // Re-render when the instrument's zones or sample names change
     useEntityRevision(session.store, instrument);
     return (
         <div className={"instrument_item_wrapper"}>
             <div
-                className={`instrument_item ${selected ? "selected" : ""}`}
+                className={`instrument_item ${isSelected ? "selected" : ""}`}
                 title={instrument.name}
             >
                 <div className={"left_buttons"}>
-                    <span className={"triangle"} onClick={() => setOpen(!open)}>
-                        {open ? "\u{25BC}" : "\u{25B6}"}
-                    </span>
-                    {link && (
-                        <span
+                    <ExpandButton isOpen={isOpen} onToggle={onToggle} />
+                    {onLink ? (
+                        <button
+                            type={"button"}
+                            className={"plain_button"}
                             title={t("instrumentLocale.linkSelectedSamples")}
+                            aria-label={t(
+                                "instrumentLocale.linkSelectedSamples"
+                            )}
                             onClick={onLink}
                         >
                             <LinkIcon />
-                        </span>
-                    )}
+                        </button>
+                    ) : null}
                 </div>
-                <span
-                    className={"monospaced instrument_item_name"}
+                <button
+                    type={"button"}
+                    className={"plain_button monospaced instrument_item_name"}
                     onClick={onClick}
                 >
                     {instrument.name}
-                </span>
+                </button>
             </div>
-            <div className={"instrument_samples"}>
-                {open &&
-                    instrument.zones.map((z, i) => (
+            {isOpen ? (
+                <div className={"instrument_samples"}>
+                    {instrument.zones.map((zone) => (
                         <SampleDisplay
-                            selected={view === z.sample}
-                            key={i}
-                            sample={z.sample}
-                            onClick={() => setView(z.sample)}
-                        ></SampleDisplay>
+                            key={getObjectId(zone)}
+                            isSelected={view === zone.sample}
+                            sample={zone.sample}
+                            onClick={() => setView(zone.sample)}
+                        />
                     ))}
-            </div>
+                </div>
+            ) : null}
         </div>
     );
 }

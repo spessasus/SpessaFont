@@ -1,131 +1,112 @@
-import type { MappedPresetType } from "../menu_list.tsx";
 import "./preset_display.css";
-import * as React from "react";
+import type { MouseEvent } from "react";
+import type { BasicInstrument, BasicPreset } from "spessasynth_core";
 import { InstrumentDisplay } from "../instrument_display/instrument_display.tsx";
+import { ExpandButton } from "../expand_button.tsx";
 import type { BankEditView } from "../../core_backend/bank_view.ts";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 import { useEntityRevision } from "../../hooks/use_entity_revision.ts";
 import { useTranslation } from "react-i18next";
 import { LinkIcon } from "../../utils/icons.tsx";
-import { typedMemo } from "../../utils/typed_memo.ts";
+import { getObjectId } from "../../utils/object_id.ts";
 
-export interface OpenPresetDisplayType {
-    open: boolean;
-    openInstruments: Record<string, boolean>;
-}
-
-const PresetString = typedMemo(({ n }: { n: number }) => {
+function PatchNumber({ n }: { n: number }) {
     return (
-        <span className={"monospaced"} style={{ opacity: n === 0 ? 0.5 : 1 }}>
+        <span className={`monospaced ${n === 0 ? "patch_number_zero" : ""}`}>
             {n.toString().padStart(3, "0")}
         </span>
     );
-});
+}
+
+interface PresetDisplayProps {
+    preset: BasicPreset;
+    view: BankEditView;
+    isSelected: boolean;
+    isOpen: boolean;
+    onToggle: () => void;
+    /**
+     * Whether each listed instrument of this preset is expanded.
+     */
+    isInstrumentOpen: (instrument: BasicInstrument) => boolean;
+    onToggleInstrument: (instrument: BasicInstrument) => void;
+    onClick: (event: MouseEvent) => void;
+    /**
+     * Shows the "link selected instruments" button when set.
+     */
+    onLink?: () => void;
+}
 
 export function PresetDisplay({
-    p,
-    onClick,
+    preset,
     view,
-    openedData,
-    setOpenedData,
-    setView,
-    selected,
-    link,
+    isSelected,
+    isOpen,
+    onToggle,
+    isInstrumentOpen,
+    onToggleInstrument,
+    onClick,
     onLink
-}: {
-    p: MappedPresetType;
-    setView: (view: BankEditView) => void;
-    onClick: React.MouseEventHandler<HTMLDivElement>;
-    view: BankEditView;
-    openedData: OpenPresetDisplayType;
-    setOpenedData: (o: OpenPresetDisplayType) => unknown;
-    selected: boolean;
-    link: boolean;
-    onLink?: () => unknown;
-}) {
+}: PresetDisplayProps) {
     const { t } = useTranslation();
-    const { session } = useBankEditor();
+    const { session, setView } = useBankEditor();
     // Re-render when the preset's zones or instrument names change
-    useEntityRevision(session.store, p.preset);
-    const isOpen = openedData.open;
-    const openedInstruments: Record<string, boolean> =
-        openedData.openInstruments ?? {};
+    useEntityRevision(session.store, preset);
     return (
         <div className={"preset_item_wrapper"}>
             <div
-                className={`preset_item ${selected ? "selected" : ""}`}
-                title={p.preset.name}
+                className={`preset_item ${isSelected ? "selected" : ""}`}
+                title={preset.name}
             >
                 <div className={"left_group"}>
-                    <span
-                        className={"triangle"}
-                        onClick={() =>
-                            setOpenedData({
-                                openInstruments: openedInstruments,
-                                open: !isOpen
-                            })
-                        }
-                    >
-                        {isOpen ? "\u{25BC}" : "\u{25B6}"}
-                    </span>
-                    <span
-                        className={"monospaced midi_patch"}
-                        onClick={() =>
-                            setOpenedData({
-                                openInstruments: openedInstruments,
-                                open: !isOpen
-                            })
-                        }
-                    >
-                        {p.preset.isGMGSDrum && `DRUMS:${p.preset.program}`}
-                        {!p.preset.isGMGSDrum && (
+                    <ExpandButton isOpen={isOpen} onToggle={onToggle} />
+                    <span className={"monospaced midi_patch"}>
+                        {preset.isGMGSDrum ? (
+                            `DRUMS:${preset.program}`
+                        ) : (
                             <>
-                                <PresetString n={p.preset.bankLSB} />:
-                                <PresetString n={p.preset.bankMSB} />:
-                                <PresetString n={p.preset.program} />
+                                <PatchNumber n={preset.bankLSB} />:
+                                <PatchNumber n={preset.bankMSB} />:
+                                <PatchNumber n={preset.program} />
                             </>
                         )}
                     </span>
-                    {link && (
-                        <span
+                    {onLink ? (
+                        <button
+                            type={"button"}
+                            className={"plain_button"}
                             title={t("presetLocale.linkSelectedInstruments")}
+                            aria-label={t(
+                                "presetLocale.linkSelectedInstruments"
+                            )}
                             onClick={onLink}
                         >
                             <LinkIcon />
-                        </span>
-                    )}
+                        </button>
+                    ) : null}
                 </div>
-                <span
-                    className={"monospaced preset_item_name"}
+                <button
+                    type={"button"}
+                    className={"plain_button monospaced preset_item_name"}
                     onClick={onClick}
                 >
-                    {p.preset.name}
-                </span>
+                    {preset.name}
+                </button>
             </div>
-            <div className={"preset_instruments"}>
-                {isOpen &&
-                    p.preset.zones.map((z, i) => (
+            {isOpen ? (
+                <div className={"preset_instruments"}>
+                    {preset.zones.map((zone) => (
                         <InstrumentDisplay
-                            open={openedInstruments[z.instrument.name] ?? false}
-                            setOpen={(isOpen) =>
-                                setOpenedData({
-                                    ...openedData,
-                                    openInstruments: {
-                                        ...openedInstruments,
-                                        [z.instrument.name]: isOpen
-                                    }
-                                })
-                            }
-                            selected={view === z.instrument}
+                            key={getObjectId(zone)}
+                            instrument={zone.instrument}
                             view={view}
-                            key={i}
-                            instrument={z.instrument}
-                            setView={setView}
-                            onClick={() => setView(z.instrument)}
-                            link={false}
-                        ></InstrumentDisplay>
+                            isSelected={view === zone.instrument}
+                            isOpen={isInstrumentOpen(zone.instrument)}
+                            onToggle={() => onToggleInstrument(zone.instrument)}
+                            onClick={() => setView(zone.instrument)}
+                        />
                     ))}
-            </div>
+                </div>
+            ) : null}
         </div>
     );
 }

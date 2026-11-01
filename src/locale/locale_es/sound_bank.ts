@@ -1,4 +1,6 @@
 export const SoundBankLocale = {
+    deleteZone: "Eliminar la zona {{name}}",
+    cellLabel: "{{generator}}, {{zone}}",
     globalZone: "Zona Global",
     createNewZone: "Crear Nueva Zona",
     thisIsAStereoSamplePair: "Este es un par de muestras estéreo.",

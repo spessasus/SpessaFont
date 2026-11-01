@@ -42,7 +42,10 @@ export const localeChinese = {
         title: "出现了问题",
         description:
             "SpessaFont 遇到错误，无法继续运行。重新加载页面将重启应用，未保存的更改将会丢失。",
-        reload: "重新加载"
+        reload: "重新加载",
+        paneTitle: "此编辑器遇到错误",
+        paneDescription:
+            "SpessaFont 的其他部分仍可正常使用。请选择其他元素，或撤销上一次更改后重新选择此元素。"
     },
 
     loadingAndSaving: {

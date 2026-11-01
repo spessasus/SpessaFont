@@ -1,69 +1,44 @@
-import {
-    BasicInstrument,
-    BasicInstrumentZone,
-    type BasicPreset,
-    type BasicPresetZone
-} from "spessasynth_core";
-import type { LinkedZoneMap } from "./generator_table.tsx";
+import type { BasicZone } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
-import { STEREO_REGEX } from "../utils/stereo_regex.ts";
 import { getObjectId } from "../utils/object_id.ts";
+import type { ZoneColumn } from "./zone_columns.ts";
 
-export function GeneratorTableModulatorRow<
-    ZoneType extends BasicPresetZone | BasicInstrumentZone,
-    ElementType extends BasicInstrument | BasicPreset
->({
-    element,
-    zones,
-    linkedZoneMap,
-    editModulators
-}: {
-    editModulators: (z: ZoneType, name: string) => unknown;
-    zones: ZoneType[];
-    element: ElementType;
-    linkedZoneMap: LinkedZoneMap<ZoneType>;
-}) {
+interface GeneratorTableModulatorRowProps {
+    /**
+     * The global zone column followed by the zone columns.
+     */
+    columns: readonly ZoneColumn[];
+    onEditModulators: (zone: BasicZone) => void;
+}
+
+export function GeneratorTableModulatorRow({
+    columns,
+    onEditModulators
+}: GeneratorTableModulatorRowProps) {
     const { t } = useTranslation();
     return (
         <tr className={"header_row"}>
-            <th className={"generator_cell_header"}>
+            <th className={"generator_cell_header"} scope={"row"}>
                 {t("modulatorLocale.modulators")}
             </th>
-            <th
-                className={`modulator_cell ${element.globalZone.modulators.length > 0 ? "modulated" : ""}`}
-                onClick={() =>
-                    editModulators(
-                        // fu ts >:)
-                        element.globalZone as ZoneType,
-                        t("soundBankLocale.globalZone")
-                    )
-                }
-            >
-                <span>{element.globalZone.modulators.length}</span>
-            </th>
-            {zones.map((z, i) => {
-                const linked = linkedZoneMap[i];
-                if (linked.index === 1) {
-                    return null;
-                }
-                let span = 1;
-                let name =
-                    z instanceof BasicInstrumentZone
-                        ? z.sample.name
-                        : z.instrument.name;
-                if (linked.index === 2) {
-                    span = 2;
-                    name = name.replace(STEREO_REGEX, "").trim();
-                }
-                const modLength = z.modulators.length;
+            {columns.map(({ zone, name, colSpan }) => {
+                const count = zone.modulators.length;
                 return (
                     <th
-                        key={getObjectId(z)}
-                        colSpan={span}
-                        className={`modulator_cell ${modLength > 0 ? "modulated" : ""}`}
-                        onClick={() => editModulators(z, name)}
+                        key={getObjectId(zone)}
+                        colSpan={colSpan}
+                        className={`modulator_cell ${count > 0 ? "modulated" : ""}`}
                     >
-                        <span>{modLength}</span>
+                        <button
+                            type={"button"}
+                            className={"plain_button modulator_count"}
+                            aria-label={t("modulatorLocale.editModulators", {
+                                name
+                            })}
+                            onClick={() => onEditModulators(zone)}
+                        >
+                            {count}
+                        </button>
                     </th>
                 );
             })}

@@ -1,8 +1,17 @@
-import { GeneratorTypes } from "spessasynth_core";
+import { GeneratorTypes, MIDIControllers } from "spessasynth_core";
 import type { TFunction } from "i18next";
 import { generatorLocaleMap } from "./generator_to_locale_map.ts";
+import { MODULABLE_CCS } from "../midi_constants.ts";
 
-const destinationGeneratorOrder = [
+export interface SelectOption {
+    value: number;
+    label: string;
+}
+
+/**
+ * Modulator destinations in the order the picker lists them.
+ */
+const DESTINATION_ORDER = [
     GeneratorTypes.initialAttenuation,
     GeneratorTypes.pan,
     GeneratorTypes.coarseTune,
@@ -43,10 +52,38 @@ const destinationGeneratorOrder = [
     GeneratorTypes.endloopAddrsOffset
 ];
 
-export function DestinationsOptions({ t }: { t: TFunction }) {
-    return destinationGeneratorOrder.map((g) => (
-        <option value={g} key={g}>
-            {t(generatorLocaleMap[g])}
-        </option>
-    ));
+/**
+ * Pads the CC number so the names line up in a monospaced select.
+ */
+const CC_NUMBER_WIDTH = 5;
+
+function getControllerName(cc: number, t: TFunction) {
+    let name: string =
+        (Object.keys(MIDIControllers) as (keyof typeof MIDIControllers)[]).find(
+            (key) => MIDIControllers[key] === cc
+        ) ?? "notDefined";
+    if (name.startsWith("undefined")) {
+        name = "notDefined";
+    }
+    return t(`MIDIControllersLocale.${name}`);
+}
+
+/**
+ * The MIDI controllers a modulator can use as a source.
+ */
+export function getControllerOptions(t: TFunction): SelectOption[] {
+    return MODULABLE_CCS.map((cc) => ({
+        value: cc,
+        label: `CC#${cc.toString().padEnd(CC_NUMBER_WIDTH, "\u{A0}")} - ${getControllerName(cc, t)}`
+    }));
+}
+
+/**
+ * The generators a modulator can target.
+ */
+export function getDestinationOptions(t: TFunction): SelectOption[] {
+    return DESTINATION_ORDER.map((generator) => ({
+        value: generator,
+        label: t(generatorLocaleMap[generator])
+    }));
 }

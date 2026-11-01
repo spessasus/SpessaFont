@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import type { SpessaFontModulatorCurveType } from "./curve_picker.tsx";
+import { getCurveLabel } from "./curve_label.ts";
 import { ModulatorCurveTypes } from "spessasynth_core";
 
 const MARGIN = 10;
@@ -143,34 +145,30 @@ function getOrCreateCurveCanvas(
     return offscreenCanvas;
 }
 
-export function ModulatorCurvePicture({
-    curve
-}: {
+interface ModulatorCurvePictureProps {
     curve: SpessaFontModulatorCurveType;
-}) {
-    const canvasRef = useRef<HTMLCanvasElement | null>(null);
+}
+
+export function ModulatorCurvePicture({ curve }: ModulatorCurvePictureProps) {
+    const { t } = useTranslation();
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const { curveType, bipolar, positive } = curve;
 
     useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) {
-            return;
-        }
-
-        const ctx = canvas.getContext("2d");
+        const ctx = canvasRef.current?.getContext("2d");
         if (!ctx) {
             return;
         }
-
-        const cached = getOrCreateCurveCanvas(curve);
+        const cached = getOrCreateCurveCanvas({ curveType, bipolar, positive });
         ctx.clearRect(0, 0, WIDTH, HEIGHT);
         ctx.drawImage(cached, 0, 0);
-    }, [curve]);
+    }, [curveType, bipolar, positive]);
 
     return (
         <canvas
             ref={canvasRef}
             className="modulator_curve"
-            title={`${curve.curveType} positive: ${curve.positive} bipolar: ${curve.bipolar}`}
+            title={getCurveLabel(t, curve)}
             width={WIDTH}
             height={HEIGHT}
         />

@@ -1,21 +1,23 @@
 import type { BasicInstrument } from "spessasynth_core";
 import "../../bank_editor/bottom_bar.css";
 import { useTranslation } from "react-i18next";
-
 import { DeleteInstrumentAction } from "./delete_instrument_action.ts";
 import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
 import { EditInstrumentNameAction } from "./edit_instrument_name_action.ts";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 import { getObjectId } from "../../utils/object_id.ts";
 
-export function LinkedPresets({ instrument }: { instrument: BasicInstrument }) {
+const MAX_NAME_LENGTH = 40;
+
+interface LinkedPresetsProps {
+    instrument: BasicInstrument;
+}
+
+export function LinkedPresets({ instrument }: LinkedPresetsProps) {
     const { t } = useTranslation();
     const { apply, setView } = useBankEditor();
     // A preset with several zones of this instrument is listed once
     const linked = new Set(instrument.linkedTo);
-
-    const deleteInstrument = () =>
-        apply([new DeleteInstrumentAction(instrument)]);
 
     return (
         <div className={"bottom_bar"}>
@@ -24,45 +26,52 @@ export function LinkedPresets({ instrument }: { instrument: BasicInstrument }) {
                     className={"monospaced"}
                     type={"text"}
                     value={instrument.name}
-                    setValue={(v) => {
+                    aria-label={t("instrumentLocale.instrumentName")}
+                    setValue={(name) => {
                         apply([
                             new EditInstrumentNameAction(
                                 instrument,
                                 instrument.name,
-                                v
+                                name
                             )
                         ]);
-                        return v;
+                        return name;
                     }}
-                    maxLength={40}
+                    maxLength={MAX_NAME_LENGTH}
                 />
             </div>
 
-            {instrument.linkedTo.length === 0 && (
+            {linked.size === 0 ? (
                 <>
                     <div>
                         <strong>
                             {t("instrumentLocale.notLinkedToPreset")}
                         </strong>
                     </div>
-                    <div onClick={deleteInstrument}>
+                    <button
+                        type={"button"}
+                        className={"plain_button"}
+                        onClick={() =>
+                            apply([new DeleteInstrumentAction(instrument)])
+                        }
+                    >
                         <strong className={"warning"}>
                             {t("instrumentLocale.deleteInstrument")}
                         </strong>
-                    </div>
+                    </button>
                 </>
-            )}
-            {instrument.linkedTo.length > 0 && (
+            ) : (
                 <>
                     <div>{t("instrumentLocale.usedBy")}:</div>
                     {Array.from(linked, (preset) => (
-                        <div
-                            className={"monospaced"}
+                        <button
+                            type={"button"}
+                            className={"plain_button monospaced"}
                             onClick={() => setView(preset)}
                             key={getObjectId(preset)}
                         >
                             {preset.name}
-                        </div>
+                        </button>
                     ))}
                 </>
             )}

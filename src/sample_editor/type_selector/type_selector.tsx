@@ -4,82 +4,49 @@ import {
     SampleTypes
 } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
-import { useMemo } from "react";
+import { getObjectId } from "../../utils/object_id.ts";
 
-export function TypeSelector({
-    sampleType,
-    linkedSample,
-    setLinkedSample,
-    samples,
-    sample
-}: {
-    sampleType: SampleType;
-    linkedSample: BasicSample | undefined;
-    setLinkedSample: (type: SampleType, s?: BasicSample) => void;
-    samples: readonly BasicSample[];
+const NO_LINK = "none";
+
+interface TypeSelectorProps {
     sample: BasicSample;
-}) {
+    samples: readonly BasicSample[];
+    onChange: (type: SampleType, linkedSample?: BasicSample) => void;
+}
+
+/**
+ * The sample type (mono, left, or right) and the other sample of a stereo pair.
+ */
+export function TypeSelector({ sample, samples, onChange }: TypeSelectorProps) {
     const { t } = useTranslation();
-    const linkedIndex = useMemo(() => {
-        return linkedSample ? samples.indexOf(linkedSample) : 0;
-    }, [linkedSample, samples]);
-
-    const availableSamples = useMemo(() => {
-        const indexedSamples: { s: BasicSample; i: number }[] = [];
-
-        for (let i = 0; i < samples.length; i++) {
-            const s = samples[i];
-            if (
-                s !== sample &&
-                (s.linkedSample === undefined || s.linkedSample === sample)
-            ) {
-                indexedSamples.push({ s, i });
-            }
-        }
-
-        return indexedSamples;
-    }, [sample, samples]);
-
-    const sampleElements = useMemo(
-        () => (
-            <>
-                <option value={-1}>-</option>
-                {availableSamples.map((sam, i) => (
-                    <option value={sam.i} key={i}>
-                        {sam.s.name}
-                    </option>
-                ))}
-            </>
-        ),
-        [availableSamples]
+    const { sampleType, linkedSample } = sample;
+    // Samples that are free to pair with this one
+    const available = samples.filter(
+        (s) =>
+            s !== sample &&
+            (s.linkedSample === undefined || s.linkedSample === sample)
     );
+    const isNothingToLink =
+        available.length === 0 || (available.length < 2 && !!linkedSample);
 
-    const nothingToLink =
-        availableSamples.length === 0 ||
-        (availableSamples.length < 2 && linkedSample);
-
-    const setType = (t: SampleType) => {
-        const linked: BasicSample = linkedSample ?? samples[0];
-        switch (t) {
-            case SampleTypes.rightSample:
-            case SampleTypes.leftSample:
-            case SampleTypes.linkedSample: {
-                setLinkedSample(t, linked);
-                break;
-            }
-
-            default: {
-                // set to mono unlinked
-                setLinkedSample(t);
-            }
+    const setType = (type: SampleType) => {
+        if (
+            type === SampleTypes.leftSample ||
+            type === SampleTypes.rightSample
+        ) {
+            onChange(type, linkedSample ?? available[0]);
+        } else {
+            onChange(type);
         }
     };
+
     return (
         <>
             <div className={"info_field"}>
                 <span>{t("sampleLocale.type")}</span>
                 <select
                     className={"pretty_input monospaced"}
+                    aria-label={t("sampleLocale.type")}
                     value={sampleType}
                     onChange={(e) =>
                         setType(Number.parseInt(e.target.value) as SampleType)
@@ -93,7 +60,7 @@ export function TypeSelector({
                     </option>
                     <option
                         disabled={
-                            nothingToLink &&
+                            isNothingToLink &&
                             sampleType !== SampleTypes.rightSample
                         }
                         value={SampleTypes.leftSample}
@@ -102,7 +69,7 @@ export function TypeSelector({
                     </option>
                     <option
                         disabled={
-                            nothingToLink &&
+                            isNothingToLink &&
                             sampleType !== SampleTypes.leftSample
                         }
                         value={SampleTypes.rightSample}
@@ -112,7 +79,6 @@ export function TypeSelector({
                     <option disabled={true} value={SampleTypes.linkedSample}>
                         {t("sampleLocale.types.linked")}
                     </option>
-
                     <option disabled={true} value={SampleTypes.romMonoSample}>
                         {t("sampleLocale.types.romMono")}
                     </option>
@@ -132,15 +98,30 @@ export function TypeSelector({
                 <select
                     disabled={linkedSample === undefined}
                     className={"pretty_input monospaced"}
-                    value={linkedSample === undefined ? -1 : linkedIndex}
+                    aria-label={t("sampleLocale.link")}
+                    value={
+                        linkedSample
+                            ? String(getObjectId(linkedSample))
+                            : NO_LINK
+                    }
                     onChange={(e) =>
-                        setLinkedSample(
+                        onChange(
                             sampleType,
-                            samples[Number.parseInt(e.target.value)]
+                            available.find(
+                                (s) => String(getObjectId(s)) === e.target.value
+                            )
                         )
                     }
                 >
-                    {sampleElements}
+                    <option value={NO_LINK}>-</option>
+                    {available.map((s) => (
+                        <option
+                            key={getObjectId(s)}
+                            value={String(getObjectId(s))}
+                        >
+                            {s.name}
+                        </option>
+                    ))}
                 </select>
             </div>
         </>

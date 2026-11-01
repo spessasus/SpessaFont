@@ -160,6 +160,17 @@ input[type="number"] {
     transform: scale(var(--active-scale));
 }
 
+/* A button that looks like the element it replaces, for clickable text and icons */
+.plain_button {
+    all: unset;
+    cursor: pointer;
+}
+
+.plain_button:focus-visible {
+    outline: 2px solid var(--light-primary-color);
+    outline-offset: -2px;
+}
+
 .pretty_outline {
     background: var(--lighter-color-end);
     border-radius: var(--primary-border-radius);

@@ -40,7 +40,10 @@ export const localePolish = {
         title: "Coś poszło nie tak",
         description:
             "SpessaFont napotkał błąd i nie może kontynuować. Odświeżenie strony uruchomi aplikację ponownie. Niezapisane zmiany zostaną utracone.",
-        reload: "Odśwież"
+        reload: "Odśwież",
+        paneTitle: "Ten edytor napotkał błąd",
+        paneDescription:
+            "Reszta SpessaFont nadal działa. Wybierz inny element lub cofnij ostatnią zmianę i wybierz ten ponownie."
     },
 
     loadingAndSaving: {

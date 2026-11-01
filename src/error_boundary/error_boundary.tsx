@@ -2,9 +2,14 @@ import { Component, type ErrorInfo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { logError } from "../utils/core_utils.ts";
 import "./error_boundary.css";
+import { getErrorMessage } from "./error_message.ts";
 
 interface ErrorBoundaryProps {
     children: ReactNode;
+    /**
+     * Renders the fallback. Without it, the app-level fallback with a reload button is shown.
+     */
+    fallback?: (error: unknown) => ReactNode;
 }
 
 interface ErrorBoundaryState {
@@ -18,7 +23,7 @@ interface ErrorFallbackProps {
 
 function ErrorFallback({ error }: ErrorFallbackProps) {
     const { t } = useTranslation();
-    const message = error instanceof Error ? error.message : String(error);
+    const message = getErrorMessage(error);
     return (
         <div className={"error_boundary"} role={"alert"}>
             <h2>{t("errorBoundary.title")}</h2>
@@ -55,10 +60,14 @@ export class ErrorBoundary extends Component<
     }
 
     public render() {
-        return this.state.hasError ? (
-            <ErrorFallback error={this.state.error} />
+        if (!this.state.hasError) {
+            return this.props.children;
+        }
+        const { fallback } = this.props;
+        return fallback ? (
+            fallback(this.state.error)
         ) : (
-            this.props.children
+            <ErrorFallback error={this.state.error} />
         );
     }
 }

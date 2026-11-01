@@ -2,6 +2,10 @@
     display: flex;
 }
 
+.patch_number_zero {
+    opacity: 0.5;
+}
+
 .preset_item_wrapper {
     display: flex;
     flex-direction: column;
@@ -38,7 +42,8 @@
     gap: 0.3rem;
 }
 
-.left_group span:not(.monospaced) {
+.left_group span:not(.monospaced),
+.left_group button {
     font-size: 1rem;
     display: flex;
 }

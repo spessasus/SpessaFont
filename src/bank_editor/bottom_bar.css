@@ -6,7 +6,9 @@
     margin-top: auto;
 }
 
-.bottom_bar > div {
+.bottom_bar > div,
+.bottom_bar > label,
+.bottom_bar > button {
     user-select: none;
     cursor: pointer;
     padding: 0.3rem 1rem;
@@ -15,7 +17,7 @@
     border-right: solid 1px var(--track-border-color);
 }
 
-.bottom_bar div:hover {
+.bottom_bar > *:hover {
     background: var(--lighter-color);
 }
 

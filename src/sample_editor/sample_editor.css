@@ -59,3 +59,7 @@
 .info_field input {
     text-align: end;
 }
+
+.original_key_input {
+    width: 5rem;
+}

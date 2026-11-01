@@ -1,185 +1,100 @@
-import type { GeneratorProps } from "../generator_row.tsx";
 import {
+    BasicInstrument,
     BasicInstrumentZone,
-    type BasicZone,
-    GeneratorTypes
+    type BasicPreset
 } from "spessasynth_core";
 import { GeneratorCellInput } from "./generator_cell_input.tsx";
-import { useCallback } from "react";
 import { SetGeneratorAction } from "./set_generator_action.ts";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
+import type { ZoneColumn } from "../zone_columns.ts";
+import { getColumnZones } from "./column_zones.ts";
+import {
+    COARSE_OFFSET_SIZE,
+    getCoarseOffsetGenerator,
+    type OffsetGenerator
+} from "./offset_generator.ts";
 
-export type OffsetGenerator =
-    | typeof GeneratorTypes.startAddrsOffset
-    | typeof GeneratorTypes.endAddrOffset
-    | typeof GeneratorTypes.startloopAddrsOffset
-    | typeof GeneratorTypes.endloopAddrsOffset;
+interface OffsetGeneratorCellProps {
+    element: BasicPreset | BasicInstrument;
+    column: ZoneColumn;
+    generator: OffsetGenerator;
+    label: string;
+}
 
-export type CoarseOffsetGenerator =
-    | typeof GeneratorTypes.startAddrsCoarseOffset
-    | typeof GeneratorTypes.endAddrsCoarseOffset
-    | typeof GeneratorTypes.startloopAddrsCoarseOffset
-    | typeof GeneratorTypes.endloopAddrsCoarseOffset;
-
+/**
+ * Edits a sample offset as one number, split into the fine and coarse generators.
+ */
 export function OffsetGeneratorCell({
-    zone,
-    linkedZone,
-    generatorType,
     element,
-    colSpan
-}: Omit<GeneratorProps, "generator"> & {
-    zone: BasicZone;
-    linkedZone?: BasicZone;
-    generatorType: OffsetGenerator;
-    colSpan: number;
-}) {
+    column,
+    generator,
+    label
+}: OffsetGeneratorCellProps) {
     const { apply } = useBankEditor();
-    let coarseGeneratorType: CoarseOffsetGenerator;
-    switch (generatorType) {
-        case GeneratorTypes.startAddrsOffset: {
-            coarseGeneratorType = GeneratorTypes.startAddrsCoarseOffset;
-            break;
-        }
+    const { zone, colSpan } = column;
+    const coarseGenerator = getCoarseOffsetGenerator(generator);
+    const fine = zone.getGenerator(generator, null);
+    const coarse = zone.getGenerator(coarseGenerator, null);
+    const textValue =
+        fine === null && coarse === null
+            ? ""
+            : ((fine ?? 0) + (coarse ?? 0) * COARSE_OFFSET_SIZE).toString();
 
-        case GeneratorTypes.endAddrOffset: {
-            coarseGeneratorType = GeneratorTypes.endAddrsCoarseOffset;
-            break;
-        }
+    const setOffset = (offset: number | null) => {
+        const newFine = offset === null ? null : offset % COARSE_OFFSET_SIZE;
+        const newCoarse =
+            offset === null
+                ? null
+                : Math.trunc(offset / COARSE_OFFSET_SIZE) || null;
+        apply(
+            getColumnZones(column).flatMap((z) => [
+                new SetGeneratorAction(
+                    element,
+                    z,
+                    generator,
+                    z.getGenerator(generator, null),
+                    newFine
+                ),
+                new SetGeneratorAction(
+                    element,
+                    z,
+                    coarseGenerator,
+                    z.getGenerator(coarseGenerator, null),
+                    newCoarse
+                )
+            ])
+        );
+    };
 
-        case GeneratorTypes.startloopAddrsOffset: {
-            coarseGeneratorType = GeneratorTypes.startloopAddrsCoarseOffset;
-            break;
+    const commitText = (typedText: string) => {
+        if (typedText === textValue) {
+            return textValue;
         }
-        case GeneratorTypes.endloopAddrsOffset: {
-            coarseGeneratorType = GeneratorTypes.endloopAddrsCoarseOffset;
+        if (typedText === "") {
+            setOffset(null);
+            return "";
         }
-    }
-    const currentFineOffset = zone.getGenerator(generatorType, null);
-    const currentCoarseOffset = zone.getGenerator(coarseGeneratorType, null);
-    let textValue = "";
-    if (currentFineOffset !== null) {
-        let offsetNum = currentFineOffset;
-        if (currentCoarseOffset !== null) {
-            offsetNum += currentCoarseOffset * 32_768;
+        const typed = Number.parseInt(typedText);
+        if (Number.isNaN(typed)) {
+            return textValue;
         }
-        textValue = offsetNum.toString();
-    }
-
-    const setValue = useCallback(
-        (typedText: string) => {
-            if (typedText === textValue) {
-                return textValue;
-            }
-            let newOffset: number | null = null;
-            if (typedText !== "") {
-                const num = Number.parseInt(typedText);
-                // clamp to a reasonable one
-                const sampleLength =
-                    zone instanceof BasicInstrumentZone
-                        ? zone.sample.getAudioData().length - 1
-                        : Infinity;
-                newOffset = Math.min(
-                    sampleLength,
-                    Math.max(-sampleLength, num)
-                );
-            }
-            const actions: SetGeneratorAction[] = [];
-            if (newOffset === null) {
-                actions.push(
-                    new SetGeneratorAction(
-                        element,
-                        zone,
-                        generatorType,
-                        currentFineOffset,
-                        null
-                    ),
-                    new SetGeneratorAction(
-                        element,
-                        zone,
-                        coarseGeneratorType,
-                        currentCoarseOffset,
-                        null
-                    )
-                );
-                if (linkedZone) {
-                    actions.push(
-                        new SetGeneratorAction(
-                            element,
-                            linkedZone,
-                            generatorType,
-                            linkedZone.getGenerator(generatorType, null),
-                            null
-                        ),
-                        new SetGeneratorAction(
-                            element,
-                            linkedZone,
-                            coarseGeneratorType,
-                            linkedZone.getGenerator(coarseGeneratorType, null),
-                            null
-                        )
-                    );
-                }
-            } else {
-                const fine = newOffset % 32_768;
-                const coarse = Math.trunc(newOffset / 32_768);
-                const coarseTarget = coarse || null;
-                actions.push(
-                    new SetGeneratorAction(
-                        element,
-                        zone,
-                        generatorType,
-                        currentFineOffset,
-                        fine
-                    ),
-                    new SetGeneratorAction(
-                        element,
-                        zone,
-                        coarseGeneratorType,
-                        currentCoarseOffset,
-                        coarseTarget
-                    )
-                );
-                if (linkedZone) {
-                    actions.push(
-                        new SetGeneratorAction(
-                            element,
-                            linkedZone,
-                            generatorType,
-                            linkedZone.getGenerator(generatorType, null),
-                            fine
-                        ),
-                        new SetGeneratorAction(
-                            element,
-                            linkedZone,
-                            coarseGeneratorType,
-                            linkedZone.getGenerator(coarseGeneratorType, null),
-                            coarseTarget
-                        )
-                    );
-                }
-            }
-            apply(actions);
-            return newOffset?.toString() ?? "";
-        },
-        [
-            textValue,
-            apply,
-            element,
-            zone,
-            generatorType,
-            currentFineOffset,
-            coarseGeneratorType,
-            currentCoarseOffset,
-            linkedZone
-        ]
-    );
+        // An offset cannot move past the whole sample
+        const limit =
+            zone instanceof BasicInstrumentZone
+                ? zone.sample.getAudioData().length - 1
+                : Infinity;
+        const offset = Math.min(limit, Math.max(-limit, typed));
+        setOffset(offset);
+        return offset.toString();
+    };
 
     return (
         <td className={"generator_cell"} colSpan={colSpan}>
             <GeneratorCellInput
+                aria-label={label}
                 value={textValue}
                 regex={/[^0-9-]/g}
-                onBlur={setValue}
+                onBlur={commitText}
                 maxLength={10}
                 type={"text"}
             />

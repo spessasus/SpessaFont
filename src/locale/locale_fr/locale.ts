@@ -39,7 +39,10 @@ export const localeFrench = {
         title: "Une erreur est survenue",
         description:
             "SpessaFont a rencontré une erreur et ne peut pas continuer. Recharger la page redémarre l'application. Les modifications non enregistrées seront perdues.",
-        reload: "Recharger"
+        reload: "Recharger",
+        paneTitle: "Cet éditeur a rencontré une erreur",
+        paneDescription:
+            "Le reste de SpessaFont fonctionne toujours. Sélectionnez un autre élément, ou annulez la dernière modification et sélectionnez celui-ci à nouveau."
     },
 
     loadingAndSaving: {
