@@ -5,7 +5,7 @@ cd ..
 
 npm uninstall spessasynth_core
 
-npm install spessasynth_core
-npm pkg set dependencies.spessasynth_core=latest
+npm install -D spessasynth_core
+npm pkg set devDependencies.spessasynth_core=latest
 
 npm prune
