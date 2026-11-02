@@ -1,10 +1,7 @@
-import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
 import { useEngineStatus } from "../hooks/use_engine_status.ts";
-
-const CANVAS_WIDTH = 100;
-const CANVAS_HEIGHT = 50;
+import { getCanvasColor, useCanvas } from "../hooks/use_canvas.ts";
 
 function VoiceCount() {
     const { t } = useTranslation();
@@ -16,52 +13,35 @@ function VoiceCount() {
     );
 }
 
-export function VoiceDisplay() {
+function Oscilloscope() {
     const {
         audioEngine: { analyser }
     } = useAudioEngine();
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    useEffect(() => {
-        const ctx = canvasRef.current?.getContext("2d");
-        if (!ctx) {
-            return;
-        }
-
-        const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-        let frame = 0;
-        const draw = () => {
-            frame = requestAnimationFrame(draw);
-
-            analyser.getByteTimeDomainData(dataArray);
-            ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
+    const canvasRef = useCanvas(
+        (ctx, { width, height }) => {
+            const samples = new Uint8Array(analyser.frequencyBinCount);
+            analyser.getByteTimeDomainData(samples);
             ctx.lineWidth = 2;
-            ctx.strokeStyle = "white";
+            ctx.strokeStyle = getCanvasColor(ctx, "--font-color");
             ctx.beginPath();
-            ctx.moveTo(0, (dataArray[0] / 255) * CANVAS_HEIGHT);
-
-            for (let i = 0; i < dataArray.length; i++) {
-                const val = dataArray[i] / 255;
-                const xPos = CANVAS_WIDTH * (i / dataArray.length);
-                ctx.lineTo(xPos, val * CANVAS_HEIGHT);
+            for (const [i, sample] of samples.entries()) {
+                ctx.lineTo(
+                    (i / samples.length) * width,
+                    (sample / 255) * height
+                );
             }
-
             ctx.stroke();
-        };
+        },
+        { isAnimated: true }
+    );
+    return <canvas ref={canvasRef} aria-hidden={true} />;
+}
 
-        draw();
-        return () => cancelAnimationFrame(frame);
-    }, [analyser]);
-
+export function VoiceDisplay() {
     return (
         <div className={"flex_menu_bar voice_display"}>
             <VoiceCount />
-            <canvas
-                ref={canvasRef}
-                width={CANVAS_WIDTH}
-                height={CANVAS_HEIGHT}
-            />
+            <Oscilloscope />
         </div>
     );
 }

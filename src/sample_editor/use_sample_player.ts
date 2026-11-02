@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import type { BasicSample } from "spessasynth_core";
 import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
 
@@ -11,10 +11,6 @@ const SAMPLE_GAIN = 0.4;
 const FALLBACK_RATE = 48_000;
 const MIN_BUFFER_RATE = 8000;
 const MAX_BUFFER_RATE = 96_000;
-/**
- * The play head starts this many seconds early, as it always has. Phase 6 (canvas) revisits it.
- */
-const PLAY_HEAD_LEAD = 0.1;
 
 function createPlaybackBuffer(
     context: BaseAudioContext,
@@ -41,23 +37,23 @@ function createPlaybackBuffer(
     return buffer;
 }
 
-interface Playback {
-    isLooped: boolean;
-    /**
-     * The audio context time playback started at, for the play head.
-     */
-    startTime: number;
-}
-
 /**
  * Plays the sample's audio directly (not through the synthesizer), looped or once.
- * Playback stops when the component unmounts and restarts when the audio changes.
+ * The state is owned by the bank editor, so the next sample shown keeps playing the same way,
+ * which helps finding a sample by ear. Playback stops when the component unmounts and restarts
+ * when the audio changes.
  */
-export function useSamplePlayer(sample: BasicSample) {
+export function useSamplePlayer(
+    sample: BasicSample,
+    state: SamplePlayerState,
+    onStateChange: (state: SamplePlayerState) => void
+) {
     const { audioEngine } = useAudioEngine();
     const { context, targetNode } = audioEngine;
-    const [playback, setPlayback] = useState<Playback | null>(null);
+    // The editor mounts per sample, so a sample shown while playing starts now
+    const [startTime, setStartTime] = useState(() => context.currentTime);
     const playerRef = useRef<AudioBufferSourceNode | null>(null);
+    const onEnded = useEffectEvent(() => onStateChange("stopped"));
 
     const data = sample.getAudioData();
     const { sampleRate, loopStart, loopEnd, pitchCorrection } = sample;
@@ -68,26 +64,26 @@ export function useSamplePlayer(sample: BasicSample) {
     );
 
     useEffect(() => {
-        if (!playback) {
+        if (state === "stopped") {
             return;
         }
         const player = context.createBufferSource();
         player.buffer = buffer;
-        player.loop = playback.isLooped;
-        player.onended = () => setPlayback(null);
+        player.loop = state === "playing_loop";
+        player.onended = () => onEnded();
         const gain = new GainNode(context, { gain: SAMPLE_GAIN });
         player.connect(gain).connect(targetNode);
         player.start();
         playerRef.current = player;
         return () => {
-            // Stopping on purpose must not reset the state of the next playback
+            // Stopping on purpose (or switching samples) must not stop the next playback
             player.onended = null;
             player.stop();
             player.disconnect();
             gain.disconnect();
             playerRef.current = null;
         };
-    }, [buffer, context, playback, targetNode]);
+    }, [buffer, context, state, startTime, targetNode]);
 
     // Loop points and tuning apply to the playing sample without restarting it
     useEffect(() => {
@@ -98,21 +94,16 @@ export function useSamplePlayer(sample: BasicSample) {
         player.loopStart = loopStart / sampleRate;
         player.loopEnd = loopEnd / sampleRate;
         player.detune.value = pitchCorrection;
-    }, [loopEnd, loopStart, pitchCorrection, sampleRate, playback]);
+    }, [loopEnd, loopStart, pitchCorrection, sampleRate, state, startTime]);
 
-    let state: SamplePlayerState = "stopped";
-    if (playback) {
-        state = playback.isLooped ? "playing_loop" : "playing";
-    }
     return {
         state,
-        startTime: playback?.startTime ?? -1,
+        startTime,
         buffer,
-        play: (isLooped: boolean) =>
-            setPlayback({
-                isLooped,
-                startTime: context.currentTime - PLAY_HEAD_LEAD
-            }),
-        stop: () => setPlayback(null)
+        play: (isLooped: boolean) => {
+            setStartTime(context.currentTime);
+            onStateChange(isLooped ? "playing_loop" : "playing");
+        },
+        stop: () => onStateChange("stopped")
     };
 }

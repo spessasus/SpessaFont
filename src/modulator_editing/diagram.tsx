@@ -1,10 +1,19 @@
+import { useId } from "react";
+
+/**
+ * The sources multiplied into the destination. Each card draws one, so the mask id has to be
+ * unique on the page.
+ */
 export function ModulatorDiagram() {
+    const maskId = useId();
     return (
         <svg
+            className="modulator_diagram"
             width="100"
             height="100"
             xmlns="http://www.w3.org/2000/svg"
             fill="currentColor"
+            aria-hidden={true}
         >
             <rect x="5" y="10" width="45" height="6" />
             <rect x="47" y="10" width="6" height="30" />
@@ -13,7 +22,7 @@ export function ModulatorDiagram() {
             <rect x="60" y="47" width="45" height="6" />
 
             <defs>
-                <mask id="x-cutout">
+                <mask id={maskId}>
                     <rect width="100%" height="100%" fill="white" />
                     <line
                         x1="44"
@@ -34,7 +43,7 @@ export function ModulatorDiagram() {
                 </mask>
             </defs>
 
-            <circle cx="50" cy="50" r="12" mask="url(#x-cutout)" />
+            <circle cx="50" cy="50" r="12" mask={`url(#${maskId})`} />
         </svg>
     );
 }

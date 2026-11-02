@@ -42,6 +42,7 @@ export function ModulatorCurvePicker({
 }: ModulatorCurvePickerProps) {
     const { t } = useTranslation();
     const currentKey = curveKey(curveType);
+    const buttonLabel = `${label}: ${getCurveLabel(t, curveType)}`;
     return (
         <div className="modulator_curve_picker">
             {isOpen ? (
@@ -52,12 +53,14 @@ export function ModulatorCurvePicker({
                 >
                     {ALL_CURVE_TYPES.map((c) => {
                         const key = curveKey(c);
+                        const curveLabel = getCurveLabel(t, c);
                         return (
                             <button
                                 type={"button"}
                                 key={key}
                                 aria-pressed={key === currentKey}
-                                aria-label={getCurveLabel(t, c)}
+                                aria-label={curveLabel}
+                                title={curveLabel}
                                 className={`plain_button modulator_curve_pick pretty_outline responsive_button ${key === currentKey ? "selected" : ""}`}
                                 onClick={() => {
                                     onOpenChange(false);
@@ -74,7 +77,8 @@ export function ModulatorCurvePicker({
                 type={"button"}
                 className={`plain_button pretty_outline responsive_button ${isOpen ? "" : "hover_brightness"}`}
                 aria-expanded={isOpen}
-                aria-label={`${label}: ${getCurveLabel(t, curveType)}`}
+                aria-label={buttonLabel}
+                title={buttonLabel}
                 onClick={() => onOpenChange(!isOpen)}
             >
                 <ModulatorCurvePicture curve={curveType} />

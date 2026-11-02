@@ -136,8 +136,8 @@ export default defineConfig(
             // Strips the leading asterisks that multi-line JSDoc relies on
             "unicorn/no-asterisk-prefix-in-documentation-comments": "off",
 
-            // The waveform path changes on every draw, so caching a Path2D buys nothing.
-            // Revisit when wave_view is rewritten (REFACTOR_PLAN.md phase 6)
+            // Every canvas path (wave, play head, oscilloscope) changes on each draw, so a
+            // cached Path2D would be rebuilt every time anyway
             "unicorn/prefer-path2d": "off"
         }
     },

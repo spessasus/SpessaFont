@@ -52,6 +52,12 @@
     --instrument-item-color: dodgerblue;
     --sample-item-color: gold;
 
+    /* drawings, the same in both themes */
+    --loop-start-color: green;
+    --loop-end-color: red;
+    --curve-axis-color: #555;
+    --curve-color: #6e00b7;
+
     /*thanks for this bezier mozilla devtools*/
     --bouncy-transition: cubic-bezier(0.68, -0.55, 0.27, 1.55);
 

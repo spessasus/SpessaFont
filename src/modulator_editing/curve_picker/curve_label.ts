@@ -10,7 +10,7 @@ const SHAPE_KEYS = {
 } as const;
 
 /**
- * A readable name for a curve, since the curve itself is only drawn on a canvas.
+ * A readable name for a curve, since the curve itself is only a picture.
  */
 export function getCurveLabel(
     t: TFunction,

@@ -11,35 +11,46 @@ import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useEntityRevision } from "../hooks/use_entity_revision.ts";
 import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
 import { useSampleEdits } from "./use_sample_edits.ts";
-import { useSamplePlayer } from "./use_sample_player.ts";
+import {
+    type SamplePlayerState,
+    useSamplePlayer
+} from "./use_sample_player.ts";
 
 const MAX_NAME_LENGTH = 40;
 
 interface SampleEditorProps {
     sample: BasicSample;
+    /**
+     * Kept by the bank editor across samples, so the next sample plays the same way.
+     */
+    playerState: SamplePlayerState;
+    onPlayerStateChange: (state: SamplePlayerState) => void;
 }
 
 /**
  * The editor pane is remounted for each sample (see `BankEditor`), so zoom and playback start
  * fresh without resetting them by hand.
  */
-export function SampleEditor({ sample }: SampleEditorProps) {
+export function SampleEditor({
+    sample,
+    playerState,
+    onPlayerStateChange
+}: SampleEditorProps) {
     const { t } = useTranslation();
     const { session } = useBankEditor();
     const samples = useBankSnapshot(session.store, (s) => s.samples);
     // Re-render when the sample's audio, properties, or links change
     useEntityRevision(session.store, sample);
     const edits = useSampleEdits(sample);
-    const player = useSamplePlayer(sample);
+    const player = useSamplePlayer(sample, playerState, onPlayerStateChange);
     const [zoom, setZoom] = useState(1);
 
     return (
         <div className={"sample_editor"}>
             <WaveView
-                disabled={false}
                 zoom={zoom}
-                setLoopStart={edits.setLoopStart}
-                setLoopEnd={edits.setLoopEnd}
+                onLoopStartChange={edits.setLoopStart}
+                onLoopEndChange={edits.setLoopEnd}
                 data={sample.getAudioData()}
                 loopStart={sample.loopStart}
                 loopEnd={sample.loopEnd}

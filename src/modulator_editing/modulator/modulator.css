@@ -24,7 +24,7 @@
     border-color: var(--border-color);
 }
 
-.modulator_main svg {
+.modulator_main .modulator_diagram {
     color: var(--font-color);
     margin: -0.5rem;
     cursor: auto;

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { MenuList } from "../menu_list/menu_list.tsx";
 import "./bank_editor.css";
 import { SoundBankInfo } from "../info_view/sound_bank_info.tsx";
@@ -18,6 +18,7 @@ import { usePreviewTarget } from "./use_preview_target.ts";
 import { ErrorBoundary } from "../error_boundary/error_boundary.tsx";
 import { PaneErrorFallback } from "../error_boundary/pane_error_fallback.tsx";
 import { getObjectId } from "../utils/object_id.ts";
+import type { SamplePlayerState } from "../sample_editor/use_sample_player.ts";
 
 function renderPaneError(error: unknown) {
     return <PaneErrorFallback error={error} />;
@@ -50,6 +51,12 @@ export function BankEditor({
 }: BankEditorProps) {
     const view = useResolvedView(session, selectedView);
     usePreviewTarget(session, view);
+    // Lives here so switching samples keeps playing, and stops when no sample is shown
+    const [samplePlayerState, setSamplePlayerState] =
+        useState<SamplePlayerState>("stopped");
+    if (samplePlayerState !== "stopped" && !(view instanceof BasicSample)) {
+        setSamplePlayerState("stopped");
+    }
 
     const context: BankEditorContextType = useMemo(
         () => ({
@@ -83,7 +90,11 @@ export function BankEditor({
                             <InstrumentEditor instrument={view} />
                         )}
                         {view instanceof BasicSample && (
-                            <SampleEditor sample={view} />
+                            <SampleEditor
+                                sample={view}
+                                playerState={samplePlayerState}
+                                onPlayerStateChange={setSamplePlayerState}
+                            />
                         )}
                     </ErrorBoundary>
                 </div>

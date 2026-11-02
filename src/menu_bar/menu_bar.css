@@ -149,6 +149,7 @@
 
 .voice_display canvas {
     height: calc(var(--menu-bar-height) - 0.1rem);
+    aspect-ratio: 2;
     padding: 0;
     margin: 0;
 }
