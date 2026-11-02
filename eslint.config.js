@@ -8,7 +8,7 @@ import eslint from "@eslint/js";
 import { defineConfig, globalIgnores } from "eslint/config";
 
 export default defineConfig(
-    globalIgnores(["dist", "externals"]),
+    globalIgnores(["dist"]),
     {
         extends: [
             eslint.configs.recommended,

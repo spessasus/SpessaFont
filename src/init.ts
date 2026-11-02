@@ -20,6 +20,22 @@ async function registerServiceWorker() {
         logInfo("Registered service worker");
     } catch (error) {
         logError("Failed to register the service worker.", error);
+        return;
+    }
+    // The service worker only caches what was fetched, so get the encoder while idle,
+    // or SF3 saves would fail offline until one was made online
+    requestIdleCallback(() => {
+        void prefetchEncoder();
+    });
+}
+
+async function prefetchEncoder() {
+    try {
+        const { prefetchVorbisEncoder } =
+            await import("./core_backend/encode_vorbis.ts");
+        await prefetchVorbisEncoder();
+    } catch (error) {
+        logError("Failed to prefetch the Vorbis encoder.", error);
     }
 }
 

@@ -1,10 +1,9 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import path from "node:path";
 
-// The app, spessasynth_core and encoder chunks are each about 600 kB
-const CHUNK_SIZE_LIMIT_KB = 700;
+// The app and spessasynth_core chunks load at startup and are each a bit under 600 kB
+const CHUNK_SIZE_LIMIT_KB = 600;
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -16,14 +15,6 @@ export default defineConfig({
     },
     // No React Compiler: it caches by object identity, and the bank objects are edited in place
     plugins: [react()],
-    resolve: {
-        alias: {
-            "sl-web-ogg": path.resolve(
-                import.meta.dirname,
-                "externals/sl-web-ogg/dist/index.min.js"
-            )
-        }
-    },
     define: {
         __APP_VERSION__: JSON.stringify(process.env.npm_package_version)
     },
@@ -37,10 +28,6 @@ export default defineConfig({
                         {
                             name: "spessasynth_core",
                             test: /node_modules[/\\]spessasynth_core/
-                        },
-                        {
-                            name: "vorbis_encoder",
-                            test: /externals[/\\]sl-web-ogg/
                         }
                     ]
                 }

@@ -117,7 +117,7 @@ This does not affect the production build though.
 
 ## Credits
 
-- [sl-web-ogg](https://github.com/erikh2000/sl-web-ogg) - for the Ogg Vorbis encoder
+- [wasm-media-encoders](https://github.com/arseneyr/wasm-media-encoders) - for the Ogg Vorbis encoder
 - [Bootstrap Icons](https://icons.getbootstrap.com/) - for the icons
 
 _Editing sound banks has never been easier!_

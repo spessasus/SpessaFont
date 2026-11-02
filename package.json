@@ -34,7 +34,8 @@
         "react-dom": "^19.3.1",
         "react-hot-toast": "^2.6.1",
         "react-i18next": "^17.1.9",
-        "spessasynth_core": "latest"
+        "spessasynth_core": "latest",
+        "wasm-media-encoders": "^0.7.0"
     },
     "devDependencies": {
         "@electron/typescript-definitions": "^9.2.1",

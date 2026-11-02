@@ -1,5 +1,4 @@
 import type { BasicSoundBank, ProgressFunction } from "spessasynth_core";
-import { encodeVorbis } from "./encode_vorbis.ts";
 import { SOFTWARE_NAME } from "../utils/software_name.ts";
 import { downloadBlob } from "../utils/download_blob.ts";
 
@@ -48,6 +47,8 @@ export async function encodeSoundBank(
             if (format === "sf2") {
                 await bank.setSampleFormat({ format: "pcm", progressFunction });
             } else if (format === "sf3") {
+                // The encoder is only needed here, so it loads on the first SF3 save
+                const { encodeVorbis } = await import("./encode_vorbis.ts");
                 await bank.setSampleFormat({
                     format: "compressed",
                     compressionFunction: encodeVorbis,

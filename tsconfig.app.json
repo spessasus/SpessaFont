@@ -22,10 +22,7 @@
         "erasableSyntaxOnly": true,
         "noFallthroughCasesInSwitch": true,
         "noUncheckedSideEffectImports": true,
-        "typeRoots": ["./src/types", "./node_modules/@types"],
-        "paths": {
-            "sl-web-ogg": ["./externals/sl-web-ogg/dist/index.min.js"]
-        }
+        "typeRoots": ["./src/types", "./node_modules/@types"]
     },
-    "include": ["src", "externals"]
+    "include": ["src"]
 }

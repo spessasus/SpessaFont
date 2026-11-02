@@ -32,9 +32,8 @@ await builder.build({
             "dist/*.{js,html,css}",
             "public/*.png",
             "LICENSE",
-            "externals/sl-web-ogg/Ogg-COPYING",
-            "externals/sl-web-ogg/Vorbis-COPYING",
-            "externals/sl-web-ogg/LICENSE"
+            // libogg and libvorbis are compiled into the encoder
+            "licenses/*"
         ],
         fileAssociations: [
             {
