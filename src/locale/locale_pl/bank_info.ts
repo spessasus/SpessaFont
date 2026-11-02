@@ -4,6 +4,7 @@ export const BankInfoLocale = {
     creationDate: "Data utworzenia",
     product: "Produkt",
     copyright: "Prawa autorskie",
+    subject: "Temat",
     description: "Opis",
 
     stats: "Informacje:",

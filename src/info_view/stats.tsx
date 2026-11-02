@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { BasicInstrument, BasicPreset } from "spessasynth_core";
 import "./stats.css";
-import { EditIcon } from "../utils/icons.tsx";
+import { EditIcon } from "../utils/icons/edit_icons.tsx";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
 

@@ -19,7 +19,10 @@ export const SettingsLocale = {
             cubic: "Sinc"
         },
         reverbLevel: "Poziom pogłosu",
-        chorusLevel: "Poziom chóru"
+        chorusLevel: "Poziom chóru",
+        delayLevel: "Poziom opóźnienia",
+        velocitySenseDepth: "Głębokość czułości na dynamikę",
+        velocitySenseOffset: "Przesunięcie czułości na dynamikę"
     },
 
     midi: {

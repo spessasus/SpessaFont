@@ -70,11 +70,10 @@ export function AudioEngineSettings({
     }
 
     const { t } = useTranslation();
-    const engineT = "settingsLocale.audioEngine.";
     return (
         <div className={"settings_group hover_brightness"}>
-            <h2>{t(`${engineT}title`)}</h2>
-            <Setting locale={`${engineT}sampleRate`}>
+            <h2>{t("settingsLocale.audioEngine.title")}</h2>
+            <Setting label={t("settingsLocale.audioEngine.sampleRate")}>
                 <WaitingInput
                     setValue={setSampleRate}
                     type={"text"}
@@ -84,7 +83,7 @@ export function AudioEngineSettings({
                     value={settings.sampleRate}
                 />
             </Setting>
-            <Setting locale={`${engineT}volume`}>
+            <Setting label={t("settingsLocale.audioEngine.volume")}>
                 <WaitingInput
                     setValue={setVolume}
                     type={"text"}
@@ -95,7 +94,9 @@ export function AudioEngineSettings({
                 />
             </Setting>
 
-            <Setting locale={`${engineT}interpolation.title`}>
+            <Setting
+                label={t("settingsLocale.audioEngine.interpolation.title")}
+            >
                 <select
                     onChange={(e) =>
                         setInterpolation(
@@ -106,18 +107,20 @@ export function AudioEngineSettings({
                     value={settings.interpolation}
                 >
                     <option value={InterpolationTypes.nearestNeighbor}>
-                        {t(`${engineT}interpolation.nearestNeighbor`)}
+                        {t(
+                            "settingsLocale.audioEngine.interpolation.nearestNeighbor"
+                        )}
                     </option>
                     <option value={InterpolationTypes.linear}>
-                        {t(`${engineT}interpolation.linear`)}
+                        {t("settingsLocale.audioEngine.interpolation.linear")}
                     </option>
                     <option value={InterpolationTypes.hermite}>
-                        {t(`${engineT}interpolation.cubic`)}
+                        {t("settingsLocale.audioEngine.interpolation.cubic")}
                     </option>
                 </select>
             </Setting>
 
-            <Setting locale={`${engineT}voiceCap`}>
+            <Setting label={t("settingsLocale.audioEngine.voiceCap")}>
                 <WaitingInput
                     setValue={setVoiceCap}
                     type={"text"}
@@ -127,7 +130,7 @@ export function AudioEngineSettings({
                 />
             </Setting>
 
-            <Setting locale={`${engineT}velocitySenseDepth`}>
+            <Setting label={t("settingsLocale.audioEngine.velocitySenseDepth")}>
                 <WaitingInput
                     setValue={setVelocitySenseDepth}
                     type={"text"}
@@ -137,7 +140,9 @@ export function AudioEngineSettings({
                 />
             </Setting>
 
-            <Setting locale={`${engineT}velocitySenseOffset`}>
+            <Setting
+                label={t("settingsLocale.audioEngine.velocitySenseOffset")}
+            >
                 <WaitingInput
                     setValue={setVelocitySenseOffset}
                     type={"text"}
@@ -147,7 +152,7 @@ export function AudioEngineSettings({
                 />
             </Setting>
 
-            <Setting locale={`${engineT}reverbLevel`}>
+            <Setting label={t("settingsLocale.audioEngine.reverbLevel")}>
                 <WaitingInput
                     setValue={setReverb}
                     type={"text"}
@@ -158,7 +163,7 @@ export function AudioEngineSettings({
                 />
             </Setting>
 
-            <Setting locale={`${engineT}chorusLevel`}>
+            <Setting label={t("settingsLocale.audioEngine.chorusLevel")}>
                 <WaitingInput
                     setValue={setChorus}
                     value={Math.floor(settings.chorusLevel * 100)}
@@ -169,7 +174,7 @@ export function AudioEngineSettings({
                 />
             </Setting>
 
-            <Setting locale={`${engineT}delayLevel`}>
+            <Setting label={t("settingsLocale.audioEngine.delayLevel")}>
                 <WaitingInput
                     setValue={setDelay}
                     value={Math.floor(settings.delayLevel * 100)}

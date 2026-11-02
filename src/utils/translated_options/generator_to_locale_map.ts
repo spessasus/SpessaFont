@@ -1,6 +1,9 @@
 import { GeneratorTypes } from "spessasynth_core";
+import type { GeneratorLocale } from "../../locale/locale_en/generator.ts";
 
-export const generatorLocaleMap: Record<number, string> = {
+type GeneratorLocaleKey = `generatorLocale.${keyof typeof GeneratorLocale}`;
+
+export const generatorLocaleMap: Record<number, GeneratorLocaleKey> = {
     [GeneratorTypes.keyRange]: "generatorLocale.keyRange",
     [GeneratorTypes.velRange]: "generatorLocale.velocityRange",
     [GeneratorTypes.sampleModes]: "generatorLocale.loopingMode",

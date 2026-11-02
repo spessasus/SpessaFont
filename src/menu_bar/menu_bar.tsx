@@ -3,21 +3,21 @@ import { MIDIPlayer } from "./midi_player.tsx";
 import { VoiceDisplay } from "./voice_display.tsx";
 import "./menu_bar.css";
 import { useTranslation } from "react-i18next";
+import { Discord, Gear, GitHub } from "../utils/icons/app_icons.tsx";
+import {
+    DeleteIcon,
+    LinkIcon,
+    RedoIcon,
+    UndoIcon
+} from "../utils/icons/edit_icons.tsx";
 import {
     CloseFileIcon,
-    DeleteIcon,
-    Discord,
     FullscreenIcon,
-    Gear,
-    GitHub,
     InfoIcon,
-    LinkIcon,
     NewFileIcon,
     OpenFileIcon,
-    RedoIcon,
-    SaveFileIcon,
-    UndoIcon
-} from "../utils/icons.tsx";
+    SaveFileIcon
+} from "../utils/icons/file_icons.tsx";
 import { IS_CHROME, IS_ELECTRON } from "../utils/environment_detection.ts";
 import type { BankSession } from "../core_backend/bank_session.ts";
 import type { BankEditView } from "../core_backend/bank_view.ts";
@@ -50,8 +50,6 @@ export function MenuBar({
     onNewFile,
     onCloseFile
 }: MenuBarProps) {
-    const fLoc = "menuBarLocale.file.";
-    const eLoc = "menuBarLocale.edit.";
     const { t } = useTranslation();
     const { undo, redo, save, removeUnusedElements, autoLinkSamples } =
         useBankCommands(session, setView);
@@ -90,7 +88,7 @@ export function MenuBar({
                     <span>{"v" + __APP_VERSION__}</span>
                 </>
             ),
-            buttons: [{ label: t(fLoc + "close") }]
+            buttons: [{ label: t("menuBarLocale.file.close") }]
         });
     };
 
@@ -104,49 +102,55 @@ export function MenuBar({
 
     return (
         <div className={"menu_bar_main"}>
-            <MenuBarDropdown main={t(fLoc + "file")}>
-                <MenuBarIcon onClick={onNewFile} text={t(fLoc + "new")}>
+            <MenuBarDropdown main={t("menuBarLocale.file.file")}>
+                <MenuBarIcon
+                    onClick={onNewFile}
+                    text={t("menuBarLocale.file.new")}
+                >
                     <NewFileIcon />
                 </MenuBarIcon>
-                <MenuBarIcon onClick={onOpenFile} text={t(fLoc + "open")}>
+                <MenuBarIcon
+                    onClick={onOpenFile}
+                    text={t("menuBarLocale.file.open")}
+                >
                     <OpenFileIcon />
                 </MenuBarIcon>
                 {session && (
                     <>
                         <MenuBarIcon
                             onClick={onCloseFile}
-                            text={t(fLoc + "close")}
+                            text={t("menuBarLocale.file.close")}
                         >
                             <CloseFileIcon />
                         </MenuBarIcon>
 
                         <MenuBarIcon
                             onClick={() => save("auto")}
-                            text={t(fLoc + "save")}
+                            text={t("menuBarLocale.file.save")}
                         >
                             <SaveFileIcon />
                         </MenuBarIcon>
                         <MenuBarIcon
                             onClick={() => save("sf2")}
-                            text={t(fLoc + "saveSF2")}
+                            text={t("menuBarLocale.file.saveSF2")}
                         >
                             <SaveFileIcon />
                         </MenuBarIcon>
                         <MenuBarIcon
                             onClick={() => save("dls")}
-                            text={t(fLoc + "saveDLS")}
+                            text={t("menuBarLocale.file.saveDLS")}
                         >
                             <SaveFileIcon format={"DLS"} />
                         </MenuBarIcon>
                         <MenuBarIcon
                             onClick={() => save("sf3")}
-                            text={t(fLoc + "saveSF3")}
+                            text={t("menuBarLocale.file.saveSF3")}
                         >
                             <SaveFileIcon format={"SF3"} />
                         </MenuBarIcon>
                         <MenuBarIcon
                             onClick={() => save("sf4")}
-                            text={t(fLoc + "saveSFE")}
+                            text={t("menuBarLocale.file.saveSFE")}
                         >
                             <SaveFileIcon format={"SFe"} />
                         </MenuBarIcon>
@@ -154,30 +158,39 @@ export function MenuBar({
                 )}
                 <MenuBarIcon
                     onClick={() => void enterFullscreen()}
-                    text={t(fLoc + "fullscreen")}
+                    text={t("menuBarLocale.file.fullscreen")}
                 >
                     <FullscreenIcon />
                 </MenuBarIcon>
-                <MenuBarIcon onClick={showAbout} text={t(fLoc + "about")}>
+                <MenuBarIcon
+                    onClick={showAbout}
+                    text={t("menuBarLocale.file.about")}
+                >
                     <InfoIcon />
                 </MenuBarIcon>
             </MenuBarDropdown>
             {session && (
-                <MenuBarDropdown main={t(eLoc + "edit")}>
-                    <MenuBarIcon onClick={undo} text={t(eLoc + "undo")}>
+                <MenuBarDropdown main={t("menuBarLocale.edit.edit")}>
+                    <MenuBarIcon
+                        onClick={undo}
+                        text={t("menuBarLocale.edit.undo")}
+                    >
                         <UndoIcon />
                     </MenuBarIcon>
-                    <MenuBarIcon onClick={redo} text={t(eLoc + "redo")}>
+                    <MenuBarIcon
+                        onClick={redo}
+                        text={t("menuBarLocale.edit.redo")}
+                    >
                         <RedoIcon />
                     </MenuBarIcon>
                     <MenuBarIcon
                         onClick={removeUnusedElements}
-                        text={t(eLoc + "removeUnusedElements")}
+                        text={t("menuBarLocale.edit.removeUnusedElements")}
                     >
                         <DeleteIcon />
                     </MenuBarIcon>
                     <MenuBarIcon
-                        text={t(eLoc + "autoLinkSamples")}
+                        text={t("menuBarLocale.edit.autoLinkSamples")}
                         onClick={autoLinkSamples}
                     >
                         <LinkIcon />

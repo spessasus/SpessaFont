@@ -1,7 +1,7 @@
 import "./sample_display.css";
 import type { MouseEvent } from "react";
 import type { BasicSample } from "spessasynth_core";
-import { SpeakerIcon } from "../../utils/icons.tsx";
+import { SpeakerIcon } from "../../utils/icons/player_icons.tsx";
 
 interface SampleDisplayProps {
     sample: BasicSample;

@@ -4,9 +4,11 @@ export const MenuBarLocale = {
         new: "Nuevo",
         open: "Abrir",
         close: "Cerrar",
+        save: "Guardar",
         saveSF2: "Guardar SF2",
         saveDLS: "Guardar DLS",
         saveSF3: "Guardar SF3",
+        saveSFE: "Guardar SFE",
         warnSF2:
             "Este banco de sonido contiene muestras comprimidas. " +
             "Guardarlo como SF2 resultará en pérdida de calidad. ¿Está seguro de que desea continuar?",

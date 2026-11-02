@@ -1,6 +1,6 @@
 import "./dropdown_header.css";
 import { useTranslation } from "react-i18next";
-import { CopyIcon, PasteIcon } from "../../utils/icons.tsx";
+import { CopyIcon, PasteIcon } from "../../utils/icons/edit_icons.tsx";
 
 interface DropdownHeaderProps {
     text: string;

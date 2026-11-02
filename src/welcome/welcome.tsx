@@ -1,6 +1,10 @@
 import { useTranslation } from "react-i18next";
 import "./welcome.css";
-import { DownloadIcon, NewFileIcon, OpenFileIcon } from "../utils/icons.tsx";
+import {
+    DownloadIcon,
+    NewFileIcon,
+    OpenFileIcon
+} from "../utils/icons/file_icons.tsx";
 import { IS_ELECTRON } from "../utils/environment_detection.ts";
 import { showToastDialog } from "../toasts/show_toast_dialog.tsx";
 import {

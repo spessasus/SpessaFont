@@ -44,7 +44,7 @@
         border 0.1s;
     border-radius: 50%;
     border: solid var(--track-border-color) 1px;
-    box-shadow: 0 0 0.125rem rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 0.125rem var(--shadow-color);
 }
 
 .switch_slider:hover::before {

@@ -37,6 +37,8 @@ I welcome contributions from translators! To add a new locale, please follow the
     - **Note 2:** The code sets `textContent` property, so doing HTML characters like `&lt;`
       is not needed.
       For new line, use `\n`
+    - **Note 3:** `npm test` checks that every locale has the same keys and placeholders as English, and names
+      the missing ones.
 
 7. **Verify your work**
     - `npm run build` to perform a full build with type checks.

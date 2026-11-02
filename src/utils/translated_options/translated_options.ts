@@ -2,6 +2,7 @@ import { GeneratorTypes, MIDIControllers } from "spessasynth_core";
 import type { TFunction } from "i18next";
 import { generatorLocaleMap } from "./generator_to_locale_map.ts";
 import { MODULABLE_CCS } from "../midi_constants.ts";
+import { MIDIControllersLocale } from "../../locale/locale_en/midi_controllers.ts";
 
 export interface SelectOption {
     value: number;
@@ -57,15 +58,19 @@ const DESTINATION_ORDER = [
  */
 const CC_NUMBER_WIDTH = 5;
 
+function isControllerLocaleKey(
+    name: string
+): name is keyof typeof MIDIControllersLocale {
+    return Object.hasOwn(MIDIControllersLocale, name);
+}
+
 function getControllerName(cc: number, t: TFunction) {
-    let name: string =
-        (Object.keys(MIDIControllers) as (keyof typeof MIDIControllers)[]).find(
-            (key) => MIDIControllers[key] === cc
-        ) ?? "notDefined";
-    if (name.startsWith("undefined")) {
-        name = "notDefined";
-    }
-    return t(`MIDIControllersLocale.${name}`);
+    const name = (
+        Object.keys(MIDIControllers) as (keyof typeof MIDIControllers)[]
+    ).find((key) => MIDIControllers[key] === cc);
+    // The locale uses the controller names of spessasynth_core, and "notDefined" for the rest
+    const key = name && isControllerLocaleKey(name) ? name : "notDefined";
+    return t(`MIDIControllersLocale.${key}`);
 }
 
 /**

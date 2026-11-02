@@ -6,7 +6,7 @@ import type { BankEditView } from "../../core_backend/bank_view.ts";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 import { useEntityRevision } from "../../hooks/use_entity_revision.ts";
 import { useTranslation } from "react-i18next";
-import { LinkIcon } from "../../utils/icons.tsx";
+import { LinkIcon } from "../../utils/icons/edit_icons.tsx";
 import { getObjectId } from "../../utils/object_id.ts";
 import { ExpandButton } from "../expand_button.tsx";
 

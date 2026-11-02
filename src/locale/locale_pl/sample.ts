@@ -9,6 +9,8 @@ export const SampleLocale = {
     link: "Połączenie",
     unlinked: "Nie połączone",
     waveZoom: "Powiększenie fali",
+    length: "Długość",
+    loop: "Pętla",
     types: {
         invalid: "Nieprawidłowy",
         mono: "Mono",
@@ -26,6 +28,7 @@ export const SampleLocale = {
         playLooped: "Odtwórz w pętli",
         stop: "Zatrzymaj",
         wavExport: "Eksport WAV",
+        wavExportLoop: "Eksport WAV (pętla)",
         replaceAudio: "Zastąp audio",
         normalize: "Normalizuj",
         loading: "Ładowanie...",

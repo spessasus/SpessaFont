@@ -23,6 +23,7 @@ export const localeFrench = {
         main: "Bienvenue sur SpessaFont, un éditeur de SoundFont2/DLS en ligne!",
         openPrompt: "Ouvrir un fichier",
         newPrompt: "Ou commencer avec un fichier vide...",
+        downloadPrompt: "Télécharger SpessaFont Desktop",
         copyright: "Créé par Spessasus avec spessasynth_core.",
         copyrightTwo: `Copyright © Spessasus ${new Date().getFullYear()}, Licencié sous la Licence Apache-2.0.`
     },
@@ -62,6 +63,14 @@ export const localeFrench = {
         writingSamples: "En train d'écrire les échantillons...",
         writingFailed:
             "Il y a eu une erreur lors de l'écriture de la Banque de Son!"
+    },
+
+    downloadDesktop: {
+        chooseFormat: "Choisir le format",
+        windowsInstaller: "Installateur Windows",
+        windowsPortable: "Windows Portable",
+        linuxAppImage: "AppImage Linux",
+        debianPackage: "Paquet Debian"
     },
 
     error: "Erreur",

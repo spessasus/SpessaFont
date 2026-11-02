@@ -9,6 +9,8 @@ export const SampleLocale = {
     link: "Lien",
     unlinked: "Lien rompu",
     waveZoom: "Zoomer sur le signal sonore",
+    length: "Longueur",
+    loop: "Boucle",
     types: {
         invalid: "Invalide",
         mono: "Mono",
@@ -26,6 +28,7 @@ export const SampleLocale = {
         playLooped: "Lecture (en boucle)",
         stop: "Stop",
         wavExport: "Exporter en WAV",
+        wavExportLoop: "Exporter en WAV (Boucle)",
         replaceAudio: "Remplacer l'Audio",
         normalize: "Normaliser",
         loading: "Chargement...",

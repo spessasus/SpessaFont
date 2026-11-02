@@ -20,7 +20,9 @@ export const SettingsLocale = {
         },
         reverbLevel: "Niveau de Réverberation",
         chorusLevel: "Niveau de Chorus",
-        delayLevel: "Niveau de Délai"
+        delayLevel: "Niveau de Délai",
+        velocitySenseDepth: "Profondeur de Sensibilité à la Vélocité",
+        velocitySenseOffset: "Décalage de Sensibilité à la Vélocité"
     },
 
     midi: {

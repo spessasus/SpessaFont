@@ -24,10 +24,11 @@ export function MidiSettings() {
         return (
             <div className="settings_group hover_brightness">
                 <h2>{t("settingsLocale.midi.title")}</h2>
-                <p className={"warning"}>
+                {/* The browser's reason is not translated, so it is only a tooltip */}
+                <p className={"warning"} title={accessError ?? undefined}>
                     {accessStatus === "unsupported"
                         ? t("settingsLocale.midi.notSupported")
-                        : (accessError ?? t("settingsLocale.midi.accessError"))}
+                        : t("settingsLocale.midi.accessError")}
                 </p>
             </div>
         );
@@ -35,7 +36,7 @@ export function MidiSettings() {
     return (
         <div className="settings_group hover_brightness">
             <h2>{t("settingsLocale.midi.title")}</h2>
-            <Setting locale={"settingsLocale.midi.midiInput"}>
+            <Setting label={t("settingsLocale.midi.midiInput")}>
                 <select
                     className={"pretty_input monospaced"}
                     value={selectedDevice?.id ?? "NO_DEVICE"}

@@ -8,7 +8,7 @@ import {
     PlayIcon,
     PlayMIDIIcon,
     TimeIcon
-} from "../utils/icons.tsx";
+} from "../utils/icons/player_icons.tsx";
 import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
 import { ACCEPTED_MIDI_FORMATS } from "../utils/accepted_formats.ts";
 import { useEngineStatus } from "../hooks/use_engine_status.ts";

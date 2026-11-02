@@ -20,7 +20,7 @@ export function InterfaceSettings({ settings, onChange }: GroupSettingsProps) {
     return (
         <div className={"settings_group hover_brightness"}>
             <h2>{t("settingsLocale.interface.title")}</h2>
-            <Setting locale={"settingsLocale.interface.language"}>
+            <Setting label={t("settingsLocale.interface.language")}>
                 <select
                     onChange={(e) => onChange({ lang: e.target.value })}
                     className={"pretty_input monospaced"}
@@ -34,7 +34,7 @@ export function InterfaceSettings({ settings, onChange }: GroupSettingsProps) {
                 </select>
             </Setting>
 
-            <Setting locale={"settingsLocale.interface.theme"}>
+            <Setting label={t("settingsLocale.interface.theme")}>
                 <select
                     onChange={(e) => {
                         if (isTheme(e.target.value)) {
