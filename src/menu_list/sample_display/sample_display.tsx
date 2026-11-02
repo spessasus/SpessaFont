@@ -7,18 +7,21 @@ interface SampleDisplayProps {
     sample: BasicSample;
     isSelected: boolean;
     onClick: (event: MouseEvent) => void;
+    onDoubleClick?: () => void;
 }
 
 export function SampleDisplay({
     sample,
     isSelected,
-    onClick
+    onClick,
+    onDoubleClick
 }: SampleDisplayProps) {
     return (
         <button
             type={"button"}
             className={`plain_button sample_display ${isSelected ? "selected" : ""}`}
             onClick={onClick}
+            onDoubleClick={onDoubleClick}
             title={sample.name}
         >
             <SpeakerIcon />

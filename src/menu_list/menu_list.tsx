@@ -49,7 +49,7 @@ export function MenuList({ view }: MenuListProps) {
     const selectedPresets = selectionOf(selection, isPreset);
     const selectedInstruments = selectionOf(selection, isInstrument);
     const selectedSamples = selectionOf(selection, isSample);
-    useMenuShortcuts(view, selection);
+    useMenuShortcuts(selection);
 
     function handleItemClick<T extends BankEntity>(
         items: readonly T[],

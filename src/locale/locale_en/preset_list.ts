@@ -3,5 +3,6 @@ export const PresetListLocale = {
     overview: "Overview",
     presets: "Presets",
     instruments: "Instruments",
-    samples: "Samples"
+    samples: "Samples",
+    deleteSkipped: "Skipped {{count}} elements that are still in use."
 };

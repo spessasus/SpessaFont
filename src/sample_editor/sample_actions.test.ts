@@ -8,7 +8,11 @@ import { EditSampleAction } from "./edit_sample_action.ts";
 import { SetSampleTypeAction } from "./set_sample_type_action.ts";
 import { DeleteSampleAction } from "./linked_instruments/delete_sample_action.ts";
 import { ReplaceSampleAudioAction } from "./replace_sample_audio_action.ts";
-import { createReplaceAudioActions, normalizeAudio } from "./sample_audio.ts";
+import {
+    createReplaceAudioActions,
+    getExportChannels,
+    normalizeAudio
+} from "./sample_audio.ts";
 
 describe("EditSampleAction", () => {
     it("changes a sample property", () => {
@@ -176,5 +180,34 @@ describe("sample audio helpers", () => {
         expect(
             createReplaceAudioActions(left, [...channels, ...channels], 1)
         ).toBeUndefined();
+    });
+
+    it("exports a stereo pair as left and right, padded to one length", () => {
+        const session = createTestSession();
+        const [left, right] = session.document.samples;
+        left.setAudioData(new Float32Array([1, 2, 3, 4]), 44_100);
+        right.setAudioData(new Float32Array([5, 6]), 44_100);
+        const toArrays = (channels: Float32Array[]) =>
+            channels.map((c) => [...c]);
+
+        expect(toArrays(getExportChannels(right, false))).toEqual([[5, 6]]);
+
+        right.setLinkedSample(left, SampleTypes.rightSample);
+        expect(toArrays(getExportChannels(right, false))).toEqual([
+            [1, 2, 3, 4],
+            [5, 6, 0, 0]
+        ]);
+        left.loopStart = 1;
+        left.loopEnd = 3;
+        expect(toArrays(getExportChannels(left, true))).toEqual([
+            [2, 3],
+            [6, 0]
+        ]);
+
+        // Different rates cannot share a file
+        right.setAudioData(new Float32Array([5, 6]), 22_050);
+        expect(toArrays(getExportChannels(left, false))).toEqual([
+            [1, 2, 3, 4]
+        ]);
     });
 });

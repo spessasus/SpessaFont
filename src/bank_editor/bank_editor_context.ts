@@ -2,6 +2,7 @@ import { createContext, useContext } from "react";
 import type { BankSession } from "../core_backend/bank_session.ts";
 import type { HistoryActionGroup } from "../core_backend/history.ts";
 import type { BankEditView } from "../core_backend/bank_view.ts";
+import type { BasicSample } from "spessasynth_core";
 
 export interface BankEditorContextType {
     session: BankSession;
@@ -10,6 +11,10 @@ export interface BankEditorContextType {
      */
     apply: (actions: HistoryActionGroup) => void;
     setView: (view: BankEditView) => void;
+    /**
+     * Shows the sample and plays it once from the start.
+     */
+    playSample: (sample: BasicSample) => void;
 }
 
 export const BankEditorContext = createContext<BankEditorContextType | null>(

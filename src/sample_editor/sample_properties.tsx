@@ -27,7 +27,7 @@ export function SampleProperties({
     const { loopStart, loopEnd, originalKey } = sample;
     const length = sample.getAudioData().length;
     return (
-        <div className={"info_column"}>
+        <div className={"sample_properties"}>
             <div className={"info_field"}>
                 <span>{t("sampleLocale.sampleRate")}</span>
                 <WaitingInput
@@ -72,7 +72,7 @@ export function SampleProperties({
                 <WaitingInput
                     setValue={edits.setOriginalKey}
                     value={originalKey}
-                    className={"pretty_input monospaced original_key_input"}
+                    className={"pretty_input monospaced"}
                     maxLength={7}
                     suffix={` (${midiNoteToPitchClass(originalKey)})`}
                     aria-label={t("sampleLocale.originalKey")}

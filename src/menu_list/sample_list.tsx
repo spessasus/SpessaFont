@@ -34,7 +34,7 @@ export function SampleList({
 }: SampleListProps) {
     const { t } = useTranslation();
     const { audioEngine } = useAudioEngine();
-    const { session, apply } = useBankEditor();
+    const { session, apply, playSample } = useBankEditor();
     const { clipboard, contents } = useClipboard();
     const [isOpen, setIsOpen] = useSectionOpen(
         view,
@@ -124,6 +124,7 @@ export function SampleList({
                             sample={sample}
                             isSelected={selected.has(sample)}
                             onClick={(e) => onItemClick(sample, e)}
+                            onDoubleClick={() => playSample(sample)}
                         />
                     )}
                 />

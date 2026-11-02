@@ -1,87 +1,54 @@
 import { useTranslation } from "react-i18next";
 import { audioToWav, type BasicSample } from "spessasynth_core";
 import { downloadBlob } from "../utils/download_blob.ts";
-import type { useSamplePlayer } from "./use_sample_player.ts";
 import { useSampleAudioCommands } from "./use_sample_audio_commands.ts";
-import { ZoomSlider } from "./zoom_slider.tsx";
-
-function exportWav(data: Float32Array, sampleRate: number, name: string) {
-    const wav = audioToWav([data], sampleRate, { normalizeAudio: false });
-    downloadBlob(new Blob([wav], { type: "audio/wav" }), `${name}.wav`);
-}
+import { getExportChannels } from "./sample_audio.ts";
 
 interface SampleToolsProps {
     sample: BasicSample;
-    player: ReturnType<typeof useSamplePlayer>;
-    zoom: number;
-    onZoomChange: (zoom: number) => void;
+    /**
+     * Replacing or normalizing the audio stops the playback first.
+     */
+    onStop: () => void;
 }
 
 /**
- * Playback, WAV export, normalize, audio replacement, and the waveform zoom.
+ * WAV export (both channels of a stereo pair), normalize, and audio replacement.
  */
-export function SampleTools({
-    sample,
-    player,
-    zoom,
-    onZoomChange
-}: SampleToolsProps) {
+export function SampleTools({ sample, onStop }: SampleToolsProps) {
     const { t } = useTranslation();
     const { isLoading, replaceAudio, normalize } = useSampleAudioCommands(
         sample,
-        player.stop
+        onStop
     );
-    const { buffer } = player;
 
-    const exportLoop = () => {
-        const loop = buffer
-            .getChannelData(0)
-            .slice(sample.loopStart, sample.loopEnd);
-        exportWav(loop, buffer.sampleRate, `${sample.name}_loop`);
+    // The original audio and rate, not the playback buffer, which may be resampled
+    const exportWav = (isLoopOnly: boolean) => {
+        const wav = audioToWav(
+            getExportChannels(sample, isLoopOnly),
+            sample.sampleRate,
+            { normalizeAudio: false }
+        );
+        const name = isLoopOnly ? `${sample.name}_loop` : sample.name;
+        downloadBlob(new Blob([wav], { type: "audio/wav" }), `${name}.wav`);
     };
 
-    const buttonClass = `pretty_button monospaced ${isLoading ? "" : "responsive_button hover_brightness"}`;
-    const isStopped = player.state === "stopped";
+    const buttonClass = `pretty_button ${isLoading ? "" : "responsive_button hover_brightness"}`;
     return (
-        <div className={`info_column ${isLoading ? "disabled" : ""} tools`}>
+        <div className={`sample_tools ${isLoading ? "disabled" : ""}`}>
             <button
                 type={"button"}
                 className={buttonClass}
-                onClick={() =>
-                    exportWav(
-                        buffer.getChannelData(0),
-                        buffer.sampleRate,
-                        sample.name
-                    )
-                }
+                onClick={() => exportWav(false)}
             >
                 {t("sampleLocale.tools.wavExport")}
             </button>
             <button
                 type={"button"}
                 className={buttonClass}
-                onClick={exportLoop}
+                onClick={() => exportWav(true)}
             >
                 {t("sampleLocale.tools.wavExportLoop")}
-            </button>
-            {/* Two stop buttons keep the layout when playback starts */}
-            <button
-                type={"button"}
-                className={buttonClass}
-                onClick={() => (isStopped ? player.play(false) : player.stop())}
-            >
-                {isStopped
-                    ? t("sampleLocale.tools.play")
-                    : t("sampleLocale.tools.stop")}
-            </button>
-            <button
-                type={"button"}
-                className={buttonClass}
-                onClick={() => (isStopped ? player.play(true) : player.stop())}
-            >
-                {isStopped
-                    ? t("sampleLocale.tools.playLooped")
-                    : t("sampleLocale.tools.stop")}
             </button>
             <button
                 type={"button"}
@@ -101,12 +68,6 @@ export function SampleTools({
                     ? t("sampleLocale.tools.loading")
                     : t("sampleLocale.tools.replaceAudio")}
             </button>
-
-            <ZoomSlider
-                sampleLength={sample.getAudioData().length}
-                zoom={zoom}
-                onZoomChange={onZoomChange}
-            />
         </div>
     );
 }

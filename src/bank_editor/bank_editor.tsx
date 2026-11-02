@@ -73,6 +73,8 @@ export function BankEditor({
     if (samplePlayerState !== "stopped" && !(view instanceof BasicSample)) {
         setSamplePlayerState("stopped");
     }
+    // Counts the requests to play from the start, so playing the shown sample again restarts it
+    const [playRequest, setPlayRequest] = useState(0);
 
     const context: BankEditorContextType = useMemo(
         () => ({
@@ -83,6 +85,11 @@ export function BankEditor({
                 if (focus) {
                     setView(focus);
                 }
+            },
+            playSample: (sample: BasicSample) => {
+                setView(sample);
+                setSamplePlayerState("playing");
+                setPlayRequest((r) => r + 1);
             }
         }),
         [session, setView]
@@ -109,6 +116,7 @@ export function BankEditor({
                             <SampleEditor
                                 sample={view}
                                 playerState={samplePlayerState}
+                                playRequest={playRequest}
                                 onPlayerStateChange={setSamplePlayerState}
                             />
                         )}

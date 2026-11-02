@@ -237,6 +237,15 @@ export class BankDocument {
     }
 
     /**
+     * Puts a removed preset back at its index. Re-sorting would not do, as presets with the same
+     * patch keep the order they were added in.
+     */
+    public restorePreset(preset: BasicPreset, index: number) {
+        linkZones(preset);
+        this.presets.splice(index, 0, preset);
+    }
+
+    /**
      * Removes a preset, unlinks its instruments and returns its index before removal.
      */
     public removePreset(preset: BasicPreset) {

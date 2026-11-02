@@ -1,65 +1,100 @@
+/* The waveform takes whatever height the toolbar and the panels leave */
 .sample_editor {
     display: flex;
     flex-direction: column;
     gap: var(--flex-gap);
     height: 100%;
+    min-height: 0;
 }
 
-.info_split {
+.sample_editor_toolbar {
     display: flex;
-    gap: var(--flex-gap);
-}
-
-.info_column {
-    display: flex;
-    flex-direction: column;
-    gap: var(--flex-gap);
-    width: 100%;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--flex-gap) 1rem;
 }
 
 .sample_name {
     font-size: 1.5rem;
+    flex: 1 1 20rem;
+    min-width: 0;
 }
 
-.tools {
+.sample_playback {
+    display: flex;
+    gap: var(--flex-gap);
+}
+
+.sample_playback button,
+.sample_tools button {
+    display: inline-flex;
     align-items: center;
-    justify-content: start;
-    width: 100%;
-}
-
-.tools > * {
-    text-align: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.8rem;
     white-space: nowrap;
-    width: 100%;
 }
 
-.tools h2 {
-    /*these values are to even out the height with the sample name input*/
-    font-size: 1.5rem;
-    padding: 0.3rem;
-    border: 0.2rem solid transparent;
+.sample_playback_label {
+    display: grid;
 }
 
-.tools .controller_range_wrapper {
-    padding: 0 0.5rem;
+/* The global transition would fade the visibility and show both labels for a moment */
+.sample_playback_label > span {
+    grid-area: 1 / 1;
+    transition: none;
+}
+
+.sample_playback_label > span[data-hidden="true"] {
+    visibility: hidden;
+}
+
+.sample_playback button[aria-pressed="true"] {
+    border-color: var(--border-color);
+    background: var(--primary-color);
+}
+
+.sample_editor_toolbar .controller_range_wrapper {
+    width: 16rem;
+}
+
+/* Properties on the left, tools on the right, space between for more panels */
+.sample_editor_panels {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: end;
+    gap: var(--flex-gap) 2rem;
+}
+
+.sample_properties {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--flex-gap) 1rem;
 }
 
 .info_field {
     display: flex;
-    justify-content: space-between;
-    gap: var(--flex-gap);
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.2rem;
 }
 
 .info_field span {
     text-align: start;
     white-space: nowrap;
+    font-size: 0.85rem;
+    opacity: 0.75;
 }
 
-.info_field input {
+.info_field input,
+.info_field select {
     text-align: end;
+    width: 8rem;
 }
 
-.original_key_input {
-    width: 5rem;
+.sample_tools {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--flex-gap);
 }

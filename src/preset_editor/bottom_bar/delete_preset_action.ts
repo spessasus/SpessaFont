@@ -6,20 +6,21 @@ import { neighborOrInfo } from "../../core_backend/neighbor_or_info.ts";
 
 export class DeletePresetAction implements HistoryAction {
     private readonly preset: BasicPreset;
+    private index = -1;
 
     public constructor(preset: BasicPreset) {
         this.preset = preset;
     }
 
     public do(document: BankDocument, changes: ChangeSet) {
-        const index = document.removePreset(this.preset);
+        this.index = document.removePreset(this.preset);
         changes.touchList("presets");
         changes.touch(...this.preset.zones.map((z) => z.instrument));
-        changes.focusOn(neighborOrInfo(document.presets, index));
+        changes.focusOn(neighborOrInfo(document.presets, this.index));
     }
 
     public undo(document: BankDocument, changes: ChangeSet) {
-        document.addPreset(this.preset);
+        document.restorePreset(this.preset, this.index);
         changes.touchList("presets");
         changes.touch(
             this.preset,

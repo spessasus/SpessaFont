@@ -41,17 +41,23 @@ function createPlaybackBuffer(
  * Plays the sample's audio directly (not through the synthesizer), looped or once.
  * The state is owned by the bank editor, so the next sample shown keeps playing the same way,
  * which helps finding a sample by ear. Playback stops when the component unmounts and restarts
- * when the audio changes.
+ * when the audio changes or `playRequest` changes.
  */
 export function useSamplePlayer(
     sample: BasicSample,
     state: SamplePlayerState,
+    playRequest: number,
     onStateChange: (state: SamplePlayerState) => void
 ) {
     const { audioEngine } = useAudioEngine();
     const { context, targetNode } = audioEngine;
     // The editor mounts per sample, so a sample shown while playing starts now
     const [startTime, setStartTime] = useState(() => context.currentTime);
+    const [handledRequest, setHandledRequest] = useState(playRequest);
+    if (handledRequest !== playRequest) {
+        setHandledRequest(playRequest);
+        setStartTime(context.currentTime);
+    }
     const playerRef = useRef<AudioBufferSourceNode | null>(null);
     const onEnded = useEffectEvent(() => onStateChange("stopped"));
 
@@ -99,7 +105,6 @@ export function useSamplePlayer(
     return {
         state,
         startTime,
-        buffer,
         play: (isLooped: boolean) => {
             setStartTime(context.currentTime);
             onStateChange(isLooped ? "playing_loop" : "playing");

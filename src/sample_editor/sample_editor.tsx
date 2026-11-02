@@ -7,6 +7,8 @@ import { WaitingInput } from "../fancy_inputs/waiting_input/waiting_input.tsx";
 import { LinkedInstruments } from "./linked_instruments/linked_instruments.tsx";
 import { SampleTools } from "./sample_tools.tsx";
 import { SampleProperties } from "./sample_properties.tsx";
+import { SamplePlayback } from "./sample_playback.tsx";
+import { ZoomSlider } from "./zoom_slider.tsx";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useEntityRevision } from "../hooks/use_entity_revision.ts";
 import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
@@ -24,6 +26,10 @@ interface SampleEditorProps {
      * Kept by the bank editor across samples, so the next sample plays the same way.
      */
     playerState: SamplePlayerState;
+    /**
+     * Changes when the sample list asks to play the sample from the start.
+     */
+    playRequest: number;
     onPlayerStateChange: (state: SamplePlayerState) => void;
 }
 
@@ -34,6 +40,7 @@ interface SampleEditorProps {
 export function SampleEditor({
     sample,
     playerState,
+    playRequest,
     onPlayerStateChange
 }: SampleEditorProps) {
     const { t } = useTranslation();
@@ -42,7 +49,12 @@ export function SampleEditor({
     // Re-render when the sample's audio, properties, or links change
     useEntityRevision(session.store, sample);
     const edits = useSampleEdits(sample);
-    const player = useSamplePlayer(sample, playerState, onPlayerStateChange);
+    const player = useSamplePlayer(
+        sample,
+        playerState,
+        playRequest,
+        onPlayerStateChange
+    );
     const [zoom, setZoom] = useState(1);
 
     return (
@@ -59,7 +71,7 @@ export function SampleEditor({
                 playbackStartTime={player.startTime}
                 centCorrection={sample.pitchCorrection}
             />
-            <div className={"info_column"}>
+            <div className={"sample_editor_toolbar"}>
                 <WaitingInput
                     setValue={edits.setName}
                     value={sample.name}
@@ -68,21 +80,26 @@ export function SampleEditor({
                     placeholder={t("sampleLocale.sampleName")}
                     aria-label={t("sampleLocale.sampleName")}
                 />
-                <div className={"info_split"}>
-                    <SampleProperties
-                        sample={sample}
-                        samples={samples}
-                        edits={edits}
-                    />
-                    <SampleTools
-                        sample={sample}
-                        player={player}
-                        zoom={zoom}
-                        onZoomChange={setZoom}
-                    />
-                </div>
-                <LinkedInstruments sample={sample} />
+                <SamplePlayback
+                    state={player.state}
+                    onPlay={player.play}
+                    onStop={player.stop}
+                />
+                <ZoomSlider
+                    sampleLength={sample.getAudioData().length}
+                    zoom={zoom}
+                    onZoomChange={setZoom}
+                />
             </div>
+            <div className={"sample_editor_panels"}>
+                <SampleProperties
+                    sample={sample}
+                    samples={samples}
+                    edits={edits}
+                />
+                <SampleTools sample={sample} onStop={player.stop} />
+            </div>
+            <LinkedInstruments sample={sample} />
         </div>
     );
 }

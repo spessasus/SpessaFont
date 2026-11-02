@@ -23,12 +23,21 @@ function getShape(value: unknown, path = ""): string[] {
         : [`${path} (${typeof value})`];
 }
 
+// Only English and Polish are kept complete. The others may miss keys, which fall back to English
 describe("locales", () => {
-    const english = getShape(LocaleList.en.translation);
+    const english = new Set(getShape(LocaleList.en.translation));
     it.each(Object.keys(LocaleList).filter((code) => code !== "en"))(
-        "%s has the same keys and placeholders as English",
+        "%s only has keys and placeholders that English has",
         (code) => {
-            expect(getShape(LocaleList[code].translation)).toEqual(english);
+            expect(
+                getShape(LocaleList[code].translation).filter(
+                    (entry) => !english.has(entry)
+                )
+            ).toEqual([]);
         }
     );
+
+    it("pl has every key of English", () => {
+        expect(getShape(LocaleList.pl.translation)).toEqual([...english]);
+    });
 });
