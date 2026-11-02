@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { useEffect } from "react";
 import type { SoundBankInfoData } from "spessasynth_core";
 import { SetBankInfoAction } from "./set_bank_info_action.ts";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
@@ -48,11 +47,6 @@ export function EditableBankInfo() {
     const { t } = useTranslation();
     const { session, apply } = useBankEditor();
     const info = useBankSnapshot(session.store, (s) => s.info);
-    const bankName = info.name.length > 0 ? info.name : t("bankInfo.unnamed");
-
-    useEffect(() => {
-        document.title = `SpessaFont - ${bankName}`;
-    }, [bankName]);
 
     function setInfo<K extends keyof SoundBankInfoData>(
         fourCC: K,

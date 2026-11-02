@@ -1,7 +1,10 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
+import react from "@vitejs/plugin-react";
 import path from "node:path";
+
+// The app, spessasynth_core and encoder chunks are each about 600 kB
+const CHUNK_SIZE_LIMIT_KB = 700;
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -11,6 +14,7 @@ export default defineConfig({
         strictPort: true,
         host: "127.0.0.1"
     },
+    // No React Compiler: it caches by object identity, and the bank objects are edited in place
     plugins: [react()],
     resolve: {
         alias: {
@@ -24,7 +28,24 @@ export default defineConfig({
         __APP_VERSION__: JSON.stringify(process.env.npm_package_version)
     },
     build: {
-        target: "esnext"
+        target: "esnext",
+        chunkSizeWarningLimit: CHUNK_SIZE_LIMIT_KB,
+        rolldownOptions: {
+            output: {
+                codeSplitting: {
+                    groups: [
+                        {
+                            name: "spessasynth_core",
+                            test: /node_modules[/\\]spessasynth_core/
+                        },
+                        {
+                            name: "vorbis_encoder",
+                            test: /externals[/\\]sl-web-ogg/
+                        }
+                    ]
+                }
+            }
+        }
     },
     test: {
         include: ["src/**/*.test.{ts,tsx}"],

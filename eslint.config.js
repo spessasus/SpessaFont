@@ -7,54 +7,6 @@ import eslintConfigPrettier from "eslint-config-prettier";
 import eslint from "@eslint/js";
 import { defineConfig, globalIgnores } from "eslint/config";
 
-// React Compiler rules report problems that need the store from REFACTOR_PLAN.md phase 2.
-// They are warnings until the phase that owns each file lands, and errors again in phase 8.
-const reactCompilerRulesAsWarnings = Object.fromEntries(
-    Object.keys(reactHooks.configs.recommended.rules)
-        .filter(
-            (rule) =>
-                rule !== "react-hooks/rules-of-hooks" &&
-                rule !== "react-hooks/exhaustive-deps"
-        )
-        .map((rule) => [rule, "warn"])
-);
-
-// Folders whose refactor phase has landed. The compiler rules are errors there again.
-// useVirtualizer returns a mutable object by design, so incompatible-library stays a warning.
-const REFACTORED_FILES = [
-    "src/app.tsx",
-    "src/init.ts",
-    "src/main.tsx",
-    "src/bank_editor/**",
-    "src/clipboard/**",
-    "src/core_backend/**",
-    "src/error_boundary/**",
-    "src/fancy_inputs/**",
-    "src/generator_table/**",
-    "src/get_user_input/**",
-    "src/hooks/**",
-    "src/info_view/**",
-    "src/instrument_editor/**",
-    "src/keyboard/**",
-    "src/menu_bar/**",
-    "src/menu_list/**",
-    "src/modulator_editing/**",
-    "src/preset_editor/**",
-    "src/sample_editor/**",
-    "src/settings/**",
-    "src/tab_list/**",
-    "src/test_utils/**",
-    "src/toasts/**",
-    "src/utils/translated_options/**",
-    "src/welcome/**"
-];
-const reactCompilerRulesAsErrors = Object.fromEntries(
-    Object.keys(reactCompilerRulesAsWarnings).map((rule) => [
-        rule,
-        rule === "react-hooks/incompatible-library" ? "warn" : "error"
-    ])
-);
-
 export default defineConfig(
     globalIgnores(["dist", "externals"]),
     {
@@ -82,7 +34,10 @@ export default defineConfig(
             eqeqeq: "error",
             "no-fallthrough": ["error", { allowEmptyCase: true }],
             ...reactHooks.configs.recommended.rules,
-            ...reactCompilerRulesAsWarnings,
+            // The recommended config only warns about it
+            "react-hooks/unsupported-syntax": "error",
+            // useVirtualizer returns a mutable object by design
+            "react-hooks/incompatible-library": "warn",
             "react-refresh/only-export-components": [
                 "warn",
                 { allowConstantExport: true }
@@ -140,10 +95,6 @@ export default defineConfig(
             // cached Path2D would be rebuilt every time anyway
             "unicorn/prefer-path2d": "off"
         }
-    },
-    {
-        files: REFACTORED_FILES,
-        rules: reactCompilerRulesAsErrors
     },
     {
         files: ["src/vite-env.d.ts"],

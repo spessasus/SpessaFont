@@ -25,9 +25,15 @@ export function AudioEngineProvider({ children }: AudioEngineProviderProps) {
     });
 
     useEffect(() => {
+        let isIgnored = false;
         void audioEngine.resumeContext().then(() => {
-            setReady(true);
+            if (!isIgnored) {
+                setReady(true);
+            }
         });
+        return () => {
+            isIgnored = true;
+        };
     }, [audioEngine]);
 
     const value = useMemo(() => ({ audioEngine }), [audioEngine]);

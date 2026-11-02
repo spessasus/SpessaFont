@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { MenuList } from "../menu_list/menu_list.tsx";
 import "./bank_editor.css";
 import { SoundBankInfo } from "../info_view/sound_bank_info.tsx";
@@ -49,8 +50,20 @@ export function BankEditor({
     setView,
     shown
 }: BankEditorProps) {
+    const { t } = useTranslation();
     const view = useResolvedView(session, selectedView);
     usePreviewTarget(session, view);
+    const { name } = useBankSnapshot(session.store, (s) => s.info);
+    const bankName = name.length > 0 ? name : t("bankInfo.unnamed");
+
+    // The title follows the active tab, and goes back to the default when the tab closes
+    useEffect(() => {
+        const previousTitle = document.title;
+        document.title = `SpessaFont - ${bankName}`;
+        return () => {
+            document.title = previousTitle;
+        };
+    }, [bankName]);
     // Lives here so switching samples keeps playing, and stops when no sample is shown
     const [samplePlayerState, setSamplePlayerState] =
         useState<SamplePlayerState>("stopped");
