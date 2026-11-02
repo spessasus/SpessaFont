@@ -113,6 +113,7 @@ export function BottomPresetBar({ preset }: BottomPresetBarProps) {
             <div className={"drums_toggle"}>
                 <span>{t("presetLocale.drums")}</span>
                 <ControllerSwitch
+                    label={t("presetLocale.drums")}
                     value={preset.isGMGSDrum}
                     // Drum presets have no bank numbers
                     onChange={(isGMGSDrum) =>

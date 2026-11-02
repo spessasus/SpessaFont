@@ -28,7 +28,10 @@ export const MenuBarLocale = {
         player: "MIDI Player",
         play: "Play MIDI",
         pause: "Pause",
-        resume: "Resume"
+        resume: "Resume",
+        loadError: "Could not load {{name}}.",
+        noName: "No name",
+        rewind: "Jump back a little"
     },
 
     voices: "Voices:",

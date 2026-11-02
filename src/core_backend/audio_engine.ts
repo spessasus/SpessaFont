@@ -7,37 +7,55 @@ import {
     SoundBankLoader,
     SpessaLog,
     SpessaSynthProcessor,
-    SpessaSynthSequencer
+    SpessaSynthSequencer,
+    type SynthesizerEventCallback
 } from "spessasynth_core";
 import { KEYBOARD_TARGET_CHANNEL } from "../keyboard/target_channel.ts";
 import { type SavedSettingsType } from "../settings/save_load/settings_typedef.ts";
 import { logInfo } from "../utils/core_utils.ts";
 import type { BankEntity } from "./bank_view.ts";
 import { createPreviewPreset } from "./preview_preset.ts";
+import { ListenerSet } from "./listener_set.ts";
+import { EngineStatusStore } from "./engine_status.ts";
 
 // audio worklet processor operates at that
 const BLOCK_SIZE = 128;
 const MAX_CHUNKS_QUEUED = 32; // 16 * 128 = 2,048 // Windows does not like small buffer sizes
 const MAX_RENDERED_AT_ONCE = 2;
+/**
+ * Seconds of synth time between status updates, which caps the menu bar re-renders.
+ */
+const STATUS_INTERVAL = 0.1;
 
 const dummy = BasicSoundBank.getSampleSoundBankFile();
 
 export class AudioEngine {
     private readonly currentSampleRate;
     private worklet: AudioWorkletNode | undefined;
-    context: AudioContext;
-    processor: SpessaSynthProcessor;
-    sequencer: SpessaSynthSequencer;
-    analyser: AnalyserNode;
-    targetNode: GainNode;
-    audioChunksQueued = 0;
-    readonly maxChunksQueued;
+    private audioChunksQueued = 0;
+    private readonly maxChunksQueued;
+    private lastStatusTime = 0;
+    public readonly context: AudioContext;
+    public readonly processor: SpessaSynthProcessor;
+    public readonly sequencer: SpessaSynthSequencer;
+    public readonly analyser: AnalyserNode;
+    public readonly targetNode: GainNode;
+    /**
+     * Every event of the synthesizer. Subscribe here instead of setting `processor.onEventCall`,
+     * which only holds one callback.
+     */
+    public readonly synthEvents = new ListenerSet<SynthesizerEventCallback>();
+    /**
+     * Voice count and sequencer state, refreshed from the render loop.
+     */
+    public readonly status = new EngineStatusStore();
 
     constructor(context: AudioContext, initialSettings: SavedSettingsType) {
         this.context = context;
         this.processor = new SpessaSynthProcessor(context.sampleRate, {
             initialTime: context.currentTime
         });
+        this.processor.onEventCall = (e) => this.synthEvents.emit(e);
         this.maxChunksQueued = Math.min(
             Math.max(
                 2,
@@ -53,7 +71,7 @@ export class AudioEngine {
         this.sequencer = new SpessaSynthSequencer(this.processor);
         this.sequencer.loopCount = Infinity;
         // analyser
-        this.analyser = new AnalyserNode(this.context);
+        this.analyser = new AnalyserNode(this.context, { fftSize: 1024 });
         this.analyser.connect(this.context.destination);
         this.targetNode = new GainNode(context);
         this.targetNode.connect(this.analyser);
@@ -67,8 +85,65 @@ export class AudioEngine {
         this.applySettings(initialSettings);
     }
 
-    get MIDIPaused() {
-        return this.sequencer.paused;
+    private audioLoop() {
+        if (this.audioChunksQueued >= this.maxChunksQueued) {
+            return;
+        }
+        const toRender = Math.min(
+            MAX_RENDERED_AT_ONCE,
+            this.maxChunksQueued - this.audioChunksQueued
+        );
+        const data: Float32Array[] = [];
+        const transferList: ArrayBuffer[] = [];
+
+        // encode the rendered data into a single f32array as it's faster
+        for (let i = 0; i < toRender; i++) {
+            const dataChunk = new Float32Array(BLOCK_SIZE * 2);
+            let byteOffset = 0;
+            // dry
+            const dL = new Float32Array(
+                dataChunk.buffer,
+                byteOffset,
+                BLOCK_SIZE
+            );
+            byteOffset += Float32Array.BYTES_PER_ELEMENT * BLOCK_SIZE;
+            const dR = new Float32Array(
+                dataChunk.buffer,
+                byteOffset,
+                BLOCK_SIZE
+            );
+
+            // render!
+            this.sequencer.processTick();
+            this.processor.process(dL, dR);
+            // copy out
+            data.push(dataChunk);
+            transferList.push(dataChunk.buffer);
+        }
+
+        // send to worklet
+        if (this.worklet) {
+            this.worklet.port.postMessage(data, transferList);
+        }
+        if (
+            this.processor.currentTime - this.lastStatusTime >=
+            STATUS_INTERVAL
+        ) {
+            this.refreshStatus();
+        }
+    }
+
+    private refreshStatus() {
+        this.lastStatusTime = this.processor.currentTime;
+        const song = this.sequencer.midiData;
+        this.status.update({
+            voiceCount: this.processor.voiceCount,
+            time: Math.floor(this.sequencer.currentTime),
+            duration: this.sequencer.duration,
+            isPaused: this.sequencer.paused,
+            hasSong: song !== undefined,
+            songName: song?.getName()
+        });
     }
 
     public processRealTime(msg: number[] | Uint8Array) {
@@ -95,7 +170,7 @@ export class AudioEngine {
         ]);
     }
 
-    applySettings(settings: SavedSettingsType) {
+    public applySettings(settings: SavedSettingsType) {
         const processor = this.processor;
         this.setVolume(settings.volume);
         processor.setSystemParameter(
@@ -155,7 +230,7 @@ export class AudioEngine {
         location.replace(url);
     }
 
-    async resumeContext() {
+    public async resumeContext() {
         await this.context.resume();
         logInfo("Setting up audio loop");
         await this.context.audioWorklet.addModule("./audio_worklet.js");
@@ -177,63 +252,36 @@ export class AudioEngine {
         this.audioLoop();
     }
 
-    audioLoop() {
-        if (this.audioChunksQueued >= this.maxChunksQueued) {
-            return;
-        }
-        const toRender = Math.min(
-            MAX_RENDERED_AT_ONCE,
-            this.maxChunksQueued - this.audioChunksQueued
-        );
-        const data: Float32Array[] = [];
-        const transferList: ArrayBuffer[] = [];
-
-        // encode the rendered data into a single f32array as it's faster
-        for (let i = 0; i < toRender; i++) {
-            const dataChunk = new Float32Array(BLOCK_SIZE * 2);
-            let byteOffset = 0;
-            // dry
-            const dL = new Float32Array(
-                dataChunk.buffer,
-                byteOffset,
-                BLOCK_SIZE
-            );
-            byteOffset += Float32Array.BYTES_PER_ELEMENT * BLOCK_SIZE;
-            const dR = new Float32Array(
-                dataChunk.buffer,
-                byteOffset,
-                BLOCK_SIZE
-            );
-
-            // render!
-            this.sequencer.processTick();
-            this.processor.process(dL, dR);
-            // copy out
-            data.push(dataChunk);
-            transferList.push(dataChunk.buffer);
-        }
-
-        // send to worklet
-        if (this.worklet) {
-            this.worklet.port.postMessage(data, transferList);
-        }
-    }
-
-    setVolume(volume: number) {
+    public setVolume(volume: number) {
         this.targetNode.gain.value = volume;
     }
 
-    toggleMIDI() {
+    public toggleMIDI() {
         if (this.sequencer.paused) {
-            this.resumeMIDI();
+            this.sequencer.play();
         } else {
-            this.pauseMIDI();
+            this.sequencer.pause();
         }
+        this.refreshStatus();
     }
 
-    playMIDI(mid: BasicMIDI) {
+    public playMIDI(mid: BasicMIDI) {
         this.sequencer.loadNewSongList([mid]);
         this.sequencer.play();
+        this.refreshStatus();
+    }
+
+    public pauseMIDI() {
+        this.sequencer.pause();
+        this.refreshStatus();
+    }
+
+    /**
+     * Jumps back a little, which plays the notes at that point again.
+     */
+    public rewindMIDI() {
+        this.sequencer.currentTime -= 0.1;
+        this.refreshStatus();
     }
 
     /**
@@ -250,13 +298,5 @@ export class AudioEngine {
             this.processor.programChange(KEYBOARD_TARGET_CHANNEL, 0);
         }
         this.processor.clearCache();
-    }
-
-    pauseMIDI() {
-        this.sequencer.pause();
-    }
-
-    resumeMIDI() {
-        this.sequencer.play();
     }
 }

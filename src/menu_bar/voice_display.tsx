@@ -1,30 +1,37 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
+import { useEngineStatus } from "../hooks/use_engine_status.ts";
 
 const CANVAS_WIDTH = 100;
 const CANVAS_HEIGHT = 50;
-const FFT_SIZE = 1024;
+
+function VoiceCount() {
+    const { t } = useTranslation();
+    const voiceCount = useEngineStatus((s) => s.voiceCount);
+    return (
+        <div className="midi_voice_display">
+            {t("menuBarLocale.voices")} {voiceCount}
+        </div>
+    );
+}
 
 export function VoiceDisplay() {
-    const { t } = useTranslation();
     const {
-        audioEngine: { analyser, processor }
+        audioEngine: { analyser }
     } = useAudioEngine();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     useEffect(() => {
-        const canvas = canvasRef.current;
-        const ctx = canvas?.getContext("2d");
-        if (!canvas || !ctx) {
+        const ctx = canvasRef.current?.getContext("2d");
+        if (!ctx) {
             return;
         }
 
-        analyser.fftSize = FFT_SIZE;
-        const bufferLength = analyser.frequencyBinCount; // frequencyBinCount = fftSize / 2
-        const dataArray = new Uint8Array(bufferLength);
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
+        let frame = 0;
         const draw = () => {
-            requestAnimationFrame(draw);
+            frame = requestAnimationFrame(draw);
 
             analyser.getByteTimeDomainData(dataArray);
             ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -44,29 +51,12 @@ export function VoiceDisplay() {
         };
 
         draw();
+        return () => cancelAnimationFrame(frame);
     }, [analyser]);
-
-    function VoiceDisplay() {
-        const [voices, setVoices] = useState(processor.voiceCount);
-
-        useEffect(() => {
-            const interval = setInterval(() => {
-                setVoices(processor.voiceCount);
-            }, 300);
-
-            return () => clearInterval(interval);
-        }, []);
-
-        return (
-            <div className="midi_voice_display">
-                {t("menuBarLocale.voices")} {voices}
-            </div>
-        );
-    }
 
     return (
         <div className={"flex_menu_bar voice_display"}>
-            <VoiceDisplay />
+            <VoiceCount />
             <canvas
                 ref={canvasRef}
                 width={CANVAS_WIDTH}

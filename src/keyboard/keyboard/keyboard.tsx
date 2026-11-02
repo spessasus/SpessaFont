@@ -1,261 +1,206 @@
-import {
-    type RefObject,
-    useEffect,
-    useImperativeHandle,
-    useMemo,
-    useRef
-} from "react";
+import type * as React from "react";
+import { memo, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import "./keyboard.css";
 import { KEYBOARD_TARGET_CHANNEL } from "../target_channel.ts";
 import type { GenericRange } from "spessasynth_core";
 import { useAudioEngine } from "../../core_backend/audio_engine_context.ts";
+import { getPressedNote, usePressedNotes } from "./use_pressed_notes.ts";
+
+const KEY_COUNT = 128;
+const MAX_VELOCITY = 127;
+const NOTES = Array.from({ length: KEY_COUNT }, (_, i) => i);
 
 function isBlackNoteNumber(midiNote: number) {
-    const pitchClass = midiNote % 12;
-    return [1, 3, 6, 8, 10].includes(pitchClass);
+    return [1, 3, 6, 8, 10].includes(midiNote % 12);
 }
 
-export type KeyboardRef = {
-    clearAll: () => void;
-    pressNote: (midiNote: number) => void;
-    releaseNote: (midiNote: number) => void;
-} | null;
+function getKeyClassName(midiNote: number) {
+    if (isBlackNoteNumber(midiNote)) {
+        return "key sharp_key";
+    }
+    const hasBlackNoteLeft = isBlackNoteNumber(midiNote - 1);
+    const hasBlackNoteRight =
+        midiNote < KEY_COUNT - 1 && isBlackNoteNumber(midiNote + 1);
+    if (hasBlackNoteLeft && hasBlackNoteRight) {
+        return "key flat_key between_sharps";
+    }
+    if (hasBlackNoteLeft) {
+        return "key flat_key left_sharp";
+    }
+    return hasBlackNoteRight ? "key flat_key right_sharp" : "key flat_key";
+}
 
-const pressedKeys = new Set<number>();
+/**
+ * Touch pointers are captured by the element they started on, so the key under the pointer
+ * is found by position, which also makes sliding across keys work.
+ */
+function findKey(e: React.PointerEvent<HTMLDivElement>) {
+    const element = document.elementFromPoint(e.clientX, e.clientY);
+    if (
+        !(element instanceof HTMLElement) ||
+        element.parentElement !== e.currentTarget
+    ) {
+        return undefined;
+    }
+    const midiNote = Number(element.dataset.note);
+    if (!Number.isSafeInteger(midiNote)) {
+        return undefined;
+    }
+    const rect = element.getBoundingClientRect();
+    const keyHeight = isBlackNoteNumber(midiNote)
+        ? rect.height * 0.7
+        : rect.height;
+    const velocity = Math.max(
+        1,
+        Math.min(
+            MAX_VELOCITY,
+            Math.floor(((e.clientY - rect.top) / keyHeight) * 128)
+        )
+    );
+    return { midiNote, velocity };
+}
+
+interface PianoKeyProps {
+    midiNote: number;
+    isPressed: boolean;
+    isHighlighted: boolean;
+    isEnabled: boolean;
+}
+
+/**
+ * Memoized because MIDI playback re-renders the keyboard on every note.
+ */
+const PianoKey = memo(function PianoKey({
+    midiNote,
+    isPressed,
+    isHighlighted,
+    isEnabled
+}: PianoKeyProps) {
+    let className = getKeyClassName(midiNote);
+    if (!isEnabled) {
+        className += " disabled";
+    }
+    if (isHighlighted) {
+        className += " zone_highlight";
+    }
+    if (isPressed) {
+        className += " pressed";
+    }
+    return <div className={className} data-note={midiNote} />;
+});
+
+interface KeyboardProps {
+    /**
+     * Key ranges of the shown element. Keys outside all of them are dimmed, and pressing a key
+     * highlights the ranges that contain it.
+     */
+    splits: readonly GenericRange[];
+    /**
+     * Called with the key under the pointer and the velocity a press there would have.
+     */
+    onKeyHover: (midiNote: number, velocity: number) => void;
+}
 
 // most of this code is ported over from spessasynth web app
-export function Keyboard({
-    ref,
-    keyDisplay,
-    velocityDisplay,
-    splits
-}: {
-    ref: RefObject<KeyboardRef | null>;
-    keyDisplay: RefObject<HTMLSpanElement | null>;
-    velocityDisplay: RefObject<HTMLSpanElement | null>;
-    splits: GenericRange[];
-}) {
+export function Keyboard({ splits, onKeyHover }: KeyboardProps) {
+    const { t } = useTranslation();
     const { audioEngine } = useAudioEngine();
-    const keysRef = useRef<HTMLDivElement[]>([]);
-    const keyboardRef = useRef<HTMLDivElement | null>(null);
+    const pressedNotes = usePressedNotes();
+    // The note each pointer holds, so several fingers can play at once
+    const heldNotes = useRef(new Map<number, number>());
 
-    const matchingSplits = useMemo(() => {
-        const map: GenericRange[][] = [];
-        for (let midiNote = 0; midiNote < 128; midiNote++) {
-            // find all splits tha this key belongs to
-            const matched: GenericRange[] = [];
-
-            for (const split of splits) {
-                if (split.min <= midiNote && split.max >= midiNote) {
-                    matched.push(split);
-                }
-            }
-            map.push(matched);
-        }
-        return map;
-    }, [splits]);
-
-    useImperativeHandle(ref, () => ({
-        clearAll() {
-            pressedKeys.clear();
-            for (const key of keysRef.current) {
-                key.classList.remove("pressed");
-            }
-        },
-
-        pressNote(midiNote: number) {
-            pressedKeys.add(midiNote);
-            keysRef?.current?.[midiNote]?.classList?.add("pressed");
-        },
-
-        releaseNote(midiNote: number) {
-            pressedKeys.delete(midiNote);
-            keysRef?.current?.[midiNote]?.classList?.remove("pressed");
-        }
-    }));
-
+    // Hiding the keyboard while a key is held would leave the note playing
     useEffect(() => {
-        let isMouseHeld = false;
-        const userNoteOff = (note: number) => {
-            // processor callback will trigger the note release
-            audioEngine.noteOffRealTime(KEYBOARD_TARGET_CHANNEL, note);
-            // find all splits tha this key belongs to
-            const splits = matchingSplits[note];
-            for (const split of splits) {
-                for (let i = split.min; i <= split.max; i++) {
-                    keysRef?.current?.[i]?.classList?.remove("zone_highlight");
-                }
+        const held = heldNotes.current;
+        return () => {
+            for (const note of held.values()) {
+                audioEngine.noteOffRealTime(KEYBOARD_TARGET_CHANNEL, note);
             }
+            held.clear();
         };
+    }, [audioEngine]);
 
-        const userNoteOn = (note: number, velocity: number) => {
-            audioEngine.noteOnRealTime(KEYBOARD_TARGET_CHANNEL, note, velocity);
-
-            const splits = matchingSplits[note];
-            for (const split of splits) {
-                for (let i = split.min; i <= split.max; i++) {
-                    keysRef?.current?.[i]?.classList?.add("zone_highlight");
-                }
+    const pressedKeys = new Array<boolean>(KEY_COUNT).fill(false);
+    const highlightedKeys = new Array<boolean>(KEY_COUNT).fill(false);
+    for (const id of pressedNotes) {
+        const { channel, midiNote } = getPressedNote(id);
+        pressedKeys[midiNote] = true;
+        if (channel !== KEYBOARD_TARGET_CHANNEL) {
+            continue;
+        }
+        for (const split of splits) {
+            if (split.min <= midiNote && split.max >= midiNote) {
+                highlightedKeys.fill(true, split.min, split.max + 1);
             }
-        };
+        }
+    }
+    const enabledKeys = new Array<boolean>(KEY_COUNT).fill(splits.length === 0);
+    for (const split of splits) {
+        enabledKeys.fill(true, split.min, split.max + 1);
+    }
 
-        const moveHandler = (e: PointerEvent) => {
-            const mouseEvent = e;
-
-            const newPressedKeys = new Set<number>();
-
-            const target = document.elementFromPoint(
-                mouseEvent.clientX,
-                mouseEvent.clientY
-            ) as HTMLDivElement;
-            if (!target) {
-                return;
-            }
-            const rect = target.getBoundingClientRect();
-
-            const midiNote = keysRef?.current?.indexOf(target) || 0;
-            if (
-                Number.isNaN(midiNote) ||
-                midiNote < 0 ||
-                pressedKeys.has(midiNote)
-            ) {
-                return;
-            }
-
-            const relativeMouseY = mouseEvent.clientY - rect.top;
-            const keyHeight = isBlackNoteNumber(midiNote)
-                ? rect.height * 0.7
-                : rect.height;
-            const velocity = Math.min(
-                127,
-                Math.floor((relativeMouseY / keyHeight) * 128)
-            );
-            if (keyDisplay.current) {
-                keyDisplay.current.textContent = midiNote
-                    .toString()
-                    .padStart(3, " ");
-            }
-            if (velocityDisplay.current) {
-                velocityDisplay.current.textContent = velocity
-                    .toString()
-                    .padStart(3, " ");
-            }
-
-            // Do the latter only for pressed
-            if (!isMouseHeld) {
-                return;
-            }
-
-            newPressedKeys.add(midiNote);
-
-            // only release keys that are no longer being pressed
-            for (const note of pressedKeys) {
-                if (!newPressedKeys.has(note)) {
-                    userNoteOff(note);
-                }
-            }
-
-            if (pressedKeys.has(midiNote)) {
-                return;
-            }
-
-            userNoteOn(midiNote, velocity);
-            pressedKeys.add(midiNote);
-        };
-
-        const onMouseDown = (e: PointerEvent) => {
-            isMouseHeld = true;
-            moveHandler(e);
-        };
-
-        const onMouseUp = () => {
-            isMouseHeld = false;
-            for (const note of pressedKeys) userNoteOff(note);
-        };
-
-        const onMouseLeave = () => {
-            for (const note of pressedKeys) userNoteOff(note);
-        };
-
-        const onMouseMove = (e: PointerEvent) => {
-            moveHandler(e);
-        };
-
-        const kb = keyboardRef.current;
-        if (!kb) {
+    const releasePointer = (pointerId: number) => {
+        const note = heldNotes.current.get(pointerId);
+        if (note === undefined) {
             return;
         }
+        heldNotes.current.delete(pointerId);
+        audioEngine.noteOffRealTime(KEYBOARD_TARGET_CHANNEL, note);
+    };
 
-        document.addEventListener("pointerdown", onMouseDown);
-        document.addEventListener("pointerup", onMouseUp);
-        kb.addEventListener("pointermove", onMouseMove);
-        kb.addEventListener("pointerleave", onMouseLeave);
-
-        // cleanup
-        return () => {
-            document.removeEventListener("pointerdown", onMouseDown);
-            document.removeEventListener("pointerup", onMouseUp);
-            kb.removeEventListener("pointermove", onMouseMove);
-            kb.removeEventListener("pointerleave", onMouseLeave);
-        };
-    }, [audioEngine, keyDisplay, matchingSplits, velocityDisplay]);
-
-    const keys: number[] = Array.from({ length: 128 }, (_, i) => i);
-
-    const enabledKeys: boolean[] = useMemo((): boolean[] => {
-        if (splits.length === 0) {
-            return new Array(128).fill(true) as boolean[];
+    const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+        const key = findKey(e);
+        if (key) {
+            onKeyHover(key.midiNote, key.velocity);
         }
-        const e: boolean[] = new Array(128).fill(false) as boolean[];
-
-        for (const s of splits) {
-            for (let i = s.min; i <= s.max; i++) {
-                e[i] ||= true;
-            }
+        // The keyboard holds the capture while the button or finger is down, so leaving the
+        // keyboard releases the note and coming back plays again
+        if (
+            !e.currentTarget.hasPointerCapture(e.pointerId) ||
+            key?.midiNote === heldNotes.current.get(e.pointerId)
+        ) {
+            return;
         }
-        return e;
-    }, [splits]);
+        releasePointer(e.pointerId);
+        if (!key) {
+            return;
+        }
+        heldNotes.current.set(e.pointerId, key.midiNote);
+        audioEngine.noteOnRealTime(
+            KEYBOARD_TARGET_CHANNEL,
+            key.midiNote,
+            key.velocity
+        );
+    };
 
     return (
-        <div className="keyboard" ref={keyboardRef}>
-            {keys.map((midiNote) => {
-                let className = "key";
-                if (!enabledKeys[midiNote]) {
-                    className += " disabled";
+        <div
+            className="keyboard"
+            role={"group"}
+            aria-label={t("keyboardLocale.keyboard")}
+            onPointerDown={(e) => {
+                if (e.pointerType === "mouse" && e.button !== 0) {
+                    return;
                 }
-                if (isBlackNoteNumber(midiNote)) {
-                    className += " sharp_key";
-                } else {
-                    className += " flat_key";
-                    let hasBlackNoteLeft = false;
-                    let hasBlackNoteRight = false;
-                    if (midiNote >= 0) {
-                        hasBlackNoteLeft = isBlackNoteNumber(midiNote - 1);
-                    }
-                    if (midiNote < 127) {
-                        hasBlackNoteRight = isBlackNoteNumber(midiNote + 1);
-                    }
-
-                    if (hasBlackNoteLeft && hasBlackNoteRight) {
-                        className += " between_sharps";
-                    } else if (hasBlackNoteLeft) {
-                        className += " left_sharp";
-                    } else if (hasBlackNoteRight) {
-                        className += " right_sharp";
-                    }
-                }
-                return (
-                    <div
-                        className={className}
-                        key={midiNote}
-                        ref={(el) => {
-                            if (el) {
-                                keysRef.current[midiNote] = el;
-                            }
-                        }}
-                    />
-                );
-            })}
+                e.currentTarget.setPointerCapture(e.pointerId);
+                handlePointerMove(e);
+            }}
+            onPointerMove={handlePointerMove}
+            onPointerUp={(e) => releasePointer(e.pointerId)}
+            onPointerCancel={(e) => releasePointer(e.pointerId)}
+            onLostPointerCapture={(e) => releasePointer(e.pointerId)}
+        >
+            {NOTES.map((midiNote) => (
+                <PianoKey
+                    // 128 fixed keys, never reordered
+                    key={midiNote}
+                    midiNote={midiNote}
+                    isPressed={pressedKeys[midiNote]}
+                    isHighlighted={highlightedKeys[midiNote]}
+                    isEnabled={enabledKeys[midiNote]}
+                />
+            ))}
         </div>
     );
 }

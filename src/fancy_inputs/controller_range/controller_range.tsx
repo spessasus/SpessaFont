@@ -1,6 +1,15 @@
 import "./controller_range.css";
-import { useEffect, useRef } from "react";
+import { useState } from "react";
 import type { ControllerProps } from "../controller_knob/controller_knob.tsx";
+
+/**
+ * Jumps larger than this (in percent) animate, so dragging stays responsive.
+ */
+const TRANSITION_THRESHOLD = 5;
+
+interface ControllerRangeProps extends ControllerProps {
+    text: string;
+}
 
 export function ControllerRange({
     min,
@@ -8,36 +17,21 @@ export function ControllerRange({
     value,
     onChange,
     text
-}: ControllerProps & { text: string }) {
-    const visualWrapperRef = useRef<HTMLDivElement>(null);
-    const previousValueRef = useRef<number>(value);
-
-    useEffect(() => {
-        const visualWrapper = visualWrapperRef.current;
-        if (!visualWrapper) {
-            return;
-        }
-
-        const oldVal = previousValueRef.current;
-        const newVal = Math.round(((value - min) / (max - min)) * 100);
-
-        const oldPercent = Math.round(((oldVal - min) / (max - min)) * 100);
-
-        visualWrapper.classList.toggle(
-            "controller_range_transition",
-            Math.abs(oldPercent - newVal) > 5
-        );
-
-        visualWrapper.style.setProperty("--visual-width", `${newVal}%`);
-        previousValueRef.current = value;
-    }, [value, min, max]);
+}: ControllerRangeProps) {
+    const percent = Math.round(((value - min) / (max - min)) * 100);
+    const [previousPercent, setPreviousPercent] = useState(percent);
+    const [isJump, setIsJump] = useState(false);
+    if (previousPercent !== percent) {
+        setPreviousPercent(percent);
+        setIsJump(Math.abs(previousPercent - percent) > TRANSITION_THRESHOLD);
+    }
 
     return (
-        <div className="controller_range_wrapper">
+        <label className="controller_range_wrapper">
             <span className={"monospaced"}>{text}</span>
             <div
-                className="controller_range_visual_wrapper"
-                ref={visualWrapperRef}
+                className={`controller_range_visual_wrapper ${isJump ? "controller_range_transition" : ""}`}
+                style={{ "--visual-width": `${percent}%` }}
             >
                 <div className="controller_range_progress" />
                 <div className="controller_range_thumb" />
@@ -50,6 +44,6 @@ export function ControllerRange({
                     onChange={(e) => onChange(Number.parseInt(e.target.value))}
                 />
             </div>
-        </div>
+        </label>
     );
 }

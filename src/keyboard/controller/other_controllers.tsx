@@ -1,100 +1,83 @@
-import { type Ref, useCallback, useImperativeHandle, useState } from "react";
 import { ControllerRange } from "../../fancy_inputs/controller_range/controller_range.tsx";
 import { useTranslation } from "react-i18next";
 import { KEYBOARD_TARGET_CHANNEL } from "../target_channel.ts";
 import { useAudioEngine } from "../../core_backend/audio_engine_context.ts";
+import { useSynthValue } from "../../hooks/use_synth_value.ts";
 
-export interface OtherCCRef {
-    setPitch: (pitch: number) => void;
-    setPressure: (pressure: number) => void;
-}
+const PITCH_WHEEL_CENTER = 8192;
 
-export function OtherControllers({ ref }: { ref: Ref<OtherCCRef> }) {
+export function OtherControllers() {
+    const { t } = useTranslation();
     const {
         audioEngine: { processor }
     } = useAudioEngine();
-    const [pitchValue, sp] = useState(
-        processor.midiChannels[KEYBOARD_TARGET_CHANNEL].midiParameters
-            .pitchWheel
+    const pitchWheel = useSynthValue(
+        (p) => p.midiChannels[KEYBOARD_TARGET_CHANNEL].midiParameters.pitchWheel
     );
-    const [pressure, spres] = useState(
-        processor.midiChannels[KEYBOARD_TARGET_CHANNEL].midiParameters.pressure
-    );
-    const { t } = useTranslation();
-
-    const setPitchValue = useCallback(
-        (v: number) => {
-            v = Math.floor(v);
-            // event callback will update the range
-            processor.pitchWheel(KEYBOARD_TARGET_CHANNEL, v);
-        },
-        [processor]
+    const pressure = useSynthValue(
+        (p) => p.midiChannels[KEYBOARD_TARGET_CHANNEL].midiParameters.pressure
     );
 
-    const setPressureValue = useCallback(
-        (v: number) => {
-            v = Math.floor(v);
-            processor.channelPressure(KEYBOARD_TARGET_CHANNEL, v);
-        },
-        [processor]
-    );
+    const handleMIDIPanic = () => processor.stopAll(true);
 
-    useImperativeHandle(ref, () => ({
-        setPitch(pitch: number) {
-            sp(pitch);
-        },
-        setPressure(pressure: number) {
-            spres(pressure);
-        }
-    }));
-
-    const midiPanic = useCallback(() => {
+    const handleSystemReset = () => {
         processor.stopAll(true);
-    }, [processor]);
-
-    const systemReset = useCallback(() => {
-        midiPanic();
         processor.reset();
-    }, [midiPanic, processor]);
+    };
 
     return (
         <div className={"controller_row"}>
             <div className={"controller_column"}>
-                <div
-                    onClick={midiPanic}
+                <button
+                    type={"button"}
+                    onClick={handleMIDIPanic}
                     className={
                         "pretty_button responsive_button hover_brightness monospaced"
                     }
                 >
                     {t("keyboardLocale.midiPanic")}
-                </div>
-                <div
-                    onClick={systemReset}
+                </button>
+                <button
+                    type={"button"}
+                    onClick={handleSystemReset}
                     className={
                         "pretty_button responsive_button hover_brightness monospaced"
                     }
                 >
                     {t("keyboardLocale.resetSynthesizer")}
-                </div>
+                </button>
             </div>
             <div className={"controller_column"}>
                 <ControllerRange
                     text={t("modulatorLocale.sources.pitchWheel")}
                     max={16_383}
                     min={0}
-                    onChange={setPitchValue}
-                    value={pitchValue}
-                ></ControllerRange>
-                <span className={"monospaced"}>{pitchValue - 8192}</span>
+                    // The synth event updates the slider
+                    onChange={(v) =>
+                        processor.pitchWheel(
+                            KEYBOARD_TARGET_CHANNEL,
+                            Math.floor(v)
+                        )
+                    }
+                    value={pitchWheel}
+                />
+                <span className={"monospaced"}>
+                    {pitchWheel - PITCH_WHEEL_CENTER}
+                </span>
             </div>
             <div className={"controller_column"}>
                 <ControllerRange
                     text={t("modulatorLocale.sources.channelPressure")}
                     max={127}
                     min={0}
-                    onChange={setPressureValue}
+                    onChange={(v) =>
+                        processor.channelPressure(
+                            KEYBOARD_TARGET_CHANNEL,
+                            Math.floor(v)
+                        )
+                    }
                     value={pressure}
-                ></ControllerRange>
+                />
                 <span className={"monospaced"}>{pressure}</span>
             </div>
         </div>

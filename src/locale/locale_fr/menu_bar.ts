@@ -26,7 +26,10 @@ export const MenuBarLocale = {
         player: "Lecteur MIDI",
         play: "Jouer un fichier MIDI",
         pause: "Pause",
-        resume: "Lecture"
+        resume: "Lecture",
+        loadError: "Impossible de charger {{name}}.",
+        noName: "Sans nom",
+        rewind: "Reculer un peu"
     },
 
     voices: "Voix :",

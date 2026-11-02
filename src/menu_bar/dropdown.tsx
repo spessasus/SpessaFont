@@ -2,13 +2,24 @@ import type { ReactNode } from "react";
 
 interface MenuBarIconProps {
     text: string;
+    title?: string;
     onClick?: () => void;
     children?: ReactNode;
 }
 
-export function MenuBarIcon({ text, onClick, children }: MenuBarIconProps) {
+export function MenuBarIcon({
+    text,
+    title,
+    onClick,
+    children
+}: MenuBarIconProps) {
     return (
-        <button type={"button"} onClick={onClick} className={"menu_bar_icon"}>
+        <button
+            type={"button"}
+            onClick={onClick}
+            title={title}
+            className={"menu_bar_icon"}
+        >
             {children}
             <span>{text}</span>
         </button>

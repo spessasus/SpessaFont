@@ -9,3 +9,8 @@
 .controller_wrapper * {
     user-select: none;
 }
+
+.controller_select {
+    font-size: 1rem;
+    width: 9ch;
+}
