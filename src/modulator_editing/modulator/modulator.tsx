@@ -12,9 +12,8 @@ import {
 } from "../curve_picker/curve_picker.tsx";
 import { ModulatorDiagram } from "../diagram.tsx";
 import { DestinationPicker } from "../destination_picker.tsx";
-import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
-
-const MAX_AMOUNT = 32_767;
+import { ModulatorHeader } from "./modulator_header.tsx";
+import { ModulatorTransform } from "./modulator_transform.tsx";
 
 export type ModulatorSourceSlot = "primary" | "secondary";
 
@@ -104,30 +103,13 @@ export function ModulatorView({
             className={`modulator_main ${isSelected ? "selected" : ""}`}
             title={isOverridingDefault ? t("modulatorLocale.overriding") : ""}
         >
-            <button
-                type={"button"}
-                aria-pressed={isSelected}
-                className={`plain_button modulator_title_left ${isOverridingDefault ? "overriding_modulator" : ""}`}
-                aria-label={t("modulatorLocale.modulatorNumber", {
-                    number: modulatorNumber
-                })}
-                onClick={onSelect}
-            >
-                #{modulatorNumber}
-            </button>
-            <button
-                type={"button"}
-                className={"plain_button modulator_title_right"}
-                aria-label={t("modulatorLocale.deleteModulator", {
-                    number: modulatorNumber
-                })}
-                title={t("modulatorLocale.deleteModulator", {
-                    number: modulatorNumber
-                })}
-                onClick={onDelete}
-            >
-                &times;
-            </button>
+            <ModulatorHeader
+                modulatorNumber={modulatorNumber}
+                isSelected={isSelected}
+                isOverridingDefault={isOverridingDefault}
+                onSelect={onSelect}
+                onDelete={onDelete}
+            />
             <div className={"source_pair"}>
                 {sources.map(({ slot, source, sourceLabel }) => (
                     <ModulatorSourcePicker
@@ -160,44 +142,20 @@ export function ModulatorView({
                 ))}
             </div>
             <ModulatorDiagram />
-            <div className={"pretty_input"}>
-                <span aria-hidden={true}>×</span>
-                <WaitingInput
-                    type={"text"}
-                    className={"amount_input monospaced"}
-                    aria-label={t("modulatorLocale.amount")}
-                    placeholder={t("modulatorLocale.amount")}
-                    min={-MAX_AMOUNT}
-                    max={MAX_AMOUNT}
-                    value={mod.transformAmount}
-                    setValue={(amount) => {
-                        const transformAmount = Math.trunc(amount);
-                        update((copy) => {
-                            copy.transformAmount = transformAmount;
-                        });
-                        return transformAmount;
-                    }}
-                />
-                <select
-                    className={"transform_selector monospaced"}
-                    aria-label={t("modulatorLocale.transform")}
-                    value={mod.transformType}
-                    onChange={(e) => {
-                        const transformType =
-                            Number.parseInt(e.target.value) === 2 ? 2 : 0;
-                        update((copy) => {
-                            copy.transformType = transformType;
-                        });
-                    }}
-                >
-                    <option value={0}>
-                        {t("modulatorLocale.transforms.noOperation")}
-                    </option>
-                    <option value={2}>
-                        {t("modulatorLocale.transforms.absoluteValue")}
-                    </option>
-                </select>
-            </div>
+            <ModulatorTransform
+                amount={mod.transformAmount}
+                transformType={mod.transformType}
+                onAmountChange={(amount) =>
+                    update((copy) => {
+                        copy.transformAmount = amount;
+                    })
+                }
+                onTransformTypeChange={(transformType) =>
+                    update((copy) => {
+                        copy.transformType = transformType;
+                    })
+                }
+            />
 
             <DestinationPicker
                 destination={mod.destination}

@@ -1,10 +1,6 @@
 import type { ReactNode } from "react";
 import { useEffect, useRef } from "react";
-import {
-    measureElement,
-    observeElementOffset,
-    useVirtualizer
-} from "@tanstack/react-virtual";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { getObjectId } from "../utils/object_id.ts";
 
 const ESTIMATED_ROW_HEIGHT = 30;
@@ -33,34 +29,7 @@ export function VirtualItemList<T extends object>({
         getScrollElement: () => parentRef.current,
         estimateSize: () => ESTIMATED_ROW_HEIGHT,
         overscan: OVERSCAN,
-        getItemKey: (index) => getObjectId(items[index]),
-        // The editor is hidden while the settings are open, and a hidden row measures 0.
-        // Caching that would stack the rows on top of each other once the list is shown again.
-        measureElement: (element, entry, instance) =>
-            element.checkVisibility()
-                ? measureElement(element, entry, instance)
-                : (instance.itemSizeCache.get(
-                      instance.options.getItemKey(
-                          instance.indexFromElement(element)
-                      )
-                  ) ?? ESTIMATED_ROW_HEIGHT),
-        // A hidden list reads as scrolled to the top, and showing it again restores the
-        // position without a scroll event, so the offset is read again on every resize
-        observeElementOffset: (instance, onOffset) => {
-            const unsubscribe = observeElementOffset(instance, onOffset);
-            const element = instance.scrollElement;
-            if (!element) {
-                return unsubscribe;
-            }
-            const observer = new ResizeObserver(() =>
-                onOffset(element.scrollTop, false)
-            );
-            observer.observe(element);
-            return () => {
-                unsubscribe?.();
-                observer.disconnect();
-            };
-        }
+        getItemKey: (index) => getObjectId(items[index])
     });
 
     const focusedIndex = focusedItem ? items.indexOf(focusedItem) : -1;

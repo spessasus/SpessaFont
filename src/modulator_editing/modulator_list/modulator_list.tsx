@@ -10,6 +10,8 @@ import { useState } from "react";
 import { useClipboard } from "../../clipboard/clipboard_context.ts";
 import toast from "react-hot-toast";
 import { getObjectId, shareObjectId } from "../../utils/object_id.ts";
+import { getClickedSelection } from "./modulator_selection.ts";
+import { ModulatorListActions } from "./modulator_list_actions.tsx";
 
 interface ModulatorListProps {
     modulatorList: readonly Modulator[];
@@ -78,35 +80,16 @@ export function ModulatorList({
 
     const handleSelect = (e: React.MouseEvent, mod: Modulator) => {
         const id = getObjectId(mod);
-        const anchorIndex = modulatorList.findIndex(
-            (m) => getObjectId(m) === anchorId
+        setSelectedIds(
+            getClickedSelection(
+                modulatorList.map((m) => getObjectId(m)),
+                selectedIds,
+                anchorId,
+                id,
+                e.shiftKey
+            )
         );
         setAnchorId(id);
-        const next = new Set(selectedIds);
-        const shouldDeselect = selectedIds.has(id);
-        if (anchorIndex === -1 || !e.shiftKey) {
-            if (shouldDeselect) {
-                next.delete(id);
-            } else {
-                next.add(id);
-            }
-            setSelectedIds(next);
-            return;
-        }
-        // Shift-click selects (or deselects) everything between the last click and this one
-        const index = modulatorList.indexOf(mod);
-        const range = modulatorList.slice(
-            Math.min(index, anchorIndex),
-            Math.max(index, anchorIndex) + 1
-        );
-        for (const m of range) {
-            if (shouldDeselect) {
-                next.delete(getObjectId(m));
-            } else {
-                next.add(getObjectId(m));
-            }
-        }
-        setSelectedIds(next);
     };
 
     const replaceModulator = (original: Modulator, edited: Modulator) => {
@@ -118,53 +101,15 @@ export function ModulatorList({
 
     return (
         <div className={"modulator_list"}>
-            <div className={"action_buttons"}>
-                <span className={"modulator_main modulator_list_button"}>
-                    {t("modulatorLocale.modulators")}: {modulatorList.length}
-                </span>
-                <button
-                    type={"button"}
-                    onClick={addModulator}
-                    className={
-                        "modulator_main modulator_list_button hover_brightness"
-                    }
-                >
-                    {t("menuBarLocale.file.new")}
-                </button>
-                {contents.modulators > 0 && (
-                    <button
-                        type={"button"}
-                        className={
-                            "modulator_main modulator_list_button hover_brightness"
-                        }
-                        onClick={paste}
-                    >
-                        {t("paste")}
-                    </button>
-                )}
-                {selectedMods.length > 0 && (
-                    <>
-                        <button
-                            type={"button"}
-                            onClick={copySelected}
-                            className={
-                                "modulator_main modulator_list_button hover_brightness"
-                            }
-                        >
-                            {t("copy")}
-                        </button>
-                        <button
-                            type={"button"}
-                            onClick={deleteSelected}
-                            className={
-                                "modulator_main modulator_list_button hover_brightness"
-                            }
-                        >
-                            {t("delete")}
-                        </button>
-                    </>
-                )}
-            </div>
+            <ModulatorListActions
+                count={modulatorList.length}
+                canPaste={contents.modulators > 0}
+                hasSelection={selectedMods.length > 0}
+                onAdd={addModulator}
+                onPaste={paste}
+                onCopy={copySelected}
+                onDelete={deleteSelected}
+            />
             <div className={"list_contents"}>
                 {modulatorList.map((mod, i) => {
                     const id = getObjectId(mod);

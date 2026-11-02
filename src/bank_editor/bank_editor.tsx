@@ -29,7 +29,10 @@ export interface BankEditorProps {
     session: BankSession;
     view: BankEditView;
     setView: (view: BankEditView) => void;
-    shown: boolean;
+    /**
+     * The settings are drawn over the editor, which then takes no input.
+     */
+    isCovered: boolean;
 }
 
 /**
@@ -48,7 +51,7 @@ export function BankEditor({
     session,
     view: selectedView,
     setView,
-    shown
+    isCovered
 }: BankEditorProps) {
     const { t } = useTranslation();
     const view = useResolvedView(session, selectedView);
@@ -87,7 +90,7 @@ export function BankEditor({
 
     return (
         <BankEditorContext value={context}>
-            <div className={"main_content" + (shown ? "" : " hidden")}>
+            <div className={"main_content"} inert={isCovered}>
                 <MenuList view={view} />
                 <div className={"main_content_window"}>
                     {/* A failing editor resets when another element is shown */}

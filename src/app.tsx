@@ -8,6 +8,7 @@ import { BankEditor } from "./bank_editor/bank_editor.tsx";
 import { ACCEPTED_SOUNDBANK_FORMATS } from "./utils/accepted_formats.ts";
 import toast, { Toaster } from "react-hot-toast";
 import "./toasts/toasts.css";
+import "./app.css";
 import { Welcome } from "./welcome/welcome.tsx";
 import { logError, logInfo } from "./utils/core_utils.ts";
 import { useAudioEngine } from "./core_backend/audio_engine_context.ts";
@@ -65,8 +66,7 @@ export function App() {
         }
     };
 
-    const isWelcomeShown = tabs.length === 0 && !areSettingsShown;
-    const isEditorShown = !isWelcomeShown && !areSettingsShown;
+    const isEditorShown = activeSession !== undefined && !areSettingsShown;
 
     return (
         <div className={`spessafont_main`}>
@@ -83,33 +83,34 @@ export function App() {
                 setView={setActiveView}
                 onToggleKeyboard={() => setIsKeyboardShown((shown) => !shown)}
             />
-            {areSettingsShown ? null : (
+            <div className={"app_body"}>
                 <TabList
                     activeId={activeSession?.id}
                     onSelect={activate}
                     onClose={requestClose}
                     tabs={tabs}
                 />
-            )}
-
-            {areSettingsShown && <Settings />}
-
-            {activeSession && (
-                <BankEditor
-                    key={activeSession.id}
-                    session={activeSession}
-                    view={activeView}
-                    setView={setActiveView}
-                    shown={isEditorShown}
-                />
-            )}
-
-            {isWelcomeShown && (
-                <Welcome
-                    onOpenFile={() => void handleOpenFile()}
-                    onNewFile={() => void openBankFile()}
-                />
-            )}
+                {activeSession && (
+                    <BankEditor
+                        key={activeSession.id}
+                        session={activeSession}
+                        view={activeView}
+                        setView={setActiveView}
+                        isCovered={areSettingsShown}
+                    />
+                )}
+                {tabs.length === 0 && (
+                    <Welcome
+                        onOpenFile={() => void handleOpenFile()}
+                        onNewFile={() => void openBankFile()}
+                    />
+                )}
+                {areSettingsShown && (
+                    <div className={"app_settings_layer"}>
+                        <Settings />
+                    </div>
+                )}
+            </div>
 
             {isKeyboardShown && (
                 <KeyboardController
