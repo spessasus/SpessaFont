@@ -1,7 +1,7 @@
 .menu_bar_main {
     display: flex;
     width: 100%;
-    background: var(--primary-color);
+    background: var(--menu-bar-color);
     height: max-content;
     align-items: center;
     overflow-x: auto;
@@ -36,20 +36,20 @@
     opacity: 0;
     visibility: hidden;
     max-width: 20ch;
-    background: var(--primary-color);
+    background: var(--menu-bar-color);
     display: flex;
     flex-direction: column;
     gap: var(--flex-gap);
     border-radius: 0 0 var(--primary-border-radius) var(--primary-border-radius);
     overflow: hidden;
-    border: solid 1px var(--border-color);
+    border: solid 1px var(--menu-border-color);
 }
 
 .menu_bar_icon {
-    border-bottom: var(--border-color) 1px solid;
-    border-top: var(--border-color) 1px solid;
+    border-bottom: var(--menu-border-color) 1px solid;
+    border-top: var(--menu-border-color) 1px solid;
     display: flex;
-    background: var(--primary-color);
+    background: var(--menu-bar-color);
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
@@ -73,7 +73,7 @@
 .menu_bar_icon span {
     padding: 0.2rem;
     white-space: break-spaces;
-    border-left: solid 1px var(--border-color);
+    border-left: solid 1px var(--menu-border-color);
     flex: 1;
     height: 100%;
 }
@@ -96,7 +96,7 @@
 }
 
 .flex_menu_bar div {
-    background: var(--primary-color);
+    background: var(--menu-bar-color);
     cursor: pointer;
     padding: 0 0.5rem;
     transition: all 0.2s ease;
@@ -107,13 +107,13 @@
 
 .menu_bar_contents .menu_bar_button {
     white-space: break-spaces;
-    border-bottom: var(--border-color) 1px solid;
+    border-bottom: var(--menu-border-color) 1px solid;
 }
 
 .menu_bar_button {
     display: flex;
     justify-content: center;
-    background: var(--primary-color);
+    background: var(--menu-bar-color);
     padding: 0.2rem 0.5rem;
     transition: all 0.2s ease;
     cursor: pointer;

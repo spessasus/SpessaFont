@@ -1,0 +1,50 @@
+/*
+ * Pink
+ * Soft pink panels with plum accents.
+ */
+:root[data-theme="pink"] {
+    color-scheme: light;
+
+    /* surfaces */
+    --darker-color-start: #fff6f9;
+    --darker-color-end: #fde8f0;
+    --lighter-color-start: #fbe3ec;
+    --lighter-color-end: #f8d7e4;
+    --selection-color: #f6c9da;
+    --shadow-color: rgb(120 40 80 / 15%);
+
+    /* text */
+    --font-color: #4b2a3c;
+    --muted-font-color: #8a5f74;
+    --warning-color: #d1123f;
+
+    /* accents */
+    --menu-bar-color: #f08bb4;
+    --menu-border-color: #c2417a;
+    --primary-color: #f08bb4;
+    --border-color: #c2417a;
+    --light-primary-color: #ffb3d1;
+    --track-color: #f6d6e3;
+    --track-border-color: #d9a3ba;
+
+    /* element kinds */
+    --preset-item-color: #d6245e;
+    --instrument-item-color: #7a4fd0;
+    --sample-item-color: #d88a00;
+
+    /* drawings */
+    --wave-color: #e45b93;
+    --loop-start-color: #2f9e6e;
+    --loop-end-color: #e0245e;
+    --curve-color: #c2417a;
+    --curve-axis-color: #d9a3ba;
+
+    /* piano */
+    --piano-gap-color: #4b2a3c;
+    --piano-white-key: linear-gradient(90deg, #f0d0dc, #fff);
+    --piano-black-key: linear-gradient(140deg, #7a4a60, #4b2a3c);
+    --piano-disabled-key: linear-gradient(65deg, #d9a3ba, #f6d6e3);
+
+    /* extras */
+    --scrollbar-colors: #e4a3bd #fff6f9;
+}

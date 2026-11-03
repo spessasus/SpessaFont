@@ -1,0 +1,50 @@
+/*
+ * Teal
+ * Deep blue-black panels with teal accents.
+ */
+:root[data-theme="teal"] {
+    color-scheme: dark;
+
+    /* surfaces */
+    --darker-color-start: #02060c;
+    --darker-color-end: #061722;
+    --lighter-color-start: #0a1a28;
+    --lighter-color-end: #0f2536;
+    --selection-color: #0f3440;
+    --shadow-color: rgb(0 10 20 / 40%);
+
+    /* text */
+    --font-color: #cfe7ef;
+    --muted-font-color: #8fb3c0;
+    --warning-color: #ff6b6b;
+
+    /* accents */
+    --menu-bar-color: #0a4f58;
+    --menu-border-color: #1fb5a3;
+    --primary-color: #0d6e74;
+    --border-color: #1fb5a3;
+    --light-primary-color: #5ff5d2;
+    --track-color: #12283a;
+    --track-border-color: #1d3d55;
+
+    /* element kinds */
+    --preset-item-color: #ff8571;
+    --instrument-item-color: #6fb8ff;
+    --sample-item-color: #f5e790;
+
+    /* drawings */
+    --wave-color: #1fb5a3;
+    --loop-start-color: #6fe697;
+    --loop-end-color: #ff6897;
+    --curve-color: #1fb5a3;
+    --curve-axis-color: #1d3d55;
+
+    /* piano */
+    --piano-gap-color: #02060c;
+    --piano-white-key: linear-gradient(90deg, #a9c4cc, #eafffa);
+    --piano-black-key: linear-gradient(140deg, #12283a, #02060c);
+    --piano-disabled-key: linear-gradient(65deg, #163247, #4a6b7a);
+
+    /* extras */
+    --scrollbar-colors: #1f6f78 #02060c;
+}

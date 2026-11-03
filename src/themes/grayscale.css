@@ -1,0 +1,50 @@
+/*
+ * Grayscale
+ * Only shades of gray.
+ */
+:root[data-theme="grayscale"] {
+    color-scheme: dark;
+
+    /* surfaces */
+    --darker-color-start: #050505;
+    --darker-color-end: #111;
+    --lighter-color-start: #1a1a1a;
+    --lighter-color-end: #222;
+    --selection-color: #333;
+    --shadow-color: rgb(0 0 0 / 40%);
+
+    /* text */
+    --font-color: #d0d0d0;
+    --muted-font-color: #8a8a8a;
+    --warning-color: #fff;
+
+    /* accents */
+    --menu-bar-color: #222;
+    --menu-border-color: #7a7a7a;
+    --primary-color: #3a3a3a;
+    --border-color: #7a7a7a;
+    --light-primary-color: #fff;
+    --track-color: #1d1d1d;
+    --track-border-color: #2e2e2e;
+
+    /* element kinds */
+    --preset-item-color: #fff;
+    --instrument-item-color: #a0a0a0;
+    --sample-item-color: #d8d8d8;
+
+    /* drawings */
+    --wave-color: #b8b8b8;
+    --loop-start-color: #fff;
+    --loop-end-color: #6a6a6a;
+    --curve-color: #b8b8b8;
+    --curve-axis-color: #3a3a3a;
+
+    /* piano */
+    --piano-gap-color: #050505;
+    --piano-white-key: linear-gradient(90deg, #aaa, #eee);
+    --piano-black-key: linear-gradient(140deg, #222, #050505);
+    --piano-disabled-key: linear-gradient(65deg, #2e2e2e, #6a6a6a);
+
+    /* extras */
+    --scrollbar-colors: #444 #050505;
+}

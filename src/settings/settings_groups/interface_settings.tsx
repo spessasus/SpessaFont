@@ -1,18 +1,20 @@
 import type { GroupSettingsProps } from "./audio_engine_settings.tsx";
 import { Setting } from "../setting.tsx";
 import { LocaleList } from "../../locale/locale_list.ts";
-import type { ThemeType } from "../save_load/settings_typedef.ts";
+import {
+    isTheme,
+    THEME_LIST,
+    type ThemeInfo
+} from "../../themes/theme_list.ts";
 import { useTranslation } from "react-i18next";
 import { resolveLocale } from "../save_load/get_user_locale.ts";
 
-const THEME_OPTIONS = {
+const THEME_ENTRIES = Object.entries(THEME_LIST);
+
+const SCHEME_LABELS = {
     dark: "settingsLocale.interface.dark",
     light: "settingsLocale.interface.light"
-} as const satisfies Record<ThemeType, string>;
-
-function isTheme(value: string): value is ThemeType {
-    return Object.hasOwn(THEME_OPTIONS, value);
-}
+} as const satisfies Record<ThemeInfo["scheme"], string>;
 
 export function InterfaceSettings({ settings, onChange }: GroupSettingsProps) {
     const { t } = useTranslation();
@@ -44,10 +46,16 @@ export function InterfaceSettings({ settings, onChange }: GroupSettingsProps) {
                     className={"pretty_input monospaced"}
                     value={settings.theme}
                 >
-                    {Object.entries(THEME_OPTIONS).map(([theme, key]) => (
-                        <option key={theme} value={theme}>
-                            {t(key)}
-                        </option>
+                    {Object.entries(SCHEME_LABELS).map(([scheme, key]) => (
+                        <optgroup key={scheme} label={t(key)}>
+                            {THEME_ENTRIES.filter(
+                                ([, theme]) => theme.scheme === scheme
+                            ).map(([id, theme]) => (
+                                <option key={id} value={id}>
+                                    {theme.name}
+                                </option>
+                            ))}
+                        </optgroup>
                     ))}
                 </select>
             </Setting>

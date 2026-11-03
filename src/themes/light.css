@@ -1,0 +1,47 @@
+/*
+ * SpessaFont Light
+ * The original light theme, white panels with blue accents.
+ */
+:root[data-theme="light"] {
+    color-scheme: light;
+
+    /* surfaces */
+    --darker-color-start: #fff;
+    --darker-color-end: #eee;
+    --lighter-color-start: #efefef;
+    --lighter-color-end: #eee;
+    --selection-color: #eee;
+    --shadow-color: oklch(0% 0 0 / 20%);
+
+    /* text */
+    --font-color: #111;
+    --muted-font-color: rgb(17 17 17 / 75%);
+    --warning-color: red;
+
+    /* accents */
+    --menu-bar-color: #5f93ff;
+    --menu-border-color: #0023c9;
+    --primary-color: #5f93ff;
+    --border-color: #0023c9;
+    --light-primary-color: #c5d9ff;
+    --track-color: #fff;
+    --track-border-color: #aaa;
+
+    /* element kinds */
+    --preset-item-color: red;
+    --instrument-item-color: deepskyblue;
+    --sample-item-color: #e58900;
+
+    /* drawings */
+    --wave-color: #5f93ff;
+    --loop-start-color: green;
+    --loop-end-color: red;
+    --curve-color: #6e00b7;
+    --curve-axis-color: #555;
+
+    /* piano */
+    --piano-gap-color: #000;
+    --piano-white-key: linear-gradient(90deg, #bbb, #fff);
+    --piano-black-key: linear-gradient(140deg, #222, #000);
+    --piano-disabled-key: linear-gradient(65deg, #333, #888);
+}

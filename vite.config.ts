@@ -39,6 +39,8 @@ export default defineConfig({
         setupFiles: ["src/test_utils/setup.ts"],
         // Restores navigator and other globals that individual tests stub
         unstubGlobals: true,
+        // The theme test reads the theme files as text, other CSS stays unprocessed
+        css: { include: [/src\/themes\//] },
         // History and core logging is noise unless a test fails
         silent: "passed-only"
     }

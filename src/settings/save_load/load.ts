@@ -4,13 +4,12 @@ import {
     type SavedSettingsType,
     SETTING_LIMITS,
     SPESSAFONT_SETTINGS_KEY,
-    type ThemeType,
     UNSET_LANGUAGE
 } from "./settings_typedef.ts";
 import { LocaleList } from "../../locale/locale_list.ts";
 import { logWarn } from "../../utils/core_utils.ts";
+import { isTheme } from "../../themes/theme_list.ts";
 
-const THEMES = new Set<unknown>(["dark", "light"] satisfies ThemeType[]);
 const INTERPOLATIONS = new Set<unknown>(Object.values(InterpolationTypes));
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -45,8 +44,8 @@ export function parseSettings(data: unknown): SavedSettingsType {
     ) {
         settings.lang = lang;
     }
-    if (THEMES.has(theme)) {
-        settings.theme = theme as ThemeType;
+    if (isTheme(theme)) {
+        settings.theme = theme;
     }
     if (INTERPOLATIONS.has(interpolation)) {
         settings.interpolation = interpolation as InterpolationType;

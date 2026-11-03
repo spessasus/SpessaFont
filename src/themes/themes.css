@@ -1,0 +1,20 @@
+/*
+ * Every theme is a set of variables on :root[data-theme="<id>"], all with the same names.
+ * To add a theme, copy one of the files below, change the ID in the selector, import it here
+ * and register it in theme_list.ts. Dark is also the fallback before a theme is applied.
+ */
+@import "./dark.css";
+@import "./light.css";
+@import "./modern_dark.css";
+@import "./modern_light.css";
+@import "./teal.css";
+@import "./purple.css";
+@import "./orange.css";
+@import "./dark_blue.css";
+@import "./dark_green.css";
+@import "./grayscale.css";
+@import "./pink.css";
+@import "./light_blue.css";
+@import "./light_green.css";
+@import "./sepia.css";
+@import "./ugly.css";

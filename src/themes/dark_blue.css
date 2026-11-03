@@ -1,0 +1,50 @@
+/*
+ * Dark Blue
+ * Navy panels with blue accents.
+ */
+:root[data-theme="dark_blue"] {
+    color-scheme: dark;
+
+    /* surfaces */
+    --darker-color-start: #010309;
+    --darker-color-end: #030a18;
+    --lighter-color-start: #07122a;
+    --lighter-color-end: #0b1a38;
+    --selection-color: #102a52;
+    --shadow-color: rgb(0 5 20 / 40%);
+
+    /* text */
+    --font-color: #c2d9f5;
+    --muted-font-color: #7f9bbf;
+    --warning-color: #ff5c7a;
+
+    /* accents */
+    --menu-bar-color: #0d2444;
+    --menu-border-color: #3f8fff;
+    --primary-color: #10275e;
+    --border-color: #3f8fff;
+    --light-primary-color: #45e0d8;
+    --track-color: #0a1830;
+    --track-border-color: #16294a;
+
+    /* element kinds */
+    --preset-item-color: #ff7ac2;
+    --instrument-item-color: #45b3ff;
+    --sample-item-color: #ffd166;
+
+    /* drawings */
+    --wave-color: #3f8fff;
+    --loop-start-color: #45e0d8;
+    --loop-end-color: #ff7ac2;
+    --curve-color: #3f8fff;
+    --curve-axis-color: #16294a;
+
+    /* piano */
+    --piano-gap-color: #010309;
+    --piano-white-key: linear-gradient(90deg, #a8bcd8, #f2f7ff);
+    --piano-black-key: linear-gradient(140deg, #0a1830, #010309);
+    --piano-disabled-key: linear-gradient(65deg, #0a1830, #4a5e80);
+
+    /* extras */
+    --scrollbar-colors: #1e4a8a #010309;
+}

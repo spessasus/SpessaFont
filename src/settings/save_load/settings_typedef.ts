@@ -1,7 +1,6 @@
 import { type InterpolationType, InterpolationTypes } from "spessasynth_core";
 import { readSampleRateParam } from "../../utils/sample_rate_param.ts";
-
-export type ThemeType = "dark" | "light";
+import type { ThemeType } from "../../themes/theme_list.ts";
 
 export interface SavedSettingsType {
     lang: string;

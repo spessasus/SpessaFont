@@ -1,0 +1,50 @@
+/*
+ * Purple
+ * Dark purple panels with pink and cyan accents.
+ */
+:root[data-theme="purple"] {
+    color-scheme: dark;
+
+    /* surfaces */
+    --darker-color-start: #08020f;
+    --darker-color-end: #12051f;
+    --lighter-color-start: #1a0a2a;
+    --lighter-color-end: #24103a;
+    --selection-color: #3a1456;
+    --shadow-color: rgb(20 0 30 / 40%);
+
+    /* text */
+    --font-color: #f2dcff;
+    --muted-font-color: #b99ad0;
+    --warning-color: #ff5470;
+
+    /* accents */
+    --menu-bar-color: #45145e;
+    --menu-border-color: #ff3fa4;
+    --primary-color: #a0157a;
+    --border-color: #ff3fa4;
+    --light-primary-color: #38e1ff;
+    --track-color: #2a1140;
+    --track-border-color: #4a1f6b;
+
+    /* element kinds */
+    --preset-item-color: #ff8a3d;
+    --instrument-item-color: #38e1ff;
+    --sample-item-color: #ffe15a;
+
+    /* drawings */
+    --wave-color: #ff4fd8;
+    --loop-start-color: #38e1ff;
+    --loop-end-color: #ff2e93;
+    --curve-color: #ff4fd8;
+    --curve-axis-color: #4a1f6b;
+
+    /* piano */
+    --piano-gap-color: #08020f;
+    --piano-white-key: linear-gradient(90deg, #c9b3d9, #fff4ff);
+    --piano-black-key: linear-gradient(140deg, #2a1140, #08020f);
+    --piano-disabled-key: linear-gradient(65deg, #2a1140, #6b4a85);
+
+    /* extras */
+    --scrollbar-colors: #6b2a8f #08020f;
+}

@@ -1,0 +1,51 @@
+/*
+ * Dark Green
+ * Black panels with green terminal text.
+ */
+:root[data-theme="dark_green"] {
+    color-scheme: dark;
+
+    /* surfaces */
+    --darker-color-start: #000;
+    --darker-color-end: #011005;
+    --lighter-color-start: #031a09;
+    --lighter-color-end: #06210f;
+    --selection-color: #0b3a1a;
+    --shadow-color: rgb(0 0 0 / 50%);
+
+    /* text */
+    --font-color: #8dfaa6;
+    --muted-font-color: #4fb86a;
+    --warning-color: #ff4a4a;
+
+    /* accents */
+    --menu-bar-color: #082613;
+    --menu-border-color: #2fd45f;
+    --primary-color: #0b3a1a;
+    --border-color: #2fd45f;
+    --light-primary-color: #35ff6d;
+    --track-color: #061309;
+    --track-border-color: #0f2e18;
+
+    /* element kinds */
+    --preset-item-color: #ff6b4a;
+    --instrument-item-color: #4ae0ff;
+    --sample-item-color: #ffd94a;
+
+    /* drawings */
+    --wave-color: #35ff6d;
+    --loop-start-color: #4ae0ff;
+    --loop-end-color: #ff4a4a;
+    --curve-color: #2fd45f;
+    --curve-axis-color: #0f2e18;
+
+    /* piano */
+    --piano-gap-color: #000;
+    --piano-white-key: linear-gradient(90deg, #6fbf84, #c8ffd6);
+    --piano-black-key: linear-gradient(140deg, #061309, #000);
+    --piano-disabled-key: linear-gradient(65deg, #061309, #1f4a2a);
+
+    /* extras */
+    --scrollbar-colors: #1a6b33 #000;
+    --main-font: "JetBrains Mono", "Monospaced", monospace;
+}

@@ -30,7 +30,7 @@ export const WaveformLayer = memo(function WaveformLayer({
             { loopStart, loopEnd },
             {
                 grid: getCanvasColor(ctx, "--lighter-color-end"),
-                wave: getCanvasColor(ctx, "--primary-color"),
+                wave: getCanvasColor(ctx, "--wave-color"),
                 loopStart: getCanvasColor(ctx, "--loop-start-color"),
                 loopEnd: getCanvasColor(ctx, "--loop-end-color")
             }

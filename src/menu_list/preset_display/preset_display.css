@@ -21,7 +21,7 @@
 
 .preset_item:hover,
 .preset_item.selected {
-    background: var(--lighter-color-end);
+    background: var(--selection-color);
 }
 
 .preset_item span {

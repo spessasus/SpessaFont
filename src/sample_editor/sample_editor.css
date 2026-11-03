@@ -84,7 +84,7 @@
     text-align: start;
     white-space: nowrap;
     font-size: 0.85rem;
-    opacity: 0.75;
+    color: var(--muted-font-color);
 }
 
 .info_field input,

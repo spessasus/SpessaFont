@@ -9,6 +9,8 @@
     padding-left: var(--flex-gap);
     padding-bottom: var(--flex-gap);
     padding-right: var(--flex-gap);
+    /* Keeps the sticky table headers and popups under the settings layer */
+    isolation: isolate;
 }
 
 .main_content_window {

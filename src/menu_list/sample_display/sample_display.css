@@ -30,5 +30,5 @@
 
 .sample_display:hover,
 .sample_display.selected {
-    background: var(--lighter-color-end);
+    background: var(--selection-color);
 }

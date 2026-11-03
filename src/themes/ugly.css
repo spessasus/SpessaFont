@@ -1,0 +1,51 @@
+/*
+ * Ugly
+ * The best theme ever.
+ */
+:root[data-theme="ugly"] {
+    color-scheme: light;
+
+    /* surfaces */
+    --darker-color-start: #ff00ff;
+    --darker-color-end: #ffff00;
+    --lighter-color-start: #ff9500;
+    --lighter-color-end: #00bfff;
+    --selection-color: #00e5ff;
+    --shadow-color: rgb(0 255 0 / 60%);
+
+    /* text */
+    --font-color: #8000ff;
+    --muted-font-color: #ff0000;
+    --warning-color: #00ffff;
+
+    /* accents */
+    --menu-bar-color: #00ff55;
+    --menu-border-color: #00e5ff;
+    --primary-color: #ffee00;
+    --border-color: #00e5ff;
+    --light-primary-color: #00ff00;
+    --track-color: #ff6a00;
+    --track-border-color: #7fff00;
+
+    /* element kinds */
+    --preset-item-color: #f00;
+    --instrument-item-color: #00f;
+    --sample-item-color: #ff0;
+
+    /* drawings */
+    --wave-color: #00ff00;
+    --loop-start-color: #00f;
+    --loop-end-color: #f00;
+    --curve-color: #8000ff;
+    --curve-axis-color: #7fff00;
+
+    /* piano */
+    --piano-gap-color: #00ff00;
+    --piano-white-key: linear-gradient(90deg, #ff00aa, #00ffea);
+    --piano-black-key: linear-gradient(140deg, #8000ff, #f00);
+    --piano-disabled-key: linear-gradient(65deg, #7fff00, #ff00ff);
+
+    /* extras */
+    --scrollbar-colors: #00ff00 #ff00ff;
+    --main-font: "Comic Sans MS", "Comic Neue", cursive;
+}
