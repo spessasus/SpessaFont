@@ -1,5 +1,5 @@
 import "./sample_display.css";
-import type { MouseEvent } from "react";
+import type { MouseEvent, PointerEvent } from "react";
 import type { BasicSample } from "spessasynth_core";
 import { SpeakerIcon } from "../../utils/icons/player_icons.tsx";
 
@@ -9,6 +9,10 @@ interface SampleDisplayProps {
     onClick: (event: MouseEvent) => void;
     onDoubleClick?: () => void;
     onContextMenu?: (event: MouseEvent) => void;
+    /**
+     * Starts dragging the sample.
+     */
+    onPointerDown?: (event: PointerEvent) => void;
 }
 
 export function SampleDisplay({
@@ -16,7 +20,8 @@ export function SampleDisplay({
     isSelected,
     onClick,
     onDoubleClick,
-    onContextMenu
+    onContextMenu,
+    onPointerDown
 }: SampleDisplayProps) {
     return (
         <button
@@ -25,6 +30,7 @@ export function SampleDisplay({
             onClick={onClick}
             onDoubleClick={onDoubleClick}
             onContextMenu={onContextMenu}
+            onPointerDown={onPointerDown}
             title={sample.name}
         >
             <SpeakerIcon />

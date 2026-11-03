@@ -1,5 +1,5 @@
 import { BasicInstrument, type BasicSample } from "spessasynth_core";
-import type { MouseEvent } from "react";
+import type { MouseEvent, PointerEvent } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import type { BankEditView } from "../core_backend/bank_view.ts";
@@ -22,6 +22,10 @@ interface InstrumentListProps {
     selectedSamples: ReadonlySet<BasicSample>;
     onItemClick: (instrument: BasicInstrument, event: MouseEvent) => void;
     onItemContextMenu: (instrument: BasicInstrument, event: MouseEvent) => void;
+    onItemPointerDown: (
+        instrument: BasicInstrument,
+        event: PointerEvent
+    ) => void;
 }
 
 export function InstrumentList({
@@ -30,7 +34,8 @@ export function InstrumentList({
     selected,
     selectedSamples,
     onItemClick,
-    onItemContextMenu
+    onItemContextMenu,
+    onItemPointerDown
 }: InstrumentListProps) {
     const { t } = useTranslation();
     const { session, apply } = useBankEditor();
@@ -101,6 +106,9 @@ export function InstrumentList({
                                 onClick={(e) => onItemClick(instrument, e)}
                                 onContextMenu={(e) =>
                                     onItemContextMenu(instrument, e)
+                                }
+                                onPointerDown={(e) =>
+                                    onItemPointerDown(instrument, e)
                                 }
                                 onLink={
                                     canLink

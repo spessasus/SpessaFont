@@ -1,9 +1,9 @@
-import { BasicSample, EmptySample, SampleTypes } from "spessasynth_core";
-import type { MouseEvent } from "react";
+import { BasicSample } from "spessasynth_core";
+import type { MouseEvent, PointerEvent } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { DropdownHeader } from "./dropdown_header/dropdown_header.tsx";
-import { CreateSampleAction } from "./create_actions/create_sample_action.ts";
+import { createSampleImportActions } from "./import_sample.ts";
 import type { BankEditView } from "../core_backend/bank_view.ts";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useClipboard } from "../clipboard/clipboard_context.ts";
@@ -14,17 +14,13 @@ import { pickFile } from "../utils/pick_file.ts";
 import { VirtualItemList } from "./virtual_item_list.tsx";
 import { useSectionOpen } from "./use_list_state.ts";
 
-/**
- * Sample names leave room for the "L" or "R" of a stereo pair.
- */
-const MAX_BASE_NAME_LENGTH = 39;
-
 interface SampleListProps {
     samples: readonly BasicSample[];
     view: BankEditView;
     selected: ReadonlySet<BasicSample>;
     onItemClick: (sample: BasicSample, event: MouseEvent) => void;
     onItemContextMenu: (sample: BasicSample, event: MouseEvent) => void;
+    onItemPointerDown: (sample: BasicSample, event: PointerEvent) => void;
 }
 
 export function SampleList({
@@ -32,7 +28,8 @@ export function SampleList({
     view,
     selected,
     onItemClick,
-    onItemContextMenu
+    onItemContextMenu,
+    onItemPointerDown
 }: SampleListProps) {
     const { t } = useTranslation();
     const { audioEngine } = useAudioEngine();
@@ -48,38 +45,16 @@ export function SampleList({
         if (!file) {
             return;
         }
-        let audioBuffer: AudioBuffer;
+        let actions;
         try {
-            audioBuffer = await audioEngine.context.decodeAudioData(
-                await file.arrayBuffer()
+            actions = await createSampleImportActions(
+                audioEngine.context,
+                file
             );
         } catch (error) {
             logError("Failed to decode the audio file.", error);
             toast.error(t("sampleLocale.tools.invalidAudioFile"));
             return;
-        }
-        const dotIndex = file.name.lastIndexOf(".");
-        const baseName = (
-            dotIndex === -1 ? file.name : file.name.slice(0, dotIndex)
-        ).slice(0, MAX_BASE_NAME_LENGTH);
-        const isStereo = audioBuffer.numberOfChannels > 1;
-
-        const sample = new EmptySample();
-        sample.name = baseName + (isStereo ? "L" : "");
-        sample.setAudioData(
-            audioBuffer.getChannelData(0),
-            audioBuffer.sampleRate
-        );
-        const actions = [new CreateSampleAction(sample)];
-        if (isStereo) {
-            const right = new EmptySample();
-            right.name = baseName + "R";
-            right.setAudioData(
-                audioBuffer.getChannelData(1),
-                audioBuffer.sampleRate
-            );
-            right.setLinkedSample(sample, SampleTypes.rightSample);
-            actions.push(new CreateSampleAction(right));
         }
         apply(actions);
         setIsOpen(true);
@@ -127,6 +102,7 @@ export function SampleList({
                             isSelected={selected.has(sample)}
                             onClick={(e) => onItemClick(sample, e)}
                             onContextMenu={(e) => onItemContextMenu(sample, e)}
+                            onPointerDown={(e) => onItemPointerDown(sample, e)}
                             onDoubleClick={() => playSample(sample)}
                         />
                     )}

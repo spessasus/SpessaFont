@@ -60,7 +60,9 @@ export const localeEnglish = {
         savingSoundBank: "Saving sound bank...",
         savedSuccessfully: "Saved successfully!",
         writingSamples: "Writing Samples...",
-        writingFailed: "Error writing the sound bank!"
+        writingFailed: "Error writing the sound bank!",
+        unsupportedFile: "{{name}} is neither a sound bank nor an audio file.",
+        openBankForSamples: "Open or create a sound bank to add samples to it."
     },
 
     downloadDesktop: {

@@ -7,5 +7,6 @@ export const ClipboardLocale = {
     pastedSamples: "Wklejono {{count}} próbek.",
     pastedInstruments: "Wklejono {{count}} instrumentów.",
     pastedPresets: "Wklejono {{count}} presetów.",
-    pastedModulators: "Wklejono {{count}} modulatorów."
+    pastedModulators: "Wklejono {{count}} modulatorów.",
+    copiedToBank: "Skopiowano {{count}} elementów do {{name}}."
 };

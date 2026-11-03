@@ -1,7 +1,8 @@
 import "./preset_display.css";
-import type { MouseEvent } from "react";
+import type { MouseEvent, PointerEvent } from "react";
 import type { BasicInstrument, BasicPreset } from "spessasynth_core";
 import { InstrumentDisplay } from "../instrument_display/instrument_display.tsx";
+import { useLinkDropTarget } from "../../drag_and_drop/use_link_drop_target.ts";
 import { ExpandButton } from "../expand_button.tsx";
 import type { BankEditView } from "../../core_backend/bank_view.ts";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
@@ -35,6 +36,10 @@ interface PresetDisplayProps {
      */
     onContextMenu?: (event: MouseEvent) => void;
     /**
+     * Starts dragging the row.
+     */
+    onPointerDown?: (event: PointerEvent) => void;
+    /**
      * Shows the "link selected instruments" button when set.
      */
     onLink?: () => void;
@@ -50,17 +55,21 @@ export function PresetDisplay({
     onToggleInstrument,
     onClick,
     onContextMenu,
+    onPointerDown,
     onLink
 }: PresetDisplayProps) {
     const { t } = useTranslation();
     const { session, setView } = useBankEditor();
     // Re-render when the preset's zones or instrument names change
     useEntityRevision(session.store, preset);
+    const dropTarget = useLinkDropTarget(preset);
     return (
         <div className={"preset_item_wrapper"}>
             <div
                 className={`preset_item ${isSelected ? "selected" : ""}`}
                 onContextMenu={onContextMenu}
+                onPointerDown={onPointerDown}
+                {...dropTarget}
                 title={preset.name}
             >
                 <div className={"left_group"}>

@@ -1,4 +1,4 @@
-import type { MouseEvent } from "react";
+import type { MouseEvent, PointerEvent } from "react";
 import { useDeferredValue, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./menu_list.css";
@@ -21,6 +21,7 @@ import {
 import { useMenuShortcuts } from "./use_menu_shortcuts.ts";
 import { useListMenu } from "./use_list_menu.ts";
 import { useContextMenu } from "../context_menu/context_menu_context.ts";
+import { useDragSource } from "../drag_and_drop/drag_context.ts";
 
 interface MenuListProps {
     view: BankEditView;
@@ -52,6 +53,7 @@ export function MenuList({ view }: MenuListProps) {
     useMenuShortcuts(selection);
     const getMenuEntries = useListMenu();
     const { openMenu } = useContextMenu();
+    const startDrag = useDragSource();
 
     function handleItemClick<T extends BankEntity>(
         items: readonly T[],
@@ -91,6 +93,13 @@ export function MenuList({ view }: MenuListProps) {
         }
         openMenu(event, getMenuEntries(target));
     };
+
+    // Dragging an item of the selection drags the whole selection
+    const handleItemPointerDown = (item: BankEntity, event: PointerEvent) =>
+        startDrag(event, {
+            session,
+            entities: selection.has(item) ? [...selection] : [item]
+        });
 
     return (
         <div className={`menu_list_main`}>
@@ -132,6 +141,7 @@ export function MenuList({ view }: MenuListProps) {
                     )
                 }
                 onItemContextMenu={handleItemContextMenu}
+                onItemPointerDown={handleItemPointerDown}
             />
 
             <InstrumentList
@@ -148,6 +158,7 @@ export function MenuList({ view }: MenuListProps) {
                     )
                 }
                 onItemContextMenu={handleItemContextMenu}
+                onItemPointerDown={handleItemPointerDown}
             />
 
             <PresetList
@@ -164,6 +175,7 @@ export function MenuList({ view }: MenuListProps) {
                     )
                 }
                 onItemContextMenu={handleItemContextMenu}
+                onItemPointerDown={handleItemPointerDown}
             />
             <div className={"search_bar"}>
                 <input

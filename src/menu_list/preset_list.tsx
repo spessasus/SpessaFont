@@ -1,5 +1,5 @@
 import { type BasicInstrument, BasicPreset } from "spessasynth_core";
-import type { MouseEvent } from "react";
+import type { MouseEvent, PointerEvent } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import type { BankEditView } from "../core_backend/bank_view.ts";
@@ -22,6 +22,7 @@ interface PresetListProps {
     selectedInstruments: ReadonlySet<BasicInstrument>;
     onItemClick: (preset: BasicPreset, event: MouseEvent) => void;
     onItemContextMenu: (preset: BasicPreset, event: MouseEvent) => void;
+    onItemPointerDown: (preset: BasicPreset, event: PointerEvent) => void;
 }
 
 export function PresetList({
@@ -30,7 +31,8 @@ export function PresetList({
     selected,
     selectedInstruments,
     onItemClick,
-    onItemContextMenu
+    onItemContextMenu,
+    onItemPointerDown
 }: PresetListProps) {
     const { t } = useTranslation();
     const { session, apply } = useBankEditor();
@@ -108,6 +110,9 @@ export function PresetList({
                                 onClick={(e) => onItemClick(preset, e)}
                                 onContextMenu={(e) =>
                                     onItemContextMenu(preset, e)
+                                }
+                                onPointerDown={(e) =>
+                                    onItemPointerDown(preset, e)
                                 }
                                 onLink={
                                     canLink

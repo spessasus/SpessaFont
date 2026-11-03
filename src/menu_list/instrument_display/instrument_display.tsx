@@ -1,5 +1,5 @@
 import "./instrument_display.css";
-import type { MouseEvent } from "react";
+import type { MouseEvent, PointerEvent } from "react";
 import type { BasicInstrument } from "spessasynth_core";
 import { SampleDisplay } from "../sample_display/sample_display.tsx";
 import type { BankEditView } from "../../core_backend/bank_view.ts";
@@ -8,6 +8,7 @@ import { useEntityRevision } from "../../hooks/use_entity_revision.ts";
 import { useTranslation } from "react-i18next";
 import { LinkIcon } from "../../utils/icons/edit_icons.tsx";
 import { getObjectId } from "../../utils/object_id.ts";
+import { useLinkDropTarget } from "../../drag_and_drop/use_link_drop_target.ts";
 import { ExpandButton } from "../expand_button.tsx";
 
 interface InstrumentDisplayProps {
@@ -22,6 +23,10 @@ interface InstrumentDisplayProps {
      */
     onContextMenu?: (event: MouseEvent) => void;
     /**
+     * Starts dragging the row.
+     */
+    onPointerDown?: (event: PointerEvent) => void;
+    /**
      * Shows the "link selected samples" button when set.
      */
     onLink?: () => void;
@@ -35,17 +40,21 @@ export function InstrumentDisplay({
     onToggle,
     onClick,
     onContextMenu,
+    onPointerDown,
     onLink
 }: InstrumentDisplayProps) {
     const { t } = useTranslation();
     const { session, setView } = useBankEditor();
     // Re-render when the instrument's zones or sample names change
     useEntityRevision(session.store, instrument);
+    const dropTarget = useLinkDropTarget(instrument);
     return (
         <div className={"instrument_item_wrapper"}>
             <div
                 className={`instrument_item ${isSelected ? "selected" : ""}`}
                 onContextMenu={onContextMenu}
+                onPointerDown={onPointerDown}
+                {...dropTarget}
                 title={instrument.name}
             >
                 <div className={"left_buttons"}>

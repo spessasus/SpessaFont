@@ -3,6 +3,14 @@ import { useTranslation } from "react-i18next";
 import type { BankSession } from "../core_backend/bank_session.ts";
 import { useHistoryState } from "../hooks/use_history_state.ts";
 import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
+import toast from "react-hot-toast";
+import { useClipboard } from "../clipboard/clipboard_context.ts";
+import { useDropTarget } from "../drag_and_drop/drag_context.ts";
+import {
+    isInstrument,
+    isPreset,
+    isSample
+} from "../menu_list/menu_selection.ts";
 
 export interface TabListProps {
     tabs: readonly BankSession[];
@@ -23,10 +31,33 @@ function Tab({ session, isActive, onSelect, onClose }: TabProps) {
     const { isDirty } = useHistoryState(session.store);
     const name = useBankSnapshot(session.store, (s) => s.info.name);
     const displayName = name.length > 0 ? name : t("bankInfo.unnamed");
+    const { clipboard } = useClipboard();
+    // Elements of another bank dropped on the tab are copied into this bank, like a paste
+    const dropTarget = useDropTarget({
+        accepts: (payload) => payload.session !== session,
+        onDrop: ({ entities }) => {
+            const { document } = session;
+            session.history.do([
+                ...clipboard.clonePresets(document, entities.filter(isPreset)),
+                ...clipboard.cloneInstruments(
+                    document,
+                    entities.filter(isInstrument)
+                ),
+                ...clipboard.cloneSamples(document, entities.filter(isSample))
+            ]);
+            toast.success(
+                t("clipboardLocale.copiedToBank", {
+                    count: entities.length,
+                    name: displayName
+                })
+            );
+        }
+    });
     return (
         <div
             className={`tab ${isActive ? "active" : ""}`}
             role={"presentation"}
+            {...dropTarget}
         >
             <button
                 type={"button"}

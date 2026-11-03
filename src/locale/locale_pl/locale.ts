@@ -61,7 +61,11 @@ export const localePolish = {
         savingSoundBank: "Zapisywanie banku dźwięków...",
         savedSuccessfully: "Zapisano pomyślnie!",
         writingSamples: "Zapisywanie próbek dźwiękowych...",
-        writingFailed: "Błąd podczas zapisu banku dźwięków!"
+        writingFailed: "Błąd podczas zapisu banku dźwięków!",
+        unsupportedFile:
+            "{{name}} nie jest bankiem dźwięków ani plikiem audio.",
+        openBankForSamples:
+            "Otwórz lub utwórz bank dźwięków, aby dodać do niego próbki."
     },
 
     downloadDesktop: {

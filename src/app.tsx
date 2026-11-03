@@ -19,6 +19,15 @@ import { useLaunchQueue } from "./hooks/use_launch_queue.ts";
 import { useElectronFileOpen } from "./hooks/use_electron_file_open.ts";
 import { useEventListener } from "./hooks/use_event_listener.ts";
 import { pickFile } from "./utils/pick_file.ts";
+import { useFileDrop } from "./hooks/use_file_drop.ts";
+import { createSampleImportActions } from "./menu_list/import_sample.ts";
+
+const SOUND_BANK_EXTENSIONS = ACCEPTED_SOUNDBANK_FORMATS.split(",");
+
+function isSoundBankFile(file: File) {
+    const name = file.name.toLowerCase();
+    return SOUND_BANK_EXTENSIONS.some((extension) => name.endsWith(extension));
+}
 
 export function App() {
     const { t } = useTranslation();
@@ -52,6 +61,36 @@ export function App() {
             })
         );
     });
+
+    // Sound banks open in new tabs, anything else is tried as audio for the open bank
+    const handleDroppedFiles = async (files: File[]) => {
+        for (const file of files) {
+            if (isSoundBankFile(file)) {
+                await openBankFile(file);
+                continue;
+            }
+            if (!activeSession) {
+                toast.error(t("loadingAndSaving.openBankForSamples"));
+                return;
+            }
+            try {
+                const actions = await createSampleImportActions(
+                    audioEngine.context,
+                    file
+                );
+                const focus = activeSession.history.do(actions);
+                if (focus) {
+                    setActiveView(focus);
+                }
+            } catch (error) {
+                logError(`Failed to import ${file.name}.`, error);
+                toast.error(
+                    t("loadingAndSaving.unsupportedFile", { name: file.name })
+                );
+            }
+        }
+    };
+    useFileDrop((files) => void handleDroppedFiles(files));
 
     useEventListener(selectedDevice, "midimessage", (e) => {
         if (e.data) {
