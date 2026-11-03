@@ -36,6 +36,18 @@ export const SampleLocale = {
         tooManyChannels: "Zbyt wiele kanałów"
     },
 
+    equalizer: {
+        title: "Korektor",
+        band: "Pasmo {{frequency}} Hz (dB)",
+        gain: "Wzmocnienie",
+        gainDb: "Wzmocnienie (dB)",
+        preview: "Podgląd",
+        reset: "Resetuj",
+        apply: "Zastosuj",
+        clipping:
+            "Wynik przekracza pełną skalę i zostanie przycięty przy zapisie. Znormalizuj go lub zmniejsz wzmocnienie."
+    },
+
     notLinkedToInstrument: "Jeszcze nie użyta.",
     usedBy: "Używana przez",
     compressedSample: "Skompresowana próbka",

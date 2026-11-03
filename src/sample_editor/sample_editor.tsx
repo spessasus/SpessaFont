@@ -17,6 +17,9 @@ import {
     type SamplePlayerState,
     useSamplePlayer
 } from "./use_sample_player.ts";
+import { useSampleAudioCommands } from "./use_sample_audio_commands.ts";
+import { EqualizerPanel } from "./equalizer/equalizer_panel.tsx";
+import { type EqualizerState, FLAT_EQUALIZER } from "./equalizer/equalizer.ts";
 
 const MAX_NAME_LENGTH = 40;
 
@@ -31,6 +34,11 @@ interface SampleEditorProps {
      */
     playRequest: number;
     onPlayerStateChange: (state: SamplePlayerState) => void;
+    /**
+     * Kept by the bank editor too, so the same settings can go to the next sample.
+     */
+    equalizer: EqualizerState;
+    onEqualizerChange: (state: EqualizerState) => void;
 }
 
 /**
@@ -41,7 +49,9 @@ export function SampleEditor({
     sample,
     playerState,
     playRequest,
-    onPlayerStateChange
+    onPlayerStateChange,
+    equalizer,
+    onEqualizerChange
 }: SampleEditorProps) {
     const { t } = useTranslation();
     const { session } = useBankEditor();
@@ -53,8 +63,10 @@ export function SampleEditor({
         sample,
         playerState,
         playRequest,
+        equalizer.isPreviewing ? equalizer.settings : FLAT_EQUALIZER,
         onPlayerStateChange
     );
+    const audio = useSampleAudioCommands(sample, player.stop);
     const [zoom, setZoom] = useState(1);
 
     return (
@@ -92,12 +104,33 @@ export function SampleEditor({
                 />
             </div>
             <div className={"sample_editor_panels"}>
-                <SampleProperties
-                    sample={sample}
-                    samples={samples}
-                    edits={edits}
+                <div className={"sample_editor_fields"}>
+                    <SampleProperties
+                        sample={sample}
+                        samples={samples}
+                        edits={edits}
+                    />
+                    <SampleTools
+                        sample={sample}
+                        isLoading={audio.isLoading}
+                        onNormalize={audio.normalize}
+                        onReplaceAudio={audio.replaceAudio}
+                    />
+                </div>
+                <EqualizerPanel
+                    state={equalizer}
+                    sampleRate={sample.sampleRate}
+                    isDisabled={audio.isLoading}
+                    onStateChange={onEqualizerChange}
+                    onApply={() => {
+                        audio.equalize(equalizer.settings);
+                        // The audio now has the changes, previewing would apply them twice
+                        onEqualizerChange({
+                            ...equalizer,
+                            isPreviewing: false
+                        });
+                    }}
                 />
-                <SampleTools sample={sample} onStop={player.stop} />
             </div>
             <LinkedInstruments sample={sample} />
         </div>

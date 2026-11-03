@@ -58,13 +58,21 @@
     width: 16rem;
 }
 
-/* Properties on the left, tools on the right, space between for more panels */
+/* Properties and tools on the left, the equalizer on the right */
 .sample_editor_panels {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
     align-items: end;
     gap: var(--flex-gap) 2rem;
+}
+
+.sample_editor_fields {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: var(--flex-gap);
+    flex: 1 1 30rem;
 }
 
 .sample_properties {

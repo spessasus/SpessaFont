@@ -36,6 +36,18 @@ export const SampleLocale = {
         tooManyChannels: "Too Many Channels"
     },
 
+    equalizer: {
+        title: "Equalizer",
+        band: "{{frequency}} Hz band (dB)",
+        gain: "Gain",
+        gainDb: "Gain (dB)",
+        preview: "Preview",
+        reset: "Reset",
+        apply: "Apply",
+        clipping:
+            "The result is louder than full scale and will clip when saved. Normalize it or lower the gain."
+    },
+
     notLinkedToInstrument: "Not used by an Instrument yet.",
     usedBy: "Used by",
     compressedSample: "Compressed Sample",

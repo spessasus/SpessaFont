@@ -20,6 +20,7 @@ import { ErrorBoundary } from "../error_boundary/error_boundary.tsx";
 import { PaneErrorFallback } from "../error_boundary/pane_error_fallback.tsx";
 import { getObjectId } from "../utils/object_id.ts";
 import type { SamplePlayerState } from "../sample_editor/use_sample_player.ts";
+import { DEFAULT_EQUALIZER_STATE } from "../sample_editor/equalizer/equalizer.ts";
 
 function renderPaneError(error: unknown) {
     return <PaneErrorFallback error={error} />;
@@ -75,6 +76,7 @@ export function BankEditor({
     }
     // Counts the requests to play from the start, so playing the shown sample again restarts it
     const [playRequest, setPlayRequest] = useState(0);
+    const [equalizer, setEqualizer] = useState(DEFAULT_EQUALIZER_STATE);
 
     const context: BankEditorContextType = useMemo(
         () => ({
@@ -118,6 +120,8 @@ export function BankEditor({
                                 playerState={samplePlayerState}
                                 playRequest={playRequest}
                                 onPlayerStateChange={setSamplePlayerState}
+                                equalizer={equalizer}
+                                onEqualizerChange={setEqualizer}
                             />
                         )}
                     </ErrorBoundary>

@@ -1,26 +1,25 @@
 import { useTranslation } from "react-i18next";
 import { audioToWav, type BasicSample } from "spessasynth_core";
 import { downloadBlob } from "../utils/download_blob.ts";
-import { useSampleAudioCommands } from "./use_sample_audio_commands.ts";
 import { getExportChannels } from "./sample_audio.ts";
 
 interface SampleToolsProps {
     sample: BasicSample;
-    /**
-     * Replacing or normalizing the audio stops the playback first.
-     */
-    onStop: () => void;
+    isLoading: boolean;
+    onNormalize: () => void;
+    onReplaceAudio: () => Promise<void>;
 }
 
 /**
  * WAV export (both channels of a stereo pair), normalize, and audio replacement.
  */
-export function SampleTools({ sample, onStop }: SampleToolsProps) {
+export function SampleTools({
+    sample,
+    isLoading,
+    onNormalize,
+    onReplaceAudio
+}: SampleToolsProps) {
     const { t } = useTranslation();
-    const { isLoading, replaceAudio, normalize } = useSampleAudioCommands(
-        sample,
-        onStop
-    );
 
     // The original audio and rate, not the playback buffer, which may be resampled
     const exportWav = (isLoopOnly: boolean) => {
@@ -54,7 +53,7 @@ export function SampleTools({ sample, onStop }: SampleToolsProps) {
                 type={"button"}
                 className={buttonClass}
                 disabled={isLoading}
-                onClick={normalize}
+                onClick={onNormalize}
             >
                 {t("sampleLocale.tools.normalize")}
             </button>
@@ -62,7 +61,7 @@ export function SampleTools({ sample, onStop }: SampleToolsProps) {
                 type={"button"}
                 className={buttonClass}
                 disabled={isLoading}
-                onClick={() => void replaceAudio()}
+                onClick={() => void onReplaceAudio()}
             >
                 {isLoading
                     ? t("sampleLocale.tools.loading")

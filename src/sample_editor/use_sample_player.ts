@@ -1,6 +1,13 @@
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import type { BasicSample } from "spessasynth_core";
 import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
+import {
+    dbToGain,
+    EQ_FREQUENCIES,
+    EQ_Q,
+    type EqualizerSettings,
+    getBandGains
+} from "./equalizer/equalizer.ts";
 
 export type SamplePlayerState = "stopped" | "playing" | "playing_loop";
 
@@ -42,11 +49,14 @@ function createPlaybackBuffer(
  * The state is owned by the bank editor, so the next sample shown keeps playing the same way,
  * which helps finding a sample by ear. Playback stops when the component unmounts and restarts
  * when the audio changes or `playRequest` changes.
+ * It always plays through the equalizer filters, so turning the preview on or off (a flat
+ * `equalizer`) changes the sound without restarting.
  */
 export function useSamplePlayer(
     sample: BasicSample,
     state: SamplePlayerState,
     playRequest: number,
+    equalizer: EqualizerSettings,
     onStateChange: (state: SamplePlayerState) => void
 ) {
     const { audioEngine } = useAudioEngine();
@@ -59,6 +69,10 @@ export function useSamplePlayer(
         setStartTime(context.currentTime);
     }
     const playerRef = useRef<AudioBufferSourceNode | null>(null);
+    const filtersRef = useRef<{
+        bands: BiquadFilterNode[];
+        gain: GainNode;
+    } | null>(null);
     const onEnded = useEffectEvent(() => onStateChange("stopped"));
 
     const data = sample.getAudioData();
@@ -77,17 +91,33 @@ export function useSamplePlayer(
         player.buffer = buffer;
         player.loop = state === "playing_loop";
         player.onended = () => onEnded();
+        const bands = EQ_FREQUENCIES.map(
+            (frequency) =>
+                new BiquadFilterNode(context, {
+                    type: "peaking",
+                    frequency,
+                    Q: EQ_Q
+                })
+        );
+        const eqGain = new GainNode(context);
         const gain = new GainNode(context, { gain: SAMPLE_GAIN });
-        player.connect(gain).connect(targetNode);
+        let node: AudioNode = player;
+        for (const band of bands) {
+            node = node.connect(band);
+        }
+        node.connect(eqGain).connect(gain).connect(targetNode);
         player.start();
         playerRef.current = player;
+        filtersRef.current = { bands, gain: eqGain };
         return () => {
             // Stopping on purpose (or switching samples) must not stop the next playback
             player.onended = null;
             player.stop();
-            player.disconnect();
-            gain.disconnect();
+            for (const audioNode of [player, ...bands, eqGain, gain]) {
+                audioNode.disconnect();
+            }
             playerRef.current = null;
+            filtersRef.current = null;
         };
     }, [buffer, context, state, startTime, targetNode]);
 
@@ -101,6 +131,17 @@ export function useSamplePlayer(
         player.loopEnd = loopEnd / sampleRate;
         player.detune.value = pitchCorrection;
     }, [loopEnd, loopStart, pitchCorrection, sampleRate, state, startTime]);
+
+    useEffect(() => {
+        const filters = filtersRef.current;
+        if (!filters) {
+            return;
+        }
+        for (const [i, gain] of getBandGains(equalizer, sampleRate).entries()) {
+            filters.bands[i].gain.value = gain;
+        }
+        filters.gain.gain.value = dbToGain(equalizer.gain);
+    }, [equalizer, sampleRate, state, startTime]);
 
     return {
         state,

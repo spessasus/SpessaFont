@@ -8,11 +8,14 @@ import { EditSampleAction } from "./edit_sample_action.ts";
 import { SetSampleTypeAction } from "./set_sample_type_action.ts";
 import { DeleteSampleAction } from "./linked_instruments/delete_sample_action.ts";
 import { ReplaceSampleAudioAction } from "./replace_sample_audio_action.ts";
+import type { HistoryActionGroup } from "../core_backend/history.ts";
 import {
     createReplaceAudioActions,
-    getExportChannels,
-    normalizeAudio
+    createEqualizerActions,
+    createNormalizeActions,
+    getExportChannels
 } from "./sample_audio.ts";
+import { FLAT_EQUALIZER } from "./equalizer/equalizer.ts";
 
 describe("EditSampleAction", () => {
     it("changes a sample property", () => {
@@ -147,13 +150,65 @@ describe("ReplaceSampleAudioAction", () => {
     });
 });
 
+/**
+ * `snapshotBank` leaves the audio out, so audio actions check their round trip here.
+ */
+function expectAudioRoundTrip(
+    session: ReturnType<typeof createTestSession>,
+    actions: HistoryActionGroup
+) {
+    const audio = () => session.document.samples.map((s) => s.getAudioData());
+    const before = audio();
+    session.history.do(actions);
+    const after = audio();
+    expect(after).not.toEqual(before);
+    session.history.undo();
+    expect(audio()).toEqual(before);
+    session.history.redo();
+    expect(audio()).toEqual(after);
+}
+
 describe("sample audio helpers", () => {
-    it("normalizes to full scale and leaves silence alone", () => {
-        expect([...normalizeAudio(new Float32Array([0.25, -0.5]))]).toEqual([
-            0.5, -1
-        ]);
-        const silence = new Float32Array(3);
-        expect(normalizeAudio(silence)).toBe(silence);
+    it("normalizes a stereo pair by one amount and skips silence", () => {
+        const session = createTestSession();
+        const [left, right] = session.document.samples;
+        left.setAudioData(new Float32Array([0.25, -0.5]), 44_100);
+        right.setAudioData(new Float32Array([0.125, 0.25]), 44_100);
+        left.setLinkedSample(right, SampleTypes.leftSample);
+
+        expectAudioRoundTrip(session, createNormalizeActions([right]));
+        expect([...left.getAudioData()]).toEqual([0.5, -1]);
+        expect([...right.getAudioData()]).toEqual([0.25, 0.5]);
+
+        left.setAudioData(new Float32Array(3), 44_100);
+        right.setAudioData(new Float32Array(3), 44_100);
+        expect(createNormalizeActions([left])).toEqual([]);
+    });
+
+    it("equalizes both halves once, keeps the loop, and reports clipping", () => {
+        const session = createTestSession();
+        const [left, right] = session.document.samples;
+        left.setLinkedSample(right, SampleTypes.leftSample);
+        left.setAudioData(new Float32Array([0.5, -0.25, 0.75]), 44_100);
+        left.loopStart = 1;
+        left.loopEnd = 2;
+
+        // The source peaks at 0.75, so only the louder version clips
+        expect(createEqualizerActions([left], FLAT_EQUALIZER).isClipping).toBe(
+            false
+        );
+        const louder = { ...FLAT_EQUALIZER, gain: 20 * Math.log10(2) };
+        const { actions, isClipping } = createEqualizerActions(
+            [left, right],
+            louder
+        );
+        expect(actions).toHaveLength(2);
+        expect(isClipping).toBe(true);
+        expectAudioRoundTrip(session, actions);
+        const data = [...left.getAudioData()];
+        expect(data[0]).toBeCloseTo(1);
+        expect(data[2]).toBeCloseTo(1.5);
+        expect(left).toMatchObject({ loopStart: 1, loopEnd: 2 });
     });
 
     it("splits stereo audio over a stereo pair and mixes it for a mono sample", () => {
