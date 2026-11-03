@@ -1,3 +1,4 @@
+import "./virtual_item_list.css";
 import type { ReactNode } from "react";
 import { useEffect, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";

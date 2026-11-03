@@ -31,6 +31,10 @@ interface PresetDisplayProps {
     onToggleInstrument: (instrument: BasicInstrument) => void;
     onClick: (event: MouseEvent) => void;
     /**
+     * Opens the menu on the whole row. The name button inside it gets the menu key.
+     */
+    onContextMenu?: (event: MouseEvent) => void;
+    /**
      * Shows the "link selected instruments" button when set.
      */
     onLink?: () => void;
@@ -45,6 +49,7 @@ export function PresetDisplay({
     isInstrumentOpen,
     onToggleInstrument,
     onClick,
+    onContextMenu,
     onLink
 }: PresetDisplayProps) {
     const { t } = useTranslation();
@@ -55,6 +60,7 @@ export function PresetDisplay({
         <div className={"preset_item_wrapper"}>
             <div
                 className={`preset_item ${isSelected ? "selected" : ""}`}
+                onContextMenu={onContextMenu}
                 title={preset.name}
             >
                 <div className={"left_group"}>

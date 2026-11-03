@@ -1,4 +1,3 @@
-import { BasicInstrument, BasicPreset, BasicSample } from "spessasynth_core";
 import type { MouseEvent } from "react";
 import { useDeferredValue, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -13,14 +12,15 @@ import { filterElements } from "./filter_elements.ts";
 import {
     getClickResult,
     getSelection,
+    isInstrument,
+    isPreset,
+    isSample,
     type MultiSelection,
     selectionOf
 } from "./menu_selection.ts";
 import { useMenuShortcuts } from "./use_menu_shortcuts.ts";
-
-const isPreset = (e: BankEntity) => e instanceof BasicPreset;
-const isInstrument = (e: BankEntity) => e instanceof BasicInstrument;
-const isSample = (e: BankEntity) => e instanceof BasicSample;
+import { useListMenu } from "./use_list_menu.ts";
+import { useContextMenu } from "../context_menu/context_menu_context.ts";
 
 interface MenuListProps {
     view: BankEditView;
@@ -50,6 +50,8 @@ export function MenuList({ view }: MenuListProps) {
     const selectedInstruments = selectionOf(selection, isInstrument);
     const selectedSamples = selectionOf(selection, isSample);
     useMenuShortcuts(selection);
+    const getMenuEntries = useListMenu();
+    const { openMenu } = useContextMenu();
 
     function handleItemClick<T extends BankEntity>(
         items: readonly T[],
@@ -78,6 +80,18 @@ export function MenuList({ view }: MenuListProps) {
             </button>
         );
     }
+    // Like a file manager, the menu acts on the selection when the item is in it,
+    // and otherwise shows the item first and acts on it alone
+    const handleItemContextMenu = (item: BankEntity, event: MouseEvent) => {
+        let target = selection;
+        if (!selection.has(item)) {
+            target = new Set([item]);
+            setMultiSelection(null);
+            setView(item);
+        }
+        openMenu(event, getMenuEntries(target));
+    };
+
     return (
         <div className={`menu_list_main`}>
             <div
@@ -117,6 +131,7 @@ export function MenuList({ view }: MenuListProps) {
                         e
                     )
                 }
+                onItemContextMenu={handleItemContextMenu}
             />
 
             <InstrumentList
@@ -132,6 +147,7 @@ export function MenuList({ view }: MenuListProps) {
                         e
                     )
                 }
+                onItemContextMenu={handleItemContextMenu}
             />
 
             <PresetList
@@ -147,6 +163,7 @@ export function MenuList({ view }: MenuListProps) {
                         e
                     )
                 }
+                onItemContextMenu={handleItemContextMenu}
             />
             <div className={"search_bar"}>
                 <input

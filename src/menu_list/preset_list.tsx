@@ -1,4 +1,4 @@
-import { type BasicInstrument, BasicPreset, BasicZone } from "spessasynth_core";
+import { type BasicInstrument, BasicPreset } from "spessasynth_core";
 import type { MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
@@ -7,11 +7,13 @@ import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useClipboard } from "../clipboard/clipboard_context.ts";
 import { DropdownHeader } from "./dropdown_header/dropdown_header.tsx";
 import { PresetDisplay } from "./preset_display/preset_display.tsx";
-import { CreatePresetAction } from "./create_actions/create_preset_action.ts";
-import { CreateZoneAction } from "../generator_table/create_zone_action.ts";
 import { getObjectId } from "../utils/object_id.ts";
 import { VirtualItemList } from "./virtual_item_list.tsx";
 import { useExpandedItems, useSectionOpen } from "./use_list_state.ts";
+import {
+    createInstrumentLinkActions,
+    createPresetFromInstruments
+} from "./link_actions.ts";
 
 interface PresetListProps {
     presets: readonly BasicPreset[];
@@ -19,6 +21,7 @@ interface PresetListProps {
     selected: ReadonlySet<BasicPreset>;
     selectedInstruments: ReadonlySet<BasicInstrument>;
     onItemClick: (preset: BasicPreset, event: MouseEvent) => void;
+    onItemContextMenu: (preset: BasicPreset, event: MouseEvent) => void;
 }
 
 export function PresetList({
@@ -26,7 +29,8 @@ export function PresetList({
     view,
     selected,
     selectedInstruments,
-    onItemClick
+    onItemClick,
+    onItemContextMenu
 }: PresetListProps) {
     const { t } = useTranslation();
     const { session, apply } = useBankEditor();
@@ -37,31 +41,6 @@ export function PresetList({
     );
     const { isExpanded, toggle } = useExpandedItems();
 
-    const createPreset = () => {
-        const preset = new BasicPreset(session.document.bank);
-        preset.name = [...selectedInstruments][0].name;
-        for (const instrument of selectedInstruments) {
-            preset.createZone(instrument);
-        }
-        // Move to the first free bank number
-        const allPresets = session.document.presets;
-        for (let i = 1; allPresets.some((p) => p.matches(preset)); i++) {
-            preset.bankMSB = i & 0x7f;
-            preset.bankLSB = Math.max(i >> 7, 0);
-        }
-        apply([new CreatePresetAction(preset)]);
-    };
-
-    const linkInstruments = (preset: BasicPreset) => {
-        apply(
-            Array.from(
-                selectedInstruments,
-                (instrument) =>
-                    new CreateZoneAction(preset, new BasicZone(), instrument)
-            )
-        );
-    };
-
     const canLink = selectedInstruments.size > 0;
     return (
         <>
@@ -69,7 +48,17 @@ export function PresetList({
                 text={t("presetList.presets")}
                 isOpen={isOpen}
                 onToggle={() => setIsOpen(!isOpen)}
-                onAdd={canLink ? createPreset : undefined}
+                onAdd={
+                    canLink
+                        ? () =>
+                              apply([
+                                  createPresetFromInstruments(
+                                      session.document,
+                                      selectedInstruments
+                                  )
+                              ])
+                        : undefined
+                }
                 onCopy={
                     selected.size > 0
                         ? () => {
@@ -117,9 +106,18 @@ export function PresetList({
                                     toggle(instrumentKey(instrument))
                                 }
                                 onClick={(e) => onItemClick(preset, e)}
+                                onContextMenu={(e) =>
+                                    onItemContextMenu(preset, e)
+                                }
                                 onLink={
                                     canLink
-                                        ? () => linkInstruments(preset)
+                                        ? () =>
+                                              apply(
+                                                  createInstrumentLinkActions(
+                                                      preset,
+                                                      selectedInstruments
+                                                  )
+                                              )
                                         : undefined
                                 }
                             />

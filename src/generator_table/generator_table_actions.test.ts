@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { BasicZone, GeneratorTypes, Modulator } from "spessasynth_core";
+import {
+    BasicZone,
+    EmptySample,
+    GeneratorTypes,
+    Modulator,
+    SampleTypes
+} from "spessasynth_core";
 import {
     createTestSession,
     expectRoundTrip,
@@ -10,6 +16,10 @@ import { SetRangeAction } from "./cell/set_range_action.ts";
 import { CreateZoneAction } from "./create_zone_action.ts";
 import { DeleteZoneAction } from "./delete_zone_action.ts";
 import { EditModulatorsAction } from "./modulator_edit/edit_modulators_action.ts";
+import {
+    createReplaceSampleActions,
+    ReplaceZoneChildAction
+} from "./replace_zone_child_action.ts";
 
 describe("SetGeneratorAction", () => {
     it("sets a generator", () => {
@@ -219,5 +229,65 @@ describe("EditModulatorsAction", () => {
             new EditModulatorsAction(instrument, zone, [modulator])
         ]);
         expect(zone.modulators).toEqual([modulator]);
+    });
+});
+
+describe("ReplaceZoneChildAction", () => {
+    it("swaps the sample of a zone and keeps its generators", () => {
+        const session = createTestSession();
+        const [instrument] = session.document.instruments;
+        const [, other] = session.document.samples;
+        const zone = instrument.zones[0];
+        const old = zone.sample;
+        zone.setGenerator(GeneratorTypes.pan, 100, false);
+        // One link per zone that uses the sample
+        const links = (sample: typeof old) =>
+            sample.linkedTo.filter((i) => i === instrument).length;
+        const oldLinks = links(old);
+        const otherLinks = links(other);
+
+        const { after } = expectRoundTrip(session, [
+            new ReplaceZoneChildAction(instrument, zone, other)
+        ]);
+        expect(after.instruments[0].zones[0].sample).toBe(other.name);
+        expect(zone.getGenerator(GeneratorTypes.pan, null)).toBe(100);
+        expect(links(old)).toBe(oldLinks - 1);
+        expect(links(other)).toBe(otherLinks + 1);
+    });
+
+    it("swaps the instrument of a preset zone", () => {
+        const session = createTestSession();
+        const [preset] = session.document.presets;
+        const [, other] = session.document.instruments;
+
+        const { after } = expectRoundTrip(session, [
+            new ReplaceZoneChildAction(preset, preset.zones[0], other)
+        ]);
+        expect(after.presets[0].zones[0].instrument).toBe(other.name);
+    });
+
+    it("gives a stereo column both halves of a stereo sample, side by side", () => {
+        const session = createTestSession();
+        const [instrument] = session.document.instruments;
+        const [left, right] = session.document.samples;
+        const newLeft = new EmptySample();
+        const newRight = new EmptySample();
+        newLeft.setLinkedSample(newRight, SampleTypes.leftSample);
+        left.setLinkedSample(right, SampleTypes.leftSample);
+        const leftZone = instrument.createZone(left);
+        const rightZone = instrument.createZone(right);
+
+        const actions = createReplaceSampleActions(
+            instrument,
+            rightZone,
+            leftZone,
+            newLeft
+        );
+        session.history.do(actions);
+        expect(leftZone.sample).toBe(newLeft);
+        expect(rightZone.sample).toBe(newRight);
+        session.history.undo();
+        expect(leftZone.sample).toBe(left);
+        expect(rightZone.sample).toBe(right);
     });
 });

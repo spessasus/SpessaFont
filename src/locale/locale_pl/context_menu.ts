@@ -1,0 +1,31 @@
+export const ContextMenuLocale = {
+    play: "Odtwórz",
+    copy: "Kopiuj",
+    cut: "Wytnij",
+    paste: "Wklej",
+    duplicate: "Duplikuj",
+    delete: "Usuń",
+    addToInstrument: "Dodaj do instrumentu…",
+    addToPreset: "Dodaj do presetu…",
+    newInstrument: "Nowy instrument z zaznaczenia",
+    newPreset: "Nowy preset z zaznaczenia",
+    normalize: "Normalizuj",
+    autoLoop: "Auto pętla",
+    gain: "Zmień wzmocnienie…",
+    open: "Otwórz",
+    replaceSample: "Zastąp próbkę…",
+    replaceInstrument: "Zastąp instrument…",
+    deleteZone: "Usuń strefę",
+
+    pickInstrument: "Do którego instrumentu dodać zaznaczone próbki?",
+    pickPreset: "Do którego presetu dodać zaznaczone instrumenty?",
+    pickSample: "Którą próbką zastąpić {{name}}?",
+    pickReplacementInstrument: "Którym instrumentem zastąpić {{name}}?",
+    gainTitle: "Zmień wzmocnienie zaznaczonych próbek",
+    gainLabel: "Wzmocnienie (dB)",
+    skippedShort: "Pominięte próbki, zbyt krótkie na pętlę: {{count}}",
+
+    noMatches: "Nic nie pasuje do wyszukiwania.",
+    cancel: "Anuluj",
+    ok: "OK"
+};

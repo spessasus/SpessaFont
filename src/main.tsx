@@ -7,6 +7,8 @@ import { AudioEngineProvider } from "./get_user_input/audio_engine_provider.tsx"
 import { ErrorBoundary } from "./error_boundary/error_boundary.tsx";
 import { SettingsProvider } from "./settings/settings_provider.tsx";
 import { ClipboardProvider } from "./clipboard/clipboard_provider.tsx";
+import { ContextMenuProvider } from "./context_menu/context_menu_provider.tsx";
+import { DialogsProvider } from "./dialogs/dialogs_provider.tsx";
 import { init } from "./init.ts";
 import { TranslatedOptionsProvider } from "./utils/translated_options/translated_options_provider.tsx";
 import { logError } from "./utils/core_utils.ts";
@@ -25,7 +27,11 @@ function render(settings: SavedSettingsType) {
                         <MIDIProvider>
                             <AudioEngineProvider>
                                 <ClipboardProvider>
-                                    <App />
+                                    <ContextMenuProvider>
+                                        <DialogsProvider>
+                                            <App />
+                                        </DialogsProvider>
+                                    </ContextMenuProvider>
                                 </ClipboardProvider>
                             </AudioEngineProvider>
                         </MIDIProvider>

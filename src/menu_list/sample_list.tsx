@@ -24,13 +24,15 @@ interface SampleListProps {
     view: BankEditView;
     selected: ReadonlySet<BasicSample>;
     onItemClick: (sample: BasicSample, event: MouseEvent) => void;
+    onItemContextMenu: (sample: BasicSample, event: MouseEvent) => void;
 }
 
 export function SampleList({
     samples,
     view,
     selected,
-    onItemClick
+    onItemClick,
+    onItemContextMenu
 }: SampleListProps) {
     const { t } = useTranslation();
     const { audioEngine } = useAudioEngine();
@@ -124,6 +126,7 @@ export function SampleList({
                             sample={sample}
                             isSelected={selected.has(sample)}
                             onClick={(e) => onItemClick(sample, e)}
+                            onContextMenu={(e) => onItemContextMenu(sample, e)}
                             onDoubleClick={() => playSample(sample)}
                         />
                     )}

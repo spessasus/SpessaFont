@@ -1,0 +1,96 @@
+.modal_dialog {
+    margin: auto;
+    padding: 1rem;
+    width: min(28rem, calc(100vw - 2rem));
+    background: var(--darker-color-start);
+    color: var(--font-color);
+    border: 1px solid var(--track-border-color);
+    border-radius: var(--primary-border-radius);
+    box-shadow: 0 0.5rem 2rem var(--shadow-color);
+}
+
+.modal_dialog::backdrop {
+    background: color-mix(in srgb, var(--shadow-color) 60%, transparent);
+}
+
+.modal_dialog[open] {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.modal_dialog * {
+    color: var(--font-color);
+    font-family: var(--main-font);
+}
+
+.modal_dialog_title {
+    font-size: 1.1rem;
+    font-weight: normal;
+    text-align: start;
+}
+
+.modal_dialog_buttons {
+    display: flex;
+    justify-content: end;
+    gap: var(--flex-gap);
+}
+
+.modal_dialog_buttons button {
+    padding: 0.3rem 1rem;
+}
+
+.modal_dialog_buttons button:disabled {
+    cursor: default;
+    opacity: 0.5;
+}
+
+.element_picker_list {
+    display: flex;
+    flex-direction: column;
+    height: min(55vh, 24rem);
+    overflow-x: hidden;
+    border: 1px solid var(--track-border-color);
+    border-radius: var(--primary-border-radius);
+}
+
+/* Beats the reset of .plain_button */
+.element_picker .element_picker_item {
+    display: block;
+    width: 100%;
+    padding: 0.3rem 0.6rem;
+    text-align: start;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+.element_picker .element_picker_item:hover,
+.element_picker .element_picker_item:focus-visible {
+    background: var(--selection-color);
+    outline: none;
+}
+
+.element_picker_empty {
+    padding: 1rem;
+    color: var(--muted-font-color);
+}
+
+.number_dialog form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.number_dialog_field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.number_dialog_field input {
+    width: 8rem;
+    text-align: end;
+}

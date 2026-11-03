@@ -18,6 +18,10 @@ interface InstrumentDisplayProps {
     onToggle: () => void;
     onClick: (event: MouseEvent) => void;
     /**
+     * Opens the menu on the whole row. The name button inside it gets the menu key.
+     */
+    onContextMenu?: (event: MouseEvent) => void;
+    /**
      * Shows the "link selected samples" button when set.
      */
     onLink?: () => void;
@@ -30,6 +34,7 @@ export function InstrumentDisplay({
     isOpen,
     onToggle,
     onClick,
+    onContextMenu,
     onLink
 }: InstrumentDisplayProps) {
     const { t } = useTranslation();
@@ -40,6 +45,7 @@ export function InstrumentDisplay({
         <div className={"instrument_item_wrapper"}>
             <div
                 className={`instrument_item ${isSelected ? "selected" : ""}`}
+                onContextMenu={onContextMenu}
                 title={instrument.name}
             >
                 <div className={"left_buttons"}>

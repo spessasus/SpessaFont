@@ -8,13 +8,15 @@ interface SampleDisplayProps {
     isSelected: boolean;
     onClick: (event: MouseEvent) => void;
     onDoubleClick?: () => void;
+    onContextMenu?: (event: MouseEvent) => void;
 }
 
 export function SampleDisplay({
     sample,
     isSelected,
     onClick,
-    onDoubleClick
+    onDoubleClick,
+    onContextMenu
 }: SampleDisplayProps) {
     return (
         <button
@@ -22,6 +24,7 @@ export function SampleDisplay({
             className={`plain_button sample_display ${isSelected ? "selected" : ""}`}
             onClick={onClick}
             onDoubleClick={onDoubleClick}
+            onContextMenu={onContextMenu}
             title={sample.name}
         >
             <SpeakerIcon />

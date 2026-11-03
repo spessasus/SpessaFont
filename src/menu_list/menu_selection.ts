@@ -1,4 +1,9 @@
+import { BasicInstrument, BasicPreset, BasicSample } from "spessasynth_core";
 import type { BankEditView, BankEntity } from "../core_backend/bank_view.ts";
+
+export const isPreset = (e: BankEntity) => e instanceof BasicPreset;
+export const isInstrument = (e: BankEntity) => e instanceof BasicInstrument;
+export const isSample = (e: BankEntity) => e instanceof BasicSample;
 
 /**
  * Elements selected with Shift or Ctrl while `anchor` was the shown element.

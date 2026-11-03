@@ -1,0 +1,20 @@
+.menu_list_scrollable {
+    user-select: none;
+    display: block;
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: auto;
+}
+
+.item_group {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.virtual_item {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+}

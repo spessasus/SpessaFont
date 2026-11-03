@@ -11,6 +11,7 @@ import { SoundBankLocale } from "./sound_bank.ts";
 import { InstrumentLocale } from "./instrument.ts";
 import { PresetLocale } from "./preset.ts";
 import { ClipboardLocale } from "./clipboard.ts";
+import { ContextMenuLocale } from "./context_menu.ts";
 
 /**
  *
@@ -99,5 +100,6 @@ export const localePolish = {
     instrumentLocale: InstrumentLocale,
     presetLocale: PresetLocale,
     soundBankLocale: SoundBankLocale,
-    clipboardLocale: ClipboardLocale
+    clipboardLocale: ClipboardLocale,
+    contextMenu: ContextMenuLocale
 };

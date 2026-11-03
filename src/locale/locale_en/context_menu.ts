@@ -1,0 +1,31 @@
+export const ContextMenuLocale = {
+    play: "Play",
+    copy: "Copy",
+    cut: "Cut",
+    paste: "Paste",
+    duplicate: "Duplicate",
+    delete: "Delete",
+    addToInstrument: "Add to Instrument…",
+    addToPreset: "Add to Preset…",
+    newInstrument: "New Instrument from Selection",
+    newPreset: "New Preset from Selection",
+    normalize: "Normalize",
+    autoLoop: "Auto Loop",
+    gain: "Change Gain…",
+    open: "Open",
+    replaceSample: "Replace Sample…",
+    replaceInstrument: "Replace Instrument…",
+    deleteZone: "Delete Zone",
+
+    pickInstrument: "Add the selected samples to which instrument?",
+    pickPreset: "Add the selected instruments to which preset?",
+    pickSample: "Replace {{name}} with which sample?",
+    pickReplacementInstrument: "Replace {{name}} with which instrument?",
+    gainTitle: "Change the gain of the selected samples",
+    gainLabel: "Gain (dB)",
+    skippedShort: "Skipped samples too short to loop: {{count}}",
+
+    noMatches: "Nothing matches the search.",
+    cancel: "Cancel",
+    ok: "OK"
+};

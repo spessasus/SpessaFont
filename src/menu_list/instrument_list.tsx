@@ -1,10 +1,4 @@
-import {
-    BasicInstrument,
-    type BasicSample,
-    BasicZone,
-    GeneratorTypes,
-    SampleTypes
-} from "spessasynth_core";
+import { BasicInstrument, type BasicSample } from "spessasynth_core";
 import type { MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
@@ -13,24 +7,13 @@ import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useClipboard } from "../clipboard/clipboard_context.ts";
 import { DropdownHeader } from "./dropdown_header/dropdown_header.tsx";
 import { InstrumentDisplay } from "./instrument_display/instrument_display.tsx";
-import { CreateInstrumentAction } from "./create_actions/create_instrument_action.ts";
-import { STEREO_REGEX } from "../utils/stereo_regex.ts";
-import { CreateZoneAction } from "../generator_table/create_zone_action.ts";
-import { addAndReorderStereoSamples } from "../utils/add_stereo_samples.ts";
 import { getObjectId } from "../utils/object_id.ts";
 import { VirtualItemList } from "./virtual_item_list.tsx";
 import { useExpandedItems, useSectionOpen } from "./use_list_state.ts";
-
-/**
- * Stereo halves are panned fully to their side.
- */
-function setStereoPan(zone: BasicZone, sample: BasicSample) {
-    if (sample.sampleType === SampleTypes.leftSample) {
-        zone.setGenerator(GeneratorTypes.pan, -500);
-    } else if (sample.sampleType === SampleTypes.rightSample) {
-        zone.setGenerator(GeneratorTypes.pan, 500);
-    }
-}
+import {
+    createInstrumentFromSamples,
+    createSampleLinkActions
+} from "./link_actions.ts";
 
 interface InstrumentListProps {
     instruments: readonly BasicInstrument[];
@@ -38,6 +21,7 @@ interface InstrumentListProps {
     selected: ReadonlySet<BasicInstrument>;
     selectedSamples: ReadonlySet<BasicSample>;
     onItemClick: (instrument: BasicInstrument, event: MouseEvent) => void;
+    onItemContextMenu: (instrument: BasicInstrument, event: MouseEvent) => void;
 }
 
 export function InstrumentList({
@@ -45,7 +29,8 @@ export function InstrumentList({
     view,
     selected,
     selectedSamples,
-    onItemClick
+    onItemClick,
+    onItemContextMenu
 }: InstrumentListProps) {
     const { t } = useTranslation();
     const { session, apply } = useBankEditor();
@@ -56,31 +41,6 @@ export function InstrumentList({
     );
     const { isExpanded, toggle } = useExpandedItems();
 
-    const createInstrument = () => {
-        const samples = addAndReorderStereoSamples(selectedSamples);
-        const instrument = new BasicInstrument();
-        const firstSample = samples[0];
-        instrument.name = firstSample.linkedSample
-            ? firstSample.name.replace(STEREO_REGEX, "")
-            : firstSample.name;
-        // add loop for convenience
-        instrument.globalZone.setGenerator(GeneratorTypes.sampleModes, 1);
-        for (const sample of samples) {
-            setStereoPan(instrument.createZone(sample), sample);
-        }
-        apply([new CreateInstrumentAction(instrument)]);
-    };
-
-    const linkSamples = (instrument: BasicInstrument) => {
-        apply(
-            addAndReorderStereoSamples(selectedSamples).map((sample) => {
-                const zone = new BasicZone();
-                setStereoPan(zone, sample);
-                return new CreateZoneAction(instrument, zone, sample);
-            })
-        );
-    };
-
     const canLink = selectedSamples.size > 0;
     return (
         <>
@@ -88,7 +48,14 @@ export function InstrumentList({
                 text={t("presetList.instruments")}
                 isOpen={isOpen}
                 onToggle={() => setIsOpen(!isOpen)}
-                onAdd={canLink ? createInstrument : undefined}
+                onAdd={
+                    canLink
+                        ? () =>
+                              apply([
+                                  createInstrumentFromSamples(selectedSamples)
+                              ])
+                        : undefined
+                }
                 onCopy={
                     selected.size > 0
                         ? () => {
@@ -132,9 +99,18 @@ export function InstrumentList({
                                 isOpen={isExpanded(key)}
                                 onToggle={() => toggle(key)}
                                 onClick={(e) => onItemClick(instrument, e)}
+                                onContextMenu={(e) =>
+                                    onItemContextMenu(instrument, e)
+                                }
                                 onLink={
                                     canLink
-                                        ? () => linkSamples(instrument)
+                                        ? () =>
+                                              apply(
+                                                  createSampleLinkActions(
+                                                      instrument,
+                                                      selectedSamples
+                                                  )
+                                              )
                                         : undefined
                                 }
                             />
