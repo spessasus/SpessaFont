@@ -11,6 +11,7 @@ import { ReplaceSampleAudioAction } from "./replace_sample_audio_action.ts";
 import type { HistoryActionGroup } from "../core_backend/history.ts";
 import {
     createReplaceAudioActions,
+    createAutoLoopActions,
     createEqualizerActions,
     createNormalizeActions,
     getExportChannels
@@ -235,6 +236,32 @@ describe("sample audio helpers", () => {
         expect(
             createReplaceAudioActions(left, [...channels, ...channels], 1)
         ).toBeUndefined();
+    });
+
+    it("auto loops a stereo pair with one loop and skips short samples", () => {
+        const session = createTestSession();
+        const [left, right] = session.document.samples;
+        const wave = (phase: number) =>
+            Float32Array.from({ length: 22_050 }, (_, i) =>
+                Math.sin((2 * Math.PI * 300.3 * i) / 44_100 + phase)
+            );
+        left.setAudioData(wave(0), 44_100);
+        right.setAudioData(wave(1), 44_100);
+        left.setLinkedSample(right, SampleTypes.leftSample);
+
+        const { actions, skipped } = createAutoLoopActions([left]);
+        expect(skipped).toBe(0);
+        expectRoundTrip(session, actions);
+        expect(left.loopStart).toBe(right.loopStart);
+        expect(left.loopEnd).toBe(right.loopEnd);
+        expect(left.loopEnd - left.loopStart).toBeGreaterThan(4410);
+
+        left.setAudioData(new Float32Array(100), 44_100);
+        right.setAudioData(new Float32Array(100), 44_100);
+        expect(createAutoLoopActions([right])).toEqual({
+            actions: [],
+            skipped: 2
+        });
     });
 
     it("exports a stereo pair as left and right, padded to one length", () => {

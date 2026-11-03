@@ -7,16 +7,18 @@ interface SampleToolsProps {
     sample: BasicSample;
     isLoading: boolean;
     onNormalize: () => void;
+    onAutoLoop: () => void;
     onReplaceAudio: () => Promise<void>;
 }
 
 /**
- * WAV export (both channels of a stereo pair), normalize, and audio replacement.
+ * WAV export (both channels of a stereo pair), normalize, auto loop, and audio replacement.
  */
 export function SampleTools({
     sample,
     isLoading,
     onNormalize,
+    onAutoLoop,
     onReplaceAudio
 }: SampleToolsProps) {
     const { t } = useTranslation();
@@ -56,6 +58,15 @@ export function SampleTools({
                 onClick={onNormalize}
             >
                 {t("sampleLocale.tools.normalize")}
+            </button>
+            <button
+                type={"button"}
+                className={buttonClass}
+                disabled={isLoading}
+                title={t("sampleLocale.tools.autoLoopTitle")}
+                onClick={onAutoLoop}
+            >
+                {t("sampleLocale.tools.autoLoop")}
             </button>
             <button
                 type={"button"}

@@ -1,5 +1,6 @@
 import { type BasicSample, SampleTypes } from "spessasynth_core";
 import { ReplaceSampleAudioAction } from "./replace_sample_audio_action.ts";
+import { crossfadeLoop, findLoopPoints, getFadeLength } from "./auto_loop.ts";
 import {
     applyEqualizer,
     type EqualizerSettings
@@ -98,6 +99,46 @@ export function createEqualizerActions(
             return replaceData(sample, data);
         });
     return { actions, isClipping };
+}
+
+/**
+ * Finds loop points and crossfades the loop. Both halves of a stereo pair get the same loop,
+ * found in their mix, so they stay in phase (unless their sample rates differ).
+ * `skipped` counts the samples too short to loop.
+ */
+export function createAutoLoopActions(samples: Iterable<BasicSample>) {
+    let skipped = 0;
+    const loopGroups = getStereoGroups(samples).flatMap((group) =>
+        group.every((s) => s.sampleRate === group[0].sampleRate)
+            ? [group]
+            : group.map((s) => [s])
+    );
+    const actions = loopGroups.flatMap((group) => {
+        const channels = group.map((s) => s.getAudioData());
+        const length = Math.min(...channels.map((c) => c.length));
+        const mix = Float32Array.from(
+            { length },
+            (_, i) =>
+                channels.reduce((sum, c) => sum + c[i], 0) / channels.length
+        );
+        const { sampleRate } = group[0];
+        const loop = findLoopPoints(mix, sampleRate);
+        if (!loop) {
+            skipped += group.length;
+            return [];
+        }
+        const fade = getFadeLength(loop, sampleRate);
+        return group.map(
+            (sample, i) =>
+                new ReplaceSampleAudioAction(sample, {
+                    data: crossfadeLoop(channels[i], loop, fade),
+                    sampleRate,
+                    loopStart: loop.start,
+                    loopEnd: loop.end
+                })
+        );
+    });
+    return { actions, skipped };
 }
 
 /**

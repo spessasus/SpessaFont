@@ -31,6 +31,10 @@ export const SampleLocale = {
         wavExportLoop: "Wav Export (Loop)",
         replaceAudio: "Replace Audio",
         normalize: "Normalize",
+        autoLoop: "Auto Loop",
+        autoLoopTitle:
+            "Find loop points in the sustain and crossfade the loop so it plays without a click",
+        tooShortToLoop: "The sample is too short to loop.",
         loading: "Loading...",
         invalidAudioFile: "Invalid Audio File",
         tooManyChannels: "Too Many Channels"

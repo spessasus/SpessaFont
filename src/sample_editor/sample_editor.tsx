@@ -114,6 +114,7 @@ export function SampleEditor({
                         sample={sample}
                         isLoading={audio.isLoading}
                         onNormalize={audio.normalize}
+                        onAutoLoop={audio.autoLoop}
                         onReplaceAudio={audio.replaceAudio}
                     />
                 </div>

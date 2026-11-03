@@ -31,6 +31,10 @@ export const SampleLocale = {
         wavExportLoop: "Eksport WAV (pętla)",
         replaceAudio: "Zastąp audio",
         normalize: "Normalizuj",
+        autoLoop: "Auto pętla",
+        autoLoopTitle:
+            "Znajdź punkty pętli w podtrzymaniu i wygładź przejście, aby pętla grała bez trzasku",
+        tooShortToLoop: "Próbka jest zbyt krótka na pętlę.",
         loading: "Ładowanie...",
         invalidAudioFile: "Nieprawidłowy plik audio",
         tooManyChannels: "Zbyt wiele kanałów"

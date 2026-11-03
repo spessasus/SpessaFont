@@ -7,6 +7,7 @@ import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { logError } from "../utils/core_utils.ts";
 import { pickFile } from "../utils/pick_file.ts";
 import {
+    createAutoLoopActions,
     createEqualizerActions,
     createNormalizeActions,
     createReplaceAudioActions
@@ -14,8 +15,8 @@ import {
 import type { EqualizerSettings } from "./equalizer/equalizer.ts";
 
 /**
- * Normalizing, equalizing and replacing the sample's audio, all undoable. Normalizing and
- * equalizing also change the other half of a stereo pair. Playback stops first, because the
+ * Normalizing, equalizing, auto looping and replacing the sample's audio, all undoable. All but
+ * replacing also change the other half of a stereo pair. Playback stops first, because the
  * playing buffer is the old audio.
  * @param sample the edited sample
  * @param onBeforeChange called before the audio changes
@@ -85,5 +86,15 @@ export function useSampleAudioCommands(
         }
     };
 
-    return { isLoading, replaceAudio, normalize, equalize };
+    const autoLoop = () => {
+        const { actions } = createAutoLoopActions([sample]);
+        if (actions.length === 0) {
+            toast.error(t("sampleLocale.tools.tooShortToLoop"));
+            return;
+        }
+        onBeforeChange();
+        apply(actions);
+    };
+
+    return { isLoading, replaceAudio, normalize, equalize, autoLoop };
 }
