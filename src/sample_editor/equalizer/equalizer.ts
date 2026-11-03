@@ -29,7 +29,7 @@ export interface EqualizerSettings {
 export interface EqualizerState {
     readonly settings: EqualizerSettings;
     /**
-     * The sample player plays through the equalizer.
+     * Everything plays through the equalizer, the sample player and the keyboard.
      */
     readonly isPreviewing: boolean;
 }

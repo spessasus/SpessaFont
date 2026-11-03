@@ -19,6 +19,7 @@ import {
 } from "./use_sample_player.ts";
 import { useSampleAudioCommands } from "./use_sample_audio_commands.ts";
 import { EqualizerPanel } from "./equalizer/equalizer_panel.tsx";
+import { useEqualizerPreview } from "./equalizer/use_equalizer_preview.ts";
 import { type EqualizerState, FLAT_EQUALIZER } from "./equalizer/equalizer.ts";
 
 const MAX_NAME_LENGTH = 40;
@@ -63,8 +64,11 @@ export function SampleEditor({
         sample,
         playerState,
         playRequest,
-        equalizer.isPreviewing ? equalizer.settings : FLAT_EQUALIZER,
         onPlayerStateChange
+    );
+    useEqualizerPreview(
+        equalizer.isPreviewing ? equalizer.settings : FLAT_EQUALIZER,
+        sample.sampleRate
     );
     const audio = useSampleAudioCommands(sample, player.stop);
     const [zoom, setZoom] = useState(1);
@@ -84,19 +88,21 @@ export function SampleEditor({
                 centCorrection={sample.pitchCorrection}
             />
             <div className={"sample_editor_toolbar"}>
-                <WaitingInput
-                    setValue={edits.setName}
-                    value={sample.name}
-                    maxLength={MAX_NAME_LENGTH}
-                    className={"pretty_input sample_name monospaced"}
-                    placeholder={t("sampleLocale.sampleName")}
-                    aria-label={t("sampleLocale.sampleName")}
-                />
-                <SamplePlayback
-                    state={player.state}
-                    onPlay={player.play}
-                    onStop={player.stop}
-                />
+                <div className={"sample_editor_title"}>
+                    <WaitingInput
+                        setValue={edits.setName}
+                        value={sample.name}
+                        maxLength={MAX_NAME_LENGTH}
+                        className={"pretty_input sample_name monospaced"}
+                        placeholder={t("sampleLocale.sampleName")}
+                        aria-label={t("sampleLocale.sampleName")}
+                    />
+                    <SamplePlayback
+                        state={player.state}
+                        onPlay={player.play}
+                        onStop={player.stop}
+                    />
+                </div>
                 <ZoomSlider
                     sampleLength={sample.getAudioData().length}
                     zoom={zoom}
@@ -104,20 +110,18 @@ export function SampleEditor({
                 />
             </div>
             <div className={"sample_editor_panels"}>
-                <div className={"sample_editor_fields"}>
-                    <SampleProperties
-                        sample={sample}
-                        samples={samples}
-                        edits={edits}
-                    />
-                    <SampleTools
-                        sample={sample}
-                        isLoading={audio.isLoading}
-                        onNormalize={audio.normalize}
-                        onAutoLoop={audio.autoLoop}
-                        onReplaceAudio={audio.replaceAudio}
-                    />
-                </div>
+                <SampleProperties
+                    sample={sample}
+                    samples={samples}
+                    edits={edits}
+                />
+                <SampleTools
+                    sample={sample}
+                    isLoading={audio.isLoading}
+                    onNormalize={audio.normalize}
+                    onAutoLoop={audio.autoLoop}
+                    onReplaceAudio={audio.replaceAudio}
+                />
                 <EqualizerPanel
                     state={equalizer}
                     sampleRate={sample.sampleRate}

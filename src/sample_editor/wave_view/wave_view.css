@@ -1,6 +1,7 @@
 .wave_view {
     background: var(--darker-color-start);
-    min-height: 0;
+    /* On short screens the editor scrolls instead of squeezing the waveform away */
+    min-height: 10rem;
     min-width: 0;
     flex-grow: 1;
     cursor: pointer;

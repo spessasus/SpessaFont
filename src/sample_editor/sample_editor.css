@@ -5,6 +5,7 @@
     gap: var(--flex-gap);
     height: 100%;
     min-height: 0;
+    overflow-y: auto;
 }
 
 .sample_editor_toolbar {
@@ -14,9 +15,17 @@
     gap: var(--flex-gap) 1rem;
 }
 
+/* The play buttons take the height of the name, so they read as one row */
+.sample_editor_title {
+    display: flex;
+    gap: var(--flex-gap);
+    flex: 1 1 30rem;
+    min-width: 0;
+}
+
 .sample_name {
     font-size: 1.5rem;
-    flex: 1 1 20rem;
+    flex: 1 1 12rem;
     min-width: 0;
 }
 
@@ -33,6 +42,10 @@
     gap: 0.4rem;
     padding: 0.3rem 0.8rem;
     white-space: nowrap;
+}
+
+.sample_playback button {
+    min-width: 7rem;
 }
 
 .sample_playback_label {
@@ -58,27 +71,27 @@
     width: 16rem;
 }
 
-/* Properties and tools on the left, the equalizer on the right */
+/* Properties, tools, and the equalizer side by side, wrapping on narrow screens */
 .sample_editor_panels {
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: end;
-    gap: var(--flex-gap) 2rem;
-}
-
-.sample_editor_fields {
-    display: flex;
-    flex-direction: column;
     align-items: start;
-    gap: var(--flex-gap);
-    flex: 1 1 30rem;
+    gap: var(--flex-gap) 1.5rem;
 }
 
 .sample_properties {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    /* At most four columns, so the seven fields make two even rows on wide screens */
+    grid-template-columns: repeat(
+        auto-fill,
+        minmax(max(8rem, (100% - 3rem) / 4), 1fr)
+    );
     gap: var(--flex-gap) 1rem;
+    flex: 1 1 17rem;
+    max-width: 47rem;
+    /* Firefox sizes the auto-fill grid at its widest by default, which pushes the equalizer
+       onto its own line */
+    min-width: 0;
 }
 
 .info_field {
@@ -98,11 +111,12 @@
 .info_field input,
 .info_field select {
     text-align: end;
-    width: 8rem;
+    width: 100%;
 }
 
 .sample_tools {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    flex-direction: column;
     gap: var(--flex-gap);
+    flex: 0 0 auto;
 }

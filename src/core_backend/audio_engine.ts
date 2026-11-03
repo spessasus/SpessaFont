@@ -29,16 +29,30 @@ const STATUS_INTERVAL = 0.1;
 
 const dummy = BasicSoundBank.getSampleSoundBankFile();
 
+/**
+ * A chain of audio nodes, from the first to the last.
+ */
+export interface OutputInsert {
+    input: AudioNode;
+    output: AudioNode;
+}
+
 export class AudioEngine {
     private readonly currentSampleRate;
     private worklet: AudioWorkletNode | undefined;
     private audioChunksQueued = 0;
     private readonly maxChunksQueued;
     private lastStatusTime = 0;
+    private outputInsert: OutputInsert | undefined;
     public readonly context: AudioContext;
     public readonly processor: SpessaSynthProcessor;
     public readonly sequencer: SpessaSynthSequencer;
     public readonly analyser: AnalyserNode;
+    /**
+     * Where the synthesizer and the sample player connect. It goes to `targetNode`, through
+     * the output insert when there is one.
+     */
+    public readonly inputNode: GainNode;
     public readonly targetNode: GainNode;
     /**
      * Every event of the synthesizer. Subscribe here instead of setting `processor.onEventCall`,
@@ -75,6 +89,8 @@ export class AudioEngine {
         this.analyser.connect(this.context.destination);
         this.targetNode = new GainNode(context);
         this.targetNode.connect(this.analyser);
+        this.inputNode = new GainNode(context);
+        this.inputNode.connect(this.targetNode);
         const isDev = import.meta.env.MODE === "development";
         if (isDev) {
             logInfo("Dev mode on");
@@ -242,7 +258,7 @@ export class AudioEngine {
                 numberOfOutputs: 1
             }
         );
-        this.worklet.connect(this.targetNode);
+        this.worklet.connect(this.inputNode);
         // Disable for performance
 
         this.worklet.port.onmessage = (e: MessageEvent<number>) => {
@@ -250,6 +266,22 @@ export class AudioEngine {
             this.audioLoop();
         };
         this.audioLoop();
+    }
+
+    /**
+     * Puts a chain of nodes between the sound sources and the volume, so it changes everything
+     * that plays. Undefined takes it out. There is one at a time.
+     */
+    public setOutputInsert(insert: OutputInsert | undefined) {
+        this.inputNode.disconnect();
+        this.outputInsert?.output.disconnect(this.targetNode);
+        this.outputInsert = insert;
+        if (insert) {
+            this.inputNode.connect(insert.input);
+            insert.output.connect(this.targetNode);
+        } else {
+            this.inputNode.connect(this.targetNode);
+        }
     }
 
     public setVolume(volume: number) {
