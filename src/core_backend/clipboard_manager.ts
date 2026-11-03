@@ -23,6 +23,19 @@ export interface ClipboardContents {
 }
 
 /**
+ * The samples of one paste: every sample of the target bank (for unique names), and the
+ * copies made so far by their original.
+ */
+interface SampleCloneState {
+    all: BasicSample[];
+    clones: Map<BasicSample, BasicSample>;
+}
+
+function createSampleCloneState(document: BankDocument): SampleCloneState {
+    return { all: [...document.samples], clones: new Map() };
+}
+
+/**
  * Copied elements and modulators, shared by all tabs.
  * Observable with `subscribe` and `getSnapshot` for `useSyncExternalStore`.
  */
@@ -51,35 +64,31 @@ export class ClipboardManager {
     /**
      * Clones a sample (and its stereo pair) into new create actions.
      * @param oldSample the sample to clone
-     * @param alreadyCloned the bank's samples plus the ones cloned so far, used for unique names
+     * @param samples the bank's samples plus the ones cloned so far, used for unique names
      * @param actions receives the create actions
      * @param shouldDuplicate when false, an existing sample with the same name is reused instead
      */
     private addSample(
         oldSample: BasicSample,
-        alreadyCloned: BasicSample[],
+        samples: SampleCloneState,
         actions: HistoryAction[],
         shouldDuplicate = true
     ): BasicSample {
-        const names = new Set(alreadyCloned.map((s) => s.name));
-        const isNameTaken = names.has(oldSample.name);
+        const cloned = samples.clones.get(oldSample);
+        if (cloned) {
+            return cloned;
+        }
+        const names = new Set(samples.all.map((s) => s.name));
+        if (!shouldDuplicate) {
+            const existing = samples.all.find((s) => s.name === oldSample.name);
+            if (existing) {
+                return existing;
+            }
+        }
         const originalName = oldSample.name.slice(0, 37);
         let name = oldSample.name;
-        if (isNameTaken) {
-            if (!shouldDuplicate) {
-                const r = alreadyCloned.find((s) => s.name === oldSample.name);
-                if (!r) {
-                    throw new Error(
-                        "This should never happen. If it did, then congrats!"
-                    );
-                }
-                return r;
-            }
-            let count = 1;
-            while (names.has(name)) {
-                name = `${originalName}-${count}`;
-                count++;
-            }
+        for (let count = 1; names.has(name); count++) {
+            name = `${originalName}-${count}`;
         }
         const newSample = new BasicSample(
             name,
@@ -99,17 +108,18 @@ export class ClipboardManager {
             );
         }
         actions.push(new CreateSampleAction(newSample));
-        alreadyCloned.push(newSample);
-        if (oldSample.linkedSample) {
-            const newLinked = this.addSample(
-                oldSample.linkedSample,
-                alreadyCloned,
-                actions,
-                false
-            );
-            // relink cloned samples
-            newLinked.unlinkSample();
-            newSample.setLinkedSample(newLinked, oldSample.sampleType);
+        samples.all.push(newSample);
+        samples.clones.set(oldSample, newSample);
+        const linked = oldSample.linkedSample;
+        if (linked) {
+            // The pair is always cloned together. Reusing a partner that is already in the
+            // bank would relink it, outside of undo. The second of the two does the linking.
+            const newLinked = samples.clones.get(linked);
+            if (newLinked) {
+                newSample.setLinkedSample(newLinked, oldSample.sampleType);
+            } else {
+                this.addSample(linked, samples, actions);
+            }
         }
         return newSample;
     }
@@ -117,7 +127,7 @@ export class ClipboardManager {
     private addInstrument(
         oldInst: BasicInstrument,
         alreadyCloned: BasicInstrument[],
-        clonedSamples: BasicSample[],
+        clonedSamples: SampleCloneState,
         actions: HistoryAction[],
         shouldDuplicate = true
     ): BasicInstrument {
@@ -227,17 +237,38 @@ export class ClipboardManager {
      * Pasted presets move to the next free MIDI patch.
      */
     pastePresets(document: BankDocument) {
+        return this.clonePresets(document, this.presetClipboard);
+    }
+
+    /**
+     * Builds the actions that paste the copied instruments with their samples.
+     */
+    pasteInstruments(document: BankDocument) {
+        return this.cloneInstruments(document, this.instrumentClipboard);
+    }
+
+    /**
+     * Builds the actions that paste the copied samples.
+     */
+    pasteSamples(document: BankDocument) {
+        return this.cloneSamples(document, this.sampleClipboard);
+    }
+
+    /**
+     * Builds the actions that copy presets into the document (the same bank or another one),
+     * with their instruments and samples. Instruments and samples with a name the document
+     * already has are reused, so a duplicate in the same bank shares them.
+     * The copies move to the next free MIDI patch.
+     */
+    clonePresets(document: BankDocument, presets: Iterable<BasicPreset>) {
         const actions = new Array<HistoryAction>();
-        if (this.presetClipboard.size === 0) {
-            return actions;
-        }
         const clonedInstruments = [...document.instruments];
-        const clonedSamples = [...document.samples];
+        const clonedSamples = createSampleCloneState(document);
         const presetNumbers = new Set<string>();
         for (const p of document.presets) {
             presetNumbers.add(p.toMIDIString());
         }
-        for (const oldPreset of this.presetClipboard) {
+        for (const oldPreset of presets) {
             const patch: MIDIPatch = {
                 bankMSB: oldPreset.bankMSB,
                 bankLSB: oldPreset.bankLSB,
@@ -287,13 +318,17 @@ export class ClipboardManager {
     }
 
     /**
-     * Builds the actions that paste the copied instruments with their samples.
+     * Builds the actions that copy instruments into the document with their samples.
+     * Samples with a name the document already has are reused.
      */
-    pasteInstruments(document: BankDocument) {
+    cloneInstruments(
+        document: BankDocument,
+        instruments: Iterable<BasicInstrument>
+    ) {
         const clonedInstruments = [...document.instruments];
-        const clonedSamples = [...document.samples];
+        const clonedSamples = createSampleCloneState(document);
         const actions = new Array<HistoryAction>();
-        for (const oldInst of this.instrumentClipboard) {
+        for (const oldInst of instruments) {
             this.addInstrument(
                 oldInst,
                 clonedInstruments,
@@ -305,13 +340,13 @@ export class ClipboardManager {
     }
 
     /**
-     * Builds the actions that paste the copied samples.
+     * Builds the actions that copy samples into the document.
      */
-    pasteSamples(document: BankDocument) {
-        const alreadyCloned = [...document.samples];
+    cloneSamples(document: BankDocument, samples: Iterable<BasicSample>) {
+        const clonedSamples = createSampleCloneState(document);
         const actions = new Array<HistoryAction>();
-        for (const oldSample of this.sampleClipboard) {
-            this.addSample(oldSample, alreadyCloned, actions);
+        for (const oldSample of samples) {
+            this.addSample(oldSample, clonedSamples, actions);
         }
         return actions;
     }

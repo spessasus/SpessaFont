@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { SampleTypes } from "spessasynth_core";
 import {
     createTestSession,
     expectRoundTrip
@@ -41,6 +42,37 @@ describe("ClipboardManager", () => {
             "Saw 2",
             "Saw-1"
         ]);
+    });
+
+    it("duplicates a stereo half as a new pair and leaves the original pair alone", () => {
+        const session = createTestSession();
+        const [left, right] = session.document.samples;
+        left.setLinkedSample(right, SampleTypes.leftSample);
+        const clipboard = new ClipboardManager();
+
+        const { after } = expectRoundTrip(session, () =>
+            clipboard.cloneSamples(session.document, [left])
+        );
+
+        expect(left.linkedSample).toBe(right);
+        expect(right.linkedSample).toBe(left);
+        expect(after.samples).toHaveLength(4);
+        const copy = session.document.samples.find((s) => s.name === "Saw-1");
+        expect(copy?.linkedSample?.name).toBe("Saw 2-1");
+        expect(copy?.linkedSample?.sampleType).toBe(SampleTypes.rightSample);
+    });
+
+    it("duplicates an instrument and shares its samples", () => {
+        const session = createTestSession();
+        const clipboard = new ClipboardManager();
+        const [instrument] = session.document.instruments;
+
+        const { after } = expectRoundTrip(session, () =>
+            clipboard.cloneInstruments(session.document, [instrument])
+        );
+
+        expect(after.instruments).toHaveLength(3);
+        expect(after.samples).toHaveLength(2);
     });
 
     it("returns no actions when nothing is copied", () => {
