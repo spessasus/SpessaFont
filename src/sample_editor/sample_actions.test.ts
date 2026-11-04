@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EmptySample, SampleTypes } from "spessasynth_core";
+import { EmptySample, SampleTypes, SoundBankLoader } from "spessasynth_core";
 import {
     createTestSession,
     expectRoundTrip
@@ -9,6 +9,7 @@ import { SetSampleTypeAction } from "./set_sample_type_action.ts";
 import { DeleteSampleAction } from "./linked_instruments/delete_sample_action.ts";
 import { ReplaceSampleAudioAction } from "./replace_sample_audio_action.ts";
 import type { HistoryActionGroup } from "../core_backend/history.ts";
+import type { BankDocument } from "../core_backend/bank_document.ts";
 import {
     createReplaceAudioActions,
     createAutoLoopActions,
@@ -17,6 +18,17 @@ import {
     getExportChannels
 } from "./sample_audio.ts";
 import { FLAT_EQUALIZER } from "./equalizer/equalizer.ts";
+
+/**
+ * Adds a mono sample with a little audio, so a test has a third sample to link.
+ */
+function addSample(document: BankDocument, name: string) {
+    const sample = new EmptySample();
+    sample.name = name;
+    sample.setAudioData(new Float32Array(16), 44_100);
+    document.addSample(sample);
+    return sample;
+}
 
 describe("EditSampleAction", () => {
     it("changes a sample property", () => {
@@ -31,6 +43,65 @@ describe("EditSampleAction", () => {
 });
 
 describe("SetSampleTypeAction", () => {
+    it("swaps the sides of a linked pair, and undo swaps them back", () => {
+        const session = createTestSession();
+        const [left, right] = session.document.samples;
+        left.setLinkedSample(right, SampleTypes.leftSample);
+
+        // Ends with the swap done, after checking that undo and redo restore the same bank
+        expectRoundTrip(session, [
+            new SetSampleTypeAction(left, {
+                linkedSample: right,
+                type: SampleTypes.rightSample
+            })
+        ]);
+        expect(left.sampleType).toBe(SampleTypes.rightSample);
+        expect(right.sampleType).toBe(SampleTypes.leftSample);
+        session.history.undo();
+        expect(left.sampleType).toBe(SampleTypes.leftSample);
+        expect(right.linkedSample).toBe(left);
+    });
+
+    it("moves a link to another sample without leaving a half link", () => {
+        const session = createTestSession();
+        const [a, b] = session.document.samples;
+        const c = addSample(session.document, "C");
+        a.setLinkedSample(b, SampleTypes.leftSample);
+
+        session.history.do([
+            new SetSampleTypeAction(a, {
+                linkedSample: c,
+                type: SampleTypes.leftSample
+            })
+        ]);
+        expect(a.linkedSample).toBe(c);
+        expect(c.linkedSample).toBe(a);
+        expect(b.linkedSample).toBeUndefined();
+        expect(b.sampleType).toBe(SampleTypes.monoSample);
+
+        session.history.undo();
+        expect(a.linkedSample).toBe(b);
+        expect(b.linkedSample).toBe(a);
+        expect(c.linkedSample).toBeUndefined();
+        expect(c.sampleType).toBe(SampleTypes.monoSample);
+    });
+
+    it("restores a ROM type on undo instead of mono", () => {
+        const session = createTestSession();
+        const [sample] = session.document.samples;
+        sample.sampleType = SampleTypes.romMonoSample;
+
+        session.history.do([
+            new SetSampleTypeAction(sample, {
+                linkedSample: undefined,
+                type: SampleTypes.monoSample
+            })
+        ]);
+        session.history.undo();
+
+        expect(sample.sampleType).toBe(SampleTypes.romMonoSample);
+    });
+
     it("links two mono samples as a stereo pair", () => {
         const session = createTestSession();
         const [left, right] = session.document.samples;
@@ -83,16 +154,53 @@ describe("DeleteSampleAction", () => {
         expect(undoFocus).toBe(unused);
     });
 
-    it("keeps the stereo link of a deleted sample so undo restores the pair", () => {
+    it("makes the remaining half mono, and undo restores the pair", () => {
         const session = createTestSession();
         const [left, right] = session.document.samples;
         left.setLinkedSample(right, SampleTypes.leftSample);
 
         session.history.do([new DeleteSampleAction(left)]);
-        expect(right.linkedSample).toBe(left);
+        expect(right.linkedSample).toBeUndefined();
+        expect(right.sampleType).toBe(SampleTypes.monoSample);
 
         session.history.undo();
         expect(left.linkedSample).toBe(right);
+        expect(right.linkedSample).toBe(left);
+        expect(left.sampleType).toBe(SampleTypes.leftSample);
+        expect(right.sampleType).toBe(SampleTypes.rightSample);
+
+        session.history.redo();
+        expect(right.linkedSample).toBeUndefined();
+    });
+
+    it("saves the remaining half without a link to another sample", () => {
+        const session = createTestSession();
+        const { bank } = session.document;
+        // Sample 0 is where a broken link used to point after saving
+        const left = addSample(session.document, "X left");
+        const right = addSample(session.document, "X right");
+        left.setLinkedSample(right, SampleTypes.leftSample);
+        session.history.do([new DeleteSampleAction(right)]);
+
+        const loaded = SoundBankLoader.fromArrayBuffer(bank.writeSF2());
+        for (const sample of loaded.samples) {
+            expect(sample.linkedSample, sample.name).toBeUndefined();
+        }
+    });
+
+    it("deletes both halves of a pair in one group and restores them", () => {
+        const session = createTestSession();
+        const [left, right] = session.document.samples;
+        left.setLinkedSample(right, SampleTypes.leftSample);
+
+        session.history.do([
+            new DeleteSampleAction(left),
+            new DeleteSampleAction(right)
+        ]);
+        session.history.undo();
+
+        expect(left.linkedSample).toBe(right);
+        expect(right.linkedSample).toBe(left);
     });
 });
 
