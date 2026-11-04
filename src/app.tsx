@@ -121,6 +121,7 @@ export function App() {
                 session={activeSession}
                 setView={setActiveView}
                 onToggleKeyboard={() => setIsKeyboardShown((shown) => !shown)}
+                isEditorCovered={areSettingsShown}
             />
             <div className={"app_body"}>
                 <TabList

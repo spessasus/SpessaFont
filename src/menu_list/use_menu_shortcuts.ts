@@ -1,28 +1,20 @@
 import type { BankEntity } from "../core_backend/bank_view.ts";
 import { useEventListener } from "../hooks/use_event_listener.ts";
 import { useSelectionCommands } from "./use_selection_commands.ts";
-
-/**
- * Keys typed into a field belong to the field, not to the element list.
- */
-function isTypingTarget(target: EventTarget | null) {
-    return (
-        target instanceof HTMLElement &&
-        (target.isContentEditable ||
-            target instanceof HTMLInputElement ||
-            target instanceof HTMLTextAreaElement ||
-            target instanceof HTMLSelectElement)
-    );
-}
+import { isEditorShortcut } from "../utils/is_editor_shortcut.ts";
 
 /**
  * Delete removes the selection (except what is still used), Ctrl+C copies the selection,
  * Ctrl+X cuts it, and Ctrl+V pastes what the clipboard holds.
+ * Nothing runs while the editor is covered (by the settings), as its changes would be out of sight.
  */
-export function useMenuShortcuts(selection: ReadonlySet<BankEntity>) {
+export function useMenuShortcuts(
+    selection: ReadonlySet<BankEntity>,
+    isCovered: boolean
+) {
     const commands = useSelectionCommands();
     useEventListener(document, "keydown", (e) => {
-        if (isTypingTarget(e.target)) {
+        if (isCovered || !isEditorShortcut(e)) {
             return;
         }
         if (e.key === "Delete") {

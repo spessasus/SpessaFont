@@ -100,7 +100,7 @@ export function BankEditor({
     return (
         <BankEditorContext value={context}>
             <div className={"main_content"} inert={isCovered}>
-                <MenuList view={view} />
+                <MenuList view={view} isCovered={isCovered} />
                 <div className={"main_content_window"}>
                     {/* A failing editor resets when another element is shown */}
                     <ErrorBoundary

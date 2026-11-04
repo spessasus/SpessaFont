@@ -11,6 +11,7 @@ import { useEventListener } from "../hooks/use_event_listener.ts";
 import { useBankCommands } from "./use_bank_commands.ts";
 import { FileMenu } from "./file_menu.tsx";
 import { EditMenu } from "./edit_menu.tsx";
+import { isEditorShortcut } from "../utils/is_editor_shortcut.ts";
 
 interface MenuBarProps {
     session: BankSession | undefined;
@@ -24,6 +25,10 @@ interface MenuBarProps {
     onOpenFile: () => void;
     onNewFile: () => void;
     onCloseFile: () => void;
+    /**
+     * Whether the settings cover the editor, which turns the editing shortcuts off.
+     */
+    isEditorCovered: boolean;
 }
 
 export function MenuBar({
@@ -34,14 +39,20 @@ export function MenuBar({
     onToggleKeyboard,
     onOpenFile,
     onNewFile,
-    onCloseFile
+    onCloseFile,
+    isEditorCovered
 }: MenuBarProps) {
     const { t } = useTranslation();
     const { undo, redo, save, removeUnusedElements, autoLinkSamples } =
         useBankCommands(session, setView);
 
     useEventListener(document, "keydown", (e) => {
-        if (!session || !(e.ctrlKey || e.metaKey)) {
+        if (
+            isEditorCovered ||
+            !session ||
+            !(e.ctrlKey || e.metaKey) ||
+            !isEditorShortcut(e)
+        ) {
             return;
         }
         switch (e.key) {
@@ -57,7 +68,8 @@ export function MenuBar({
             }
             case "s": {
                 e.preventDefault();
-                save("auto");
+                // Holding the keys would start a save for every repeat
+                if (!e.repeat) save("auto");
                 break;
             }
         }

@@ -25,9 +25,13 @@ import { useDragSource } from "../drag_and_drop/drag_context.ts";
 
 interface MenuListProps {
     view: BankEditView;
+    /**
+     * Whether the settings cover the editor, which turns the list shortcuts off.
+     */
+    isCovered: boolean;
 }
 
-export function MenuList({ view }: MenuListProps) {
+export function MenuList({ view, isCovered }: MenuListProps) {
     const { t } = useTranslation();
     const { session, setView } = useBankEditor();
     const samples = useBankSnapshot(session.store, (s) => s.samples);
@@ -50,7 +54,7 @@ export function MenuList({ view }: MenuListProps) {
     const selectedPresets = selectionOf(selection, isPreset);
     const selectedInstruments = selectionOf(selection, isInstrument);
     const selectedSamples = selectionOf(selection, isSample);
-    useMenuShortcuts(selection);
+    useMenuShortcuts(selection, isCovered);
     const getMenuEntries = useListMenu();
     const { openMenu } = useContextMenu();
     const startDrag = useDragSource();
