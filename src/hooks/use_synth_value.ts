@@ -1,17 +1,17 @@
 import { useSyncExternalStore } from "react";
-import type { SpessaSynthProcessor } from "spessasynth_core";
 import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
+import type { KeyboardChannelValues } from "../core_backend/keyboard_channel_store.ts";
 
 /**
- * Reads a value from the synthesizer and re-renders when it changes.
- * Any synth event re-reads it, and React skips the render when the value is the same, so `read`
- * must return a primitive.
+ * Reads a value of the keyboard's channel and re-renders when it changes.
+ * React skips the render when the value is the same, so `read` must return a primitive.
  */
 export function useSynthValue<T extends number | boolean | string>(
-    read: (processor: SpessaSynthProcessor) => T
+    read: (channel: KeyboardChannelValues) => T
 ) {
     const { audioEngine } = useAudioEngine();
-    return useSyncExternalStore(audioEngine.synthEvents.subscribe, () =>
-        read(audioEngine.processor)
+    const { keyboardChannel } = audioEngine;
+    return useSyncExternalStore(keyboardChannel.subscribe, () =>
+        read(keyboardChannel.getSnapshot())
     );
 }

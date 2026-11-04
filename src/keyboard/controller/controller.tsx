@@ -25,7 +25,7 @@ export function Controller({ cc, setCC, number }: ControllerProps) {
     const { audioEngine } = useAudioEngine();
     // The synth stores 14-bit values, the knob shows the 7-bit MSB
     const ccValue = useSynthValue(
-        (p) => p.midiChannels[KEYBOARD_TARGET_CHANNEL].midiControllers[cc] >> 7
+        (channel) => (channel.controllers[cc] ?? 0) >> 7
     );
     const valueLabel = t("keyboardLocale.controllerValue", { number });
 

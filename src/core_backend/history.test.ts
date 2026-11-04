@@ -26,9 +26,9 @@ function failingAction(): HistoryAction {
 }
 
 describe("HistoryManager", () => {
-    it("runs a group in order, records it and clears the synth cache once", () => {
+    it("runs a group in order, records it and publishes it once", () => {
         const session = createTestSession();
-        const clearCache = vi.spyOn(session.synth, "clearCache");
+        const commit = vi.spyOn(session.store, "commit");
         const log = new Array<string>();
 
         session.history.do([
@@ -38,17 +38,17 @@ describe("HistoryManager", () => {
 
         expect(log).toEqual(["do a", "do b"]);
         expect(session.history.canUndo).toBe(true);
-        expect(clearCache).toHaveBeenCalledTimes(1);
+        expect(commit).toHaveBeenCalledTimes(1);
     });
 
     it("ignores an empty group", () => {
         const session = createTestSession();
-        const clearCache = vi.spyOn(session.synth, "clearCache");
+        const commit = vi.spyOn(session.store, "commit");
 
         session.history.do([]);
 
         expect(session.history.canUndo).toBe(false);
-        expect(clearCache).not.toHaveBeenCalled();
+        expect(commit).not.toHaveBeenCalled();
     });
 
     it("undoes a group in reverse order and redoes it in the original order", () => {
@@ -88,12 +88,12 @@ describe("HistoryManager", () => {
 
     it("does nothing when there is nothing to undo or redo", () => {
         const session = createTestSession();
-        const clearCache = vi.spyOn(session.synth, "clearCache");
+        const commit = vi.spyOn(session.store, "commit");
 
         expect(session.history.undo()).toBeUndefined();
         expect(session.history.redo()).toBeUndefined();
 
-        expect(clearCache).not.toHaveBeenCalled();
+        expect(commit).not.toHaveBeenCalled();
     });
 
     it("undoes the completed actions of a failing group and does not record it", () => {

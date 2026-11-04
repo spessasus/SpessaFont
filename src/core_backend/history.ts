@@ -1,4 +1,3 @@
-import { BasicPreset } from "spessasynth_core";
 import { logInfo } from "../utils/core_utils.ts";
 import type { BankDocument } from "./bank_document.ts";
 import type { BankStore, HistoryState } from "./bank_store.ts";
@@ -17,25 +16,12 @@ export interface HistoryAction {
 export type HistoryActionGroup = HistoryAction[];
 
 /**
- * Anything whose cached voices must be dropped after the bank changes.
- */
-export interface VoiceCache {
-    clearCache(): void;
-
-    /**
-     * Also rebuilds the synthesizer's preset list, for changes to presets.
-     */
-    refreshPresets(): void;
-}
-
-/**
  * Runs, undoes and redoes groups of actions on one document,
- * then publishes the changes to the store and clears the synthesizer cache once per group.
+ * then publishes the changes to the store once per group.
  */
 export class HistoryManager {
     private readonly document: BankDocument;
     private readonly store: BankStore;
-    private readonly voiceCache: VoiceCache;
     private readonly done = new Array<HistoryActionGroup>();
     private readonly undone = new Array<HistoryActionGroup>();
 
@@ -44,14 +30,9 @@ export class HistoryManager {
      */
     private savedPosition: number | undefined = 0;
 
-    public constructor(
-        document: BankDocument,
-        store: BankStore,
-        voiceCache: VoiceCache
-    ) {
+    public constructor(document: BankDocument, store: BankStore) {
         this.document = document;
         this.store = store;
-        this.voiceCache = voiceCache;
     }
 
     private run(group: HistoryActionGroup, changes: ChangeSet) {
@@ -72,14 +53,6 @@ export class HistoryManager {
     }
 
     private commit(changes: ChangeSet) {
-        const isPresetChanged =
-            changes.lists.has("presets") ||
-            [...changes.entities].some((e) => e instanceof BasicPreset);
-        if (isPresetChanged) {
-            this.voiceCache.refreshPresets();
-        } else {
-            this.voiceCache.clearCache();
-        }
         this.store.commit(changes, this.state);
         return changes.focus;
     }

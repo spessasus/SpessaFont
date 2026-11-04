@@ -12,6 +12,7 @@ import { BankDocument } from "../core_backend/bank_document.ts";
 import type { BankViews } from "../core_backend/entity_views.ts";
 import { ChangeSet } from "../core_backend/change_set.ts";
 import type { HistoryActionGroup } from "../core_backend/history.ts";
+import type { SynthHost } from "../core_backend/synth_binding.ts";
 
 /**
  * Suffix appended to every element of the second copy of the sample bank,
@@ -20,14 +21,55 @@ import type { HistoryActionGroup } from "../core_backend/history.ts";
 export const SECOND_COPY_SUFFIX = " 2";
 
 /**
+ * `AudioEngine`'s bank handling on a bare processor, since the engine needs Web Audio.
+ */
+export class ProcessorHost implements SynthHost {
+    public readonly processor = new SpessaSynthProcessor(44_100);
+    public refreshCount = 0;
+    public clearCount = 0;
+
+    public isBankAttached(bank: BasicSoundBank) {
+        return (
+            this.processor.soundBankManager.soundBankList[0]?.soundBank === bank
+        );
+    }
+
+    public attachBank(bank: BasicSoundBank) {
+        this.processor.soundBankManager.addSoundBank(bank, "main");
+        this.refreshPresets();
+    }
+
+    public detachBank(bank: BasicSoundBank) {
+        if (!this.isBankAttached(bank)) {
+            return;
+        }
+        this.processor.soundBankManager.addSoundBank(
+            SoundBankLoader.fromArrayBuffer(
+                BasicSoundBank.getSampleSoundBankFile()
+            ),
+            "main"
+        );
+        this.refreshPresets();
+    }
+
+    public clearCache() {
+        this.clearCount++;
+        this.processor.clearCache();
+    }
+
+    public refreshPresets() {
+        this.refreshCount++;
+        this.processor.refreshPresets();
+    }
+}
+
+/**
  * Creates a session holding two copies of the spessasynth_core sample bank.
  * The result has two presets, two instruments and two mono samples,
  * which is enough to exercise linking, deleting and reordering.
- * Pass a processor to check what the synthesizer sees.
+ * Pass a host to check what the synthesizer sees.
  */
-export function createTestSession(
-    processor = new SpessaSynthProcessor(44_100)
-) {
+export function createTestSession(host: SynthHost = new ProcessorHost()) {
     const { bank } = BankDocument.createEmpty();
     const secondCopy = SoundBankLoader.fromArrayBuffer(
         BasicSoundBank.getSampleSoundBankFile()
@@ -44,13 +86,7 @@ export function createTestSession(
         bank.clonePreset(preset);
     }
     // The session is made after the bank is complete, so its store starts from the final bank
-    return new BankSession(
-        {
-            processor,
-            refreshPresets: () => processor.refreshPresets()
-        },
-        bank
-    );
+    return new BankSession(host, bank);
 }
 
 /**

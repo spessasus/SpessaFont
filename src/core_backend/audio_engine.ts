@@ -17,6 +17,8 @@ import type { BankEntity } from "./bank_view.ts";
 import { createPreviewPreset } from "./preview_preset.ts";
 import { ListenerSet } from "./listener_set.ts";
 import { EngineStatusStore } from "./engine_status.ts";
+import { KeyboardChannelStore } from "./keyboard_channel_store.ts";
+import type { SynthHost } from "./synth_binding.ts";
 
 // audio worklet processor operates at that
 const BLOCK_SIZE = 128;
@@ -27,7 +29,10 @@ const MAX_RENDERED_AT_ONCE = 2;
  */
 const STATUS_INTERVAL = 0.1;
 
-const dummy = BasicSoundBank.getSampleSoundBankFile();
+/**
+ * The built-in bank the synthesizer plays when no tab's bank is attached.
+ */
+const SAMPLE_BANK_FILE = BasicSoundBank.getSampleSoundBankFile();
 
 /**
  * A chain of audio nodes, from the first to the last.
@@ -37,7 +42,7 @@ export interface OutputInsert {
     output: AudioNode;
 }
 
-export class AudioEngine {
+export class AudioEngine implements SynthHost {
     private readonly currentSampleRate;
     private worklet: AudioWorkletNode | undefined;
     private audioChunksQueued = 0;
@@ -51,9 +56,10 @@ export class AudioEngine {
         { target: BankEntity | undefined; bank: BasicSoundBank } | undefined;
     private isPreviewStale = false;
     private started: Promise<void> | undefined;
+    private isChannelRefreshQueued = false;
+    private readonly processor: SpessaSynthProcessor;
+    private readonly sequencer: SpessaSynthSequencer;
     public readonly context: AudioContext;
-    public readonly processor: SpessaSynthProcessor;
-    public readonly sequencer: SpessaSynthSequencer;
     public readonly analyser: AnalyserNode;
     /**
      * Where the synthesizer and the sample player connect. It goes to `targetNode`, through
@@ -62,14 +68,17 @@ export class AudioEngine {
     public readonly inputNode: GainNode;
     public readonly targetNode: GainNode;
     /**
-     * Every event of the synthesizer. Subscribe here instead of setting `processor.onEventCall`,
-     * which only holds one callback.
+     * Every event of the synthesizer.
      */
     public readonly synthEvents = new ListenerSet<SynthesizerEventCallback>();
     /**
      * Voice count and sequencer state, refreshed from the render loop.
      */
     public readonly status = new EngineStatusStore();
+    /**
+     * The keyboard channel's controllers, pitch wheel and pressure, refreshed after synth events.
+     */
+    public readonly keyboardChannel = new KeyboardChannelStore();
 
     constructor(context: AudioContext, initialSettings: SavedSettingsType) {
         this.context = context;
@@ -84,6 +93,7 @@ export class AudioEngine {
                 this.isPreviewStale = true;
             }
             this.synthEvents.emit(e);
+            this.queueChannelRefresh();
         };
         this.maxChunksQueued = Math.min(
             Math.max(
@@ -92,10 +102,8 @@ export class AudioEngine {
             ),
             32
         );
-        this.processor.soundBankManager.addSoundBank(
-            SoundBankLoader.fromArrayBuffer(dummy.slice()),
-            "main"
-        );
+        this.addSampleBank();
+        this.refreshKeyboardChannel();
 
         this.sequencer = new SpessaSynthSequencer(this.processor);
         this.sequencer.loopCount = Infinity;
@@ -136,6 +144,36 @@ export class AudioEngine {
             this.audioLoop();
         };
         this.audioLoop();
+    }
+
+    private addSampleBank() {
+        this.processor.soundBankManager.addSoundBank(
+            SoundBankLoader.fromArrayBuffer(SAMPLE_BANK_FILE.slice()),
+            "main"
+        );
+    }
+
+    /**
+     * A render or a message can fire many events at once, so the channel is read once after them.
+     */
+    private queueChannelRefresh() {
+        if (this.isChannelRefreshQueued) {
+            return;
+        }
+        this.isChannelRefreshQueued = true;
+        queueMicrotask(() => {
+            this.isChannelRefreshQueued = false;
+            this.refreshKeyboardChannel();
+        });
+    }
+
+    private refreshKeyboardChannel() {
+        const channel = this.processor.midiChannels[KEYBOARD_TARGET_CHANNEL];
+        this.keyboardChannel.update({
+            controllers: Array.from(channel.midiControllers),
+            pitchWheel: channel.midiParameters.pitchWheel,
+            pressure: channel.midiParameters.pressure
+        });
     }
 
     private applyPreviewTarget() {
@@ -376,6 +414,55 @@ export class AudioEngine {
      */
     public releaseAllNotes() {
         this.processor.stopAll(false);
+    }
+
+    /**
+     * Cuts every note at once, the MIDI panic.
+     */
+    public stopAllNotes() {
+        this.processor.stopAll(true);
+    }
+
+    /**
+     * Cuts every note and puts every channel and system parameter back to its default.
+     */
+    public resetSynthesizer() {
+        this.processor.stopAll(true);
+        this.processor.reset();
+    }
+
+    public pitchWheel(channel: number, value: number) {
+        this.processor.pitchWheel(channel, value);
+    }
+
+    public channelPressure(channel: number, value: number) {
+        this.processor.channelPressure(channel, value);
+    }
+
+    public isBankAttached(bank: BasicSoundBank) {
+        return (
+            this.processor.soundBankManager.soundBankList[0]?.soundBank === bank
+        );
+    }
+
+    /**
+     * Channels keep the preset they resolved before, so the preset list is rebuilt after it.
+     */
+    public attachBank(bank: BasicSoundBank) {
+        this.processor.soundBankManager.addSoundBank(bank, "main");
+        this.refreshPresets();
+    }
+
+    public detachBank(bank: BasicSoundBank) {
+        if (!this.isBankAttached(bank)) {
+            return;
+        }
+        this.addSampleBank();
+        this.refreshPresets();
+    }
+
+    public clearCache() {
+        this.processor.clearCache();
     }
 
     /**

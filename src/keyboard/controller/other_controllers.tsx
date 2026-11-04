@@ -8,22 +8,13 @@ const PITCH_WHEEL_CENTER = 8192;
 
 export function OtherControllers() {
     const { t } = useTranslation();
-    const {
-        audioEngine: { processor }
-    } = useAudioEngine();
-    const pitchWheel = useSynthValue(
-        (p) => p.midiChannels[KEYBOARD_TARGET_CHANNEL].midiParameters.pitchWheel
-    );
-    const pressure = useSynthValue(
-        (p) => p.midiChannels[KEYBOARD_TARGET_CHANNEL].midiParameters.pressure
-    );
+    const { audioEngine } = useAudioEngine();
+    const pitchWheel = useSynthValue((channel) => channel.pitchWheel);
+    const pressure = useSynthValue((channel) => channel.pressure);
 
-    const handleMIDIPanic = () => processor.stopAll(true);
+    const handleMIDIPanic = () => audioEngine.stopAllNotes();
 
-    const handleSystemReset = () => {
-        processor.stopAll(true);
-        processor.reset();
-    };
+    const handleSystemReset = () => audioEngine.resetSynthesizer();
 
     return (
         <div className={"controller_row"}>
@@ -54,7 +45,7 @@ export function OtherControllers() {
                     min={0}
                     // The synth event updates the slider
                     onChange={(v) =>
-                        processor.pitchWheel(
+                        audioEngine.pitchWheel(
                             KEYBOARD_TARGET_CHANNEL,
                             Math.floor(v)
                         )
@@ -71,7 +62,7 @@ export function OtherControllers() {
                     max={127}
                     min={0}
                     onChange={(v) =>
-                        processor.channelPressure(
+                        audioEngine.channelPressure(
                             KEYBOARD_TARGET_CHANNEL,
                             Math.floor(v)
                         )

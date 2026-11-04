@@ -30,6 +30,7 @@ export class BankSession {
     private saveHandle: SaveFileHandle | undefined;
     private writeFormat: WriteFormat;
     private isClosed = false;
+    private readonly unsubscribeSynth: () => void;
     public readonly id = nextSessionId++;
     public readonly document: BankDocument;
     public readonly store: BankStore;
@@ -46,12 +47,16 @@ export class BankSession {
             : BankDocument.createEmpty();
         this.writeFormat = getInitialWriteFormat(this.document.bank);
         this.store = new BankStore(this.document);
-        this.synth = new SynthBinding(synth, this.document.bank);
-        this.history = new HistoryManager(
-            this.document,
-            this.store,
-            this.synth
+        this.synth = new SynthBinding(
+            synth,
+            this.document.bank,
+            this.store.getSnapshot().views
         );
+        // Every commit reaches the synthesizer, including ones made outside the history
+        this.unsubscribeSynth = this.store.subscribe(() => {
+            this.synth.update(this.store.getSnapshot().views);
+        });
+        this.history = new HistoryManager(this.document, this.store);
     }
 
     /**
@@ -108,6 +113,7 @@ export class BankSession {
             return;
         }
         this.isClosed = true;
+        this.unsubscribeSynth();
         this.synth.detach();
         this.document.bank.destroySoundBank();
     }
