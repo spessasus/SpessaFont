@@ -1,3 +1,4 @@
+import { BasicPreset } from "spessasynth_core";
 import { logInfo } from "../utils/core_utils.ts";
 import type { BankDocument } from "./bank_document.ts";
 import type { BankStore, HistoryState } from "./bank_store.ts";
@@ -20,6 +21,11 @@ export type HistoryActionGroup = HistoryAction[];
  */
 export interface VoiceCache {
     clearCache(): void;
+
+    /**
+     * Also rebuilds the synthesizer's preset list, for changes to presets.
+     */
+    refreshPresets(): void;
 }
 
 /**
@@ -66,7 +72,14 @@ export class HistoryManager {
     }
 
     private commit(changes: ChangeSet) {
-        this.voiceCache.clearCache();
+        const isPresetChanged =
+            changes.lists.has("presets") ||
+            [...changes.entities].some((e) => e instanceof BasicPreset);
+        if (isPresetChanged) {
+            this.voiceCache.refreshPresets();
+        } else {
+            this.voiceCache.clearCache();
+        }
         this.store.commit(changes, this.state);
         return changes.focus;
     }

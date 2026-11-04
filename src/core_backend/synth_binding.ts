@@ -62,4 +62,16 @@ export class SynthBinding implements VoiceCache {
     public clearCache() {
         this.host.processor.clearCache();
     }
+
+    /**
+     * After presets were added, removed or renumbered, or their zones replaced. Core's preset
+     * list keeps each preset's zone array from when it was built.
+     */
+    public refreshPresets() {
+        if (this.isAttached) {
+            this.host.refreshPresets();
+        } else {
+            this.host.processor.clearCache();
+        }
+    }
 }
