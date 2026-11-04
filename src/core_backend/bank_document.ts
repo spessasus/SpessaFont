@@ -15,6 +15,7 @@ import { presetSorter } from "../utils/preset_sorter.ts";
 import { nameSorter } from "../utils/name_sorter.ts";
 import { SOFTWARE_NAME } from "../utils/software_name.ts";
 import type { BankEntity } from "./bank_view.ts";
+import { getObjectId } from "../utils/object_id.ts";
 
 const SAMPLE_BANK_FILE = BasicSoundBank.getSampleSoundBankFile();
 
@@ -108,6 +109,22 @@ export class BankDocument {
             return this.instruments.includes(entity);
         }
         return entity instanceof BasicSample && this.samples.includes(entity);
+    }
+
+    /**
+     * Finds a preset by its view id, or undefined when it is not in the bank (any more).
+     * For event handlers, which build actions from the core objects.
+     */
+    public getPreset(id: number) {
+        return this.presets.find((p) => getObjectId(p) === id);
+    }
+
+    public getInstrument(id: number) {
+        return this.instruments.find((i) => getObjectId(i) === id);
+    }
+
+    public getSample(id: number) {
+        return this.samples.find((s) => getObjectId(s) === id);
     }
 
     public getBankName(unnamed: string) {

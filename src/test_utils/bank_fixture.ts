@@ -8,6 +8,9 @@ import {
 } from "spessasynth_core";
 import { expect } from "vitest";
 import { BankSession } from "../core_backend/bank_session.ts";
+import { BankDocument } from "../core_backend/bank_document.ts";
+import type { BankViews } from "../core_backend/entity_views.ts";
+import { ChangeSet } from "../core_backend/change_set.ts";
 import type { HistoryActionGroup } from "../core_backend/history.ts";
 
 /**
@@ -25,12 +28,7 @@ export const SECOND_COPY_SUFFIX = " 2";
 export function createTestSession(
     processor = new SpessaSynthProcessor(44_100)
 ) {
-    const session = new BankSession({
-        processor,
-        refreshPresets: () => processor.refreshPresets()
-    });
-    const bank = session.document.bank;
-
+    const { bank } = BankDocument.createEmpty();
     const secondCopy = SoundBankLoader.fromArrayBuffer(
         BasicSoundBank.getSampleSoundBankFile()
     );
@@ -45,8 +43,51 @@ export function createTestSession(
     for (const preset of secondCopy.presets) {
         bank.clonePreset(preset);
     }
-    session.document.sortElements();
-    return session;
+    // The session is made after the bank is complete, so its store starts from the final bank
+    return new BankSession(
+        {
+            processor,
+            refreshPresets: () => processor.refreshPresets()
+        },
+        bank
+    );
+}
+
+/**
+ * Publishes changes a test made to the bank directly (outside the history) while setting up,
+ * so the store's views start from the set-up bank.
+ */
+export function publishSetUp(session: BankSession) {
+    const changes = new ChangeSet();
+    const { presets, instruments, samples } = session.document;
+    changes.touch(...presets, ...instruments, ...samples);
+    changes.touchList("presets");
+    changes.touchList("instruments");
+    changes.touchList("samples");
+    changes.touchBankInfo();
+    session.store.commit(changes, session.store.getSnapshot().history);
+}
+
+/**
+ * A map's insertion order depends on the edit history and means nothing, the orders do.
+ */
+function normalizeViews(views: BankViews) {
+    return {
+        ...views,
+        presets: Object.fromEntries(views.presets),
+        instruments: Object.fromEntries(views.instruments),
+        samples: Object.fromEntries(views.samples)
+    };
+}
+
+/**
+ * Checks that the store's views, updated commit by commit, equal views built from scratch.
+ * An action that forgets to touch something it changed fails here.
+ */
+export function expectViewsUpToDate(session: BankSession) {
+    expect(normalizeViews(session.store.getSnapshot().views)).toEqual(
+        normalizeViews(session.store.buildFreshViews())
+    );
 }
 
 function sourceSnapshot(source: ModulatorSource) {
@@ -132,6 +173,7 @@ export function snapshotBank(bank: BasicSoundBank) {
  * original bank and redo restores the edited one.
  * Returns both snapshots so the caller can assert what the edit changed,
  * and the focus hint of each step.
+ * The store's views are checked against a fresh build after each step.
  * Pass a function when building the actions changes the bank already,
  * for example because new zones link their children on creation.
  */
@@ -145,11 +187,14 @@ export function expectRoundTrip(
     const doFocus = session.history.do(group);
     const after = snapshotBank(bank);
     expect(after).not.toEqual(before);
+    expectViewsUpToDate(session);
 
     const undoFocus = session.history.undo();
     expect(snapshotBank(bank)).toEqual(before);
+    expectViewsUpToDate(session);
 
     const redoFocus = session.history.redo();
     expect(snapshotBank(bank)).toEqual(after);
+    expectViewsUpToDate(session);
     return { before, after, doFocus, undoFocus, redoFocus };
 }

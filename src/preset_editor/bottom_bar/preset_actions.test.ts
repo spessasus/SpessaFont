@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
     createTestSession,
-    expectRoundTrip
+    expectRoundTrip,
+    publishSetUp
 } from "../../test_utils/bank_fixture.ts";
 import { EditPresetAction } from "./edit_preset_action.ts";
 import { DeletePresetAction } from "./delete_preset_action.ts";
@@ -22,6 +23,7 @@ describe("EditPresetAction", () => {
         const [first, second] = session.document.presets;
         second.program = 1;
         session.document.sortPresets();
+        publishSetUp(session);
 
         expectRoundTrip(session, [
             new EditPresetAction(first, "program", first.program, 2)

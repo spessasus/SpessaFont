@@ -105,7 +105,7 @@ export class ConvertSamplesAction implements HistoryAction {
     public do(document: BankDocument, changes: ChangeSet) {
         for (const { sample, after } of this.changes) {
             applySample(sample, after);
-            changes.touch(sample);
+            changes.touchSampleAudio(sample);
         }
         document.bank.soundBankInfo.version = { ...this.versionAfter };
         changes.touchBankInfo();
@@ -114,7 +114,7 @@ export class ConvertSamplesAction implements HistoryAction {
     public undo(document: BankDocument, changes: ChangeSet) {
         for (const { sample, before } of this.changes) {
             applySample(sample, before);
-            changes.touch(sample);
+            changes.touchSampleAudio(sample);
         }
         document.bank.soundBankInfo.version = { ...this.versionBefore };
         changes.touchBankInfo();

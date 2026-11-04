@@ -5,6 +5,7 @@ import type {
     Modulator,
     SoundBankInfoData
 } from "spessasynth_core";
+import { type BankViews, updateBankViews } from "./entity_views.ts";
 import type { BankDocument } from "./bank_document.ts";
 import type { BankEntity } from "./bank_view.ts";
 import type { ChangeSet } from "./change_set.ts";
@@ -31,6 +32,11 @@ export interface BankSnapshot {
     readonly info: Readonly<SoundBankInfoData>;
     readonly defaultModulators: readonly Modulator[];
     readonly history: HistoryState;
+    /**
+     * Plain, frozen copies of the elements. They replace the core-object fields above as the
+     * UI moves to them (issue #27).
+     */
+    readonly views: BankViews;
 }
 
 /**
@@ -41,6 +47,9 @@ export class BankStore {
     private readonly document: BankDocument;
     private readonly listeners = new Set<() => void>();
     private readonly entityRevisions = new WeakMap<BankEntity, number>();
+    private readonly audioRevisions = new WeakMap<BasicSample, number>();
+    private readonly getAudioRevision = (sample: BasicSample) =>
+        this.audioRevisions.get(sample) ?? 0;
     private snapshot: BankSnapshot;
 
     public readonly subscribe = (listener: () => void) => {
@@ -62,7 +71,8 @@ export class BankStore {
             samples: [...bank.samples],
             info: { ...bank.soundBankInfo },
             defaultModulators: [...bank.defaultModulators],
-            history: { canUndo: false, canRedo: false, isDirty: false }
+            history: { canUndo: false, canRedo: false, isDirty: false },
+            views: updateBankViews(bank, this.getAudioRevision)
         };
     }
 
@@ -83,6 +93,14 @@ export class BankStore {
     }
 
     /**
+     * The views built from scratch from the current bank, for tests that compare them with the
+     * incrementally updated ones.
+     */
+    public buildFreshViews() {
+        return updateBankViews(this.document.bank, this.getAudioRevision);
+    }
+
+    /**
      * Returns the revision at which the entity or one of its children last changed, 0 if never.
      */
     public getEntityRevision(entity: BankEntity) {
@@ -99,6 +117,9 @@ export class BankStore {
 
         for (const entity of changes.entities) {
             this.bumpWithParents(entity, revision);
+        }
+        for (const sample of changes.audio) {
+            this.audioRevisions.set(sample, revision);
         }
 
         const isHistoryChanged =
@@ -123,7 +144,13 @@ export class BankStore {
             defaultModulators: changes.hasBankInfoChanged
                 ? [...bank.defaultModulators]
                 : previous.defaultModulators,
-            history: isHistoryChanged ? { ...history } : previous.history
+            history: isHistoryChanged ? { ...history } : previous.history,
+            views: updateBankViews(
+                bank,
+                this.getAudioRevision,
+                previous.views,
+                changes
+            )
         };
         for (const listener of this.listeners) {
             listener();

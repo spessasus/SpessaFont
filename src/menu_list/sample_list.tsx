@@ -1,3 +1,4 @@
+import { getObjectId } from "../utils/object_id.ts";
 import { BasicSample } from "spessasynth_core";
 import type { MouseEvent, PointerEvent } from "react";
 import { useTranslation } from "react-i18next";
@@ -98,7 +99,7 @@ export function SampleList({
                     focusedItem={view instanceof BasicSample ? view : undefined}
                     renderItem={(sample) => (
                         <SampleDisplay
-                            sample={sample}
+                            sampleId={getObjectId(sample)}
                             isSelected={selected.has(sample)}
                             onClick={(e) => onItemClick(sample, e)}
                             onContextMenu={(e) => onItemContextMenu(sample, e)}

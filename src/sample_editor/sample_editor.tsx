@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { WaveView } from "./wave_view/wave_view.tsx";
 import { WaitingInput } from "../fancy_inputs/waiting_input/waiting_input.tsx";
 import { LinkedInstruments } from "./linked_instruments/linked_instruments.tsx";
+import { getObjectId } from "../utils/object_id.ts";
 import { SampleTools } from "./sample_tools.tsx";
 import { SampleProperties } from "./sample_properties.tsx";
 import { SamplePlayback } from "./sample_playback.tsx";
@@ -137,7 +138,7 @@ export function SampleEditor({
                     }}
                 />
             </div>
-            <LinkedInstruments sample={sample} />
+            <LinkedInstruments sampleId={getObjectId(sample)} />
         </div>
     );
 }

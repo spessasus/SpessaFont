@@ -1,10 +1,14 @@
 import "./sample_display.css";
 import type { MouseEvent, PointerEvent } from "react";
-import type { BasicSample } from "spessasynth_core";
 import { SpeakerIcon } from "../../utils/icons/player_icons.tsx";
+import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
+import { useSampleView } from "../../hooks/use_sample_view.ts";
 
 interface SampleDisplayProps {
-    sample: BasicSample;
+    /**
+     * The sample's view id.
+     */
+    sampleId: number;
     isSelected: boolean;
     onClick: (event: MouseEvent) => void;
     onDoubleClick?: () => void;
@@ -16,13 +20,19 @@ interface SampleDisplayProps {
 }
 
 export function SampleDisplay({
-    sample,
+    sampleId,
     isSelected,
     onClick,
     onDoubleClick,
     onContextMenu,
     onPointerDown
 }: SampleDisplayProps) {
+    const { session } = useBankEditor();
+    const sample = useSampleView(session.store, sampleId);
+    // The row can render once more after its sample was removed, before the list updates
+    if (!sample) {
+        return null;
+    }
     return (
         <button
             type={"button"}

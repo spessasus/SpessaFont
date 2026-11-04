@@ -87,7 +87,7 @@ export function InstrumentDisplay({
                         <SampleDisplay
                             key={getObjectId(zone)}
                             isSelected={view === zone.sample}
-                            sample={zone.sample}
+                            sampleId={getObjectId(zone.sample)}
                             onClick={() => setView(zone.sample)}
                         />
                     ))}

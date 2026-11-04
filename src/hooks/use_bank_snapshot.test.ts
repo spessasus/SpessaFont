@@ -8,6 +8,10 @@ import { SetGeneratorAction } from "../generator_table/cell/set_generator_action
 import { useBankSnapshot } from "./use_bank_snapshot.ts";
 import { useEntityRevision } from "./use_entity_revision.ts";
 import { useHistoryState } from "./use_history_state.ts";
+import { useSampleView } from "./use_sample_view.ts";
+import { useInstrumentView } from "./use_instrument_view.ts";
+import { getObjectId } from "../utils/object_id.ts";
+import { EditSampleAction } from "../sample_editor/edit_sample_action.ts";
 
 function countRenders<T>(hook: () => T) {
     const renders = { count: 0 };
@@ -111,5 +115,51 @@ describe("useHistoryState", () => {
             session.history.markSaved();
         });
         expect(result.current).toMatchObject({ canUndo: true, isDirty: false });
+    });
+});
+
+describe("element view hooks", () => {
+    it("re-render a sample row only when that sample's view changes", () => {
+        const session = createTestSession();
+        const [sample, other] = session.document.samples;
+        const { result, renders } = countRenders(() =>
+            useSampleView(session.store, getObjectId(sample))
+        );
+        expect(result.current?.name).toBe(sample.name);
+
+        editPan(session);
+        act(() => {
+            session.history.do([
+                new EditSampleAction(other, "name", other.name, "Other")
+            ]);
+        });
+        expect(renders.count).toBe(1);
+
+        act(() => {
+            session.history.do([
+                new EditSampleAction(sample, "name", sample.name, "Renamed")
+            ]);
+        });
+        expect(renders.count).toBe(2);
+        expect(result.current?.name).toBe("Renamed");
+    });
+
+    it("re-render an instrument for its own edit, not a sample rename", () => {
+        const session = createTestSession();
+        const instrument = session.document.instruments[0];
+        const { renders } = countRenders(() =>
+            useInstrumentView(session.store, getObjectId(instrument))
+        );
+        const sample = instrument.zones[0].sample;
+
+        act(() => {
+            session.history.do([
+                new EditSampleAction(sample, "name", sample.name, "Renamed")
+            ]);
+        });
+        expect(renders.count).toBe(1);
+
+        editPan(session);
+        expect(renders.count).toBe(2);
     });
 });

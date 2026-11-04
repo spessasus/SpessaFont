@@ -1,28 +1,50 @@
-import type { BasicSample } from "spessasynth_core";
 import "../../bank_editor/bottom_bar.css";
 import { useTranslation } from "react-i18next";
 
 import { DeleteSampleAction } from "./delete_sample_action.ts";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
-import { getObjectId } from "../../utils/object_id.ts";
+import { useSampleView } from "../../hooks/use_sample_view.ts";
+import { useBankSnapshot } from "../../hooks/use_bank_snapshot.ts";
 
 interface LinkedInstrumentsProps {
-    sample: BasicSample;
+    /**
+     * The sample's view id.
+     */
+    sampleId: number;
 }
 
-export function LinkedInstruments({ sample }: LinkedInstrumentsProps) {
+export function LinkedInstruments({ sampleId }: LinkedInstrumentsProps) {
     const { t } = useTranslation();
-    const { apply, setView } = useBankEditor();
+    const { session, apply, setView } = useBankEditor();
+    const sample = useSampleView(session.store, sampleId);
+    const instruments = useBankSnapshot(
+        session.store,
+        (s) => s.views.instruments
+    );
+    if (!sample) {
+        return null;
+    }
     // An instrument with several zones of this sample is listed once
-    const linked = new Set(sample.linkedTo);
+    const linked = [...new Set(sample.usedBy)];
 
     const deleteSample = () => {
-        const actions = [new DeleteSampleAction(sample)];
+        const toDelete = session.document.getSample(sampleId);
+        if (!toDelete) {
+            return;
+        }
+        const actions = [new DeleteSampleAction(toDelete)];
         // delete the other one too if linked and unused
-        if (sample.linkedSample?.useCount === 0) {
-            actions.push(new DeleteSampleAction(sample.linkedSample));
+        if (toDelete.linkedSample?.useCount === 0) {
+            actions.push(new DeleteSampleAction(toDelete.linkedSample));
         }
         apply(actions);
+    };
+
+    const showInstrument = (id: number) => {
+        const instrument = session.document.getInstrument(id);
+        if (instrument) {
+            setView(instrument);
+        }
     };
 
     return (
@@ -36,7 +58,7 @@ export function LinkedInstruments({ sample }: LinkedInstrumentsProps) {
                     </strong>
                 </div>
             )}
-            {sample.linkedTo.length === 0 && (
+            {linked.length === 0 ? (
                 <>
                     <div>
                         <strong>
@@ -51,18 +73,17 @@ export function LinkedInstruments({ sample }: LinkedInstrumentsProps) {
                         {t("sampleLocale.deleteSample")}
                     </button>
                 </>
-            )}
-            {sample.linkedTo.length > 0 && (
+            ) : (
                 <>
                     <div>{t("sampleLocale.usedBy")}:</div>
-                    {Array.from(linked, (inst) => (
+                    {linked.map((id) => (
                         <button
                             type={"button"}
                             className={"plain_button monospaced"}
-                            onClick={() => setView(inst)}
-                            key={getObjectId(inst)}
+                            onClick={() => showInstrument(id)}
+                            key={id}
                         >
-                            {inst.name}
+                            {instruments.get(id)?.name}
                         </button>
                     ))}
                 </>

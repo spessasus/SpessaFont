@@ -2,7 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import { BasicPreset, SampleTypes } from "spessasynth_core";
 import {
     createTestSession,
-    expectRoundTrip
+    expectRoundTrip,
+    publishSetUp
 } from "../test_utils/bank_fixture.ts";
 import { ClipboardManager } from "./clipboard_manager.ts";
 
@@ -48,6 +49,7 @@ describe("ClipboardManager", () => {
         const session = createTestSession();
         const [left, right] = session.document.samples;
         left.setLinkedSample(right, SampleTypes.leftSample);
+        publishSetUp(session);
         const clipboard = new ClipboardManager();
 
         const { after } = expectRoundTrip(session, () =>

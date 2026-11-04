@@ -64,7 +64,7 @@ export class ReplaceSampleAudioAction implements HistoryAction {
         }
         this.sample.loopStart = audio.loopStart;
         this.sample.loopEnd = audio.loopEnd;
-        changes.touch(this.sample);
+        changes.touchSampleAudio(this.sample);
     }
 
     public do(_document: BankDocument, changes: ChangeSet) {

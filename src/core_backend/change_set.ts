@@ -1,3 +1,4 @@
+import type { BasicSample } from "spessasynth_core";
 import type { BankEditView, BankEntity } from "./bank_view.ts";
 
 export type ElementList = "presets" | "instruments" | "samples";
@@ -10,6 +11,7 @@ export type ElementList = "presets" | "instruments" | "samples";
 export class ChangeSet {
     private readonly touchedEntities = new Set<BankEntity>();
     private readonly touchedLists = new Set<ElementList>();
+    private readonly touchedAudio = new Set<BasicSample>();
     private isBankInfoTouched = false;
     private focusTarget: BankEditView | undefined;
 
@@ -25,6 +27,13 @@ export class ChangeSet {
      */
     public get lists(): ReadonlySet<ElementList> {
         return this.touchedLists;
+    }
+
+    /**
+     * Samples whose audio data changed, not only their metadata.
+     */
+    public get audio(): ReadonlySet<BasicSample> {
+        return this.touchedAudio;
     }
 
     /**
@@ -53,6 +62,14 @@ export class ChangeSet {
         for (const entity of entities) {
             this.touchedEntities.add(entity);
         }
+    }
+
+    /**
+     * Marks the sample's audio data as changed, and the sample as touched.
+     */
+    public touchSampleAudio(sample: BasicSample) {
+        this.touchedAudio.add(sample);
+        this.touchedEntities.add(sample);
     }
 
     public touchList(list: ElementList) {
