@@ -44,7 +44,8 @@ export const localeEnglish = {
         reload: "Reload",
         paneTitle: "This editor ran into an error",
         paneDescription:
-            "The rest of SpessaFont still works. Select another element, or undo the last change and select this one again."
+            "The rest of SpessaFont still works. Select another element, or undo the last change and select this one again.",
+        actionFailed: "SpessaFont ran into an error. The details are above."
     },
 
     loadingAndSaving: {

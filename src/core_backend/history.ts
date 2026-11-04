@@ -112,14 +112,29 @@ export class HistoryManager {
         return this.commit(changes);
     }
 
+    /**
+     * Undoes the last group. If an action throws, the part already undone is done again and the
+     * group stays in the history, so the bank is not left half undone and nothing is lost.
+     */
     public undo() {
         const group = this.done.pop();
         if (!group) {
             return;
         }
         const changes = new ChangeSet();
-        for (const action of group.toReversed()) {
-            action.undo(this.document, changes);
+        const undone = new Array<HistoryAction>();
+        try {
+            for (const action of group.toReversed()) {
+                action.undo(this.document, changes);
+                undone.push(action);
+            }
+        } catch (error) {
+            for (const action of undone.toReversed()) {
+                action.do(this.document, changes);
+            }
+            this.done.push(group);
+            this.commit(changes);
+            throw error;
         }
         this.undone.push(group);
         logInfo(`Undid. Remaining history: ${this.done.length}`);
@@ -132,7 +147,13 @@ export class HistoryManager {
             return;
         }
         const changes = new ChangeSet();
-        this.run(group, changes);
+        try {
+            this.run(group, changes);
+        } catch (error) {
+            // run already rolled the group back, so it can be redone again later
+            this.undone.push(group);
+            throw error;
+        }
         this.done.push(group);
         logInfo(`Redid. Remaining undo history: ${this.undone.length}`);
         return this.commit(changes);

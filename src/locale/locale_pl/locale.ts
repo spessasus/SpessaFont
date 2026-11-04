@@ -44,7 +44,8 @@ export const localePolish = {
         reload: "Odśwież",
         paneTitle: "Ten edytor napotkał błąd",
         paneDescription:
-            "Reszta SpessaFont nadal działa. Wybierz inny element lub cofnij ostatnią zmianę i wybierz ten ponownie."
+            "Reszta SpessaFont nadal działa. Wybierz inny element lub cofnij ostatnią zmianę i wybierz ten ponownie.",
+        actionFailed: "SpessaFont napotkał błąd. Szczegóły są powyżej."
     },
 
     loadingAndSaving: {

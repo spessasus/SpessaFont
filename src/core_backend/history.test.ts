@@ -166,4 +166,44 @@ describe("HistoryManager dirty state", () => {
 
         expect(session.history.isDirty).toBe(true);
     });
+
+    it("keeps a group whose undo throws and does again what it had undone", () => {
+        const session = createTestSession();
+        const log = new Array<string>();
+        const failingUndo: HistoryAction = {
+            do: () => {
+                log.push("do bad");
+            },
+            undo: () => {
+                throw new Error("Failed on purpose.");
+            }
+        };
+        session.history.do([failingUndo, recordingAction("b", log)]);
+        log.length = 0;
+
+        expect(() => session.history.undo()).toThrow("Failed on purpose.");
+
+        expect(log).toEqual(["undo b", "do b"]);
+        expect(session.history.canUndo).toBe(true);
+        expect(session.history.canRedo).toBe(false);
+    });
+
+    it("keeps a group whose redo throws on the redo stack", () => {
+        const session = createTestSession();
+        let shouldFail = false;
+        const flaky: HistoryAction = {
+            do: () => {
+                if (shouldFail) throw new Error("Failed on purpose.");
+            },
+            undo: () => undefined
+        };
+        session.history.do([flaky]);
+        session.history.undo();
+        shouldFail = true;
+
+        expect(() => session.history.redo()).toThrow("Failed on purpose.");
+
+        expect(session.history.canRedo).toBe(true);
+        expect(session.history.canUndo).toBe(false);
+    });
 });

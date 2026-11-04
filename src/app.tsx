@@ -18,6 +18,7 @@ import { useBankFileOpener } from "./hooks/use_bank_file_opener.ts";
 import { useLaunchQueue } from "./hooks/use_launch_queue.ts";
 import { useElectronFileOpen } from "./hooks/use_electron_file_open.ts";
 import { useEventListener } from "./hooks/use_event_listener.ts";
+import { useUncaughtErrorToasts } from "./hooks/use_uncaught_error_toasts.ts";
 import { pickFile } from "./utils/pick_file.ts";
 import { useFileDrop } from "./hooks/use_file_drop.ts";
 import { createSampleImportActions } from "./menu_list/import_sample.ts";
@@ -33,6 +34,7 @@ export function App() {
     const { t } = useTranslation();
     const { audioEngine } = useAudioEngine();
     const { selectedDevice } = useMIDIAccess();
+    useUncaughtErrorToasts();
     const {
         tabs,
         activeSession,
