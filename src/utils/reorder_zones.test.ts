@@ -75,4 +75,16 @@ describe("reorderInstrumentZones", () => {
 
         expect(instrument.zones).toEqual(input);
     });
+
+    it("orders by key first, so a high velocity layer does not jump ahead", () => {
+        const instrument = new BasicInstrument();
+        const high = instrument.createZone(sample("high"));
+        high.keyRange = { min: 6, max: 11 };
+        high.velRange = { min: 0, max: 99 };
+        const low = instrument.createZone(sample("low"));
+        low.keyRange = { min: 0, max: 5 };
+        low.velRange = { min: 100, max: 127 };
+
+        expect(reorderInstrumentZones(instrument.zones)).toEqual([low, high]);
+    });
 });

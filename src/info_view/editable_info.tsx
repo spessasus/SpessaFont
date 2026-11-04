@@ -15,7 +15,13 @@ function toLocalDateTimeValue(date: Date) {
     const local = new Date(
         date.getTime() - date.getTimezoneOffset() * MS_PER_MINUTE
     );
-    return local.toISOString().slice(0, 16);
+    if (Number.isNaN(local.getTime())) {
+        return "";
+    }
+    // Years past 9999 do not fit the field
+    return local.getUTCFullYear() > 9999
+        ? ""
+        : local.toISOString().slice(0, 16);
 }
 
 interface InfoTextFieldProps {
@@ -87,18 +93,29 @@ export function EditableBankInfo() {
 
                 <span>
                     <label htmlFor={"ICRD"}>{t("bankInfo.creationDate")}</label>
+                    {/* Commits on blur, typing a year digit by digit would make an undo step each */}
                     <input
                         type={"datetime-local"}
                         className={"pretty_input hover_brightness"}
                         id={"ICRD"}
-                        onChange={(e) => {
+                        // A new value from outside (undo, another bank) replaces the field
+                        key={toLocalDateTimeValue(info.creationDate)}
+                        defaultValue={toLocalDateTimeValue(info.creationDate)}
+                        // toISOString writes longer years in another form, which breaks the field
+                        min={"0001-01-01T00:00"}
+                        max={"9999-12-31T23:59"}
+                        onBlur={(e) => {
                             // The value is local time, valueAsDate does not work for this input type
                             const date = new Date(e.target.value);
-                            if (!Number.isNaN(date.getTime())) {
+                            const value = toLocalDateTimeValue(date);
+                            if (
+                                !Number.isNaN(date.getTime()) &&
+                                value !==
+                                    toLocalDateTimeValue(info.creationDate)
+                            ) {
                                 setInfo("creationDate", date);
                             }
                         }}
-                        value={toLocalDateTimeValue(info.creationDate)}
                     />
                 </span>
 

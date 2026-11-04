@@ -68,12 +68,11 @@ export function NumberGeneratorCell({
     const textValue = toText(value);
 
     const limits = GeneratorLimits[generator];
-    const { min, max } = getGeneratorRange(
-        generator,
-        element instanceof BasicInstrument
-    );
+    const isInstrument = element instanceof BasicInstrument;
+    const { min, max } = getGeneratorRange(generator, isInstrument);
 
-    let placeholder = toText(limits.def);
+    // An unset preset generator adds nothing to the instrument, so its placeholder is 0
+    let placeholder = toText(isInstrument ? limits.def : 0);
     if (
         zone instanceof BasicInstrumentZone &&
         generator === GeneratorTypes.overridingRootKey

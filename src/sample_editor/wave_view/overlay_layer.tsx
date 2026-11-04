@@ -61,7 +61,8 @@ export function OverlayLayer({
                     isLooped: playerState === "playing_loop",
                     loopStart,
                     loopEnd,
-                    sampleRate
+                    sampleRate,
+                    sampleCount
                 });
                 const x = sampleToX(view, playheadSample);
                 if (x < 0 || x > size.width) {

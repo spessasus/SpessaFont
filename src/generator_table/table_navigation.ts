@@ -1,42 +1,75 @@
 import type { KeyboardEvent } from "react";
 
 /**
- * Moves the focus between the inputs of the generator table with the arrow keys.
+ * The visual column a cell starts in. Merged cells (a stereo pair) span two columns, while
+ * the pan row has a cell per zone, so the DOM index of a cell is not its column.
+ */
+function getColumn(cell: Element) {
+    let column = 0;
+    for (let c = cell.previousElementSibling; c; c = c.previousElementSibling) {
+        column += c instanceof HTMLTableCellElement ? c.colSpan : 1;
+    }
+    return column;
+}
+
+/**
+ * The cell of the row that covers the visual column.
+ */
+function getCellAt(row: Element, column: number) {
+    let start = 0;
+    for (const cell of row.children) {
+        const span = cell instanceof HTMLTableCellElement ? cell.colSpan : 1;
+        if (column < start + span) {
+            return cell;
+        }
+        start += span;
+    }
+    return undefined;
+}
+
+/**
+ * Moves the focus between the inputs and selects of the generator table with the arrow keys.
  * The first cell of each row is the row header, so it is skipped.
+ * Up and down keep only to inputs, as a select uses them to pick a value.
  */
 export function moveTableFocus(e: KeyboardEvent<HTMLTableElement>) {
-    const input = e.target;
-    if (!(input instanceof HTMLInputElement)) {
+    const field = e.target;
+    const isInput = field instanceof HTMLInputElement;
+    if (!isInput && !(field instanceof HTMLSelectElement)) {
         return;
     }
-    const cell = input.closest("td, th");
+    if (!isInput && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
+        return;
+    }
+    const cell = field.closest("td, th");
     const row = cell?.parentElement;
     const section = row?.parentElement;
-    if (
-        !section ||
-        !(cell instanceof HTMLTableCellElement) ||
-        !(row instanceof HTMLTableRowElement)
-    ) {
+    if (!section || !cell || !row) {
         return;
     }
     const rows = [...section.children];
-    let rowIndex = rows.indexOf(row);
-    let column = cell.cellIndex;
+    const rowIndex = rows.indexOf(row);
+    let target: Element | undefined;
     switch (e.key) {
         case "ArrowUp": {
-            rowIndex = Math.max(0, rowIndex - 1);
+            target = rows[rowIndex - 1];
             break;
         }
         case "ArrowDown": {
-            rowIndex = Math.min(rows.length - 1, rowIndex + 1);
+            target = rows[rowIndex + 1];
             break;
         }
         case "ArrowLeft": {
-            column = Math.max(1, column - 1);
+            const previous = cell.previousElementSibling;
+            // Not into the row header
+            target =
+                previous && previous !== row.firstElementChild
+                    ? previous
+                    : undefined;
             break;
         }
         case "ArrowRight": {
-            column = Math.min(row.children.length - 1, column + 1);
+            target = cell.nextElementSibling ?? undefined;
             break;
         }
         default: {
@@ -44,5 +77,9 @@ export function moveTableFocus(e: KeyboardEvent<HTMLTableElement>) {
         }
     }
     e.preventDefault();
-    rows[rowIndex]?.children[column]?.querySelector("input")?.focus();
+    const targetCell =
+        e.key === "ArrowUp" || e.key === "ArrowDown"
+            ? target && getCellAt(target, getColumn(cell))
+            : target;
+    targetCell?.querySelector<HTMLElement>("input, select")?.focus();
 }

@@ -39,6 +39,10 @@ export interface PlayheadOptions {
     loopStart: number;
     loopEnd: number;
     sampleRate: number;
+    /**
+     * The sample's length in sample points.
+     */
+    sampleCount: number;
 }
 
 /**
@@ -49,12 +53,23 @@ export function getPlayheadSample({
     isLooped,
     loopStart,
     loopEnd,
-    sampleRate
+    sampleRate,
+    sampleCount
 }: PlayheadOptions) {
     const played = Math.max(0, elapsed) * sampleRate;
-    const loopLength = loopEnd - loopStart;
-    const isWrapping = isLooped && loopLength > 0 && played >= loopEnd;
-    return isWrapping
-        ? loopStart + ((played - loopStart) % loopLength)
+    if (!isLooped) {
+        return played;
+    }
+    // Web Audio's loop rules: an end past the sample (or none) is the sample's end,
+    // and a loop that is empty or backwards loops the whole sample
+    let start = Math.max(0, loopStart);
+    let end = loopEnd <= 0 || loopEnd > sampleCount ? sampleCount : loopEnd;
+    if (start >= end) {
+        start = 0;
+        end = sampleCount;
+    }
+    const loopLength = end - start;
+    return loopLength > 0 && played >= end
+        ? start + ((played - start) % loopLength)
         : played;
 }

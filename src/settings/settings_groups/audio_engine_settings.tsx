@@ -55,7 +55,8 @@ function NumberSetting({
                 suffix={isPercent ? "%" : suffix}
                 value={
                     isPercent
-                        ? Math.floor(settings[name] * scale)
+                        ? // Rounded, as 0.29 * 100 is 28.999...
+                          Math.round(settings[name] * scale)
                         : settings[name]
                 }
             />

@@ -1,8 +1,10 @@
 import type { BasicInstrumentZone, BasicZone } from "spessasynth_core";
 
+/**
+ * Orders zones by their lowest key, and zones that start on the same key by their lowest velocity.
+ */
 export const ZONE_SORTING_FUNCTION = (z1: BasicZone, z2: BasicZone) =>
-    (z1.keyRange.min - z2.keyRange.min) * 10 +
-    (z1.velRange.min - z2.velRange.min);
+    z1.keyRange.min - z2.keyRange.min || z1.velRange.min - z2.velRange.min;
 
 /**
  * Picks the linked zone that best matches the zone based on key and velocity range similarity.

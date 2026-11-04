@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { SampleTypes } from "spessasynth_core";
+import { BasicPreset, SampleTypes } from "spessasynth_core";
 import {
     createTestSession,
     expectRoundTrip
@@ -123,5 +123,30 @@ describe("ClipboardManager", () => {
         selection.add(session.document.samples[1]);
 
         expect(clipboard.sampleCount).toBe(1);
+    });
+
+    it("finds a free patch in the next bank when the preset's bank is full", () => {
+        const session = createTestSession();
+        const { bank } = session.document;
+        const [preset] = session.document.presets;
+        // Take every program of bank 0 with copies of the preset
+        const copies = new Array<BasicPreset>();
+        for (let program = 0; program < 128; program++) {
+            const copy = new BasicPreset(bank);
+            copy.name = `P${program}`;
+            copy.program = program;
+            copies.push(copy);
+        }
+        bank.presets.push(...copies);
+
+        const [action] = new ClipboardManager().clonePresets(session.document, [
+            preset
+        ]);
+        session.history.do([action]);
+
+        const pasted = session.document.presets.find(
+            (p) => p.bankMSB === 1 && p.program === 0
+        );
+        expect(pasted?.name).toBe(preset.name);
     });
 });

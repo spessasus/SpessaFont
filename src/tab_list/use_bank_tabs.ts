@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer } from "react";
+import { useCallback, useEffect, useReducer, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import type { BankSession } from "../core_backend/bank_session.ts";
 import type { BankEditView } from "../core_backend/bank_view.ts";
@@ -36,6 +36,9 @@ export function useBankTabs() {
         }
     });
 
+    // Tabs with an open "unsaved changes" question
+    const closePrompts = useRef(new Set<number>());
+
     const openSession = (session: BankSession) => {
         dispatch({ type: "open", tab: session });
     };
@@ -53,12 +56,26 @@ export function useBankTabs() {
             closeSession(session);
             return;
         }
+        // One question per tab, a second click on close would stack another
+        if (closePrompts.current.has(session.id)) {
+            return;
+        }
+        closePrompts.current.add(session.id);
+        const forgetPrompt = () => {
+            closePrompts.current.delete(session.id);
+        };
         showToastDialog({
             content: t("unsavedChanges"),
             isError: true,
             buttons: [
-                { label: t("discard"), onClick: () => closeSession(session) },
-                { label: t("keep") }
+                {
+                    label: t("discard"),
+                    onClick: () => {
+                        forgetPrompt();
+                        closeSession(session);
+                    }
+                },
+                { label: t("keep"), onClick: forgetPrompt }
             ]
         });
     };

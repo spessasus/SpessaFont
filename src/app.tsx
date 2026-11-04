@@ -1,6 +1,6 @@
 import { MenuBar } from "./menu_bar/menu_bar.tsx";
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Settings } from "./settings/settings.tsx";
 import { TabList } from "./tab_list/tab_list.tsx";
 import { KeyboardController } from "./keyboard/keyboard_controller.tsx";
@@ -100,6 +100,13 @@ export function App() {
             audioEngine.processRealTime(e.data);
         }
     });
+    // Note offs of keys held on the previous device never arrive, so its notes are released
+    useEffect(() => {
+        if (!selectedDevice) {
+            return;
+        }
+        return () => audioEngine.releaseAllNotes();
+    }, [audioEngine, selectedDevice]);
 
     const handleOpenFile = async () => {
         const file = await pickFile(ACCEPTED_SOUNDBANK_FORMATS);

@@ -1,5 +1,5 @@
 import "./dialogs.css";
-import { type ReactNode, useEffect, useRef } from "react";
+import { type MouseEvent, type ReactNode, useEffect, useRef } from "react";
 
 interface ModalDialogProps {
     title: string;
@@ -12,6 +12,23 @@ interface ModalDialogProps {
 }
 
 /**
+ * Whether the pointer is on the backdrop: the event targets the dialog itself (the backdrop
+ * counts as the dialog) and lies outside its box, so its padding does not count.
+ */
+function isOnBackdrop(e: MouseEvent<HTMLDialogElement>) {
+    if (e.target !== e.currentTarget) {
+        return false;
+    }
+    const box = e.currentTarget.getBoundingClientRect();
+    return (
+        e.clientX < box.left ||
+        e.clientX > box.right ||
+        e.clientY < box.top ||
+        e.clientY > box.bottom
+    );
+}
+
+/**
  * A native modal dialog, shown while it is mounted.
  */
 export function ModalDialog({
@@ -21,6 +38,7 @@ export function ModalDialog({
     onCancel
 }: ModalDialogProps) {
     const dialogRef = useRef<HTMLDialogElement>(null);
+    const backdropPress = useRef(false);
     useEffect(() => {
         const dialog = dialogRef.current;
         dialog?.showModal();
@@ -35,9 +53,13 @@ export function ModalDialog({
                 e.preventDefault();
                 onCancel();
             }}
+            onPointerDown={(e) => {
+                backdropPress.current = isOnBackdrop(e);
+            }}
             onClick={(e) => {
-                // The backdrop counts as the dialog itself
-                if (e.target === e.currentTarget) {
+                // Both the press and the release, so a text selection dragged out of the
+                // search field does not close it
+                if (backdropPress.current && isOnBackdrop(e)) {
                     onCancel();
                 }
             }}

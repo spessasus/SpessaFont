@@ -50,6 +50,7 @@ export class AudioEngine {
     private previewTarget:
         { target: BankEntity | undefined; bank: BasicSoundBank } | undefined;
     private isPreviewStale = false;
+    private started: Promise<void> | undefined;
     public readonly context: AudioContext;
     public readonly processor: SpessaSynthProcessor;
     public readonly sequencer: SpessaSynthSequencer;
@@ -113,6 +114,28 @@ export class AudioEngine {
 
         this.currentSampleRate = context.sampleRate;
         this.applySettings(initialSettings);
+    }
+
+    private async start() {
+        await this.context.resume();
+        logInfo("Setting up audio loop");
+        await this.context.audioWorklet.addModule("./audio_worklet.js");
+        this.worklet = new AudioWorkletNode(
+            this.context,
+            "playback-processor",
+            {
+                outputChannelCount: [2],
+                numberOfOutputs: 1
+            }
+        );
+        this.worklet.connect(this.inputNode);
+        // Disable for performance
+
+        this.worklet.port.onmessage = (e: MessageEvent<number>) => {
+            this.audioChunksQueued = e.data;
+            this.audioLoop();
+        };
+        this.audioLoop();
     }
 
     private applyPreviewTarget() {
@@ -277,26 +300,13 @@ export class AudioEngine {
         location.replace(url);
     }
 
-    public async resumeContext() {
-        await this.context.resume();
-        logInfo("Setting up audio loop");
-        await this.context.audioWorklet.addModule("./audio_worklet.js");
-        this.worklet = new AudioWorkletNode(
-            this.context,
-            "playback-processor",
-            {
-                outputChannelCount: [2],
-                numberOfOutputs: 1
-            }
-        );
-        this.worklet.connect(this.inputNode);
-        // Disable for performance
-
-        this.worklet.port.onmessage = (e: MessageEvent<number>) => {
-            this.audioChunksQueued = e.data;
-            this.audioLoop();
-        };
-        this.audioLoop();
+    /**
+     * Resumes the context and starts the audio loop. Calling it again (StrictMode runs the
+     * provider's effect twice) waits for the same start, so there is one worklet.
+     */
+    public resumeContext() {
+        this.started ??= this.start();
+        return this.started;
     }
 
     /**
@@ -359,6 +369,13 @@ export class AudioEngine {
     ) {
         this.previewTarget = { target, bank };
         this.applyPreviewTarget();
+    }
+
+    /**
+     * Releases every playing note, as if each key was let go.
+     */
+    public releaseAllNotes() {
+        this.processor.stopAll(false);
     }
 
     /**

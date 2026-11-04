@@ -31,13 +31,16 @@ interface EqualizerCurveProps {
  * at the same scale, so a single band peaks at its slider.
  */
 export function EqualizerCurve({ settings, sampleRate }: EqualizerCurveProps) {
+    // A sample has nothing above half its rate, the response there would only repeat
+    const shown = FREQUENCIES.filter((f) => f < sampleRate / 2);
     const response = getEqualizerResponse(
         { ...settings, gain: 0 },
         sampleRate,
-        FREQUENCIES
+        shown
     );
     const toY = (db: number) =>
         HEIGHT / 2 - (db / EQ_MAX_BAND_GAIN) * (HEIGHT / 2);
+    const lastX = ((shown.length - 1) / POINTS) * WIDTH;
     const line = response
         .map((db, i) => `${(i / POINTS) * WIDTH},${toY(db).toFixed(2)}`)
         .join(" L");
@@ -57,7 +60,7 @@ export function EqualizerCurve({ settings, sampleRate }: EqualizerCurveProps) {
             />
             <path
                 className={"equalizer_curve_fill"}
-                d={`M0,${HEIGHT / 2} L${line} L${WIDTH},${HEIGHT / 2} Z`}
+                d={`M0,${HEIGHT / 2} L${line} L${lastX},${HEIGHT / 2} Z`}
             />
             <path className={"equalizer_curve_line"} d={`M${line}`} />
         </svg>

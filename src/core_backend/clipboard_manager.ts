@@ -48,6 +48,35 @@ function getCreateActions(cloner: SoundBankCloner) {
     ];
 }
 
+const MIDI_VALUES = 128;
+
+/**
+ * The first free patch from the preset's own: the next programs of its bank first, then the
+ * next bank numbers (MSB, then LSB). Undefined when every patch is taken.
+ */
+function findFreePatch(preset: BasicPreset, taken: ReadonlySet<string>) {
+    // A drum preset is told apart by its program only
+    const bankSteps = preset.isGMGSDrum ? 1 : MIDI_VALUES * MIDI_VALUES;
+    for (let bankStep = 0; bankStep < bankSteps; bankStep++) {
+        const msb = preset.bankMSB + bankStep;
+        const bankMSB = msb % MIDI_VALUES;
+        const bankLSB =
+            (preset.bankLSB + Math.floor(msb / MIDI_VALUES)) % MIDI_VALUES;
+        for (let step = 0; step < MIDI_VALUES; step++) {
+            const patch: MIDIPatch = {
+                bankMSB,
+                bankLSB,
+                program: (preset.program + step) % MIDI_VALUES,
+                isGMGSDrum: preset.isGMGSDrum
+            };
+            if (!taken.has(MIDIPatchTools.toMIDIString(patch))) {
+                return patch;
+            }
+        }
+    }
+    return undefined;
+}
+
 /**
  * Copied elements and modulators, shared by all tabs.
  * Observable with `subscribe` and `getSnapshot` for `useSyncExternalStore`.
@@ -171,36 +200,30 @@ export class ClipboardManager {
      */
     clonePresets(document: BankDocument, presets: Iterable<BasicPreset>) {
         const cloner = createCloner(document);
-        const presetNumbers = new Set<string>();
+        const taken = new Set<string>();
         for (const p of document.presets) {
-            presetNumbers.add(p.toMIDIString());
+            taken.add(p.toMIDIString());
         }
-        for (const oldPreset of presets) {
-            const patch: MIDIPatch = {
-                bankMSB: oldPreset.bankMSB,
-                bankLSB: oldPreset.bankLSB,
-                program: oldPreset.program,
-                isGMGSDrum: oldPreset.isGMGSDrum
-            };
-            let num = 0;
-            while (presetNumbers.has(MIDIPatchTools.toMIDIString(patch))) {
-                num++;
-                patch.program = num % 128;
-                patch.bankMSB = Math.max(0, num - 128) % 128;
-                patch.bankLSB = Math.max(0, num - 256) % 128;
-                if (num > 3 * 128) {
-                    throw new Error(
-                        `No free space to paste ${oldPreset.toMIDIString()}`
-                    );
-                }
+        // Every patch is found before anything is cloned, as cloned zones already link to
+        // the instruments they reuse
+        const targets = new Array<{ preset: BasicPreset; patch: MIDIPatch }>();
+        for (const preset of presets) {
+            const patch = findFreePatch(preset, taken);
+            if (!patch) {
+                throw new Error(
+                    `No free space to paste ${preset.toMIDIString()}`
+                );
             }
+            taken.add(MIDIPatchTools.toMIDIString(patch));
+            targets.push({ preset, patch });
+        }
+        for (const { preset: oldPreset, patch } of targets) {
             const newPreset = cloner.clonePreset(oldPreset);
             // Presets are told apart by their patch, so the copy needs no new name
             newPreset.name = oldPreset.name;
             newPreset.program = patch.program;
             newPreset.bankMSB = patch.bankMSB;
             newPreset.bankLSB = patch.bankLSB;
-            presetNumbers.add(newPreset.toMIDIString());
         }
         return getCreateActions(cloner);
     }

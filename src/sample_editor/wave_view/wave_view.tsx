@@ -82,7 +82,8 @@ export function WaveView({
                     playbackRate={Math.pow(2, centCorrection / 1200)}
                     onPlayheadHidden={(x) => {
                         if (scrollerRef.current) {
-                            scrollerRef.current.scrollLeft = x + 1;
+                            // Just inside the view, past it would hide it again
+                            scrollerRef.current.scrollLeft = Math.max(0, x - 1);
                         }
                     }}
                 />

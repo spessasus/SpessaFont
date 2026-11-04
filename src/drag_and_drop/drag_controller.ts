@@ -173,8 +173,21 @@ export class DragController {
 
     public cancel() {
         this.pending = undefined;
-        if (this.state) {
-            this.setState(null);
+        if (!this.state) {
+            return;
         }
+        this.setState(null);
+        // Escape cancels while the button is still held, its release would click what is under it
+        document.addEventListener("click", swallowClick, { capture: true });
+        document.addEventListener(
+            "pointerup",
+            () =>
+                requestAnimationFrame(() =>
+                    document.removeEventListener("click", swallowClick, {
+                        capture: true
+                    })
+                ),
+            { capture: true, once: true }
+        );
     }
 }

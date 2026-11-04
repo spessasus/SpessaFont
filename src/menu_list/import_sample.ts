@@ -24,6 +24,8 @@ export async function createSampleImportActions(
     const sample = new EmptySample();
     sample.name = baseName + (isStereo ? "L" : "");
     sample.setAudioData(audioBuffer.getChannelData(0), audioBuffer.sampleRate);
+    // Loop the whole sample, like replaced audio, instead of an empty loop
+    sample.loopEnd = audioBuffer.length;
     const actions = [new CreateSampleAction(sample)];
     if (isStereo) {
         const right = new EmptySample();
@@ -32,6 +34,7 @@ export async function createSampleImportActions(
             audioBuffer.getChannelData(1),
             audioBuffer.sampleRate
         );
+        right.loopEnd = audioBuffer.length;
         right.setLinkedSample(sample, SampleTypes.rightSample);
         actions.push(new CreateSampleAction(right));
     }

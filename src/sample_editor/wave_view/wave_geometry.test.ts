@@ -40,7 +40,8 @@ describe("getPlayheadSample", () => {
         isLooped: true,
         loopStart: 100,
         loopEnd: 200,
-        sampleRate: 1000
+        sampleRate: 1000,
+        sampleCount: 300
     };
 
     it("plays straight through before the loop end", () => {
@@ -53,12 +54,29 @@ describe("getPlayheadSample", () => {
         expect(getPlayheadSample({ ...base, elapsed: 0.42 })).toBeCloseTo(120);
     });
 
-    it("does not wrap without a loop", () => {
+    it("does not wrap when not looped", () => {
         expect(
             getPlayheadSample({ ...base, isLooped: false, elapsed: 0.25 })
         ).toBeCloseTo(250);
+    });
+
+    it("wraps the whole sample for an empty loop, like Web Audio", () => {
         expect(
             getPlayheadSample({ ...base, loopEnd: 100, elapsed: 0.25 })
         ).toBeCloseTo(250);
+        expect(
+            getPlayheadSample({
+                ...base,
+                loopStart: 0,
+                loopEnd: 0,
+                elapsed: 0.35
+            })
+        ).toBeCloseTo(50);
+    });
+
+    it("clamps a loop end past the sample", () => {
+        expect(
+            getPlayheadSample({ ...base, loopEnd: 999, elapsed: 0.35 })
+        ).toBeCloseTo(150);
     });
 });
