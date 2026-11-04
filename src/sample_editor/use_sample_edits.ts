@@ -9,6 +9,8 @@ import {
     type EditableSampleProperty
 } from "./edit_sample_action.ts";
 import { SetSampleTypeAction } from "./set_sample_type_action.ts";
+import type { SampleView } from "../core_backend/entity_views.ts";
+import { useEntityLookup } from "../hooks/use_entity_lookup.ts";
 
 export const MIN_SAMPLE_RATE = 8000;
 export const MAX_SAMPLE_RATE = 192_000;
@@ -33,12 +35,14 @@ function getStereoSuffix(type: SampleType) {
 /**
  * Setters for the sample's properties. Each one clamps the value, applies it as an action
  * (to both halves of a stereo pair where that makes sense), and returns the applied value
- * for the input to show.
+ * for the input to show. They read the sample when called, render reads its view.
+ * @param sample the edited sample, which the actions change
+ * @param view its view, for the length (the editor's sample has no data)
  */
-export function useSampleEdits(sample: BasicSample) {
-    const { apply } = useBankEditor();
-    const linkedSample = sample.linkedSample;
-    const length = sample.sampleLength;
+export function useSampleEdits(sample: BasicSample, view: SampleView) {
+    const { session, apply } = useBankEditor();
+    const lookup = useEntityLookup(session.store);
+    const { length } = view;
 
     const changeProperty = <K extends EditableSampleProperty>(
         property: K,
@@ -47,6 +51,7 @@ export function useSampleEdits(sample: BasicSample) {
         if (value === sample[property]) {
             return value;
         }
+        const linkedSample = sample.linkedSample;
         const actions = [
             new EditSampleAction(sample, property, sample[property], value)
         ];
@@ -68,6 +73,7 @@ export function useSampleEdits(sample: BasicSample) {
         if (name === sample.name) {
             return name;
         }
+        const linkedSample = sample.linkedSample;
         let base = name.slice(0, MAX_BASE_NAME_LENGTH);
         if (base.endsWith("R") || base.endsWith("L")) {
             base = base.slice(0, -1);
@@ -118,9 +124,15 @@ export function useSampleEdits(sample: BasicSample) {
          * Links the sample as a stereo half, or makes it mono without a sample.
          * The action adjusts the other sample of the pair too.
          */
-        setLinkedSample: (type: SampleType, other?: BasicSample) =>
+        setLinkedSample: (type: SampleType, otherId?: number) =>
             apply([
-                new SetSampleTypeAction(sample, { linkedSample: other, type })
+                new SetSampleTypeAction(sample, {
+                    linkedSample:
+                        otherId === undefined
+                            ? undefined
+                            : lookup.sample(otherId),
+                    type
+                })
             ])
     };
 }

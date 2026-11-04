@@ -1,17 +1,16 @@
-import {
-    type BasicSample,
-    type SampleType,
-    SampleTypes
-} from "spessasynth_core";
+import { type SampleType, SampleTypes } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
-import { getObjectId } from "../../utils/object_id.ts";
+import type { SampleView } from "../../core_backend/entity_views.ts";
 
 const NO_LINK = "none";
 
 interface TypeSelectorProps {
-    sample: BasicSample;
-    samples: readonly BasicSample[];
-    onChange: (type: SampleType, linkedSample?: BasicSample) => void;
+    sample: SampleView;
+    samples: readonly SampleView[];
+    /**
+     * The new type and the id of the other half of the pair, if any.
+     */
+    onChange: (type: SampleType, linkedSampleId?: number) => void;
 }
 
 /**
@@ -19,22 +18,23 @@ interface TypeSelectorProps {
  */
 export function TypeSelector({ sample, samples, onChange }: TypeSelectorProps) {
     const { t } = useTranslation();
-    const { sampleType, linkedSample } = sample;
+    const { type: sampleType, linkedSampleId } = sample;
     // Samples that are free to pair with this one
     const available = samples.filter(
         (s) =>
-            s !== sample &&
-            (s.linkedSample === undefined || s.linkedSample === sample)
+            s.id !== sample.id &&
+            (s.linkedSampleId === undefined || s.linkedSampleId === sample.id)
     );
     const isNothingToLink =
-        available.length === 0 || (available.length < 2 && !!linkedSample);
+        available.length === 0 ||
+        (available.length < 2 && linkedSampleId !== undefined);
 
     const setType = (type: SampleType) => {
         if (
             type === SampleTypes.leftSample ||
             type === SampleTypes.rightSample
         ) {
-            onChange(type, linkedSample ?? available[0]);
+            onChange(type, linkedSampleId ?? available[0]?.id);
         } else {
             onChange(type);
         }
@@ -96,29 +96,26 @@ export function TypeSelector({ sample, samples, onChange }: TypeSelectorProps) {
             <div className={"info_field"}>
                 <span>{t("sampleLocale.link")}</span>
                 <select
-                    disabled={linkedSample === undefined}
+                    disabled={linkedSampleId === undefined}
                     className={"pretty_input monospaced"}
                     aria-label={t("sampleLocale.link")}
                     value={
-                        linkedSample
-                            ? String(getObjectId(linkedSample))
-                            : NO_LINK
+                        linkedSampleId === undefined
+                            ? NO_LINK
+                            : String(linkedSampleId)
                     }
                     onChange={(e) =>
                         onChange(
                             sampleType,
                             available.find(
-                                (s) => String(getObjectId(s)) === e.target.value
-                            )
+                                (s) => String(s.id) === e.target.value
+                            )?.id
                         )
                     }
                 >
                     <option value={NO_LINK}>-</option>
                     {available.map((s) => (
-                        <option
-                            key={getObjectId(s)}
-                            value={String(getObjectId(s))}
-                        >
+                        <option key={s.id} value={String(s.id)}>
                             {s.name}
                         </option>
                     ))}

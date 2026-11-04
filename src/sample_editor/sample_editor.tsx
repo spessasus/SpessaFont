@@ -1,6 +1,6 @@
 import type { BasicSample } from "spessasynth_core";
 import "./sample_editor.css";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { WaveView } from "./wave_view/wave_view.tsx";
 import { WaitingInput } from "../fancy_inputs/waiting_input/waiting_input.tsx";
@@ -11,7 +11,8 @@ import { SampleProperties } from "./sample_properties.tsx";
 import { SamplePlayback } from "./sample_playback.tsx";
 import { ZoomSlider } from "./zoom_slider.tsx";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
-import { useEntityRevision } from "../hooks/use_entity_revision.ts";
+import { useSampleView } from "../hooks/use_sample_view.ts";
+import type { SampleView } from "../core_backend/entity_views.ts";
 import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
 import { useSampleEdits } from "./use_sample_edits.ts";
 import {
@@ -60,15 +61,62 @@ export function SampleEditor({
     equalizer,
     onEqualizerChange
 }: SampleEditorProps) {
+    const { session } = useBankEditor();
+    const sampleId = getObjectId(sample);
+    const view = useSampleView(session.store, sampleId);
+    const sampleViews = useBankSnapshot(session.store, (s) => s.views.samples);
+    const sampleOrder = useBankSnapshot(
+        session.store,
+        (s) => s.views.sampleOrder
+    );
+    // In bank order, for the stereo link list
+    const samples = useMemo(
+        () =>
+            sampleOrder.flatMap((id) => {
+                const v = sampleViews.get(id);
+                return v ? [v] : [];
+            }),
+        [sampleOrder, sampleViews]
+    );
+    if (!view) {
+        // The pane is closed when its sample is removed, this only covers the render before
+        return null;
+    }
+    return (
+        <SampleEditorPane
+            sample={sample}
+            view={view}
+            samples={samples}
+            playerState={playerState}
+            playRequest={playRequest}
+            onPlayerStateChange={onPlayerStateChange}
+            equalizer={equalizer}
+            onEqualizerChange={onEqualizerChange}
+        />
+    );
+}
+
+interface SampleEditorPaneProps extends SampleEditorProps {
+    view: SampleView;
+    samples: readonly SampleView[];
+}
+
+function SampleEditorPane({
+    sample,
+    view,
+    samples,
+    playerState,
+    playRequest,
+    onPlayerStateChange,
+    equalizer,
+    onEqualizerChange
+}: SampleEditorPaneProps) {
     const { t } = useTranslation();
     const { session } = useBankEditor();
-    const samples = useBankSnapshot(session.store, (s) => s.samples);
-    // Re-render when the sample's audio, properties, or links change
-    useEntityRevision(session.store, sample);
-    const edits = useSampleEdits(sample);
-    const data = useSampleAudio(session, getObjectId(sample));
+    const edits = useSampleEdits(sample, view);
+    const data = useSampleAudio(session, view.id);
     const player = useSamplePlayer(
-        sample,
+        view,
         data,
         playerState,
         playRequest,
@@ -76,7 +124,7 @@ export function SampleEditor({
     );
     useEqualizerPreview(
         equalizer.isPreviewing ? equalizer.settings : FLAT_EQUALIZER,
-        sample.sampleRate
+        view.sampleRate
     );
     const audio = useSampleAudioCommands(sample, player.stop);
     const [zoom, setZoom] = useState(1);
@@ -88,18 +136,18 @@ export function SampleEditor({
                 onLoopStartChange={edits.setLoopStart}
                 onLoopEndChange={edits.setLoopEnd}
                 data={data ?? NO_AUDIO}
-                loopStart={sample.loopStart}
-                loopEnd={sample.loopEnd}
-                sampleRate={sample.sampleRate}
+                loopStart={view.loopStart}
+                loopEnd={view.loopEnd}
+                sampleRate={view.sampleRate}
                 playerState={player.state}
                 playbackStartTime={player.startTime}
-                centCorrection={sample.pitchCorrection}
+                centCorrection={view.pitchCorrection}
             />
             <div className={"sample_editor_toolbar"}>
                 <div className={"sample_editor_title"}>
                     <WaitingInput
                         setValue={edits.setName}
-                        value={sample.name}
+                        value={view.name}
                         maxLength={MAX_NAME_LENGTH}
                         className={"pretty_input sample_name monospaced"}
                         placeholder={t("sampleLocale.sampleName")}
@@ -112,14 +160,14 @@ export function SampleEditor({
                     />
                 </div>
                 <ZoomSlider
-                    sampleLength={sample.sampleLength}
+                    sampleLength={view.length}
                     zoom={zoom}
                     onZoomChange={setZoom}
                 />
             </div>
             <div className={"sample_editor_panels"}>
                 <SampleProperties
-                    sample={sample}
+                    sample={view}
                     samples={samples}
                     edits={edits}
                 />
@@ -132,7 +180,7 @@ export function SampleEditor({
                 />
                 <EqualizerPanel
                     state={equalizer}
-                    sampleRate={sample.sampleRate}
+                    sampleRate={view.sampleRate}
                     isDisabled={audio.isLoading}
                     onStateChange={onEqualizerChange}
                     onApply={() => {

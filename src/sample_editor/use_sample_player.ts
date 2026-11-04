@@ -1,5 +1,5 @@
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
-import type { BasicSample } from "spessasynth_core";
+import type { SampleView } from "../core_backend/entity_views.ts";
 import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
 
 export type SamplePlayerState = "stopped" | "playing" | "playing_loop";
@@ -44,7 +44,7 @@ function createPlaybackBuffer(
  * when the audio changes or `playRequest` changes.
  */
 export function useSamplePlayer(
-    sample: BasicSample,
+    sample: SampleView,
     data: Float32Array | undefined,
     state: SamplePlayerState,
     playRequest: number,

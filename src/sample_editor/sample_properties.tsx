@@ -1,4 +1,4 @@
-import type { BasicSample } from "spessasynth_core";
+import type { SampleView } from "../core_backend/entity_views.ts";
 import { useTranslation } from "react-i18next";
 import { WaitingInput } from "../fancy_inputs/waiting_input/waiting_input.tsx";
 import { TypeSelector } from "./type_selector/type_selector.tsx";
@@ -10,8 +10,11 @@ import {
 } from "./use_sample_edits.ts";
 
 interface SamplePropertiesProps {
-    sample: BasicSample;
-    samples: readonly BasicSample[];
+    sample: SampleView;
+    /**
+     * Every sample of the bank, for the stereo link.
+     */
+    samples: readonly SampleView[];
     edits: ReturnType<typeof useSampleEdits>;
 }
 
@@ -24,8 +27,7 @@ export function SampleProperties({
     edits
 }: SamplePropertiesProps) {
     const { t } = useTranslation();
-    const { loopStart, loopEnd, originalKey } = sample;
-    const length = sample.sampleLength;
+    const { loopStart, loopEnd, originalKey, length } = sample;
     return (
         <div className={"sample_properties"}>
             <div className={"info_field"}>
