@@ -10,6 +10,8 @@ export const SettingsLocale = {
     audioEngine: {
         title: "Audio Engine Settings",
         sampleRate: "Sample Rate",
+        sampleRateRejected:
+            "This browser does not support a sample rate of {{rate}} Hz, so the default rate is used.",
         volume: "Volume",
         voiceCap: "Voice Cap",
         interpolation: {

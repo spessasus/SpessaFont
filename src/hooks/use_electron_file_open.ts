@@ -1,5 +1,6 @@
 import { useEffect, useEffectEvent } from "react";
 import { logInfo } from "../utils/core_utils.ts";
+import { getFileName, toFileURL } from "../utils/file_path.ts";
 
 /**
  * Receives the files the OS opens with the Electron app, and tells Electron the app is ready.
@@ -19,9 +20,9 @@ export function useElectronFileOpen(
         const openPath = async (path: string) => {
             logInfo(`Attempting to open ${path}`);
             try {
-                const response = await fetch(`file://${path}`);
+                const response = await fetch(toFileURL(path));
                 const blob = await response.blob();
-                const name = path.split("/").at(-1) ?? "soundfont";
+                const name = getFileName(path);
                 await handleFile(new File([blob], name));
             } catch (error) {
                 handleError(path, error);

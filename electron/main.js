@@ -1,5 +1,13 @@
 import path from "node:path";
-import { app, BrowserWindow, ipcMain, Menu, nativeImage } from "electron";
+import {
+    app,
+    BrowserWindow,
+    dialog,
+    ipcMain,
+    Menu,
+    nativeImage,
+    shell
+} from "electron";
 import pkg from "electron-updater";
 
 const { autoUpdater } = pkg;
@@ -28,7 +36,9 @@ app.on("open-file", (event, path) => {
 
     console.info("macOS requested file open:", path);
 
-    if (mainWindow) mainWindow.webContents.send("open-file", path);
+    // On macOS the window can be closed while the app keeps running
+    if (mainWindow && !mainWindow.isDestroyed())
+        mainWindow.webContents.send("open-file", path);
     else fileToOpen = path;
 });
 
@@ -52,6 +62,32 @@ async function createWindow() {
             preload: preloadPath
         }
     });
+    // Shown as soon as it can paint, so an app that fails to start still shows its error screen
+    mainWindow.once("ready-to-show", () => mainWindow.show());
+
+    // Links (GitHub, downloads) open in the browser, not in a window with the app's preload
+    mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+        if (url.startsWith("https://") || url.startsWith("http://")) {
+            void shell.openExternal(url);
+        }
+        return { action: "deny" };
+    });
+
+    // Electron cancels a prevented unload silently, so ask the way a browser does
+    mainWindow.webContents.on("will-prevent-unload", (event) => {
+        const choice = dialog.showMessageBoxSync(mainWindow, {
+            type: "warning",
+            buttons: ["Leave", "Stay"],
+            defaultId: 1,
+            cancelId: 1,
+            title: "Unsaved changes",
+            message: "Some sound banks have unsaved changes. Leave anyway?"
+        });
+        if (choice === 0) {
+            event.preventDefault();
+        }
+    });
+
     if (DEV_MODE) {
         console.info("DEVELOPER MODE");
         // Devtools handler
@@ -60,16 +96,9 @@ async function createWindow() {
                 mainWindow.webContents.toggleDevTools();
         });
     }
-    await (DEV_MODE
-        ? mainWindow.loadURL(devServerUrl)
-        : mainWindow.loadFile(distIndex));
-
-    console.info("Searching for opened files");
-
-    // Sent from the main thread
+    // Registered before loading, so a fast app cannot send it too early
     ipcMain.once("app-ready", () => {
         console.info("Application is loaded!");
-        mainWindow.show();
 
         if (process.platform !== "darwin") {
             fileToOpen = process.argv.find((arg) => {
@@ -86,9 +115,27 @@ async function createWindow() {
             fileToOpen = null;
         }
     });
+
+    await (DEV_MODE
+        ? mainWindow.loadURL(devServerUrl)
+        : mainWindow.loadFile(distIndex));
 }
 
 app.whenReady().then(async () => {
-    if (app.isPackaged) await autoUpdater.checkForUpdatesAndNotify();
     await createWindow();
+    // The window does not wait for the network, and a failed check (offline) is only logged
+    if (app.isPackaged) {
+        autoUpdater.checkForUpdatesAndNotify().catch((error) => {
+            console.error("Update check failed:", error);
+        });
+    }
+});
+
+// macOS keeps the app running without windows, a click on the dock icon opens one again
+app.on("activate", () => {
+    if (BrowserWindow.getAllWindows().length === 0) void createWindow();
+});
+
+app.on("window-all-closed", () => {
+    if (process.platform !== "darwin") app.quit();
 });

@@ -1,5 +1,8 @@
 import { type InterpolationType, InterpolationTypes } from "spessasynth_core";
-import { readSampleRateParam } from "../../utils/sample_rate_param.ts";
+import {
+    readSampleRateParam,
+    SAMPLE_RATE_LIMITS
+} from "../../utils/sample_rate_param.ts";
 import type { ThemeType } from "../../themes/theme_list.ts";
 
 export interface SavedSettingsType {
@@ -60,7 +63,7 @@ export const SETTING_LIMITS: Record<
     chorusLevel: { min: 0, max: 10 },
     delayLevel: { min: 0, max: 10 },
     voiceCap: { min: 0, max: 2048 },
-    sampleRate: { min: 3000, max: 768_000 }
+    sampleRate: SAMPLE_RATE_LIMITS
 };
 
 /**

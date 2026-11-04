@@ -16,17 +16,49 @@ async function registerServiceWorker() {
         return;
     }
     try {
-        await navigator.serviceWorker.register("service-worker.js");
+        // The version in the URL makes every release install its own worker and cache
+        await navigator.serviceWorker.register(
+            `service-worker.js?version=${encodeURIComponent(__APP_VERSION__)}`
+        );
         logInfo("Registered service worker");
     } catch (error) {
         logError("Failed to register the service worker.", error);
         return;
     }
-    // The service worker only caches what was fetched, so get the encoder while idle,
+    const worker = await getControllingWorker();
+    // On the first visit the page loaded before the worker could cache anything
+    worker.postMessage({
+        type: "cache",
+        urls: performance
+            .getEntriesByType("resource")
+            .map((entry) => entry.name)
+    });
+    // The encoder is only loaded for SF3 saves, so it is fetched (and cached) while idle,
     // or SF3 saves would fail offline until one was made online
-    requestIdleCallback(() => {
+    const whenIdle = globalThis.requestIdleCallback ?? setTimeout;
+    whenIdle(() => {
         void prefetchEncoder();
     });
+}
+
+/**
+ * The worker that controls this page, waiting for it to take over on the first visit.
+ */
+async function getControllingWorker() {
+    const { serviceWorker } = navigator;
+    if (serviceWorker.controller) {
+        return serviceWorker.controller;
+    }
+    await new Promise<void>((resolve) => {
+        serviceWorker.addEventListener("controllerchange", () => resolve(), {
+            once: true
+        });
+    });
+    const { controller } = serviceWorker;
+    if (!controller) {
+        throw new Error("The service worker did not take control of the page.");
+    }
+    return controller;
 }
 
 async function prefetchEncoder() {
@@ -49,7 +81,9 @@ export async function init() {
     await i18next.use(initReactI18next).init({
         resources: LocaleList,
         lng: resolveLocale(settings.lang),
-        fallbackLng: DEFAULT_LOCALE
+        fallbackLng: DEFAULT_LOCALE,
+        // React escapes text itself, escaping here shows names like "Tom's Kit" as entities
+        interpolation: { escapeValue: false }
     });
     // The app works without it, so rendering does not wait for it
     void registerServiceWorker();

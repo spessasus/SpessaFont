@@ -7,6 +7,7 @@ interface MIDIAccessState {
     status: MIDIAccessStatus;
     error: string | null;
     devices: MIDIInput[];
+    midiAccess: MIDIAccess | null;
 }
 
 function getInitialAccessState(): MIDIAccessState {
@@ -17,7 +18,8 @@ function getInitialAccessState(): MIDIAccessState {
     return {
         status: isSupported ? "waiting" : "unsupported",
         error: null,
-        devices: []
+        devices: [],
+        midiAccess: null
     };
 }
 
@@ -47,7 +49,8 @@ export function MIDIProvider({ children }: MIDIProviderProps) {
                     setAccess({
                         status: "granted",
                         error: null,
-                        devices: Array.from(midiAccess.inputs.values())
+                        devices: Array.from(midiAccess.inputs.values()),
+                        midiAccess
                     });
                 }
             } catch (error) {
@@ -59,7 +62,8 @@ export function MIDIProvider({ children }: MIDIProviderProps) {
                             error instanceof Error
                                 ? error.message
                                 : String(error),
-                        devices: []
+                        devices: [],
+                        midiAccess: null
                     });
                 }
             }
@@ -69,6 +73,24 @@ export function MIDIProvider({ children }: MIDIProviderProps) {
             isIgnored = true;
         };
     }, [isWaiting]);
+
+    // Devices plugged in or out after access was granted
+    const { midiAccess } = access;
+    useEffect(() => {
+        if (!midiAccess) {
+            return;
+        }
+        const handleStateChange = () => {
+            const devices = Array.from(midiAccess.inputs.values());
+            setAccess((previous) => ({ ...previous, devices }));
+            setSelectedDevice((selected) =>
+                selected && devices.includes(selected) ? selected : null
+            );
+        };
+        midiAccess.addEventListener("statechange", handleStateChange);
+        return () =>
+            midiAccess.removeEventListener("statechange", handleStateChange);
+    }, [midiAccess]);
 
     const value = useMemo(
         () => ({

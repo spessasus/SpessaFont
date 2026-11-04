@@ -46,7 +46,7 @@
 
     "file_handlers": [
         {
-            "action": "/",
+            "action": "./",
             "accept": {
                 "application/octet-stream": [".sf2", ".sf3", ".dls", ".sfogg"]
             }

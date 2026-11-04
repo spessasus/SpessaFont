@@ -20,6 +20,7 @@ import { useElectronFileOpen } from "./hooks/use_electron_file_open.ts";
 import { useEventListener } from "./hooks/use_event_listener.ts";
 import { useUncaughtErrorToasts } from "./hooks/use_uncaught_error_toasts.ts";
 import { pickFile } from "./utils/pick_file.ts";
+import { getFileName } from "./utils/file_path.ts";
 import { useFileDrop } from "./hooks/use_file_drop.ts";
 import { createSampleImportActions } from "./menu_list/import_sample.ts";
 
@@ -59,7 +60,7 @@ export function App() {
         logError(`Failed to open ${path}.`, error);
         toast.error(
             t("loadingAndSaving.electronOpenError", {
-                name: path.split("/").at(-1) ?? path
+                name: getFileName(path)
             })
         );
     });

@@ -10,6 +10,8 @@ export const SettingsLocale = {
     audioEngine: {
         title: "Ustawienia silnika audio",
         sampleRate: "Częstotliwość Próbkowania",
+        sampleRateRejected:
+            "Ta przeglądarka nie obsługuje częstotliwości {{rate}} Hz, więc używana jest domyślna.",
         volume: "Głośność",
         voiceCap: "Limit głosów",
         interpolation: {
