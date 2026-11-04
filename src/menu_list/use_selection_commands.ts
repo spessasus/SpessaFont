@@ -26,19 +26,19 @@ export function useSelectionCommands() {
         const instruments = selectionOf(selection, isInstrument);
         const samples = selectionOf(selection, isSample);
         if (presets.size > 0) {
-            clipboard.copyPresets(presets);
+            clipboard.copyPresets(presets, session);
             toast.success(
                 t("clipboardLocale.copiedPresets", { count: presets.size })
             );
         } else if (instruments.size > 0) {
-            clipboard.copyInstruments(instruments);
+            clipboard.copyInstruments(instruments, session);
             toast.success(
                 t("clipboardLocale.copiedInstruments", {
                     count: instruments.size
                 })
             );
         } else if (samples.size > 0) {
-            clipboard.copySamples(samples);
+            clipboard.copySamples(samples, session);
             toast.success(
                 t("clipboardLocale.copiedSamples", { count: samples.size })
             );
@@ -56,9 +56,8 @@ export function useSelectionCommands() {
     };
 
     const paste = () => {
-        const { document } = session;
         if (clipboard.hasPresets()) {
-            apply(clipboard.pastePresets(document));
+            apply(clipboard.pastePresets(session));
             toast.success(
                 t("clipboardLocale.pastedPresets", {
                     count: clipboard.presetCount
@@ -66,7 +65,7 @@ export function useSelectionCommands() {
             );
         }
         if (clipboard.hasInstruments()) {
-            apply(clipboard.pasteInstruments(document));
+            apply(clipboard.pasteInstruments(session));
             toast.success(
                 t("clipboardLocale.pastedInstruments", {
                     count: clipboard.instrumentCount
@@ -76,7 +75,7 @@ export function useSelectionCommands() {
         if (!clipboard.hasSamples()) {
             return;
         }
-        apply(clipboard.pasteSamples(document));
+        apply(clipboard.pasteSamples(session));
         toast.success(
             t("clipboardLocale.pastedSamples", {
                 count: clipboard.sampleCount
@@ -86,20 +85,16 @@ export function useSelectionCommands() {
 
     // Leaves the clipboard alone. Instruments and samples are shared with the original.
     const duplicate = (selection: ReadonlySet<BankEntity>) => {
-        const { document } = session;
         apply([
             ...clipboard.clonePresets(
-                document,
+                session,
                 selectionOf(selection, isPreset)
             ),
             ...clipboard.cloneInstruments(
-                document,
+                session,
                 selectionOf(selection, isInstrument)
             ),
-            ...clipboard.cloneSamples(
-                document,
-                selectionOf(selection, isSample)
-            )
+            ...clipboard.cloneSamples(session, selectionOf(selection, isSample))
         ]);
     };
 

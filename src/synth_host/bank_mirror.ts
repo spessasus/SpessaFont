@@ -51,6 +51,15 @@ export interface MirrorPatch {
      * The new data of samples whose audio changed, by id.
      */
     readonly sampleData: ReadonlyMap<number, SampleStoredData>;
+    /**
+     * New samples whose data is a copy of a sample in a mirror (pasted or duplicated), by id.
+     */
+    readonly sampleCopies: ReadonlyMap<number, SampleCopySource>;
+}
+
+export interface SampleCopySource {
+    readonly mirror: BankMirror;
+    readonly id: number;
 }
 
 /**
@@ -62,6 +71,15 @@ export interface MirrorTarget {
 }
 
 const UNSET_RANGE = { min: -1, max: 127 };
+
+/**
+ * A copy, so two samples never share an array that one of them changes.
+ */
+export function copyStoredData(stored: SampleStoredData): SampleStoredData {
+    return stored.form === "float32"
+        ? { form: stored.form, data: stored.data.slice() }
+        : { form: stored.form, data: stored.data.slice() };
+}
 
 function applySource(source: ModulatorSource, view: ModulatorSourceView) {
     source.index = view.index;
@@ -303,6 +321,15 @@ export class BankMirror {
         this.applySamples(views.samples);
         for (const [id, stored] of patch.sampleData) {
             getOrThrow(this.samples, id, "sample").setStoredData(stored);
+        }
+        for (const [id, source] of patch.sampleCopies) {
+            const from = source.mirror.getSample(source.id);
+            if (!from) {
+                throw new Error(`No sample with the id ${source.id} to copy.`);
+            }
+            getOrThrow(this.samples, id, "sample").setStoredData(
+                copyStoredData(from.getStoredData())
+            );
         }
         // Presets first, so a removed preset lets go of its instruments before they are removed
         this.applyPresetRemovals(views.presets);

@@ -64,7 +64,7 @@ export function InstrumentList({
                 onCopy={
                     selected.size > 0
                         ? () => {
-                              clipboard.copyInstruments(selected);
+                              clipboard.copyInstruments(selected, session);
                               toast.success(
                                   t("clipboardLocale.copiedInstruments", {
                                       count: selected.size
@@ -76,9 +76,7 @@ export function InstrumentList({
                 onPaste={
                     contents.instruments > 0
                         ? () => {
-                              apply(
-                                  clipboard.pasteInstruments(session.document)
-                              );
+                              apply(clipboard.pasteInstruments(session));
                               toast.success(
                                   t("clipboardLocale.pastedInstruments", {
                                       count: clipboard.instrumentCount

@@ -1,17 +1,12 @@
-import type { SampleStoredData } from "spessasynth_core";
-import type { BankMirror } from "../synth_host/bank_mirror.ts";
+import type { BasicSample, SampleStoredData } from "spessasynth_core";
+import {
+    type BankMirror,
+    copyStoredData,
+    type SampleCopySource
+} from "../synth_host/bank_mirror.ts";
 import type { BankDocument } from "./bank_document.ts";
 import type { BankSnapshot } from "./bank_store.ts";
 import { diffBankViews } from "./view_diff.ts";
-
-/**
- * A copy, so the two banks never share an array that one of them changes.
- */
-function copyStoredData(stored: SampleStoredData): SampleStoredData {
-    return stored.form === "float32"
-        ? { form: stored.form, data: stored.data.slice() }
-        : { form: stored.form, data: stored.data.slice() };
-}
 
 /**
  * Keeps the mirror up to date with the store: each commit becomes one patch of the views that
@@ -26,6 +21,13 @@ export class MirrorSync {
      * the mirror keeps their data for an undo.
      */
     private readonly sentRevisions = new Map<number, number>();
+    /**
+     * Pasted and duplicated samples, whose data the mirror copies from the source's mirror.
+     */
+    private readonly pendingCopies = new WeakMap<
+        BasicSample,
+        SampleCopySource
+    >();
 
     /**
      * @param snapshot the store's first snapshot. The mirror was loaded from the same file, so
@@ -52,8 +54,17 @@ export class MirrorSync {
                 defaultModulators: undefined
             },
             info: snapshot.info,
-            sampleData: new Map()
+            sampleData: new Map(),
+            sampleCopies: new Map()
         });
+    }
+
+    /**
+     * Makes the mirror copy a new sample's data from a sample of a mirror, when the commit that
+     * adds it arrives.
+     */
+    public copyDataOnAdd(sample: BasicSample, source: SampleCopySource) {
+        this.pendingCopies.set(sample, source);
     }
 
     /**
@@ -69,6 +80,7 @@ export class MirrorSync {
         }
         const views = diffBankViews(previous.views, snapshot.views);
         const sampleData = new Map<number, SampleStoredData>();
+        const sampleCopies = new Map<number, SampleCopySource>();
         for (const view of views.samples.changed) {
             if (this.sentRevisions.get(view.id) === view.audioRevision) {
                 continue;
@@ -78,15 +90,20 @@ export class MirrorSync {
                 throw new Error(`The sample with the id ${view.id} is gone.`);
             }
             this.sentRevisions.set(view.id, view.audioRevision);
-            // A new empty sample has nothing to send, and the mirror's copy is empty too
-            if (sample.hasData) {
+            const copy = this.pendingCopies.get(sample);
+            if (copy) {
+                this.pendingCopies.delete(sample);
+                sampleCopies.set(view.id, copy);
+            } else if (sample.hasData) {
+                // A new empty sample has nothing to send, and the mirror's copy is empty too
                 sampleData.set(view.id, copyStoredData(sample.getStoredData()));
             }
         }
         this.mirror.apply({
             views,
             info: isInfoChanged ? snapshot.info : undefined,
-            sampleData
+            sampleData,
+            sampleCopies
         });
         return previous.views === snapshot.views ? undefined : views;
     }

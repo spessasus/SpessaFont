@@ -86,6 +86,23 @@ export class BankSession implements SampleDataSource {
         return mirrored;
     }
 
+    /**
+     * Gives pasted or duplicated samples (not added yet) the data of their source samples.
+     * @param copies each new sample and the sample it copies
+     * @param source the session the source samples belong to
+     */
+    public copySampleData(
+        copies: ReadonlyMap<BasicSample, BasicSample>,
+        source: BankSession
+    ) {
+        for (const [copy, original] of copies) {
+            this.mirrorSync.copyDataOnAdd(copy, {
+                mirror: source.mirror,
+                id: getObjectId(original)
+            });
+        }
+    }
+
     public readAudio(sample: BasicSample) {
         return Promise.resolve(this.getMirrorSample(sample).getAudioData());
     }

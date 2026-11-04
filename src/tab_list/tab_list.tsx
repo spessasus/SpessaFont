@@ -35,15 +35,23 @@ function Tab({ session, isActive, onSelect, onClose }: TabProps) {
     // Elements of another bank dropped on the tab are copied into this bank, like a paste
     const dropTarget = useDropTarget({
         accepts: (payload) => payload.session !== session,
-        onDrop: ({ entities }) => {
-            const { document } = session;
+        onDrop: ({ entities, session: source }) => {
             session.history.do([
-                ...clipboard.clonePresets(document, entities.filter(isPreset)),
-                ...clipboard.cloneInstruments(
-                    document,
-                    entities.filter(isInstrument)
+                ...clipboard.clonePresets(
+                    session,
+                    entities.filter(isPreset),
+                    source
                 ),
-                ...clipboard.cloneSamples(document, entities.filter(isSample))
+                ...clipboard.cloneInstruments(
+                    session,
+                    entities.filter(isInstrument),
+                    source
+                ),
+                ...clipboard.cloneSamples(
+                    session,
+                    entities.filter(isSample),
+                    source
+                )
             ]);
             toast.success(
                 t("clipboardLocale.copiedToBank", {

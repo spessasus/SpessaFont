@@ -64,7 +64,7 @@ export function PresetList({
                 onCopy={
                     selected.size > 0
                         ? () => {
-                              clipboard.copyPresets(selected);
+                              clipboard.copyPresets(selected, session);
                               toast.success(
                                   t("clipboardLocale.copiedPresets", {
                                       count: selected.size
@@ -76,7 +76,7 @@ export function PresetList({
                 onPaste={
                     contents.presets > 0
                         ? () => {
-                              apply(clipboard.pastePresets(session.document));
+                              apply(clipboard.pastePresets(session));
                               toast.success(
                                   t("clipboardLocale.pastedPresets", {
                                       count: clipboard.presetCount

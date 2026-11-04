@@ -1,7 +1,7 @@
 import {
-    type BasicInstrument,
-    type BasicPreset,
-    type BasicSample,
+    BasicInstrument,
+    BasicPreset,
+    BasicSample,
     type MIDIPatch,
     MIDIPatchTools,
     Modulator,
@@ -11,6 +11,7 @@ import { CreateSampleAction } from "../menu_list/create_actions/create_sample_ac
 import { CreateInstrumentAction } from "../menu_list/create_actions/create_instrument_action.ts";
 import { CreatePresetAction } from "../menu_list/create_actions/create_preset_action.ts";
 import type { BankDocument } from "./bank_document.ts";
+import type { BankSession } from "./bank_session.ts";
 
 /**
  * How many items of each kind the clipboard holds. A new object is created on every copy.
@@ -46,6 +47,59 @@ function getCreateActions(cloner: SoundBankCloner) {
         ...instruments.map((i) => new CreateInstrumentAction(i)),
         ...presets.map((p) => new CreatePresetAction(p))
     ];
+}
+
+/**
+ * Pairs each sample the cloner made with the sample it copied. The cloner keeps that map to
+ * itself, but it copies zones in order, so the copied elements line up with their sources.
+ */
+function getSampleCopies(
+    cloner: SoundBankCloner,
+    pairs: Iterable<
+        | [BasicPreset, BasicPreset]
+        | [BasicInstrument, BasicInstrument]
+        | [BasicSample, BasicSample]
+    >
+) {
+    const createdSamples = new Set(cloner.created.samples);
+    const createdInstruments = new Set(cloner.created.instruments);
+    const copies = new Map<BasicSample, BasicSample>();
+    const addSample = (source: BasicSample, copy: BasicSample) => {
+        if (!createdSamples.has(copy) || copies.has(copy)) {
+            return;
+        }
+        copies.set(copy, source);
+        if (source.linkedSample && copy.linkedSample) {
+            addSample(source.linkedSample, copy.linkedSample);
+        }
+    };
+    // A reused instrument is the document's own, its zones do not line up with the source's
+    const addInstrument = (source: BasicInstrument, copy: BasicInstrument) => {
+        if (!createdInstruments.has(copy)) {
+            return;
+        }
+        for (const [i, zone] of source.zones.entries()) {
+            addSample(zone.sample, copy.zones[i].sample);
+        }
+    };
+    for (const [source, copy] of pairs) {
+        if (source instanceof BasicPreset && copy instanceof BasicPreset) {
+            for (const [i, zone] of source.zones.entries()) {
+                addInstrument(zone.instrument, copy.zones[i].instrument);
+            }
+        } else if (
+            source instanceof BasicInstrument &&
+            copy instanceof BasicInstrument
+        ) {
+            addInstrument(source, copy);
+        } else if (
+            source instanceof BasicSample &&
+            copy instanceof BasicSample
+        ) {
+            addSample(source, copy);
+        }
+    }
+    return copies;
 }
 
 const MIDI_VALUES = 128;
@@ -85,6 +139,10 @@ export class ClipboardManager {
     private sampleClipboard = new Set<BasicSample>();
     private instrumentClipboard = new Set<BasicInstrument>();
     private presetClipboard = new Set<BasicPreset>();
+    /**
+     * The session the copied elements belong to, whose mirror has their sample data.
+     */
+    private source: BankSession | undefined;
     private readonly listeners = new Set<() => void>();
     private contents: ClipboardContents = {
         presets: 0,
@@ -143,21 +201,24 @@ export class ClipboardManager {
     }
 
     // Copies keep their own sets, so later selection changes do not alter the clipboard
-    copyPresets(p: ReadonlySet<BasicPreset>) {
+    copyPresets(p: ReadonlySet<BasicPreset>, source: BankSession) {
+        this.source = source;
         this.presetClipboard = new Set(p);
         this.sampleClipboard = new Set();
         this.instrumentClipboard = new Set();
         this.notify();
     }
 
-    copyInstruments(i: ReadonlySet<BasicInstrument>) {
+    copyInstruments(i: ReadonlySet<BasicInstrument>, source: BankSession) {
+        this.source = source;
         this.instrumentClipboard = new Set(i);
         this.sampleClipboard = new Set();
         this.presetClipboard = new Set();
         this.notify();
     }
 
-    copySamples(s: ReadonlySet<BasicSample>) {
+    copySamples(s: ReadonlySet<BasicSample>, source: BankSession) {
+        this.source = source;
         this.sampleClipboard = new Set(s);
         this.instrumentClipboard = new Set();
         this.presetClipboard = new Set();
@@ -173,22 +234,26 @@ export class ClipboardManager {
      * Builds the actions that paste the copied presets with their instruments and samples.
      * Pasted presets move to the next free MIDI patch.
      */
-    pastePresets(document: BankDocument) {
-        return this.clonePresets(document, this.presetClipboard);
+    pastePresets(target: BankSession) {
+        return this.clonePresets(target, this.presetClipboard, this.source);
     }
 
     /**
      * Builds the actions that paste the copied instruments with their samples.
      */
-    pasteInstruments(document: BankDocument) {
-        return this.cloneInstruments(document, this.instrumentClipboard);
+    pasteInstruments(target: BankSession) {
+        return this.cloneInstruments(
+            target,
+            this.instrumentClipboard,
+            this.source
+        );
     }
 
     /**
      * Builds the actions that paste the copied samples.
      */
-    pasteSamples(document: BankDocument) {
-        return this.cloneSamples(document, this.sampleClipboard);
+    pasteSamples(target: BankSession) {
+        return this.cloneSamples(target, this.sampleClipboard, this.source);
     }
 
     /**
@@ -196,8 +261,14 @@ export class ClipboardManager {
      * with their instruments and samples. Instruments and samples with a name the document
      * already has are reused, so a duplicate in the same bank shares them.
      * The copies keep their names and move to the next free MIDI patch.
+     * @param source the session the presets belong to, the target itself for a duplicate
      */
-    clonePresets(document: BankDocument, presets: Iterable<BasicPreset>) {
+    clonePresets(
+        target: BankSession,
+        presets: Iterable<BasicPreset>,
+        source = target
+    ) {
+        const { document } = target;
         const cloner = createCloner(document);
         const taken = new Set<string>();
         for (const p of document.presets) {
@@ -216,14 +287,17 @@ export class ClipboardManager {
             taken.add(MIDIPatchTools.toMIDIString(patch));
             targets.push({ preset, patch });
         }
+        const pairs = new Array<[BasicPreset, BasicPreset]>();
         for (const { preset: oldPreset, patch } of targets) {
             const newPreset = cloner.clonePreset(oldPreset);
+            pairs.push([oldPreset, newPreset]);
             // Presets are told apart by their patch, so the copy needs no new name
             newPreset.name = oldPreset.name;
             newPreset.program = patch.program;
             newPreset.bankMSB = patch.bankMSB;
             newPreset.bankLSB = patch.bankLSB;
         }
+        target.copySampleData(getSampleCopies(cloner, pairs), source);
         return getCreateActions(cloner);
     }
 
@@ -232,24 +306,33 @@ export class ClipboardManager {
      * Samples with a name the document already has are reused.
      */
     cloneInstruments(
-        document: BankDocument,
-        instruments: Iterable<BasicInstrument>
+        target: BankSession,
+        instruments: Iterable<BasicInstrument>,
+        source = target
     ) {
-        const cloner = createCloner(document);
+        const cloner = createCloner(target.document);
+        const pairs = new Array<[BasicInstrument, BasicInstrument]>();
         for (const instrument of instruments) {
-            cloner.cloneInstrument(instrument);
+            pairs.push([instrument, cloner.cloneInstrument(instrument)]);
         }
+        target.copySampleData(getSampleCopies(cloner, pairs), source);
         return getCreateActions(cloner);
     }
 
     /**
      * Builds the actions that copy samples into the document, with their stereo partners.
      */
-    cloneSamples(document: BankDocument, samples: Iterable<BasicSample>) {
-        const cloner = createCloner(document);
+    cloneSamples(
+        target: BankSession,
+        samples: Iterable<BasicSample>,
+        source = target
+    ) {
+        const cloner = createCloner(target.document);
+        const pairs = new Array<[BasicSample, BasicSample]>();
         for (const sample of samples) {
-            cloner.cloneSample(sample);
+            pairs.push([sample, cloner.cloneSample(sample)]);
         }
+        target.copySampleData(getSampleCopies(cloner, pairs), source);
         return getCreateActions(cloner);
     }
 }

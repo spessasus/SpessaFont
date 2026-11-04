@@ -12,10 +12,10 @@ describe("ClipboardManager", () => {
         const source = createTestSession();
         const target = createTestSession();
         const clipboard = new ClipboardManager();
-        clipboard.copyPresets(new Set([source.document.presets[0]]));
+        clipboard.copyPresets(new Set([source.document.presets[0]]), source);
 
         const { after } = expectRoundTrip(target, () =>
-            clipboard.pastePresets(target.document)
+            clipboard.pastePresets(target)
         );
 
         expect(after.presets).toHaveLength(3);
@@ -32,10 +32,10 @@ describe("ClipboardManager", () => {
     it("pastes samples with unique names", () => {
         const session = createTestSession();
         const clipboard = new ClipboardManager();
-        clipboard.copySamples(new Set([session.document.samples[0]]));
+        clipboard.copySamples(new Set([session.document.samples[0]]), session);
 
         const { after } = expectRoundTrip(session, () =>
-            clipboard.pasteSamples(session.document)
+            clipboard.pasteSamples(session)
         );
 
         expect(after.samples.map((s) => s.name)).toEqual([
@@ -53,7 +53,7 @@ describe("ClipboardManager", () => {
         const clipboard = new ClipboardManager();
 
         const { after } = expectRoundTrip(session, () =>
-            clipboard.cloneSamples(session.document, [left])
+            clipboard.cloneSamples(session, [left])
         );
 
         expect(left.linkedSample).toBe(right);
@@ -70,7 +70,7 @@ describe("ClipboardManager", () => {
         const [instrument] = session.document.instruments;
 
         const { after } = expectRoundTrip(session, () =>
-            clipboard.cloneInstruments(session.document, [instrument])
+            clipboard.cloneInstruments(session, [instrument])
         );
 
         expect(after.instruments).toHaveLength(3);
@@ -79,9 +79,7 @@ describe("ClipboardManager", () => {
 
     it("returns no actions when nothing is copied", () => {
         const session = createTestSession();
-        expect(new ClipboardManager().pasteSamples(session.document)).toEqual(
-            []
-        );
+        expect(new ClipboardManager().pasteSamples(session)).toEqual([]);
     });
 
     it("notifies subscribers and replaces the snapshot on every copy", () => {
@@ -92,7 +90,7 @@ describe("ClipboardManager", () => {
         const empty = clipboard.getSnapshot();
         expect(clipboard.getSnapshot()).toBe(empty);
 
-        clipboard.copySamples(new Set(session.document.samples));
+        clipboard.copySamples(new Set(session.document.samples), session);
         expect(listener).toHaveBeenCalledTimes(1);
         expect(clipboard.getSnapshot()).toEqual({
             presets: 0,
@@ -102,7 +100,7 @@ describe("ClipboardManager", () => {
         });
 
         // Copying elements of another kind replaces them, modulators are separate
-        clipboard.copyPresets(new Set([session.document.presets[0]]));
+        clipboard.copyPresets(new Set([session.document.presets[0]]), session);
         clipboard.copyModulators(
             session.document.presets[0].globalZone.modulators
         );
@@ -112,7 +110,10 @@ describe("ClipboardManager", () => {
         });
 
         unsubscribe();
-        clipboard.copyInstruments(new Set(session.document.instruments));
+        clipboard.copyInstruments(
+            new Set(session.document.instruments),
+            session
+        );
         expect(listener).toHaveBeenCalledTimes(3);
     });
 
@@ -120,7 +121,7 @@ describe("ClipboardManager", () => {
         const session = createTestSession();
         const clipboard = new ClipboardManager();
         const selection = new Set([session.document.samples[0]]);
-        clipboard.copySamples(selection);
+        clipboard.copySamples(selection, session);
 
         selection.add(session.document.samples[1]);
 
@@ -141,9 +142,7 @@ describe("ClipboardManager", () => {
         }
         bank.presets.push(...copies);
 
-        const [action] = new ClipboardManager().clonePresets(session.document, [
-            preset
-        ]);
+        const [action] = new ClipboardManager().clonePresets(session, [preset]);
         session.history.do([action]);
 
         const pasted = session.document.presets.find(
@@ -165,7 +164,7 @@ describe("ClipboardManager", () => {
         }
         bank.presets.push(...kits);
 
-        const [action] = new ClipboardManager().clonePresets(session.document, [
+        const [action] = new ClipboardManager().clonePresets(session, [
             kits[0]
         ]);
         session.history.do([action]);
@@ -174,5 +173,44 @@ describe("ClipboardManager", () => {
             (p) => p.isGMGSDrum && p.bankMSB === 1 && p.program === 0
         );
         expect(pasted?.name).toBe("Kit 0");
+    });
+
+    it("gives a sample pasted into another bank the data from the source's mirror", async () => {
+        const source = createTestSession();
+        const target = createTestSession();
+        const [original] = source.document.samples;
+        original.setAudioData(new Float32Array([0.1, 0.2, 0.3]), 44_100);
+        publishSetUp(source);
+        const clipboard = new ClipboardManager();
+        clipboard.copySamples(new Set([original]), source);
+        // The editor's sample has other data, so only a copy between mirrors passes
+        original.setAudioData(new Float32Array(3), 44_100);
+
+        target.history.do(clipboard.pasteSamples(target));
+
+        const pasted = target.document.samples.find((s) => s.name === "Saw-1");
+        if (!pasted) throw new Error("The sample was not pasted.");
+        expect([...(await target.readAudio(pasted))]).toEqual([
+            ...(await source.readAudio(original))
+        ]);
+    });
+
+    it("gives the samples of a duplicated preset's new instrument the source's data", async () => {
+        const session = createTestSession();
+        const clipboard = new ClipboardManager();
+        // A preset from the other bank brings an instrument and a sample with new names
+        const other = createTestSession();
+        const [preset] = other.document.presets;
+        const sample = preset.zones[0].instrument.zones[0].sample;
+        sample.setAudioData(new Float32Array([0.5, -0.5]), 44_100);
+        sample.name = "Unique";
+        preset.zones[0].instrument.name = "Unique Instrument";
+        publishSetUp(other);
+
+        session.history.do(clipboard.clonePresets(session, [preset], other));
+
+        const copy = session.document.samples.find((s) => s.name === "Unique");
+        if (!copy) throw new Error("The sample was not copied.");
+        expect([...(await session.readAudio(copy))]).toEqual([0.5, -0.5]);
     });
 });

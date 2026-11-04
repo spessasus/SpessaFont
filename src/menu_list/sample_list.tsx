@@ -71,7 +71,7 @@ export function SampleList({
                 onCopy={
                     selected.size > 0
                         ? () => {
-                              clipboard.copySamples(selected);
+                              clipboard.copySamples(selected, session);
                               toast.success(
                                   t("clipboardLocale.copiedSamples", {
                                       count: selected.size
@@ -83,7 +83,7 @@ export function SampleList({
                 onPaste={
                     contents.samples > 0
                         ? () => {
-                              apply(clipboard.pasteSamples(session.document));
+                              apply(clipboard.pasteSamples(session));
                               toast.success(
                                   t("clipboardLocale.pastedSamples", {
                                       count: clipboard.sampleCount
