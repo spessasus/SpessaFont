@@ -1,8 +1,7 @@
 import {
     BasicSoundBank,
     SoundBankLoader,
-    type SpessaSynthProcessor,
-    type SpessaSynthSequencer
+    type SpessaSynthProcessor
 } from "spessasynth_core";
 import type { VoiceCache } from "./history.ts";
 
@@ -13,26 +12,11 @@ const SAMPLE_BANK_FILE = BasicSoundBank.getSampleSoundBankFile();
  */
 export class SynthBinding implements VoiceCache {
     private readonly processor: SpessaSynthProcessor;
-    private readonly sequencer: SpessaSynthSequencer;
     private readonly bank: BasicSoundBank;
 
-    public constructor(
-        processor: SpessaSynthProcessor,
-        sequencer: SpessaSynthSequencer,
-        bank: BasicSoundBank
-    ) {
+    public constructor(processor: SpessaSynthProcessor, bank: BasicSoundBank) {
         this.processor = processor;
-        this.sequencer = sequencer;
         this.bank = bank;
-    }
-
-    /**
-     * Channels keep the preset they resolved before the bank changed.
-     * Seeking makes the sequencer resend the program changes, so channels pick presets from the new bank.
-     * spessasynth_core has no call that re-resolves channel presets directly, which would remove this.
-     */
-    private refreshSequencerPresets() {
-        this.sequencer.currentTime -= 0.1;
     }
 
     public get isAttached() {
@@ -44,11 +28,11 @@ export class SynthBinding implements VoiceCache {
 
     /**
      * Makes this bank the synthesizer's main bank.
+     * Channels keep the preset they resolved before, so they are pointed at the new bank's presets.
      */
     public attach() {
         this.processor.soundBankManager.addSoundBank(this.bank, "main");
-        this.processor.clearCache();
-        this.refreshSequencerPresets();
+        this.processor.refreshPresets();
     }
 
     /**
@@ -61,7 +45,7 @@ export class SynthBinding implements VoiceCache {
                 "main"
             );
         }
-        this.processor.clearCache();
+        this.processor.refreshPresets();
     }
 
     public clearCache() {

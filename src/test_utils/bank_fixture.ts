@@ -4,8 +4,7 @@ import {
     type Modulator,
     type ModulatorSource,
     SoundBankLoader,
-    SpessaSynthProcessor,
-    SpessaSynthSequencer
+    SpessaSynthProcessor
 } from "spessasynth_core";
 import { expect } from "vitest";
 import { BankSession } from "../core_backend/bank_session.ts";
@@ -23,9 +22,7 @@ export const SECOND_COPY_SUFFIX = " 2";
  * which is enough to exercise linking, deleting and reordering.
  */
 export function createTestSession() {
-    const processor = new SpessaSynthProcessor(44_100);
-    const sequencer = new SpessaSynthSequencer(processor);
-    const session = new BankSession(processor, sequencer);
+    const session = new BankSession(new SpessaSynthProcessor(44_100));
     const bank = session.document.bank;
 
     const secondCopy = SoundBankLoader.fromArrayBuffer(

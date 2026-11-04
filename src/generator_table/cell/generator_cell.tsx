@@ -2,6 +2,7 @@ import {
     BasicInstrument,
     BasicInstrumentZone,
     type BasicPreset,
+    GeneratorLimits,
     GeneratorTypes
 } from "spessasynth_core";
 import { SetGeneratorAction } from "./set_generator_action.ts";
@@ -9,7 +10,6 @@ import { midiNoteToPitchClass } from "../../utils/note_name.ts";
 import { GeneratorCellInput } from "./generator_cell_input.tsx";
 import { useTranslation } from "react-i18next";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
-import { GeneratorLimits } from "../../core_backend/generator_limits.ts";
 import type { GeneratorRowType } from "../generator_row_type.ts";
 import type { ZoneColumn } from "../zone_columns.ts";
 import { getColumnZones } from "./column_zones.ts";
@@ -52,8 +52,8 @@ export function NumberGeneratorCell({
 
     const limits = GeneratorLimits[generator];
     const isInstrument = element instanceof BasicInstrument;
-    const min = isInstrument ? limits.min : (limits.pMin ?? limits.min);
-    const max = isInstrument ? limits.max : (limits.pMax ?? limits.max);
+    const min = isInstrument ? limits.min : (limits.presetMin ?? limits.min);
+    const max = isInstrument ? limits.max : (limits.presetMax ?? limits.max);
 
     let placeholder = toText(limits.def);
     if (

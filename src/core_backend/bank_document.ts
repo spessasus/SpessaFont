@@ -40,27 +40,6 @@ function removeFrom<T extends { name: string }>(list: T[], item: T) {
 }
 
 /**
- * Restores the links from the zones' children back to the element.
- * Removing a preset or an instrument from the bank unlinks its children,
- * so restoring it on undo or redo has to link them again.
- * spessasynth_core keeps `linkTo` internal, so this adds the missing links directly,
- * one per zone, which is what the core zone constructors do.
- */
-function linkZones(element: BasicPreset | BasicInstrument) {
-    if (element instanceof BasicInstrument) {
-        addMissingLinks(
-            element,
-            element.zones.map((z) => z.sample.linkedTo)
-        );
-        return;
-    }
-    addMissingLinks(
-        element,
-        element.zones.map((z) => z.instrument.linkedTo)
-    );
-}
-
-/**
  * Sets the zones of an element, checking that each zone has the right type for it.
  */
 function replaceZones(
@@ -82,23 +61,6 @@ function replaceZones(
         throw new Error(`A zone does not fit ${element.name}.`);
     }
     element.zones = presetZones;
-}
-
-/**
- * Each zone needs one link to the parent in its child's `linkedTo` list.
- * Zones that share a child share the list, so missing links are counted per list.
- */
-function addMissingLinks<P>(parent: P, zoneLinkLists: P[][]) {
-    const needed = new Map<P[], number>();
-    for (const links of zoneLinkLists) {
-        needed.set(links, (needed.get(links) ?? 0) + 1);
-    }
-    for (const [links, count] of needed) {
-        const linkCount = links.filter((l) => l === parent).length;
-        for (let i = linkCount; i < count; i++) {
-            links.push(parent);
-        }
-    }
 }
 
 /**
@@ -203,10 +165,10 @@ export class BankDocument {
     }
 
     /**
-     * Adds an instrument in name order, links its samples and returns its index.
+     * Adds a new instrument in name order and returns its index.
+     * Its zones linked their samples when they were created.
      */
     public addInstrument(instrument: BasicInstrument) {
-        linkZones(instrument);
         return insertSorted(this.instruments, instrument, nameSorter);
     }
 
@@ -214,7 +176,7 @@ export class BankDocument {
      * Puts a removed instrument back at its previous index and links its samples again.
      */
     public restoreInstrument(instrument: BasicInstrument, index: number) {
-        linkZones(instrument);
+        instrument.restore();
         this.instruments.splice(index, 0, instrument);
     }
 
@@ -228,10 +190,10 @@ export class BankDocument {
     }
 
     /**
-     * Adds a preset, links its instruments and re-sorts the presets.
+     * Adds a new preset and re-sorts the presets.
+     * Its zones linked their instruments when they were created.
      */
     public addPreset(preset: BasicPreset) {
-        linkZones(preset);
         this.presets.push(preset);
         this.sortPresets();
     }
@@ -241,7 +203,7 @@ export class BankDocument {
      * patch keep the order they were added in.
      */
     public restorePreset(preset: BasicPreset, index: number) {
-        linkZones(preset);
+        preset.restore();
         this.presets.splice(index, 0, preset);
     }
 
@@ -288,7 +250,15 @@ export class BankDocument {
         ];
         zones.splice(index, 0, zone);
         replaceZones(element, zones);
-        linkZones(element);
+        // linkTo is internal in spessasynth_core, so the zone's link is added directly,
+        // one entry per zone like linkTo does. A public linkTo would remove this.
+        if (element instanceof BasicInstrument) {
+            if (zone instanceof BasicInstrumentZone) {
+                zone.sample.linkedTo.push(element);
+            }
+        } else if (zone instanceof BasicPresetZone) {
+            zone.instrument.linkedTo.push(element);
+        }
     }
 
     /**

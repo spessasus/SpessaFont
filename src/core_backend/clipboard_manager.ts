@@ -1,14 +1,14 @@
 import {
-    BasicInstrument,
-    BasicPreset,
-    BasicSample,
+    type BasicInstrument,
+    type BasicPreset,
+    type BasicSample,
     type MIDIPatch,
     MIDIPatchTools,
-    Modulator
+    Modulator,
+    SoundBankCloner
 } from "spessasynth_core";
 import { CreateSampleAction } from "../menu_list/create_actions/create_sample_action.ts";
 import { CreateInstrumentAction } from "../menu_list/create_actions/create_instrument_action.ts";
-import type { HistoryAction } from "./history.ts";
 import { CreatePresetAction } from "../menu_list/create_actions/create_preset_action.ts";
 import type { BankDocument } from "./bank_document.ts";
 
@@ -23,16 +23,29 @@ export interface ClipboardContents {
 }
 
 /**
- * The samples of one paste: every sample of the target bank (for unique names), and the
- * copies made so far by their original.
+ * Starts one paste or duplicate. The copied elements are always new, under a free name
+ * (`Name-1`), while the instruments and samples they use are reused when the document has
+ * one with the same name. Nothing is added to the bank, the create actions do that.
  */
-interface SampleCloneState {
-    all: BasicSample[];
-    clones: Map<BasicSample, BasicSample>;
+function createCloner(document: BankDocument) {
+    return new SoundBankCloner(document.bank, {
+        reuseByName: false,
+        reuseChildrenByName: true,
+        addToBank: false
+    });
 }
 
-function createSampleCloneState(document: BankDocument): SampleCloneState {
-    return { all: [...document.samples], clones: new Map() };
+/**
+ * Wraps what the cloner made in create actions, children first so every zone's child is in the
+ * bank before the zone's element is.
+ */
+function getCreateActions(cloner: SoundBankCloner) {
+    const { samples, instruments, presets } = cloner.created;
+    return [
+        ...samples.map((s) => new CreateSampleAction(s)),
+        ...instruments.map((i) => new CreateInstrumentAction(i)),
+        ...presets.map((p) => new CreatePresetAction(p))
+    ];
 }
 
 /**
@@ -60,110 +73,6 @@ export class ClipboardManager {
     };
 
     public readonly getSnapshot = () => this.contents;
-
-    /**
-     * Clones a sample (and its stereo pair) into new create actions.
-     * @param oldSample the sample to clone
-     * @param samples the bank's samples plus the ones cloned so far, used for unique names
-     * @param actions receives the create actions
-     * @param shouldDuplicate when false, an existing sample with the same name is reused instead
-     */
-    private addSample(
-        oldSample: BasicSample,
-        samples: SampleCloneState,
-        actions: HistoryAction[],
-        shouldDuplicate = true
-    ): BasicSample {
-        const cloned = samples.clones.get(oldSample);
-        if (cloned) {
-            return cloned;
-        }
-        const names = new Set(samples.all.map((s) => s.name));
-        if (!shouldDuplicate) {
-            const existing = samples.all.find((s) => s.name === oldSample.name);
-            if (existing) {
-                return existing;
-            }
-        }
-        const originalName = oldSample.name.slice(0, 37);
-        let name = oldSample.name;
-        for (let count = 1; names.has(name); count++) {
-            name = `${originalName}-${count}`;
-        }
-        const newSample = new BasicSample(
-            name,
-            oldSample.sampleRate,
-            oldSample.originalKey,
-            oldSample.pitchCorrection,
-            oldSample.sampleType,
-            oldSample.loopStart,
-            oldSample.loopEnd
-        );
-        if (oldSample.isCompressed) {
-            newSample.setCompressedData(oldSample.getRawData(true));
-        } else {
-            newSample.setAudioData(
-                oldSample.getAudioData(),
-                oldSample.sampleRate
-            );
-        }
-        actions.push(new CreateSampleAction(newSample));
-        samples.all.push(newSample);
-        samples.clones.set(oldSample, newSample);
-        const linked = oldSample.linkedSample;
-        if (linked) {
-            // The pair is always cloned together. Reusing a partner that is already in the
-            // bank would relink it, outside of undo. The second of the two does the linking.
-            const newLinked = samples.clones.get(linked);
-            if (newLinked) {
-                newSample.setLinkedSample(newLinked, oldSample.sampleType);
-            } else {
-                this.addSample(linked, samples, actions);
-            }
-        }
-        return newSample;
-    }
-
-    private addInstrument(
-        oldInst: BasicInstrument,
-        alreadyCloned: BasicInstrument[],
-        clonedSamples: SampleCloneState,
-        actions: HistoryAction[],
-        shouldDuplicate = true
-    ): BasicInstrument {
-        const names = new Set(alreadyCloned.map((i) => i.name));
-        const isNameTaken = names.has(oldInst.name);
-        let name = oldInst.name;
-        const originalName = oldInst.name.slice(0, 37);
-        if (isNameTaken) {
-            if (!shouldDuplicate) {
-                const r = alreadyCloned.find((i) => i.name === oldInst.name);
-                if (!r) {
-                    throw new Error(
-                        "This should never happen. If it did, then congrats!"
-                    );
-                }
-                return r;
-            }
-            let count = 1;
-            while (names.has(name)) {
-                name = `${originalName}-${count}`;
-                count++;
-            }
-        }
-        const newInst = new BasicInstrument();
-        newInst.name = name;
-        newInst.globalZone.copyFrom(oldInst.globalZone);
-        for (const zone of oldInst.zones) {
-            const copiedZone = newInst.createZone(
-                this.addSample(zone.sample, clonedSamples, actions, false)
-            );
-            copiedZone.copyFrom(zone);
-        }
-        actions.push(new CreateInstrumentAction(newInst));
-        alreadyCloned.push(newInst);
-        return newInst;
-    }
 
     private notify() {
         this.contents = {
@@ -258,12 +167,10 @@ export class ClipboardManager {
      * Builds the actions that copy presets into the document (the same bank or another one),
      * with their instruments and samples. Instruments and samples with a name the document
      * already has are reused, so a duplicate in the same bank shares them.
-     * The copies move to the next free MIDI patch.
+     * The copies keep their names and move to the next free MIDI patch.
      */
     clonePresets(document: BankDocument, presets: Iterable<BasicPreset>) {
-        const actions = new Array<HistoryAction>();
-        const clonedInstruments = [...document.instruments];
-        const clonedSamples = createSampleCloneState(document);
+        const cloner = createCloner(document);
         const presetNumbers = new Set<string>();
         for (const p of document.presets) {
             presetNumbers.add(p.toMIDIString());
@@ -287,34 +194,15 @@ export class ClipboardManager {
                     );
                 }
             }
-            const newPreset = new BasicPreset(document.bank);
+            const newPreset = cloner.clonePreset(oldPreset);
+            // Presets are told apart by their patch, so the copy needs no new name
             newPreset.name = oldPreset.name;
             newPreset.program = patch.program;
             newPreset.bankMSB = patch.bankMSB;
             newPreset.bankLSB = patch.bankLSB;
-            newPreset.isGMGSDrum = oldPreset.isGMGSDrum;
-
-            newPreset.library = oldPreset.library;
-            newPreset.morphology = oldPreset.morphology;
-            newPreset.genre = oldPreset.genre;
-
-            newPreset.globalZone.copyFrom(oldPreset.globalZone);
-            for (const zone of oldPreset.zones) {
-                const newZone = newPreset.createZone(
-                    this.addInstrument(
-                        zone.instrument,
-                        clonedInstruments,
-                        clonedSamples,
-                        actions,
-                        false
-                    )
-                );
-                newZone.copyFrom(zone);
-            }
-            actions.push(new CreatePresetAction(newPreset));
             presetNumbers.add(newPreset.toMIDIString());
         }
-        return actions;
+        return getCreateActions(cloner);
     }
 
     /**
@@ -325,29 +213,21 @@ export class ClipboardManager {
         document: BankDocument,
         instruments: Iterable<BasicInstrument>
     ) {
-        const clonedInstruments = [...document.instruments];
-        const clonedSamples = createSampleCloneState(document);
-        const actions = new Array<HistoryAction>();
-        for (const oldInst of instruments) {
-            this.addInstrument(
-                oldInst,
-                clonedInstruments,
-                clonedSamples,
-                actions
-            );
+        const cloner = createCloner(document);
+        for (const instrument of instruments) {
+            cloner.cloneInstrument(instrument);
         }
-        return actions;
+        return getCreateActions(cloner);
     }
 
     /**
-     * Builds the actions that copy samples into the document.
+     * Builds the actions that copy samples into the document, with their stereo partners.
      */
     cloneSamples(document: BankDocument, samples: Iterable<BasicSample>) {
-        const clonedSamples = createSampleCloneState(document);
-        const actions = new Array<HistoryAction>();
-        for (const oldSample of samples) {
-            this.addSample(oldSample, clonedSamples, actions);
+        const cloner = createCloner(document);
+        for (const sample of samples) {
+            cloner.cloneSample(sample);
         }
-        return actions;
+        return getCreateActions(cloner);
     }
 }

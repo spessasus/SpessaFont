@@ -5,13 +5,19 @@ import type { ChangeSet } from "../../core_backend/change_set.ts";
 
 export class CreateInstrumentAction implements HistoryAction {
     private readonly instrument: BasicInstrument;
+    // Where undo removed it from, so redo puts it back there with its links
+    private removedIndex: number | undefined;
 
     public constructor(instrument: BasicInstrument) {
         this.instrument = instrument;
     }
 
     public do(document: BankDocument, changes: ChangeSet) {
-        document.addInstrument(this.instrument);
+        if (this.removedIndex === undefined) {
+            document.addInstrument(this.instrument);
+        } else {
+            document.restoreInstrument(this.instrument, this.removedIndex);
+        }
         changes.touchList("instruments");
         changes.touch(
             this.instrument,
@@ -21,7 +27,7 @@ export class CreateInstrumentAction implements HistoryAction {
     }
 
     public undo(document: BankDocument, changes: ChangeSet) {
-        document.removeInstrument(this.instrument);
+        this.removedIndex = document.removeInstrument(this.instrument);
         changes.touchList("instruments");
         changes.touch(...this.instrument.zones.map((z) => z.sample));
         changes.focusOn(document.instruments[0] ?? "info");

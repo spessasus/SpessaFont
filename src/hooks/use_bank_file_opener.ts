@@ -52,9 +52,7 @@ export function useBankFileOpener(onOpened: (session: BankSession) => void) {
                 return;
             }
         }
-        onOpened(
-            new BankSession(audioEngine.processor, audioEngine.sequencer, bank)
-        );
+        onOpened(new BankSession(audioEngine.processor, bank));
         toast.dismiss(id);
     };
 }

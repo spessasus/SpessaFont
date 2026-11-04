@@ -2,8 +2,8 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// The app and spessasynth_core chunks load at startup and are each a bit under 600 kB
-const CHUNK_SIZE_LIMIT_KB = 600;
+// The app and spessasynth_core chunks load at startup. Core is the larger one, a bit under 750 kB
+const CHUNK_SIZE_LIMIT_KB = 750;
 
 // https://vite.dev/config/
 export default defineConfig({
