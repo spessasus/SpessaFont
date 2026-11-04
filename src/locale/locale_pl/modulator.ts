@@ -31,8 +31,12 @@ export const ModulatorLocale = {
         channelPressure: "Aftertouch kanału",
         pitchWheel: "Koło wysokości dźwięku",
         pitchWheelRange: "Zakres koła wysokości dźwięku",
-        midiController: "Kontroler MIDI"
+        midiController: "Kontroler MIDI",
+        link: "Połączony modulator",
+        otherSource: "Źródło {{number}}",
+        otherController: "CC#{{number}}"
     },
+    otherDestination: "Generator {{number}}",
     transforms: {
         noOperation: "Brak operacji",
         absoluteValue: "Wartość bezwzględna"

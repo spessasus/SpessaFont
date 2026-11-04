@@ -15,6 +15,7 @@ import type { GeneratorRowType } from "../generator_row_type.ts";
 import type { ZoneColumn } from "../zone_columns.ts";
 import { getColumnZones } from "./column_zones.ts";
 import { getGeneratorOptions } from "../generator_options.ts";
+import { parseGeneratorText } from "./parse_generator_text.ts";
 
 const EXCLUSIVE_CLASS_COLORS = 10;
 
@@ -109,8 +110,10 @@ export function NumberGeneratorCell({
         if (Number.isNaN(typed)) {
             return textValue;
         }
-        const raw = Math.floor(toGenerator(typed));
-        const newValue = Math.max(min, Math.min(max, raw));
+        const newValue = parseGeneratorText(typed, toGenerator, min, max);
+        if (newValue === undefined) {
+            return textValue;
+        }
         setGenerator(newValue);
         return toText(newValue);
     };

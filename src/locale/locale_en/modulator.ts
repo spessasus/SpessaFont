@@ -31,8 +31,12 @@ export const ModulatorLocale = {
         channelPressure: "Channel Pressure",
         pitchWheel: "Pitch Wheel",
         pitchWheelRange: "Pitch Wheel Range",
-        midiController: "MIDI Controller"
+        midiController: "MIDI Controller",
+        link: "Linked Modulator",
+        otherSource: "Source {{number}}",
+        otherController: "CC#{{number}}"
     },
+    otherDestination: "Generator {{number}}",
     transforms: {
         noOperation: "No Operation",
         absoluteValue: "Absolute Value"
