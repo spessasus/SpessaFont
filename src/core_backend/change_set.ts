@@ -1,7 +1,18 @@
-import type { BasicSample } from "spessasynth_core";
+import type { BasicSample, SampleStoredData } from "spessasynth_core";
 import type { BankEditView, BankEntity } from "./bank_view.ts";
 
 export type ElementList = "presets" | "instruments" | "samples";
+
+/**
+ * Audio the synthesizer host has kept (the data before or after a conversion), which a sample
+ * gets back without the editor holding it. Core cannot set a data-less sample's form and length
+ * (`setLengthWithoutData` is internal), so the views take them from here.
+ */
+export interface RestoredAudio {
+    readonly snapshot: number;
+    readonly form: SampleStoredData["form"];
+    readonly length: number;
+}
 
 /**
  * Collects what a group of history actions changed,
@@ -12,6 +23,7 @@ export class ChangeSet {
     private readonly touchedEntities = new Set<BankEntity>();
     private readonly touchedLists = new Set<ElementList>();
     private readonly touchedAudio = new Set<BasicSample>();
+    private readonly restored = new Map<BasicSample, RestoredAudio>();
     private isBankInfoTouched = false;
     private focusTarget: BankEditView | undefined;
 
@@ -34,6 +46,13 @@ export class ChangeSet {
      */
     public get audio(): ReadonlySet<BasicSample> {
         return this.touchedAudio;
+    }
+
+    /**
+     * The samples among `audio` whose audio comes back from the host.
+     */
+    public get restoredAudio(): ReadonlyMap<BasicSample, RestoredAudio> {
+        return this.restored;
     }
 
     /**
@@ -65,11 +84,17 @@ export class ChangeSet {
     }
 
     /**
-     * Marks the sample's audio data as changed, and the sample as touched.
+     * Marks the sample's audio data as changed, and the sample as touched. The new data is set on
+     * the sample, or kept by the host when `restored` says so.
      */
-    public touchSampleAudio(sample: BasicSample) {
+    public touchSampleAudio(sample: BasicSample, restored?: RestoredAudio) {
         this.touchedAudio.add(sample);
         this.touchedEntities.add(sample);
+        if (restored) {
+            this.restored.set(sample, restored);
+        } else {
+            this.restored.delete(sample);
+        }
     }
 
     public touchList(list: ElementList) {

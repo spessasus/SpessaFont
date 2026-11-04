@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { GeneratorTypes, Modulator, SoundBankLoader } from "spessasynth_core";
-import { createTestSession } from "../test_utils/bank_fixture.ts";
+import { createTestSession, getMirror } from "../test_utils/bank_fixture.ts";
 import { hasSFEOnlyData } from "./sfe_data.ts";
 
 describe("hasSFEOnlyData", () => {
@@ -44,7 +44,7 @@ describe("hasSFEOnlyData", () => {
 
     it("matches what the writers keep: SFE keeps the generator, SF2 and DLS drop it", () => {
         // The mirror has the sample data, so it is what gets written
-        const { bank } = createTestSession().mirror;
+        const { bank } = getMirror(createTestSession());
         bank.instruments[0].zones[0].setGenerator(
             GeneratorTypes.ignoreNoteOff,
             1

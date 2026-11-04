@@ -8,6 +8,7 @@ import {
 import {
     createTestSession,
     expectRoundTrip,
+    getMirror,
     publishSetUp
 } from "../test_utils/bank_fixture.ts";
 import { EditSampleAction } from "./edit_sample_action.ts";
@@ -189,7 +190,7 @@ describe("DeleteSampleAction", () => {
         session.history.do([new DeleteSampleAction(right)]);
 
         const loaded = SoundBankLoader.fromArrayBuffer(
-            session.mirror.bank.writeSF2()
+            getMirror(session).bank.writeSF2()
         );
         for (const sample of loaded.samples) {
             expect(sample.linkedSample, sample.name).toBeUndefined();

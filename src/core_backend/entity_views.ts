@@ -12,6 +12,7 @@ import type {
     ModulatorSource,
     ModulatorSourceIndex,
     ModulatorTransformType,
+    SampleStoredData,
     SampleType
 } from "spessasynth_core";
 import { getObjectId } from "../utils/object_id.ts";
@@ -150,7 +151,19 @@ export interface ViewChanges {
 /**
  * Looks up the audio revision of a sample, which only the store knows.
  */
-export type AudioRevisionLookup = (sample: BasicSample) => number;
+/**
+ * A sample's audio revision and, when its last audio change came back from the host, that
+ * audio's form and length (the editor's sample has no data to tell them). Only the store
+ * knows these.
+ */
+export interface SampleAudioState {
+    readonly revision: number;
+    readonly restored:
+        | { readonly form: SampleStoredData["form"]; readonly length: number }
+        | undefined;
+}
+
+export type AudioRevisionLookup = (sample: BasicSample) => SampleAudioState;
 
 function buildRange(range: { min: number; max: number }, isSet: boolean) {
     return isSet ? { min: range.min, max: range.max } : undefined;
@@ -226,7 +239,7 @@ export function buildInstrumentView(
 
 export function buildSampleView(
     sample: BasicSample,
-    audioRevision: number
+    audio: SampleAudioState
 ): SampleView {
     return {
         id: getObjectId(sample),
@@ -240,10 +253,12 @@ export function buildSampleView(
         linkedSampleId: sample.linkedSample
             ? getObjectId(sample.linkedSample)
             : undefined,
-        length: sample.sampleLength,
-        isCompressed: sample.isCompressed,
+        length: audio.restored?.length ?? sample.sampleLength,
+        isCompressed: audio.restored
+            ? audio.restored.form === "vorbis"
+            : sample.isCompressed,
         usedBy: sample.linkedTo.map((i) => getObjectId(i)),
-        audioRevision
+        audioRevision: audio.revision
     };
 }
 

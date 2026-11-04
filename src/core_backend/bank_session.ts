@@ -1,16 +1,15 @@
 import type { BasicSample, ProgressFunction } from "spessasynth_core";
-import { BankMirror } from "../synth_host/bank_mirror.ts";
 import { getObjectId } from "../utils/object_id.ts";
+import { SOFTWARE_NAME } from "../utils/software_name.ts";
+import type { MirrorTarget } from "../synth_host/bank_mirror.ts";
 import { BankDocument } from "./bank_document.ts";
 import { type LoadedBank, loadNewBank } from "./load_sound_bank.ts";
 import { MirrorSync } from "./mirror_sync.ts";
 import type { SampleDataSource } from "./sample_data_source.ts";
+import type { SynthClient } from "./synth_client.ts";
 import { BankStore } from "./bank_store.ts";
 import { HistoryManager } from "./history.ts";
-import { SynthBinding, type SynthHost } from "./synth_binding.ts";
 import {
-    convertSampleFormat,
-    encodeSoundBank,
     getInitialWriteFormat,
     getSaveExtension,
     pickSaveFile,
@@ -20,41 +19,38 @@ import {
     writeFile,
     type WriteFormat
 } from "./persistence.ts";
-import {
-    captureBankFormat,
-    ConvertSamplesAction
-} from "./convert_samples_action.ts";
+import { ConvertSamplesAction } from "./convert_samples_action.ts";
 
 let nextSessionId = 1;
 
 /**
- * One open sound bank: the document, its store and history, its synthesizer binding,
+ * One open sound bank: the document, its store and history, its mirror in the synthesizer host,
  * and where it was last saved.
  */
 export class BankSession implements SampleDataSource {
     private saveHandle: SaveFileHandle | undefined;
     private writeFormat: WriteFormat;
     private isClosed = false;
-    private readonly unsubscribeSynth: () => void;
+    private readonly client: SynthClient;
+    private readonly unsubscribeSync: () => void;
     private readonly mirrorSync: MirrorSync;
     public readonly id = nextSessionId++;
     public readonly document: BankDocument;
     public readonly store: BankStore;
     public readonly history: HistoryManager;
-    public readonly synth: SynthBinding;
-    /**
-     * The copy of the bank the synthesizer plays, which follows the store.
-     */
-    public readonly mirror: BankMirror;
 
     /**
-     * @param synth the shared synthesizer
+     * @param client the synthesizer host, which keeps this bank's mirror
      * @param loaded the loaded bank and its file, or undefined to start a new one
      */
-    public constructor(synth: SynthHost, loaded: LoadedBank = loadNewBank()) {
+    public constructor(
+        client: SynthClient,
+        loaded: LoadedBank = loadNewBank()
+    ) {
         const { bank, file } = loaded;
-        // The mirror pairs the elements by index, so it is made before the document sorts them
-        this.mirror = BankMirror.fromFile(file, {
+        this.client = client;
+        // The mirror pairs the elements by index, so it is opened before the document sorts them
+        client.openBank(this.id, file, {
             presets: bank.presets.map((p) => getObjectId(p)),
             instruments: bank.instruments.map((i) => getObjectId(i)),
             samples: bank.samples.map((s) => getObjectId(s))
@@ -63,46 +59,16 @@ export class BankSession implements SampleDataSource {
         this.writeFormat = getInitialWriteFormat(this.document.bank);
         this.store = new BankStore(this.document);
         this.mirrorSync = new MirrorSync(
-            this.mirror,
+            client,
+            this.id,
             this.document,
-            this.store.getSnapshot()
+            this.store
         );
-        this.synth = new SynthBinding(synth, this.mirror.bank);
-        // Every commit reaches the synthesizer, including ones made outside the history
-        this.unsubscribeSynth = this.store.subscribe(() => {
-            const diff = this.mirrorSync.update(this.store.getSnapshot());
-            if (diff) {
-                this.synth.update(diff);
-            }
+        // Every commit reaches the mirror, including ones made outside the history
+        this.unsubscribeSync = this.store.subscribe(() => {
+            this.mirrorSync.update();
         });
         this.history = new HistoryManager(this.document, this.store);
-    }
-
-    private getMirrorSample(sample: BasicSample) {
-        const mirrored = this.mirror.getSample(getObjectId(sample));
-        if (!mirrored) {
-            throw new Error(`The mirror has no sample "${sample.name}".`);
-        }
-        return mirrored;
-    }
-
-    private recordConversion(before: ReturnType<typeof captureBankFormat>) {
-        const { bank } = this.mirror;
-        const editorSamples = new Map(
-            this.document.samples.map((s) => [getObjectId(s), s])
-        );
-        const conversion = ConvertSamplesAction.between(bank, before, (s) => {
-            const sample = editorSamples.get(this.mirror.getSampleId(s));
-            if (!sample) {
-                throw new Error(`The editor has no sample "${s.name}".`);
-            }
-            return sample;
-        });
-        if (!conversion) {
-            return;
-        }
-        this.mirrorSync.markAudioInMirror(conversion.samples);
-        this.history.do([conversion]);
     }
 
     /**
@@ -116,18 +82,32 @@ export class BankSession implements SampleDataSource {
     ) {
         for (const [copy, original] of copies) {
             this.mirrorSync.copyDataOnAdd(copy, {
-                mirror: source.mirror,
+                sessionId: source.id,
                 id: getObjectId(original)
             });
         }
     }
 
+    /**
+     * Makes this bank the one the synthesizer plays, when its tab is shown.
+     */
+    public attach() {
+        this.client.attach(this.id);
+    }
+
+    /**
+     * Makes the keyboard play an element of this bank, or its first preset without one.
+     */
+    public setPreviewTarget(target: MirrorTarget | undefined) {
+        this.client.setPreviewTarget(this.id, target);
+    }
+
     public readAudio(sample: BasicSample) {
-        return Promise.resolve(this.getMirrorSample(sample).getAudioData());
+        return this.client.readAudio(this.id, getObjectId(sample));
     }
 
     public readStoredData(sample: BasicSample) {
-        return Promise.resolve(this.getMirrorSample(sample).getStoredData());
+        return this.client.readStoredData(this.id, getObjectId(sample));
     }
 
     /**
@@ -138,9 +118,9 @@ export class BankSession implements SampleDataSource {
     }
 
     /**
-     * Saves the bank: asks for the file first, then converts the samples for an explicit SF2 or
-     * SF3 save (recorded in the history), encodes, writes, and marks the position as saved.
-     * The mirror is what gets converted and written, as it has the sample data.
+     * Saves the bank: asks for the file first, then has the host convert the samples for an
+     * explicit SF2 or SF3 save (recorded in the history) and write the mirror, writes the file,
+     * and marks the position as saved.
      * Throws when encoding or writing fails, including when the user cancels the file picker.
      */
     public async save(
@@ -148,9 +128,13 @@ export class BankSession implements SampleDataSource {
         unnamed: string,
         progressFunction?: ProgressFunction
     ) {
-        const { bank } = this.mirror;
         const target = this.getWriteFormat(format);
-        const extension = getSaveExtension(bank, format, target);
+        // The views know the stored form, the editor's samples have no data
+        const views = this.store.getSnapshot().views.samples;
+        const hasCompressed = this.document.samples.some(
+            (s) => views.get(getObjectId(s))?.isCompressed
+        );
+        const extension = getSaveExtension(hasCompressed, format, target);
         const name = `${this.document.getBankName(unnamed)}.${extension}`;
         // An "auto" save whose contents no longer match the file (SF3 data for a .sf2 file)
         // asks for a new file instead of writing over the old one
@@ -163,19 +147,35 @@ export class BankSession implements SampleDataSource {
             format !== "auto" || isOtherFormat
         );
 
-        const before = captureBankFormat(bank);
-        try {
-            await convertSampleFormat(bank, format, progressFunction);
-        } finally {
-            // A conversion that failed halfway changed some samples already
-            this.recordConversion(before);
+        let convert: "pcm" | "compressed" | undefined;
+        if (format === "sf2") {
+            convert = "pcm";
+        } else if (format === "sf3") {
+            convert = "compressed";
         }
-        // Edits made while the file is written are not in it, so they keep the bank dirty
+        const requestPosition = this.history.position;
+        const result = await this.client.write(
+            this.id,
+            { format: target, convert, software: SOFTWARE_NAME },
+            progressFunction
+        );
+        // A conversion that failed halfway changed some samples already
+        if (result.conversion) {
+            this.history.do([new ConvertSamplesAction(result.conversion)]);
+        }
+        if (!result.binary) {
+            throw new Error(result.error ?? "The bank was not written.");
+        }
+        // Edits made while the host wrote may or may not be in the file, and edits made while the
+        // file is written are not, so either keeps the bank dirty
         const savedPosition = this.history.position;
-        const binary = encodeSoundBank(bank, target, progressFunction);
-        this.saveHandle = await writeFile(binary, name, handle);
+        const isUnchanged =
+            savedPosition === requestPosition + (result.conversion ? 1 : 0);
+        this.saveHandle = await writeFile(result.binary, name, handle);
         this.writeFormat = target;
-        this.history.markSaved(savedPosition);
+        if (isUnchanged) {
+            this.history.markSaved(savedPosition);
+        }
     }
 
     /**
@@ -186,9 +186,8 @@ export class BankSession implements SampleDataSource {
             return;
         }
         this.isClosed = true;
-        this.unsubscribeSynth();
-        this.synth.detach();
+        this.unsubscribeSync();
+        this.client.closeBank(this.id);
         this.document.bank.destroySoundBank();
-        this.mirror.bank.destroySoundBank();
     }
 }

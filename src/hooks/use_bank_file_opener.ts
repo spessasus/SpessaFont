@@ -54,7 +54,7 @@ export function useBankFileOpener(onOpened: (session: BankSession) => void) {
                 return;
             }
         }
-        onOpened(new BankSession(audioEngine, loaded));
+        onOpened(new BankSession(audioEngine.client, loaded));
         toast.dismiss(id);
     };
 }

@@ -9,6 +9,7 @@ import {
     createTestSession,
     expectMirrorUpToDate,
     expectRoundTrip,
+    getMirror,
     normalizeForMirror,
     publishSetUp,
     snapshotBank
@@ -25,7 +26,7 @@ type TestSession = ReturnType<typeof createTestSession>;
 
 function getFirstMirrorSample(session: TestSession) {
     const id = getObjectId(session.document.samples[0]);
-    const sample = session.mirror.getSample(id);
+    const sample = getMirror(session).getSample(id);
     if (!sample) {
         throw new Error("The mirror has no such sample.");
     }
@@ -95,9 +96,9 @@ describe("BankMirror", () => {
         const session = createTestSession();
         await editBank(session);
 
-        const fromMirror = render(session.mirror.bank);
+        const fromMirror = render(getMirror(session).bank);
         const reloaded = SoundBankLoader.fromArrayBuffer(
-            session.mirror.bank.writeSF2()
+            getMirror(session).bank.writeSF2()
         );
 
         expect(fromMirror.some((v) => v !== 0)).toBe(true);
@@ -117,7 +118,7 @@ describe("BankMirror", () => {
         await editBank(session);
 
         const reloaded = SoundBankLoader.fromArrayBuffer(
-            session.mirror.bank.writeSF2(),
+            getMirror(session).bank.writeSF2(),
             { sampleData: false }
         );
 

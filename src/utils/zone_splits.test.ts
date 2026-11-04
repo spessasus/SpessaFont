@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { createTestSession } from "../test_utils/bank_fixture.ts";
+import {
+    createTestHost,
+    createTestSession
+} from "../test_utils/bank_fixture.ts";
 import { getViewSplits } from "./zone_splits.ts";
 
 describe("getViewSplits", () => {
@@ -48,6 +51,8 @@ describe("getViewSplits", () => {
     });
 
     it("highlights exactly the keys the synth plays", () => {
+        // One host for all the sessions, as starting a synthesizer for each is slow
+        const host = createTestHost();
         const ranges = [
             undefined,
             { min: 0, max: 60 },
@@ -57,7 +62,7 @@ describe("getViewSplits", () => {
         for (const presetGlobal of ranges) {
             for (const presetZone of ranges) {
                 for (const instrumentZone of ranges) {
-                    const { presets } = createTestSession().document;
+                    const { presets } = createTestSession(host).document;
                     const [preset] = presets;
                     const [zone] = preset.zones;
                     const instrument = zone.instrument;

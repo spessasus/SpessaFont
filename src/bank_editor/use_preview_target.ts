@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { BasicInstrument, BasicPreset } from "spessasynth_core";
 import type { BankSession } from "../core_backend/bank_session.ts";
 import type { BankEditView } from "../core_backend/bank_view.ts";
-import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
 import type { MirrorTarget } from "../synth_host/bank_mirror.ts";
 import { getObjectId } from "../utils/object_id.ts";
 
@@ -24,10 +23,8 @@ function getTarget(view: BankEditView): MirrorTarget | undefined {
  * or the bank's first preset on the overview.
  */
 export function usePreviewTarget(session: BankSession, view: BankEditView) {
-    const { audioEngine } = useAudioEngine();
     useEffect(() => {
-        const { mirror } = session;
-        audioEngine.setPreviewTarget(mirror, getTarget(view));
-        return () => audioEngine.setPreviewTarget(mirror, undefined);
-    }, [audioEngine, session, view]);
+        session.setPreviewTarget(getTarget(view));
+        return () => session.setPreviewTarget(undefined);
+    }, [session, view]);
 }

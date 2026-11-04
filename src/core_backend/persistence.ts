@@ -1,5 +1,4 @@
-import type { BasicSoundBank, ProgressFunction } from "spessasynth_core";
-import { SOFTWARE_NAME } from "../utils/software_name.ts";
+import type { BasicSoundBank } from "spessasynth_core";
 import { downloadBlob } from "../utils/download_blob.ts";
 
 /**
@@ -35,7 +34,7 @@ export function resolveWriteFormat(
  * samples (a loaded SF3, or samples pasted from one).
  */
 export function getSaveExtension(
-    bank: BasicSoundBank,
+    hasCompressedSamples: boolean,
     format: SaveFormat,
     target: WriteFormat
 ): WriteFormat {
@@ -45,55 +44,7 @@ export function getSaveExtension(
     if (format !== "auto") {
         return format === "sf3" ? "sf3" : "sf2";
     }
-    return bank.samples.some((s) => s.isCompressed) ? "sf3" : "sf2";
-}
-
-/**
- * Explicit SF2 and SF3 saves decompress or compress the samples in place, so later "auto"
- * saves keep the format.
- */
-export async function convertSampleFormat(
-    bank: BasicSoundBank,
-    format: SaveFormat,
-    progressFunction?: ProgressFunction
-) {
-    if (format === "sf2") {
-        await bank.setSampleFormat({ format: "pcm", progressFunction });
-    } else if (format === "sf3") {
-        // The encoder is only needed here, so it loads on the first SF3 save
-        const { encodeVorbis } = await import("./encode_vorbis.ts");
-        await bank.setSampleFormat({
-            format: "compressed",
-            compressionFunction: encodeVorbis,
-            progressFunction
-        });
-    }
-}
-
-/**
- * Writes the bank in the format, as it is (see `convertSampleFormat`).
- */
-export function encodeSoundBank(
-    bank: BasicSoundBank,
-    target: WriteFormat,
-    progressFunction?: ProgressFunction
-) {
-    const options = { progressFunction, software: SOFTWARE_NAME };
-    switch (target) {
-        case "sf2":
-        case "sf3": {
-            // An SF2 write keeps compressed samples compressed, which preserves SF3 on "auto"
-            return bank.writeSF2(options);
-        }
-
-        case "sf4": {
-            return bank.writeSFE(options);
-        }
-
-        case "dls": {
-            return bank.writeDLS(options);
-        }
-    }
+    return hasCompressedSamples ? "sf3" : "sf2";
 }
 
 function createBlob(binary: ArrayBuffer) {

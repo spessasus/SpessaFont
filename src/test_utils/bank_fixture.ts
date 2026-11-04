@@ -3,8 +3,7 @@ import {
     type BasicZone,
     type Modulator,
     type ModulatorSource,
-    SoundBankLoader,
-    SpessaSynthProcessor
+    SoundBankLoader
 } from "spessasynth_core";
 import { expect } from "vitest";
 import { BankSession } from "../core_backend/bank_session.ts";
@@ -12,7 +11,11 @@ import { loadSoundBank } from "../core_backend/load_sound_bank.ts";
 import type { BankViews } from "../core_backend/entity_views.ts";
 import { ChangeSet } from "../core_backend/change_set.ts";
 import type { HistoryActionGroup } from "../core_backend/history.ts";
-import type { SynthHost } from "../core_backend/synth_binding.ts";
+import { SynthClient } from "../core_backend/synth_client.ts";
+import { getHostSettings } from "../core_backend/audio_engine.ts";
+import { DEFAULT_SETTINGS } from "../settings/save_load/settings_typedef.ts";
+import { SynthHost } from "../synth_host/synth_host.ts";
+import type { HostPort } from "../synth_host/protocol.ts";
 
 /**
  * Suffix appended to every element of the second copy of the sample bank,
@@ -21,46 +24,60 @@ import type { SynthHost } from "../core_backend/synth_binding.ts";
 export const SECOND_COPY_SUFFIX = " 2";
 
 /**
- * `AudioEngine`'s bank handling on a bare processor, since the engine needs Web Audio.
+ * One end of a channel that delivers right away, with the copying and transfers of a real
+ * MessagePort, so the action tests stay synchronous. Tests of the host's own timing use a real
+ * MessageChannel.
  */
-export class ProcessorHost implements SynthHost {
-    public readonly processor = new SpessaSynthProcessor(44_100);
-    public refreshCount = 0;
-    public clearCount = 0;
+class LoopbackPort implements HostPort {
+    public other: LoopbackPort | undefined;
+    public onmessage: ((event: MessageEvent) => void) | null = null;
 
-    public isBankAttached(bank: BasicSoundBank) {
-        return (
-            this.processor.soundBankManager.soundBankList[0]?.soundBank === bank
-        );
+    public postMessage(message: unknown, transfer: Transferable[]) {
+        const data: unknown = structuredClone(message, { transfer });
+        this.other?.onmessage?.(new MessageEvent("message", { data }));
     }
+}
 
-    public attachBank(bank: BasicSoundBank) {
-        this.processor.soundBankManager.addSoundBank(bank, "main");
-        this.refreshPresets();
-    }
+export interface TestHost {
+    host: SynthHost;
+    client: SynthClient;
+}
 
-    public detachBank(bank: BasicSoundBank) {
-        if (!this.isBankAttached(bank)) {
-            return;
-        }
-        this.processor.soundBankManager.addSoundBank(
-            SoundBankLoader.fromArrayBuffer(
-                BasicSoundBank.getSampleSoundBankFile()
-            ),
-            "main"
-        );
-        this.refreshPresets();
-    }
+/**
+ * A synthesizer host and its client, connected by loopback ports.
+ */
+export function createTestHost(): TestHost {
+    const clientEnd = new LoopbackPort();
+    const hostEnd = new LoopbackPort();
+    clientEnd.other = hostEnd;
+    hostEnd.other = clientEnd;
+    const host = new SynthHost(hostEnd, {
+        sampleRate: 44_100,
+        currentTime: 0,
+        settings: getHostSettings(DEFAULT_SETTINGS),
+        isVerbose: false
+    });
+    return { host, client: new SynthClient(clientEnd) };
+}
 
-    public clearCache() {
-        this.clearCount++;
-        this.processor.clearCache();
-    }
+const testHosts = new WeakMap<BankSession, TestHost>();
 
-    public refreshPresets() {
-        this.refreshCount++;
-        this.processor.refreshPresets();
+/**
+ * The host a test session was opened in.
+ */
+export function getTestHost(session: BankSession) {
+    const testHost = testHosts.get(session);
+    if (!testHost) {
+        throw new Error("The session was not made by createTestSession.");
     }
+    return testHost;
+}
+
+/**
+ * The session's mirror in its host, which is what the synthesizer plays and saving writes.
+ */
+export function getMirror(session: BankSession) {
+    return getTestHost(session).host.getMirrorOf(session.id);
 }
 
 /**
@@ -93,15 +110,17 @@ const TEST_BANK_FILE = writeTestBankFile();
  * Creates a session holding two copies of the spessasynth_core sample bank.
  * The result has two presets, two instruments and two mono samples,
  * which is enough to exercise linking, deleting and reordering.
- * Pass a host to check what the synthesizer sees.
+ * Pass a host to open several sessions in one, as the app does.
  * The session opens the bank like a file, so the mirror loads the same file.
  */
-export function createTestSession(host: SynthHost = new ProcessorHost()) {
-    // Each session gets its own buffer, the mirror's samples point into it
+export function createTestSession(testHost = createTestHost()) {
+    // Each session gets its own buffer, which moves to the host
     const loaded = loadSoundBank(TEST_BANK_FILE.slice());
     // Writing fills in a default name, a new bank has none
     loaded.bank.soundBankInfo.name = "";
-    return new BankSession(host, loaded);
+    const session = new BankSession(testHost.client, loaded);
+    testHosts.set(session, testHost);
+    return session;
 }
 
 /**
@@ -181,7 +200,8 @@ export function normalizeForMirror(snapshot: ReturnType<typeof snapshotBank>) {
  * Checks that the mirror, patched commit by commit, holds the same bank as the editor.
  */
 export function expectMirrorUpToDate(session: BankSession) {
-    expect(normalizeForMirror(snapshotBank(session.mirror.bank))).toEqual(
+    const mirrored = snapshotBank(getMirror(session).bank);
+    expect(normalizeForMirror(mirrored)).toEqual(
         normalizeForMirror(snapshotBank(session.document.bank))
     );
 }

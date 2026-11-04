@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { BasicPreset, SampleTypes } from "spessasynth_core";
 import {
+    createTestHost,
     createTestSession,
     expectRoundTrip,
     publishSetUp
@@ -9,8 +10,10 @@ import { ClipboardManager } from "./clipboard_manager.ts";
 
 describe("ClipboardManager", () => {
     it("pastes presets with their instruments and samples into another bank", () => {
-        const source = createTestSession();
-        const target = createTestSession();
+        // The app opens every bank in one host, which copies sample data between them
+        const host = createTestHost();
+        const source = createTestSession(host);
+        const target = createTestSession(host);
         const clipboard = new ClipboardManager();
         clipboard.copyPresets(new Set([source.document.presets[0]]), source);
 
@@ -176,8 +179,10 @@ describe("ClipboardManager", () => {
     });
 
     it("gives a sample pasted into another bank the data from the source's mirror", async () => {
-        const source = createTestSession();
-        const target = createTestSession();
+        // The app opens every bank in one host, which copies sample data between them
+        const host = createTestHost();
+        const source = createTestSession(host);
+        const target = createTestSession(host);
         const [original] = source.document.samples;
         original.setAudioData(new Float32Array([0.1, 0.2, 0.3]), 44_100);
         publishSetUp(source);
@@ -196,10 +201,11 @@ describe("ClipboardManager", () => {
     });
 
     it("gives the samples of a duplicated preset's new instrument the source's data", async () => {
-        const session = createTestSession();
+        const host = createTestHost();
+        const session = createTestSession(host);
         const clipboard = new ClipboardManager();
         // A preset from the other bank brings an instrument and a sample with new names
-        const other = createTestSession();
+        const other = createTestSession(host);
         const [preset] = other.document.presets;
         const sample = preset.zones[0].instrument.zones[0].sample;
         sample.setAudioData(new Float32Array([0.5, -0.5]), 44_100);

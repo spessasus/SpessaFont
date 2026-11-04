@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SoundBankLoader } from "spessasynth_core";
-import { createTestSession } from "../test_utils/bank_fixture.ts";
+import { createTestSession, getMirror } from "../test_utils/bank_fixture.ts";
 import { hasTextOutsideLatin1 } from "./latin1_text.ts";
 
 describe("hasTextOutsideLatin1", () => {
@@ -22,7 +22,7 @@ describe("hasTextOutsideLatin1", () => {
 
     it("matches what core cannot write back", () => {
         // The mirror has the sample data, so it is what gets written
-        const { bank } = createTestSession().mirror;
+        const { bank } = getMirror(createTestSession());
         bank.presets[0].name = "Żółw";
         const loaded = SoundBankLoader.fromArrayBuffer(bank.writeSF2());
         expect(loaded.presets.some((p) => p.name === "Żółw")).toBe(false);

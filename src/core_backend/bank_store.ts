@@ -8,7 +8,7 @@ import type {
 import { type BankViews, updateBankViews } from "./entity_views.ts";
 import type { BankDocument } from "./bank_document.ts";
 import type { BankEntity } from "./bank_view.ts";
-import type { ChangeSet } from "./change_set.ts";
+import type { ChangeSet, RestoredAudio } from "./change_set.ts";
 
 export interface HistoryState {
     readonly canUndo: boolean;
@@ -48,8 +48,14 @@ export class BankStore {
     private readonly listeners = new Set<() => void>();
     private readonly entityRevisions = new WeakMap<BankEntity, number>();
     private readonly audioRevisions = new WeakMap<BasicSample, number>();
-    private readonly getAudioRevision = (sample: BasicSample) =>
-        this.audioRevisions.get(sample) ?? 0;
+    /**
+     * Samples whose last audio change came back from the host.
+     */
+    private readonly restoredAudio = new WeakMap<BasicSample, RestoredAudio>();
+    private readonly getAudioRevision = (sample: BasicSample) => ({
+        revision: this.audioRevisions.get(sample) ?? 0,
+        restored: this.restoredAudio.get(sample)
+    });
     private snapshot: BankSnapshot;
 
     public readonly subscribe = (listener: () => void) => {
@@ -101,6 +107,13 @@ export class BankStore {
     }
 
     /**
+     * The host's audio a sample's last audio change restored, if it did.
+     */
+    public getRestoredAudio(sample: BasicSample) {
+        return this.restoredAudio.get(sample);
+    }
+
+    /**
      * Returns the revision at which the entity or one of its children last changed, 0 if never.
      */
     public getEntityRevision(entity: BankEntity) {
@@ -120,6 +133,12 @@ export class BankStore {
         }
         for (const sample of changes.audio) {
             this.audioRevisions.set(sample, revision);
+            const restored = changes.restoredAudio.get(sample);
+            if (restored) {
+                this.restoredAudio.set(sample, restored);
+            } else {
+                this.restoredAudio.delete(sample);
+            }
         }
 
         const isHistoryChanged =

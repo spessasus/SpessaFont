@@ -10,6 +10,6 @@ export function downloadBlob(blob: Blob, name: string) {
     a.download = name;
     a.click();
     logInfo(`Downloading ${name}`);
-    // The download starts asynchronously, so the URL must outlive this call
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    // Not revoked for now: a large file is still being read long after the click, and revoking
+    // it a second later broke the download of a 1.3 GB bank. This keeps the blob until reload.
 }

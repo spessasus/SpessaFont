@@ -11,13 +11,22 @@ class PlaybackProcessor extends AudioWorkletProcessor {
      * @type {Float32Array[]}
      */
     data = [];
+    /**
+     * The synthesizer host's end, which arrives as the first message.
+     * @type {MessagePort | undefined}
+     */
+    host = undefined;
 
     constructor() {
         super();
 
         this.port.onmessage = (e) => {
-            const data = e.data;
-            this.data.push(...data);
+            this.host = e.data;
+            this.host.onmessage = (message) => {
+                this.data.push(...message.data);
+            };
+            // Asks for the first chunks
+            this.host.postMessage(0);
         };
     }
 
@@ -32,7 +41,7 @@ class PlaybackProcessor extends AudioWorkletProcessor {
         // decode the data
         outputs[0][0].set(data.subarray(0, blockSize));
         outputs[0][1].set(data.subarray(blockSize, blockSize * 2));
-        this.port.postMessage(this.data.length);
+        this.host?.postMessage(this.data.length);
         return true;
     }
 }

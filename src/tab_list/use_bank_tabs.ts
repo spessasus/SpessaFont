@@ -26,7 +26,7 @@ export function useBankTabs() {
         : "info";
 
     useEffect(() => {
-        if (activeSession) activeSession.synth.attach();
+        if (activeSession) activeSession.attach();
         else audioEngine.pauseMIDI();
     }, [audioEngine, activeSession]);
 

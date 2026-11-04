@@ -69,11 +69,10 @@ export function MIDIPlayer() {
             return;
         }
         try {
-            const mid = BasicMIDI.fromArrayBuffer(
-                await file.arrayBuffer(),
-                file.name
-            );
-            audioEngine.playMIDI(mid);
+            const buffer = await file.arrayBuffer();
+            // Parsed here as well, so a broken file is reported before anything plays
+            BasicMIDI.fromArrayBuffer(buffer, file.name);
+            audioEngine.playMIDI(buffer, file.name);
         } catch (error) {
             logError(`Failed to load ${file.name}.`, error);
             toast.error(t("menuBarLocale.midi.loadError", { name: file.name }));
