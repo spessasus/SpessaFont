@@ -8,7 +8,7 @@ import {
 } from "spessasynth_core";
 import { expect } from "vitest";
 import { BankSession } from "../core_backend/bank_session.ts";
-import { loadNewBank, loadSoundBank } from "../core_backend/load_sound_bank.ts";
+import { loadSoundBank } from "../core_backend/load_sound_bank.ts";
 import type { BankViews } from "../core_backend/entity_views.ts";
 import { ChangeSet } from "../core_backend/change_set.ts";
 import type { HistoryActionGroup } from "../core_backend/history.ts";
@@ -67,7 +67,9 @@ export class ProcessorHost implements SynthHost {
  * Two copies of the spessasynth_core sample bank as an SF2 file.
  */
 function writeTestBankFile() {
-    const { bank } = loadNewBank();
+    const bank = SoundBankLoader.fromArrayBuffer(
+        BasicSoundBank.getSampleSoundBankFile()
+    );
     const secondCopy = SoundBankLoader.fromArrayBuffer(
         BasicSoundBank.getSampleSoundBankFile()
     );
@@ -147,7 +149,7 @@ export function expectViewsUpToDate(session: BankSession) {
  * The mirror builds zones in view order, so the "used by" lists (one entry per zone) can come
  * out in another order, which means nothing. An unset range keeps whatever maximum it had.
  */
-function normalizeForMirror(snapshot: ReturnType<typeof snapshotBank>) {
+export function normalizeForMirror(snapshot: ReturnType<typeof snapshotBank>) {
     const normalizeZone = <T extends ReturnType<typeof zoneSnapshot>>(
         zone: T
     ) => ({

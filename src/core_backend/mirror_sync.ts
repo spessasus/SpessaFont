@@ -10,7 +10,8 @@ import { diffBankViews } from "./view_diff.ts";
 
 /**
  * Keeps the mirror up to date with the store: each commit becomes one patch of the views that
- * changed. New actions need no code here.
+ * changed. New actions need no code here. The mirror holds the only copy of the sample data, an
+ * action that gives a sample new audio sets it on the editor's sample, and it is moved from there.
  */
 export class MirrorSync {
     private readonly mirror: BankMirror;
@@ -113,6 +114,9 @@ export class MirrorSync {
                 // A new empty sample has nothing to send, and the mirror's copy is empty too
                 sampleData.set(view.id, copyStoredData(sample.getStoredData()));
             }
+            // The editor's samples hold data only on its way to the mirror. The length and
+            // the stored form stay, for the views.
+            sample.releaseData();
         }
         this.mirror.apply({
             views,

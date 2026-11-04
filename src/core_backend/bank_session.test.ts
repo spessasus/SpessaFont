@@ -33,7 +33,7 @@ describe("BankSession.save", () => {
     it("changes nothing when the file picker is cancelled", async () => {
         const session = createTestSession();
         const sample = session.document.samples[0];
-        const data = sample.getStoredData().data;
+        const data = await session.readStoredData(sample);
         vi.stubGlobal("showSaveFilePicker", () =>
             Promise.reject(new DOMException("Cancelled", "AbortError"))
         );
@@ -41,7 +41,8 @@ describe("BankSession.save", () => {
         // An SF3 save compresses every sample, so this must happen after the picker
         await expect(session.save("sf3", "x")).rejects.toThrow("Cancelled");
 
-        expect(sample.getStoredData().data).toBe(data);
+        const after = await session.readStoredData(sample);
+        expect(after.data).toBe(data.data);
         expect(sample.isCompressed).toBe(false);
         expect(session.history.canUndo).toBe(false);
         expect(session.history.isDirty).toBe(false);

@@ -21,7 +21,8 @@ describe("hasTextOutsideLatin1", () => {
     });
 
     it("matches what core cannot write back", () => {
-        const { bank } = createTestSession().document;
+        // The mirror has the sample data, so it is what gets written
+        const { bank } = createTestSession().mirror;
         bank.presets[0].name = "Żółw";
         const loaded = SoundBankLoader.fromArrayBuffer(bank.writeSF2());
         expect(loaded.presets.some((p) => p.name === "Żółw")).toBe(false);

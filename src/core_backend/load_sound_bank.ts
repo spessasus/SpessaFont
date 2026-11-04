@@ -11,9 +11,17 @@ export interface LoadedBank {
     file: ArrayBuffer;
 }
 
+/**
+ * The editor's bank has the structure only. The mirror loads the file again with the samples.
+ */
+const EDITOR_LOAD_OPTIONS = { sampleData: false };
+
 export function loadSoundBank(buf: ArrayBuffer): LoadedBank {
     try {
-        return { bank: SoundBankLoader.fromArrayBuffer(buf), file: buf };
+        return {
+            bank: SoundBankLoader.fromArrayBuffer(buf, EDITOR_LOAD_OPTIONS),
+            file: buf
+        };
     } catch (error) {
         // Maybe MIDI can parse it?
         try {
@@ -24,7 +32,13 @@ export function loadSoundBank(buf: ArrayBuffer): LoadedBank {
                 });
             }
             const file = mid.embeddedSoundBank;
-            return { bank: SoundBankLoader.fromArrayBuffer(file), file };
+            return {
+                bank: SoundBankLoader.fromArrayBuffer(
+                    file,
+                    EDITOR_LOAD_OPTIONS
+                ),
+                file
+            };
         } catch {
             throw error;
         }
@@ -36,7 +50,7 @@ export function loadSoundBank(buf: ArrayBuffer): LoadedBank {
  */
 export function loadNewBank(): LoadedBank {
     const file = SAMPLE_BANK_FILE.slice();
-    const bank = SoundBankLoader.fromArrayBuffer(file);
+    const bank = SoundBankLoader.fromArrayBuffer(file, EDITOR_LOAD_OPTIONS);
     bank.soundBankInfo.software = SOFTWARE_NAME;
     bank.soundBankInfo.name = "";
     return { bank, file };

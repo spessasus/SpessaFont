@@ -181,14 +181,16 @@ describe("DeleteSampleAction", () => {
 
     it("saves the remaining half without a link to another sample", () => {
         const session = createTestSession();
-        const { bank } = session.document;
         // Sample 0 is where a broken link used to point after saving
         const left = addSample(session.document, "X left");
         const right = addSample(session.document, "X right");
         left.setLinkedSample(right, SampleTypes.leftSample);
+        publishSetUp(session);
         session.history.do([new DeleteSampleAction(right)]);
 
-        const loaded = SoundBankLoader.fromArrayBuffer(bank.writeSF2());
+        const loaded = SoundBankLoader.fromArrayBuffer(
+            session.mirror.bank.writeSF2()
+        );
         for (const sample of loaded.samples) {
             expect(sample.linkedSample, sample.name).toBeUndefined();
         }

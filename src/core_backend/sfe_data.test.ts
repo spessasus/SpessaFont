@@ -43,7 +43,8 @@ describe("hasSFEOnlyData", () => {
     });
 
     it("matches what the writers keep: SFE keeps the generator, SF2 and DLS drop it", () => {
-        const { bank } = createTestSession().document;
+        // The mirror has the sample data, so it is what gets written
+        const { bank } = createTestSession().mirror;
         bank.instruments[0].zones[0].setGenerator(
             GeneratorTypes.ignoreNoteOff,
             1

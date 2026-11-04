@@ -2,13 +2,16 @@ import { describe, expect, it } from "vitest";
 import {
     type BasicSoundBank,
     GeneratorTypes,
+    SoundBankLoader,
     SpessaSynthProcessor
 } from "spessasynth_core";
 import {
     createTestSession,
     expectMirrorUpToDate,
     expectRoundTrip,
-    publishSetUp
+    normalizeForMirror,
+    publishSetUp,
+    snapshotBank
 } from "../test_utils/bank_fixture.ts";
 import { getObjectId } from "../utils/object_id.ts";
 import { SetGeneratorAction } from "../generator_table/cell/set_generator_action.ts";
@@ -88,25 +91,39 @@ describe("BankMirror", () => {
         expectMirrorUpToDate(createTestSession());
     });
 
-    it("plays the same as the editor's bank after edits", async () => {
+    it("plays the same as a fresh load of the file it writes, after edits", async () => {
         const session = createTestSession();
         await editBank(session);
 
         const fromMirror = render(session.mirror.bank);
+        const reloaded = SoundBankLoader.fromArrayBuffer(
+            session.mirror.bank.writeSF2()
+        );
 
         expect(fromMirror.some((v) => v !== 0)).toBe(true);
-        expect(fromMirror).toEqual(render(session.document.bank));
+        // The replaced float audio is written as 16-bit, which rounds it a little
+        const fromFile = render(reloaded);
+        const difference = Math.max(
+            ...fromMirror.map((v, i) => Math.abs(v - fromFile[i]))
+        );
+        expect(difference).toBeLessThan(0.001);
     });
 
-    it("writes the same file as the editor's bank after edits", async () => {
+    it("writes a file that holds the editor's bank, after edits", async () => {
         const session = createTestSession();
+        // Writing fills in a default for an empty name
+        session.document.bank.soundBankInfo.name = "Named";
+        publishSetUp(session);
         await editBank(session);
-        const options = { software: "test" };
-        // The creation date is written as the bank info has it, so both share it
-        const written = new Uint8Array(session.mirror.bank.writeSF2(options));
 
-        expect(written).toEqual(
-            new Uint8Array(session.document.bank.writeSF2(options))
+        const reloaded = SoundBankLoader.fromArrayBuffer(
+            session.mirror.bank.writeSF2(),
+            { sampleData: false }
+        );
+
+        // The file's elements come in the editor's order, so they compare one to one
+        expect(normalizeForMirror(snapshotBank(reloaded))).toEqual(
+            normalizeForMirror(snapshotBank(session.document.bank))
         );
     });
 
@@ -128,18 +145,18 @@ describe("BankMirror", () => {
         expect(getFirstMirrorSample(session).getAudioData()).toEqual(before);
     });
 
-    it("keeps a deleted sample's data for the undo that brings it back", () => {
+    it("keeps a deleted sample's data for the undo that brings it back", async () => {
         const session = createTestSession();
         const { bank } = session.document;
         const unused = bank.cloneSample(session.document.samples[0]);
         unused.name = "Unused";
+        unused.setAudioData(new Float32Array([0.25, 0.5]), 44_100);
         publishSetUp(session);
 
         session.history.do([new DeleteSampleAction(unused)]);
         session.history.undo();
 
         expectMirrorUpToDate(session);
-        const mirrored = session.mirror.getSample(getObjectId(unused));
-        expect(mirrored?.getAudioData()).toEqual(unused.getAudioData());
+        expect([...(await session.readAudio(unused))]).toEqual([0.25, 0.5]);
     });
 });
