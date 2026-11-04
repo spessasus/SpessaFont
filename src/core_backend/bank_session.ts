@@ -1,12 +1,8 @@
-import type {
-    BasicSoundBank,
-    ProgressFunction,
-    SpessaSynthProcessor
-} from "spessasynth_core";
+import type { BasicSoundBank, ProgressFunction } from "spessasynth_core";
 import { BankDocument } from "./bank_document.ts";
 import { BankStore } from "./bank_store.ts";
 import { HistoryManager } from "./history.ts";
-import { SynthBinding } from "./synth_binding.ts";
+import { SynthBinding, type SynthHost } from "./synth_binding.ts";
 import {
     convertSampleFormat,
     encodeSoundBank,
@@ -41,16 +37,16 @@ export class BankSession {
     public readonly synth: SynthBinding;
 
     /**
-     * @param processor the shared synthesizer
+     * @param synth the shared synthesizer
      * @param bank the loaded bank, or undefined to start a new one
      */
-    public constructor(processor: SpessaSynthProcessor, bank?: BasicSoundBank) {
+    public constructor(synth: SynthHost, bank?: BasicSoundBank) {
         this.document = bank
             ? new BankDocument(bank)
             : BankDocument.createEmpty();
         this.writeFormat = getInitialWriteFormat(this.document.bank);
         this.store = new BankStore(this.document);
-        this.synth = new SynthBinding(processor, this.document.bank);
+        this.synth = new SynthBinding(synth, this.document.bank);
         this.history = new HistoryManager(
             this.document,
             this.store,

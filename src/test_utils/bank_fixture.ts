@@ -20,9 +20,15 @@ export const SECOND_COPY_SUFFIX = " 2";
  * Creates a session holding two copies of the spessasynth_core sample bank.
  * The result has two presets, two instruments and two mono samples,
  * which is enough to exercise linking, deleting and reordering.
+ * Pass a processor to check what the synthesizer sees.
  */
-export function createTestSession() {
-    const session = new BankSession(new SpessaSynthProcessor(44_100));
+export function createTestSession(
+    processor = new SpessaSynthProcessor(44_100)
+) {
+    const session = new BankSession({
+        processor,
+        refreshPresets: () => processor.refreshPresets()
+    });
     const bank = session.document.bank;
 
     const secondCopy = SoundBankLoader.fromArrayBuffer(

@@ -44,6 +44,12 @@ export class AudioEngine {
     private readonly maxChunksQueued;
     private lastStatusTime = 0;
     private outputInsert: OutputInsert | undefined;
+    /**
+     * What the keyboard's channel plays, kept to apply it again after a reset or refresh.
+     */
+    private previewTarget:
+        { target: BankEntity | undefined; bank: BasicSoundBank } | undefined;
+    private isPreviewStale = false;
     public readonly context: AudioContext;
     public readonly processor: SpessaSynthProcessor;
     public readonly sequencer: SpessaSynthSequencer;
@@ -69,7 +75,15 @@ export class AudioEngine {
         this.processor = new SpessaSynthProcessor(context.sampleRate, {
             initialTime: context.currentTime
         });
-        this.processor.onEventCall = (e) => this.synthEvents.emit(e);
+        this.processor.onEventCall = (e) => {
+            // A reset (the reset button, a GS or GM reset message, a bank swap) puts the
+            // keyboard's channel back on its MIDI patch. The event comes before the reset is
+            // done, so the preview is applied again on the next render.
+            if (e.type === "reset") {
+                this.isPreviewStale = true;
+            }
+            this.synthEvents.emit(e);
+        };
         this.maxChunksQueued = Math.min(
             Math.max(
                 2,
@@ -101,7 +115,24 @@ export class AudioEngine {
         this.applySettings(initialSettings);
     }
 
+    private applyPreviewTarget() {
+        this.isPreviewStale = false;
+        if (!this.previewTarget) {
+            return;
+        }
+        const { target, bank } = this.previewTarget;
+        // Set directly, as a program change would follow the channel's bank select
+        this.processor.midiChannels[KEYBOARD_TARGET_CHANNEL].preset = target
+            ? createPreviewPreset(target, bank)
+            : bank.presets[0];
+        this.processor.clearCache();
+    }
+
     private audioLoop() {
+        // A playing song owns the keyboard's channel, pausing it brings the preview back
+        if (this.isPreviewStale && this.sequencer.paused) {
+            this.applyPreviewTarget();
+        }
         if (this.audioChunksQueued >= this.maxChunksQueued) {
             return;
         }
@@ -305,6 +336,8 @@ export class AudioEngine {
 
     public pauseMIDI() {
         this.sequencer.pause();
+        // The song may have changed the keyboard channel's program
+        this.applyPreviewTarget();
         this.refreshStatus();
     }
 
@@ -318,17 +351,23 @@ export class AudioEngine {
 
     /**
      * Plays the element on the keyboard's channel, or the bank's first preset without one.
+     * The target is kept, so it can be applied again after something resets the channel.
      */
     public setPreviewTarget(
         target: BankEntity | undefined,
         bank: BasicSoundBank
     ) {
-        if (target) {
-            this.processor.midiChannels[KEYBOARD_TARGET_CHANNEL].preset =
-                createPreviewPreset(target, bank);
-        } else if (bank.presets.length > 0) {
-            this.processor.programChange(KEYBOARD_TARGET_CHANNEL, 0);
-        }
-        this.processor.clearCache();
+        this.previewTarget = { target, bank };
+        this.applyPreviewTarget();
+    }
+
+    /**
+     * Rebuilds the synthesizer's preset list after the banks or their presets changed (added,
+     * removed, renumbered, zones replaced). That points every channel at its MIDI patch again,
+     * so the preview is applied again after it.
+     */
+    public refreshPresets() {
+        this.processor.refreshPresets();
+        this.applyPreviewTarget();
     }
 }
