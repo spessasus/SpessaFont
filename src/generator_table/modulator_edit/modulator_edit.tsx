@@ -1,43 +1,41 @@
-import type {
-    BasicInstrument,
-    BasicPreset,
-    BasicZone,
-    Modulator
-} from "spessasynth_core";
+import type { BasicInstrument, BasicPreset, Modulator } from "spessasynth_core";
 import { ModulatorList } from "../../modulator_editing/modulator_list/modulator_list.tsx";
 import "./modulator_edit.css";
 import { useTranslation } from "react-i18next";
 import { EditModulatorsAction } from "./edit_modulators_action.ts";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
+import type { ModulatorView } from "../../core_backend/entity_views.ts";
+import type { ZoneColumn } from "../zone_columns.ts";
+import { findZone, getColumnZones } from "../cell/column_zones.ts";
 
 interface ModulatorEditorProps {
     name: string;
-    zone: BasicZone;
-    linkedZone: BasicZone | undefined;
+    column: ZoneColumn;
     onClose: () => void;
+    /**
+     * The edited element, for the actions.
+     */
     element: BasicPreset | BasicInstrument;
-    defaultModulators: readonly Modulator[];
+    defaultModulators: readonly ModulatorView[];
 }
 
 export function ModulatorEditor({
     name,
-    zone,
+    column,
     onClose,
     element,
-    linkedZone,
     defaultModulators
 }: ModulatorEditorProps) {
     const { t } = useTranslation();
     const { apply } = useBankEditor();
 
-    const setModulators = (mods: Modulator[]) => {
-        const actions = [new EditModulatorsAction(element, zone, mods)];
-        // The stereo partner gets the same modulators
-        if (linkedZone) {
-            actions.push(new EditModulatorsAction(element, linkedZone, mods));
-        }
-        apply(actions);
-    };
+    // The stereo partner gets the same modulators
+    const setModulators = (mods: Modulator[]) =>
+        apply(
+            getColumnZones(element, column).map(
+                (zone) => new EditModulatorsAction(element, zone, mods)
+            )
+        );
 
     return (
         <div className={"zone_modulators"}>
@@ -56,7 +54,10 @@ export function ModulatorEditor({
                 &times;
             </button>
             <ModulatorList
-                modulatorList={zone.modulators}
+                modulatorList={column.zone.modulators}
+                getModulators={() =>
+                    findZone(element, column.zone.id)?.modulators ?? []
+                }
                 setModulatorList={setModulators}
                 defaultModulators={defaultModulators}
             />

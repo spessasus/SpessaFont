@@ -1,48 +1,58 @@
-import {
-    BasicInstrumentZone,
-    type BasicPresetZone,
-    type BasicZone
-} from "spessasynth_core";
+import type {
+    InstrumentView,
+    SampleView,
+    ZoneView
+} from "../core_backend/entity_views.ts";
 import { STEREO_REGEX } from "../utils/stereo_regex.ts";
 
 /**
  * One column of the generator table. A stereo pair shares a column,
  * and edits to it are applied to both zones.
  */
-export interface ZoneColumn<T extends BasicZone = BasicZone> {
-    zone: T;
+export interface ZoneColumn {
+    zone: ZoneView;
     /**
      * The stereo partner that receives the same edits, if any.
      */
-    linkedZone: T | undefined;
+    linkedZone: ZoneView | undefined;
     colSpan: number;
     isStereo: boolean;
     name: string;
+    /**
+     * The sample of an instrument zone, for the root key placeholder and the offset limit.
+     */
+    sample: SampleView | undefined;
 }
+
+/**
+ * The children a table shows: the samples of an instrument, or the instruments of a preset.
+ */
+export type ZoneChildren =
+    | { kind: "samples"; views: ReadonlyMap<number, SampleView> }
+    | { kind: "instruments"; views: ReadonlyMap<number, InstrumentView> };
 
 /**
  * Pairs each zone with its stereo partner, if the partner is the zone right before or after it.
  */
-function getLinkedZoneMap<
-    ZoneType extends BasicPresetZone | BasicInstrumentZone
->(zones: readonly ZoneType[]) {
-    const linkedZones = new Set<BasicZone>();
+function getLinkedZoneMap(zones: readonly ZoneView[], children: ZoneChildren) {
     /**
      * 0 - no link
      * 1 - first zone of the linked pair
      * 2 - second zone of the linked pair
      */
     type LinkPosition = 0 | 1 | 2;
-    return zones.map((z, i): { index: LinkPosition; linkedZone?: ZoneType } => {
+    const linkedZones = new Set<ZoneView>();
+    return zones.map((z, i): { index: LinkPosition; linkedZone?: ZoneView } => {
         let linkedZoneIndex = -1;
-        if (z instanceof BasicInstrumentZone) {
-            const linkedSample = z.sample.linkedSample;
-            if (linkedSample) {
+        if (children.kind === "samples" && z.childId !== undefined) {
+            const linkedSampleId = children.views.get(
+                z.childId
+            )?.linkedSampleId;
+            if (linkedSampleId !== undefined) {
                 linkedZoneIndex = zones.findIndex(
-                    (z) =>
-                        !linkedZones.has(z) &&
-                        z instanceof BasicInstrumentZone &&
-                        z.sample === linkedSample
+                    (other) =>
+                        !linkedZones.has(other) &&
+                        other.childId === linkedSampleId
                 );
             }
         }
@@ -63,35 +73,37 @@ function getLinkedZoneMap<
     });
 }
 
-function getZoneName(zone: BasicPresetZone | BasicInstrumentZone) {
-    return zone instanceof BasicInstrumentZone
-        ? zone.sample.name
-        : zone.instrument.name;
-}
-
 /**
  * Lays out the zones as table columns.
  * With `shouldSplitPairs`, both zones of an adjacent stereo pair get their own column and are edited
  * separately (used for pan, which differs between the left and right sample).
  */
 export function getZoneColumns(
-    zones: readonly (BasicPresetZone | BasicInstrumentZone)[],
+    zones: readonly ZoneView[],
+    children: ZoneChildren,
     shouldSplitPairs = false
 ) {
-    const linkedZoneMap = getLinkedZoneMap(zones);
-    const columns = new Array<
-        ZoneColumn<BasicPresetZone | BasicInstrumentZone>
-    >();
+    const linkedZoneMap = getLinkedZoneMap(zones, children);
+    const columns = new Array<ZoneColumn>();
     for (const [i, zone] of zones.entries()) {
         const { index, linkedZone } = linkedZoneMap[i];
-        const name = getZoneName(zone);
+        const child =
+            zone.childId === undefined
+                ? undefined
+                : children.views.get(zone.childId);
+        const sample =
+            children.kind === "samples" && zone.childId !== undefined
+                ? children.views.get(zone.childId)
+                : undefined;
+        const name = child?.name ?? "";
         if (index === 0 || shouldSplitPairs) {
             columns.push({
                 zone,
                 linkedZone: index === 0 ? linkedZone : undefined,
                 colSpan: 1,
                 isStereo: false,
-                name
+                name,
+                sample
             });
             continue;
         }
@@ -103,8 +115,16 @@ export function getZoneColumns(
             linkedZone,
             colSpan: 2,
             isStereo: true,
-            name: name.replace(STEREO_REGEX, "").trim()
+            name: name.replace(STEREO_REGEX, "").trim(),
+            sample
         });
     }
     return columns;
+}
+
+/**
+ * A generator's value in a zone view, or null when the zone does not set it.
+ */
+export function getViewGenerator(zone: ZoneView, type: number) {
+    return zone.generators.find((g) => g.type === type)?.value ?? null;
 }

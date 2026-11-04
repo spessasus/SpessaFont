@@ -1,6 +1,5 @@
 import {
     BasicInstrument,
-    BasicInstrumentZone,
     type BasicPreset,
     GeneratorLimits,
     type GeneratorType,
@@ -12,7 +11,7 @@ import { GeneratorCellInput } from "./generator_cell_input.tsx";
 import { useTranslation } from "react-i18next";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 import type { GeneratorRowType } from "../generator_row_type.ts";
-import type { ZoneColumn } from "../zone_columns.ts";
+import { getViewGenerator, type ZoneColumn } from "../zone_columns.ts";
 import { getColumnZones } from "./column_zones.ts";
 import { getGeneratorOptions } from "../generator_options.ts";
 import { parseGeneratorText } from "./parse_generator_text.ts";
@@ -61,8 +60,8 @@ export function NumberGeneratorCell({
         toGenerator = identity,
         precision = 0
     } = row;
-    const { zone, colSpan } = column;
-    const value = zone.getGenerator(generator, null);
+    const { zone, colSpan, sample } = column;
+    const value = getViewGenerator(zone, generator);
     const toText = (v: number | null) =>
         v === null ? "" : fromGenerator(v).toFixed(precision);
     const textValue = toText(value);
@@ -73,11 +72,8 @@ export function NumberGeneratorCell({
 
     // An unset preset generator adds nothing to the instrument, so its placeholder is 0
     let placeholder = toText(isInstrument ? limits.def : 0);
-    if (
-        zone instanceof BasicInstrumentZone &&
-        generator === GeneratorTypes.overridingRootKey
-    ) {
-        const key = zone.sample.originalKey;
+    if (sample && generator === GeneratorTypes.overridingRootKey) {
+        const key = sample.originalKey;
         placeholder = `${key} (${midiNoteToPitchClass(key)})`;
     } else if (placeholder === "-1") {
         placeholder = "-";
@@ -85,7 +81,7 @@ export function NumberGeneratorCell({
 
     const setGenerator = (newValue: number | null) =>
         apply(
-            getColumnZones(column).map(
+            getColumnZones(element, column).map(
                 (z) =>
                     new SetGeneratorAction(
                         element,

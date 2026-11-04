@@ -10,13 +10,44 @@ import { useState } from "react";
 import { useClipboard } from "../../clipboard/clipboard_context.ts";
 import toast from "react-hot-toast";
 import { getObjectId, shareObjectId } from "../../utils/object_id.ts";
+import type { ModulatorView as ModulatorData } from "../../core_backend/entity_views.ts";
 import { getClickedSelection } from "./modulator_selection.ts";
 import { ModulatorListActions } from "./modulator_list_actions.tsx";
 
 interface ModulatorListProps {
-    modulatorList: readonly Modulator[];
+    modulatorList: readonly ModulatorData[];
+    /**
+     * The current modulators, read when an edit is applied. The list renders from the views.
+     */
+    getModulators: () => readonly Modulator[];
     setModulatorList: (l: Modulator[]) => void;
-    defaultModulators: readonly Modulator[];
+    defaultModulators: readonly ModulatorData[];
+}
+
+function isSameSource(
+    a: ModulatorData["primarySource"],
+    b: ModulatorData["primarySource"]
+) {
+    return (
+        a.index === b.index &&
+        a.isCC === b.isCC &&
+        a.isBipolar === b.isBipolar &&
+        a.isNegative === b.isNegative &&
+        a.curveType === b.curveType
+    );
+}
+
+/**
+ * Core's `Modulator.isIdentical` on views: the same sources, destination and transform, which
+ * is what makes a zone modulator override a default one.
+ */
+function isSameModulator(a: ModulatorData, b: ModulatorData) {
+    return (
+        isSameSource(a.primarySource, b.primarySource) &&
+        isSameSource(a.secondarySource, b.secondarySource) &&
+        a.destination === b.destination &&
+        a.transformType === b.transformType
+    );
 }
 
 /**
@@ -25,6 +56,7 @@ interface ModulatorListProps {
  */
 export function ModulatorList({
     modulatorList,
+    getModulators,
     setModulatorList,
     defaultModulators
 }: ModulatorListProps) {
@@ -39,9 +71,9 @@ export function ModulatorList({
         slot: ModulatorSourceSlot;
     } | null>(null);
 
-    const selectedMods = modulatorList.filter((m) =>
-        selectedIds.has(getObjectId(m))
-    );
+    const selectedCount = modulatorList.filter((m) =>
+        selectedIds.has(m.id)
+    ).length;
 
     const addModulator = () => {
         const mod = new Modulator(
@@ -51,17 +83,20 @@ export function ModulatorList({
             0,
             0
         );
-        setModulatorList([mod, ...modulatorList]);
+        setModulatorList([mod, ...getModulators()]);
     };
 
     const deleteSelected = () => {
         setModulatorList(
-            modulatorList.filter((m) => !selectedIds.has(getObjectId(m)))
+            getModulators().filter((m) => !selectedIds.has(getObjectId(m)))
         );
         setSelectedIds(new Set());
     };
 
     const copySelected = () => {
+        const selectedMods = getModulators().filter((m) =>
+            selectedIds.has(getObjectId(m))
+        );
         clipboard.copyModulators(selectedMods);
         toast.success(
             t("clipboardLocale.copiedModulators", {
@@ -72,17 +107,16 @@ export function ModulatorList({
 
     const paste = () => {
         const pasted = clipboard.getModulators();
-        setModulatorList([...pasted, ...modulatorList]);
+        setModulatorList([...pasted, ...getModulators()]);
         toast.success(
             t("clipboardLocale.pastedModulators", { count: pasted.length })
         );
     };
 
-    const handleSelect = (e: React.MouseEvent, mod: Modulator) => {
-        const id = getObjectId(mod);
+    const handleSelect = (e: React.MouseEvent, id: number) => {
         setSelectedIds(
             getClickedSelection(
-                modulatorList.map((m) => getObjectId(m)),
+                modulatorList.map((m) => m.id),
                 selectedIds,
                 anchorId,
                 id,
@@ -92,11 +126,19 @@ export function ModulatorList({
         setAnchorId(id);
     };
 
-    const replaceModulator = (original: Modulator, edited: Modulator) => {
+    const replaceModulator = (
+        id: number,
+        change: (copy: Modulator) => void
+    ) => {
+        const current = getModulators();
+        const original = current.find((m) => getObjectId(m) === id);
+        if (!original) {
+            return;
+        }
+        const edited = Modulator.copyFrom(original);
+        change(edited);
         shareObjectId(original, edited);
-        setModulatorList(
-            modulatorList.map((m) => (m === original ? edited : m))
-        );
+        setModulatorList(current.map((m) => (m === original ? edited : m)));
     };
 
     return (
@@ -104,7 +146,7 @@ export function ModulatorList({
             <ModulatorListActions
                 count={modulatorList.length}
                 canPaste={contents.modulators > 0}
-                hasSelection={selectedMods.length > 0}
+                hasSelection={selectedCount > 0}
                 onAdd={addModulator}
                 onPaste={paste}
                 onCopy={copySelected}
@@ -112,16 +154,18 @@ export function ModulatorList({
             />
             <div className={"list_contents"}>
                 {modulatorList.map((mod, i) => {
-                    const id = getObjectId(mod);
+                    const { id } = mod;
                     return (
                         <ModulatorView
                             key={id}
                             modulatorNumber={i + 1}
                             mod={mod}
-                            onChange={(edited) => replaceModulator(mod, edited)}
+                            onChange={(change) => replaceModulator(id, change)}
                             onDelete={() =>
                                 setModulatorList(
-                                    modulatorList.filter((m) => m !== mod)
+                                    getModulators().filter(
+                                        (m) => getObjectId(m) !== id
+                                    )
                                 )
                             }
                             openCurvePicker={
@@ -133,9 +177,9 @@ export function ModulatorList({
                                 setOpenCurvePicker(slot ? { id, slot } : null)
                             }
                             isSelected={selectedIds.has(id)}
-                            onSelect={(e) => handleSelect(e, mod)}
+                            onSelect={(e) => handleSelect(e, id)}
                             isOverridingDefault={defaultModulators.some((m) =>
-                                Modulator.isIdentical(m, mod)
+                                isSameModulator(m, mod)
                             )}
                         />
                     );

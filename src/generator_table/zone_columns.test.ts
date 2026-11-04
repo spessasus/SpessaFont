@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { BasicInstrument, EmptySample, SampleTypes } from "spessasynth_core";
-import { getZoneColumns } from "./zone_columns.ts";
+import {
+    BasicInstrument,
+    type BasicSample,
+    EmptySample,
+    SampleTypes
+} from "spessasynth_core";
+import {
+    buildInstrumentView,
+    buildSampleView
+} from "../core_backend/entity_views.ts";
+import { getObjectId } from "../utils/object_id.ts";
+import { getZoneColumns, type ZoneChildren } from "./zone_columns.ts";
 
 function createSample(name: string) {
     const sample = new EmptySample();
@@ -14,54 +24,86 @@ function createStereoInstrument() {
     left.setLinkedSample(right, SampleTypes.leftSample);
     const mono = createSample("Bell");
     const instrument = new BasicInstrument();
-    const leftZone = instrument.createZone(left);
-    const rightZone = instrument.createZone(right);
-    const monoZone = instrument.createZone(mono);
-    return { instrument, leftZone, rightZone, monoZone };
+    instrument.createZone(left);
+    instrument.createZone(right);
+    instrument.createZone(mono);
+    return { instrument, samples: [left, right, mono] };
+}
+
+function getChildren(samples: BasicSample[]): ZoneChildren {
+    return {
+        kind: "samples",
+        views: new Map(
+            samples.map((s) => [
+                getObjectId(s),
+                buildSampleView(s, { revision: 0, restored: undefined })
+            ])
+        )
+    };
+}
+
+/**
+ * Each column as the view ids of its zone and partner, and its span.
+ */
+function describeColumns(columns: ReturnType<typeof getZoneColumns>) {
+    return columns.map((c) => [c.zone.id, c.linkedZone?.id, c.colSpan]);
 }
 
 describe("getZoneColumns", () => {
     it("merges an adjacent stereo pair into one column", () => {
-        const { instrument, leftZone, rightZone, monoZone } =
-            createStereoInstrument();
-        const columns = getZoneColumns(instrument.zones);
-        expect(columns).toEqual([
+        const { instrument, samples } = createStereoInstrument();
+        const view = buildInstrumentView(instrument);
+        const [left, right, mono] = view.zones;
+
+        const columns = getZoneColumns(view.zones, getChildren(samples));
+
+        expect(columns.map((c) => ({ ...c, sample: c.sample?.name }))).toEqual([
             {
-                zone: leftZone,
-                linkedZone: rightZone,
+                zone: left,
+                linkedZone: right,
                 colSpan: 2,
                 isStereo: true,
-                name: "Piano"
+                name: "Piano",
+                sample: "Piano L"
             },
             {
-                zone: monoZone,
+                zone: mono,
                 linkedZone: undefined,
                 colSpan: 1,
                 isStereo: false,
-                name: "Bell"
+                name: "Bell",
+                sample: "Bell"
             }
         ]);
     });
 
     it("splits the pair without linking the zones", () => {
-        const { instrument, leftZone, rightZone } = createStereoInstrument();
-        const columns = getZoneColumns(instrument.zones, true);
-        expect(columns.map((c) => [c.zone, c.linkedZone, c.colSpan])).toEqual([
-            [leftZone, undefined, 1],
-            [rightZone, undefined, 1],
-            [instrument.zones[2], undefined, 1]
+        const { instrument, samples } = createStereoInstrument();
+        const view = buildInstrumentView(instrument);
+        const [left, right, mono] = view.zones;
+
+        const columns = getZoneColumns(view.zones, getChildren(samples), true);
+
+        expect(describeColumns(columns)).toEqual([
+            [left.id, undefined, 1],
+            [right.id, undefined, 1],
+            [mono.id, undefined, 1]
         ]);
     });
 
     it("links a partner that is not adjacent without merging", () => {
-        const { instrument, leftZone, rightZone, monoZone } =
-            createStereoInstrument();
+        const { instrument, samples } = createStereoInstrument();
+        const [leftZone, rightZone, monoZone] = instrument.zones;
         instrument.zones = [leftZone, monoZone, rightZone];
-        const columns = getZoneColumns(instrument.zones);
-        expect(columns.map((c) => [c.zone, c.linkedZone, c.colSpan])).toEqual([
-            [leftZone, rightZone, 1],
-            [monoZone, undefined, 1],
-            [rightZone, leftZone, 1]
+        const view = buildInstrumentView(instrument);
+        const [left, mono, right] = view.zones;
+
+        const columns = getZoneColumns(view.zones, getChildren(samples));
+
+        expect(describeColumns(columns)).toEqual([
+            [left.id, right.id, 1],
+            [mono.id, undefined, 1],
+            [right.id, left.id, 1]
         ]);
     });
 });

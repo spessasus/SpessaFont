@@ -5,7 +5,6 @@ import { generatorLocaleMap } from "../utils/translated_options/generator_to_loc
 import { NumberGeneratorCell } from "./cell/generator_cell.tsx";
 import { RangeGeneratorCell } from "./cell/range_cell.tsx";
 import { OffsetGeneratorCell } from "./cell/offset_cell.tsx";
-import { getObjectId } from "../utils/object_id.ts";
 import type { GeneratorRowType } from "./generator_row_type.ts";
 import type { ZoneColumn } from "./zone_columns.ts";
 import { GENERATOR_UNITS } from "./generator_unit.ts";
@@ -78,7 +77,7 @@ export function GeneratorRow({ element, row, columns }: GeneratorRowProps) {
             </th>
             {columns.map((column) => (
                 <GeneratorCell
-                    key={getObjectId(column.zone)}
+                    key={column.zone.id}
                     element={element}
                     row={row}
                     column={column}

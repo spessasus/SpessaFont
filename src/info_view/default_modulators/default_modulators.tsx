@@ -10,13 +10,15 @@ export function DefaultModulatorList() {
     const { session, apply } = useBankEditor();
     const defaultModulators = useBankSnapshot(
         session.store,
-        (s) => s.defaultModulators
+        (s) => s.views.defaultModulators
     );
+    // The bank's own list, read when an edit is applied
+    const getModulators = () => session.document.bank.defaultModulators;
     const info = useBankSnapshot(session.store, (s) => s.info);
 
     const setDefaultModulators = (modulators: Modulator[]) => {
         apply([
-            new SetDefaultModulatorsAction([...defaultModulators], modulators)
+            new SetDefaultModulatorsAction([...getModulators()], modulators)
         ]);
     };
 
@@ -31,6 +33,7 @@ export function DefaultModulatorList() {
             </h2>
             <ModulatorList
                 modulatorList={defaultModulators}
+                getModulators={getModulators}
                 setModulatorList={setDefaultModulators}
                 defaultModulators={[]} // can't override default modulators when editing default modulators
             />

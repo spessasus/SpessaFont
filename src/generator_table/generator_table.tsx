@@ -1,7 +1,6 @@
 import {
     BasicInstrument,
     type BasicPreset,
-    type BasicZone,
     GeneratorTypes
 } from "spessasynth_core";
 import type { GeneratorRowType } from "./generator_row_type.ts";
@@ -14,11 +13,18 @@ import { GeneratorTableModulatorRow } from "./modulator_row.tsx";
 import { ModulatorEditor } from "./modulator_edit/modulator_edit.tsx";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
-import { useEntityRevision } from "../hooks/use_entity_revision.ts";
-import { getZoneColumns, type ZoneColumn } from "./zone_columns.ts";
+import { getObjectId } from "../utils/object_id.ts";
+import {
+    getZoneColumns,
+    type ZoneChildren,
+    type ZoneColumn
+} from "./zone_columns.ts";
 import { moveTableFocus } from "./table_navigation.ts";
 
 interface GeneratorTableProps {
+    /**
+     * The edited element, for the actions. What the table shows comes from its view.
+     */
     element: BasicPreset | BasicInstrument;
     rows: readonly GeneratorRowType[];
 }
@@ -29,39 +35,55 @@ interface GeneratorTableProps {
 export function GeneratorTable({ element, rows }: GeneratorTableProps) {
     const { t } = useTranslation();
     const { session } = useBankEditor();
-    // The zones are mutable, so re-render when the element or its zones change
-    useEntityRevision(session.store, element);
+    const isInstrument = element instanceof BasicInstrument;
+    const id = getObjectId(element);
+    const view = useBankSnapshot(session.store, (s) =>
+        isInstrument ? s.views.instruments.get(id) : s.views.presets.get(id)
+    );
+    const sampleViews = useBankSnapshot(session.store, (s) => s.views.samples);
+    const instrumentViews = useBankSnapshot(
+        session.store,
+        (s) => s.views.instruments
+    );
     const defaultModulators = useBankSnapshot(
         session.store,
-        (s) => s.defaultModulators
+        (s) => s.views.defaultModulators
     );
-    const [editedZone, setEditedZone] = useState<BasicZone | null>(null);
+    const [editedZoneId, setEditedZoneId] = useState<number | null>(null);
+    // The pane closes when its element is removed, this only covers the render before
+    if (!view) {
+        return null;
+    }
+    const children: ZoneChildren = isInstrument
+        ? { kind: "samples", views: sampleViews }
+        : { kind: "instruments", views: instrumentViews };
 
     const globalColumn: ZoneColumn = {
-        zone: element.globalZone,
+        zone: view.globalZone,
         linkedZone: undefined,
         colSpan: 1,
         isStereo: false,
-        name: t("soundBankLocale.globalZone")
+        name: t("soundBankLocale.globalZone"),
+        sample: undefined
     };
-    const zoneColumns = getZoneColumns(element.zones);
+    const zoneColumns = getZoneColumns(view.zones, children);
     const columns = [globalColumn, ...zoneColumns];
     // Pan differs between the left and right sample, so stereo pairs are edited separately
-    const splitColumns = [globalColumn, ...getZoneColumns(element.zones, true)];
+    const splitColumns = [
+        globalColumn,
+        ...getZoneColumns(view.zones, children, true)
+    ];
 
     // The edited zone may be gone after an undo, which closes the editor
-    const editedColumn = columns.find((c) => c.zone === editedZone);
+    const editedColumn = columns.find((c) => c.zone.id === editedZoneId);
     if (editedColumn) {
         return (
             <ModulatorEditor
                 name={editedColumn.name}
-                zone={editedColumn.zone}
-                linkedZone={editedColumn.linkedZone}
-                onClose={() => setEditedZone(null)}
+                column={editedColumn}
+                onClose={() => setEditedZoneId(null)}
                 element={element}
-                defaultModulators={
-                    element instanceof BasicInstrument ? defaultModulators : []
-                }
+                defaultModulators={isInstrument ? defaultModulators : []}
             />
         );
     }
@@ -72,11 +94,12 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
                 <thead>
                     <GeneratorTableHeader
                         element={element}
+                        name={view.name}
                         columns={zoneColumns}
                     />
                     <GeneratorTableModulatorRow
                         columns={columns}
-                        onEditModulators={setEditedZone}
+                        onEditModulators={setEditedZoneId}
                     />
                 </thead>
                 <tbody>

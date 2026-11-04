@@ -1,4 +1,5 @@
-import { Modulator } from "spessasynth_core";
+import type { Modulator } from "spessasynth_core";
+import type { ModulatorView as ModulatorData } from "../../core_backend/entity_views.ts";
 import type * as React from "react";
 import "./modulator.css";
 import { useTranslation } from "react-i18next";
@@ -18,7 +19,7 @@ import { ModulatorTransform } from "./modulator_transform.tsx";
 export type ModulatorSourceSlot = "primary" | "secondary";
 
 interface ModulatorViewProps {
-    mod: Modulator;
+    mod: ModulatorData;
     modulatorNumber: number;
     isSelected: boolean;
     isOverridingDefault: boolean;
@@ -28,9 +29,10 @@ interface ModulatorViewProps {
     openCurvePicker: ModulatorSourceSlot | null;
     onOpenCurvePickerChange: (slot: ModulatorSourceSlot | null) => void;
     /**
-     * Receives an edited copy. The modulator itself is never changed.
+     * Receives the change, which the list applies to a copy of the modulator. The modulator
+     * itself is never changed.
      */
-    onChange: (mod: Modulator) => void;
+    onChange: (change: (copy: Modulator) => void) => void;
     onDelete: () => void;
     onSelect: (e: React.MouseEvent) => void;
 }
@@ -48,11 +50,7 @@ export function ModulatorView({
 }: ModulatorViewProps) {
     const { t } = useTranslation();
 
-    const update = (change: (copy: Modulator) => void) => {
-        const copy = Modulator.copyFrom(mod);
-        change(copy);
-        onChange(copy);
-    };
+    const update = onChange;
 
     const getSourceSetter =
         (slot: ModulatorSourceSlot) => (s: SpessaFontModulatorSource) =>

@@ -1,12 +1,8 @@
-import {
-    BasicInstrument,
-    BasicInstrumentZone,
-    type BasicPreset
-} from "spessasynth_core";
+import type { BasicInstrument, BasicPreset } from "spessasynth_core";
 import { GeneratorCellInput } from "./generator_cell_input.tsx";
 import { SetGeneratorAction } from "./set_generator_action.ts";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
-import type { ZoneColumn } from "../zone_columns.ts";
+import { getViewGenerator, type ZoneColumn } from "../zone_columns.ts";
 import { getColumnZones } from "./column_zones.ts";
 import {
     COARSE_OFFSET_SIZE,
@@ -31,10 +27,10 @@ export function OffsetGeneratorCell({
     label
 }: OffsetGeneratorCellProps) {
     const { apply } = useBankEditor();
-    const { zone, colSpan } = column;
+    const { zone, colSpan, sample } = column;
     const coarseGenerator = getCoarseOffsetGenerator(generator);
-    const fine = zone.getGenerator(generator, null);
-    const coarse = zone.getGenerator(coarseGenerator, null);
+    const fine = getViewGenerator(zone, generator);
+    const coarse = getViewGenerator(zone, coarseGenerator);
     const textValue =
         fine === null && coarse === null
             ? ""
@@ -47,7 +43,7 @@ export function OffsetGeneratorCell({
                 ? null
                 : Math.trunc(offset / COARSE_OFFSET_SIZE) || null;
         apply(
-            getColumnZones(column).flatMap((z) => [
+            getColumnZones(element, column).flatMap((z) => [
                 new SetGeneratorAction(
                     element,
                     z,
@@ -79,10 +75,7 @@ export function OffsetGeneratorCell({
             return textValue;
         }
         // An offset cannot move past the whole sample
-        const limit =
-            zone instanceof BasicInstrumentZone
-                ? zone.sample.sampleLength - 1
-                : Infinity;
+        const limit = sample ? sample.length - 1 : Infinity;
         const offset = Math.min(limit, Math.max(-limit, typed));
         setOffset(offset);
         return offset.toString();

@@ -3,6 +3,7 @@ import type {
     BasicPreset,
     GenericRange
 } from "spessasynth_core";
+import type { RangeView } from "../../core_backend/entity_views.ts";
 import { GeneratorTypes } from "spessasynth_core";
 import { GeneratorCellInput } from "./generator_cell_input.tsx";
 import { SetRangeAction } from "./set_range_action.ts";
@@ -11,10 +12,11 @@ import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 import type { ZoneColumn } from "../zone_columns.ts";
 import { getColumnZones } from "./column_zones.ts";
 
-function formatRange({ min, max }: GenericRange) {
-    if (min === -1) {
+function formatRange(range: RangeView | GenericRange | undefined) {
+    if (!range || range.min === -1) {
         return "";
     }
+    const { min, max } = range;
     return min === max ? min.toString() : `${min}-${max}`;
 }
 
@@ -54,7 +56,9 @@ export function RangeGeneratorCell({
     const { apply } = useBankEditor();
     const isKeyRange = generator === GeneratorTypes.keyRange;
     const { zone, colSpan } = column;
-    const rangeText = formatRange(isKeyRange ? zone.keyRange : zone.velRange);
+    const rangeText = formatRange(
+        isKeyRange ? zone.keyRange : zone.velocityRange
+    );
 
     const commitText = (typedText: string) => {
         if (typedText === rangeText) {
@@ -65,7 +69,7 @@ export function RangeGeneratorCell({
             return rangeText;
         }
         apply(
-            getColumnZones(column).map(
+            getColumnZones(element, column).map(
                 (z) =>
                     new SetRangeAction(
                         element,
