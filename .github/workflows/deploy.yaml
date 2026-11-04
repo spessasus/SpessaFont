@@ -81,11 +81,18 @@ jobs:
               if: steps.version_check.outputs.should_release == 'true'
               run: |
                   PREVIOUS_TAG=$(git tag --list 'v*' --sort=-version:refname | head -1)
-                  if [ -n "$PREVIOUS_TAG" ]; then
-                      git log "$PREVIOUS_TAG..HEAD" --oneline --no-merges | sed 's/^/- /' > release_notes.md
+                  # Skip the latest commit, it is the version bump
+                  if git rev-parse -q --verify HEAD^ > /dev/null; then
+                      END=HEAD^
                   else
-                      git log --oneline --no-merges | sed 's/^/- /' > release_notes.md
+                      END=HEAD
                   fi
+                  if [ -n "$PREVIOUS_TAG" ]; then
+                      RANGE="$PREVIOUS_TAG..$END"
+                  else
+                      RANGE="$END"
+                  fi
+                  git log "$RANGE" --no-merges --format="- %s (\`%h\`)" > release_notes.md
 
             - name: Upload patch notes
               if: steps.version_check.outputs.should_release == 'true'

@@ -90,31 +90,31 @@ describe("menu selection", () => {
     });
 });
 
-describe("filterElements", () => {
-    it("returns everything for an empty query", () => {
-        const { document } = createTestSession();
-        const elements = {
-            presets: document.presets,
-            instruments: document.instruments,
-            samples: document.samples
-        };
+function names<T extends { name: string }>(
+    ids: readonly number[],
+    map: ReadonlyMap<number, T>
+) {
+    return ids.map((id) => map.get(id)?.name);
+}
 
-        expect(filterElements(elements, "")).toBe(elements);
+describe("filterElements", () => {
+    it("keeps the views' orders for an empty query", () => {
+        const { views } = createTestSession().store.getSnapshot();
+
+        const result = filterElements(views, "");
+
+        expect(result.presets).toBe(views.presetOrder);
+        expect(result.samples).toBe(views.sampleOrder);
     });
 
     it("keeps what a matching preset uses, in bank order", () => {
-        const { document } = createTestSession();
-        const result = filterElements(
-            {
-                presets: document.presets,
-                instruments: document.instruments,
-                samples: document.samples
-            },
-            "WAVE 2"
-        );
+        const { views } = createTestSession().store.getSnapshot();
+        const result = filterElements(views, "WAVE 2");
 
-        expect(result.presets.map((p) => p.name)).toEqual(["Saw Wave 2"]);
-        expect(result.instruments.map((i) => i.name)).toEqual(["Saw Wave 2"]);
-        expect(result.samples.map((s) => s.name)).toEqual(["Saw 2"]);
+        expect(names(result.presets, views.presets)).toEqual(["Saw Wave 2"]);
+        expect(names(result.instruments, views.instruments)).toEqual([
+            "Saw Wave 2"
+        ]);
+        expect(names(result.samples, views.samples)).toEqual(["Saw 2"]);
     });
 });

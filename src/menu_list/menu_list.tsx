@@ -22,6 +22,7 @@ import { useMenuShortcuts } from "./use_menu_shortcuts.ts";
 import { useListMenu } from "./use_list_menu.ts";
 import { useContextMenu } from "../context_menu/context_menu_context.ts";
 import { useDragSource } from "../drag_and_drop/drag_context.ts";
+import { getObjectId } from "../utils/object_id.ts";
 
 interface MenuListProps {
     view: BankEditView;
@@ -37,6 +38,7 @@ export function MenuList({ view, isCovered }: MenuListProps) {
     const samples = useBankSnapshot(session.store, (s) => s.samples);
     const instruments = useBankSnapshot(session.store, (s) => s.instruments);
     const presets = useBankSnapshot(session.store, (s) => s.presets);
+    const views = useBankSnapshot(session.store, (s) => s.views);
     const [isOpen, setIsOpen] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [multiSelection, setMultiSelection] = useState<MultiSelection | null>(
@@ -45,10 +47,25 @@ export function MenuList({ view, isCovered }: MenuListProps) {
 
     // Filtering thousands of elements must not delay typing
     const deferredQuery = useDeferredValue(searchQuery);
-    const filtered = useMemo(
-        () => filterElements({ presets, instruments, samples }, deferredQuery),
-        [presets, instruments, samples, deferredQuery]
-    );
+    const filtered = useMemo(() => {
+        const ids = filterElements(views, deferredQuery);
+        // The lists keep the core objects as identities, which the selection and handlers use
+        const keep = <T extends object>(
+            list: readonly T[],
+            order: readonly number[]
+        ) => {
+            if (order.length === list.length) {
+                return list;
+            }
+            const listed = new Set(order);
+            return list.filter((e) => listed.has(getObjectId(e)));
+        };
+        return {
+            presets: keep(presets, ids.presets),
+            instruments: keep(instruments, ids.instruments),
+            samples: keep(samples, ids.samples)
+        };
+    }, [views, presets, instruments, samples, deferredQuery]);
 
     const listed = useMemo(
         () =>

@@ -1,10 +1,10 @@
 import "./instrument_display.css";
 import type { MouseEvent, PointerEvent } from "react";
-import type { BasicInstrument } from "spessasynth_core";
-import { SampleDisplay } from "../sample_display/sample_display.tsx";
 import type { BankEditView } from "../../core_backend/bank_view.ts";
+import { SampleDisplay } from "../sample_display/sample_display.tsx";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
-import { useEntityRevision } from "../../hooks/use_entity_revision.ts";
+import { useInstrumentView } from "../../hooks/use_instrument_view.ts";
+import { useEntityLookup } from "../../hooks/use_entity_lookup.ts";
 import { useTranslation } from "react-i18next";
 import { LinkIcon } from "../../utils/icons/edit_icons.tsx";
 import { getObjectId } from "../../utils/object_id.ts";
@@ -12,7 +12,10 @@ import { useLinkDropTarget } from "../../drag_and_drop/use_link_drop_target.ts";
 import { ExpandButton } from "../expand_button.tsx";
 
 interface InstrumentDisplayProps {
-    instrument: BasicInstrument;
+    /**
+     * The instrument's view id.
+     */
+    instrumentId: number;
     view: BankEditView;
     isSelected: boolean;
     isOpen: boolean;
@@ -33,7 +36,7 @@ interface InstrumentDisplayProps {
 }
 
 export function InstrumentDisplay({
-    instrument,
+    instrumentId,
     view,
     isSelected,
     isOpen,
@@ -45,9 +48,20 @@ export function InstrumentDisplay({
 }: InstrumentDisplayProps) {
     const { t } = useTranslation();
     const { session, setView } = useBankEditor();
-    // Re-render when the instrument's zones or sample names change
-    useEntityRevision(session.store, instrument);
-    const dropTarget = useLinkDropTarget(instrument);
+    const instrument = useInstrumentView(session.store, instrumentId);
+    const lookup = useEntityLookup(session.store);
+    const dropTarget = useLinkDropTarget(lookup.instrument(instrumentId));
+    // The row can render once more after its instrument was removed, before the list updates
+    if (!instrument) {
+        return null;
+    }
+    const viewId = view === "info" ? undefined : getObjectId(view);
+    const showSample = (id: number) => {
+        const sample = lookup.sample(id);
+        if (sample) {
+            setView(sample);
+        }
+    };
     return (
         <div className={"instrument_item_wrapper"}>
             <div
@@ -83,14 +97,16 @@ export function InstrumentDisplay({
             </div>
             {isOpen ? (
                 <div className={"instrument_samples"}>
-                    {instrument.zones.map((zone) => (
-                        <SampleDisplay
-                            key={getObjectId(zone)}
-                            isSelected={view === zone.sample}
-                            sampleId={getObjectId(zone.sample)}
-                            onClick={() => setView(zone.sample)}
-                        />
-                    ))}
+                    {instrument.zones.map((zone) =>
+                        zone.childId === undefined ? null : (
+                            <SampleDisplay
+                                key={zone.id}
+                                isSelected={viewId === zone.childId}
+                                sampleId={zone.childId}
+                                onClick={() => showSample(zone.childId ?? -1)}
+                            />
+                        )
+                    )}
                 </div>
             ) : null}
         </div>

@@ -92,8 +92,8 @@ export function PresetList({
                     focusedItem={view instanceof BasicPreset ? view : undefined}
                     renderItem={(preset) => {
                         const key = String(getObjectId(preset));
-                        const instrumentKey = (instrument: BasicInstrument) =>
-                            `${key}-${getObjectId(instrument)}`;
+                        const instrumentKey = (instrumentId: number) =>
+                            `${key}-${instrumentId}`;
                         return (
                             <PresetDisplay
                                 preset={preset}
@@ -101,11 +101,11 @@ export function PresetList({
                                 isSelected={selected.has(preset)}
                                 isOpen={isExpanded(key)}
                                 onToggle={() => toggle(key)}
-                                isInstrumentOpen={(instrument) =>
-                                    isExpanded(instrumentKey(instrument))
+                                isInstrumentOpen={(id) =>
+                                    isExpanded(instrumentKey(id))
                                 }
-                                onToggleInstrument={(instrument) =>
-                                    toggle(instrumentKey(instrument))
+                                onToggleInstrument={(id) =>
+                                    toggle(instrumentKey(id))
                                 }
                                 onClick={(e) => onItemClick(preset, e)}
                                 onContextMenu={(e) =>

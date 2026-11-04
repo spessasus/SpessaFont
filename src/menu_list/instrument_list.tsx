@@ -96,7 +96,7 @@ export function InstrumentList({
                         const key = String(getObjectId(instrument));
                         return (
                             <InstrumentDisplay
-                                instrument={instrument}
+                                instrumentId={getObjectId(instrument)}
                                 view={view}
                                 isSelected={selected.has(instrument)}
                                 isOpen={isExpanded(key)}

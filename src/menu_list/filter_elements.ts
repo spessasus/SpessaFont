@@ -1,57 +1,70 @@
-import type {
-    BasicInstrument,
-    BasicPreset,
-    BasicSample
-} from "spessasynth_core";
+import { MIDIPatchTools } from "spessasynth_core";
+import type { BankViews, PresetView } from "../core_backend/entity_views.ts";
 
-export interface BankElements {
-    presets: readonly BasicPreset[];
-    instruments: readonly BasicInstrument[];
-    samples: readonly BasicSample[];
+/**
+ * The ids of the listed elements of each kind, in bank order.
+ */
+export interface FilteredIds {
+    presets: readonly number[];
+    instruments: readonly number[];
+    samples: readonly number[];
 }
 
 /**
  * The text a preset is found by (its MIDI patch and name).
  */
-export function getPresetSearchText(preset: BasicPreset) {
-    return preset.toString().toLowerCase();
+export function getPresetSearchText(preset: PresetView) {
+    return MIDIPatchTools.toFullMIDIString(preset).toLowerCase();
+}
+
+function addChildren(
+    element: { zones: readonly { childId: number | undefined }[] } | undefined,
+    children: Set<number>
+) {
+    const zones = element?.zones ?? [];
+    for (const zone of zones) {
+        if (zone.childId !== undefined) children.add(zone.childId);
+    }
 }
 
 /**
  * Keeps the elements whose name contains the query, plus the instruments of matching presets
- * and the samples of matching instruments, so a match shows what it uses.
+ * and the samples of matching instruments, so a match shows what it uses. An empty query keeps
+ * the views' orders as they are.
  */
-export function filterElements(
-    elements: BankElements,
-    query: string
-): BankElements {
+export function filterElements(views: BankViews, query: string): FilteredIds {
     const lowerQuery = query.toLowerCase();
     if (lowerQuery === "") {
-        return elements;
+        return {
+            presets: views.presetOrder,
+            instruments: views.instrumentOrder,
+            samples: views.sampleOrder
+        };
     }
-    const presets = elements.presets.filter((p) =>
-        getPresetSearchText(p).includes(lowerQuery)
-    );
+    const presets = views.presetOrder.filter((id) => {
+        const preset = views.presets.get(id);
+        return preset && getPresetSearchText(preset).includes(lowerQuery);
+    });
     const instruments = new Set(
-        elements.instruments.filter((i) =>
-            i.name.toLowerCase().includes(lowerQuery)
+        views.instrumentOrder.filter((id) =>
+            views.instruments.get(id)?.name.toLowerCase().includes(lowerQuery)
         )
     );
     const samples = new Set(
-        elements.samples.filter((s) =>
-            s.name.toLowerCase().includes(lowerQuery)
+        views.sampleOrder.filter((id) =>
+            views.samples.get(id)?.name.toLowerCase().includes(lowerQuery)
         )
     );
-    for (const preset of presets) {
-        for (const zone of preset.zones) instruments.add(zone.instrument);
+    for (const id of presets) {
+        addChildren(views.presets.get(id), instruments);
     }
-    for (const instrument of instruments) {
-        for (const zone of instrument.zones) samples.add(zone.sample);
+    for (const id of instruments) {
+        addChildren(views.instruments.get(id), samples);
     }
     // Keep the bank order, backfilled elements are not appended at the end
     return {
         presets,
-        instruments: elements.instruments.filter((i) => instruments.has(i)),
-        samples: elements.samples.filter((s) => samples.has(s))
+        instruments: views.instrumentOrder.filter((id) => instruments.has(id)),
+        samples: views.sampleOrder.filter((id) => samples.has(id))
     };
 }

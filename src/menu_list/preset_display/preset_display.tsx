@@ -6,7 +6,8 @@ import { useLinkDropTarget } from "../../drag_and_drop/use_link_drop_target.ts";
 import { ExpandButton } from "../expand_button.tsx";
 import type { BankEditView } from "../../core_backend/bank_view.ts";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
-import { useEntityRevision } from "../../hooks/use_entity_revision.ts";
+import { usePresetView } from "../../hooks/use_preset_view.ts";
+import { useEntityLookup } from "../../hooks/use_entity_lookup.ts";
 import { useTranslation } from "react-i18next";
 import { LinkIcon } from "../../utils/icons/edit_icons.tsx";
 import { getObjectId } from "../../utils/object_id.ts";
@@ -20,6 +21,10 @@ function PatchNumber({ n }: { n: number }) {
 }
 
 interface PresetDisplayProps {
+    /**
+     * The preset's identity, for the drop target and the handlers. What is shown comes from
+     * its view.
+     */
     preset: BasicPreset;
     view: BankEditView;
     isSelected: boolean;
@@ -28,8 +33,8 @@ interface PresetDisplayProps {
     /**
      * Whether each listed instrument of this preset is expanded.
      */
-    isInstrumentOpen: (instrument: BasicInstrument) => boolean;
-    onToggleInstrument: (instrument: BasicInstrument) => void;
+    isInstrumentOpen: (instrumentId: number) => boolean;
+    onToggleInstrument: (instrumentId: number) => void;
     onClick: (event: MouseEvent) => void;
     /**
      * Opens the menu on the whole row. The name button inside it gets the menu key.
@@ -60,9 +65,20 @@ export function PresetDisplay({
 }: PresetDisplayProps) {
     const { t } = useTranslation();
     const { session, setView } = useBankEditor();
-    // Re-render when the preset's zones or instrument names change
-    useEntityRevision(session.store, preset);
+    const presetView = usePresetView(session.store, getObjectId(preset));
+    const lookup = useEntityLookup(session.store);
     const dropTarget = useLinkDropTarget(preset);
+    // The row can render once more after its preset was removed, before the list updates
+    if (!presetView) {
+        return null;
+    }
+    const viewId = view === "info" ? undefined : getObjectId(view);
+    const showInstrument = (id: number) => {
+        const instrument: BasicInstrument | undefined = lookup.instrument(id);
+        if (instrument) {
+            setView(instrument);
+        }
+    };
     return (
         <div className={"preset_item_wrapper"}>
             <div
@@ -70,22 +86,22 @@ export function PresetDisplay({
                 onContextMenu={onContextMenu}
                 onPointerDown={onPointerDown}
                 {...dropTarget}
-                title={preset.name}
+                title={presetView.name}
             >
                 <div className={"left_group"}>
                     <ExpandButton isOpen={isOpen} onToggle={onToggle} />
                     <span className={"monospaced midi_patch"}>
-                        {preset.isGMGSDrum ? "DRUMS:" : null}
+                        {presetView.isGMGSDrum ? "DRUMS:" : null}
                         {/* A drum kit shows its bank numbers only when it sets them */}
-                        {preset.isGMGSDrum &&
-                        preset.bankLSB === 0 &&
-                        preset.bankMSB === 0 ? null : (
+                        {presetView.isGMGSDrum &&
+                        presetView.bankLSB === 0 &&
+                        presetView.bankMSB === 0 ? null : (
                             <>
-                                <PatchNumber n={preset.bankLSB} />:
-                                <PatchNumber n={preset.bankMSB} />:
+                                <PatchNumber n={presetView.bankLSB} />:
+                                <PatchNumber n={presetView.bankMSB} />:
                             </>
                         )}
-                        <PatchNumber n={preset.program} />
+                        <PatchNumber n={presetView.program} />
                     </span>
                     {onLink ? (
                         <button
@@ -106,22 +122,28 @@ export function PresetDisplay({
                     className={"plain_button monospaced preset_item_name"}
                     onClick={onClick}
                 >
-                    {preset.name}
+                    {presetView.name}
                 </button>
             </div>
             {isOpen ? (
                 <div className={"preset_instruments"}>
-                    {preset.zones.map((zone) => (
-                        <InstrumentDisplay
-                            key={getObjectId(zone)}
-                            instrument={zone.instrument}
-                            view={view}
-                            isSelected={view === zone.instrument}
-                            isOpen={isInstrumentOpen(zone.instrument)}
-                            onToggle={() => onToggleInstrument(zone.instrument)}
-                            onClick={() => setView(zone.instrument)}
-                        />
-                    ))}
+                    {presetView.zones.map((zone) =>
+                        zone.childId === undefined ? null : (
+                            <InstrumentDisplay
+                                key={zone.id}
+                                instrumentId={zone.childId}
+                                view={view}
+                                isSelected={viewId === zone.childId}
+                                isOpen={isInstrumentOpen(zone.childId)}
+                                onToggle={() =>
+                                    onToggleInstrument(zone.childId ?? -1)
+                                }
+                                onClick={() =>
+                                    showInstrument(zone.childId ?? -1)
+                                }
+                            />
+                        )
+                    )}
                 </div>
             ) : null}
         </div>

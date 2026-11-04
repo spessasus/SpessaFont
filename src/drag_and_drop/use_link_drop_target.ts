@@ -13,16 +13,23 @@ import {
  * new zones, like the link button and the "Add to" menu items. Only elements of the same bank.
  * Elements removed during the drag (an undo or a delete) are left out, as a zone must not use them.
  */
-export function useLinkDropTarget(element: BasicInstrument | BasicPreset) {
+export function useLinkDropTarget(
+    element: BasicInstrument | BasicPreset | undefined
+) {
     const { session, apply } = useBankEditor();
     const isChild =
         element instanceof BasicInstrument ? isSample : isInstrument;
+    // An element that is gone (a row rendered once more after a delete) takes nothing
     const isOwn = (payload: DragPayload) =>
+        element !== undefined &&
         payload.session === session &&
         payload.entities.every((e) => isChild(e));
     return useDropTarget({
         accepts: isOwn,
         onDrop: (payload) => {
+            if (!element) {
+                return;
+            }
             const entities = payload.entities.filter((e) =>
                 session.document.contains(e)
             );
