@@ -53,6 +53,7 @@ export function createTestHost(): TestHost {
     hostEnd.other = clientEnd;
     const host = new SynthHost(hostEnd, {
         sampleRate: 44_100,
+        queuedBlocks: 32,
         currentTime: 0,
         settings: getHostSettings(DEFAULT_SETTINGS),
         isVerbose: false

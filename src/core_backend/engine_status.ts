@@ -14,6 +14,10 @@ export interface EngineStatus {
     isPaused: boolean;
     hasSong: boolean;
     songName: string | undefined;
+    /**
+     * Blocks the playback worklet had no audio for since it started, the dropouts.
+     */
+    underruns: number;
 }
 
 const STATUS_KEYS = [
@@ -22,7 +26,8 @@ const STATUS_KEYS = [
     "duration",
     "isPaused",
     "hasSong",
-    "songName"
+    "songName",
+    "underruns"
 ] as const satisfies readonly (keyof EngineStatus)[];
 
 /**
@@ -36,7 +41,8 @@ export class EngineStatusStore {
         duration: 0,
         isPaused: true,
         hasSong: false,
-        songName: undefined
+        songName: undefined,
+        underruns: 0
     };
     private readonly changes = new ListenerSet<void>();
 

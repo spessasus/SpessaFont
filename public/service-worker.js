@@ -15,7 +15,6 @@ const service = /** @type {ServiceWorkerGlobalScope} */ self;
 const PRECACHED = [
     "./",
     "index.html",
-    "audio_worklet.js",
     "manifest.webmanifest"
 ];
 

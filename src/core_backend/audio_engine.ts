@@ -1,9 +1,17 @@
 import { MIDIMessageTypes } from "spessasynth_core";
 import { type SavedSettingsType } from "../settings/save_load/settings_typedef.ts";
 import { logInfo } from "../utils/core_utils.ts";
-import { SynthHost } from "../synth_host/synth_host.ts";
 import type { HostSettings } from "../synth_host/protocol.ts";
+import playbackWorkletURL from "../synth_host/playback_worklet.ts?worker&url";
 import { SynthClient } from "./synth_client.ts";
+import { startHost } from "./start_host.ts";
+
+/**
+ * Blocks of 128 frames the playback worklet keeps queued at 48 kHz (about 85 ms), as before the
+ * Worker. A smaller queue should work now, but it has to be measured per browser on an idle
+ * machine first (`AUDIO_WORKLET_MIGRATION_PLAN.md`, phase 5).
+ */
+const QUEUED_BLOCKS = 32;
 
 /**
  * A chain of audio nodes, from the first to the last.
@@ -46,6 +54,10 @@ export class AudioEngine {
      * The synthesizer host, which also keeps every open bank's mirror.
      */
     public readonly client: SynthClient;
+    /**
+     * Where the host runs, once it started: a Worker, or this thread when the Worker failed.
+     */
+    public readonly hostMode;
 
     constructor(context: AudioContext, initialSettings: SavedSettingsType) {
         this.context = context;
@@ -53,15 +65,15 @@ export class AudioEngine {
         if (isDev) {
             logInfo("Dev mode on");
         }
-        // The host runs on this thread behind a MessageChannel, so nothing calls it directly
-        const channel = new MessageChannel();
-        new SynthHost(channel.port2, {
+        const { port, mode } = startHost({
             sampleRate: context.sampleRate,
+            queuedBlocks: QUEUED_BLOCKS,
             currentTime: context.currentTime,
             settings: getHostSettings(initialSettings),
             isVerbose: isDev
         });
-        this.client = new SynthClient(channel.port1);
+        this.client = new SynthClient(port);
+        this.hostMode = mode;
         this.analyser = new AnalyserNode(this.context, { fftSize: 1024 });
         this.analyser.connect(this.context.destination);
         this.targetNode = new GainNode(context);
@@ -76,7 +88,7 @@ export class AudioEngine {
     private async start() {
         await this.context.resume();
         logInfo("Setting up audio loop");
-        await this.context.audioWorklet.addModule("./audio_worklet.js");
+        await this.context.audioWorklet.addModule(playbackWorkletURL);
         this.worklet = new AudioWorkletNode(
             this.context,
             "playback-processor",

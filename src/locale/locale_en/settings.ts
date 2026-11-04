@@ -12,6 +12,8 @@ export const SettingsLocale = {
         sampleRate: "Sample Rate",
         sampleRateRejected:
             "This browser does not support a sample rate of {{rate}} Hz, so the default rate is used.",
+        workerFailed:
+            "The synthesizer could not start in the background, so it runs on the page. Busy moments may cause dropouts.",
         volume: "Volume",
         voiceCap: "Voice Cap",
         interpolation: {

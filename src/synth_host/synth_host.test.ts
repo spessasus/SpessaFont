@@ -176,6 +176,7 @@ function createChannelHost() {
     const channel = new MessageChannel();
     const host = new SynthHost(channel.port2, {
         sampleRate: 44_100,
+        queuedBlocks: 32,
         currentTime: 0,
         settings: getHostSettings(DEFAULT_SETTINGS),
         isVerbose: false

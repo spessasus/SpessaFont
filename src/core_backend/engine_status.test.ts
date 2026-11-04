@@ -8,7 +8,8 @@ const STATUS: EngineStatus = {
     duration: 60,
     isPaused: false,
     hasSong: true,
-    songName: "Test"
+    songName: "Test",
+    underruns: 0
 };
 
 describe("EngineStatusStore", () => {

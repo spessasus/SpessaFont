@@ -18,6 +18,8 @@ export default defineConfig({
     define: {
         __APP_VERSION__: JSON.stringify(process.env.npm_package_version)
     },
+    // The synthesizer Worker splits its chunks too (the Vorbis encoder loads on demand)
+    worker: { format: "es" },
     build: {
         target: "esnext",
         chunkSizeWarningLimit: CHUNK_SIZE_LIMIT_KB,

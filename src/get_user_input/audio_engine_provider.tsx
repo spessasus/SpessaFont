@@ -53,6 +53,18 @@ export function AudioEngineProvider({ children }: AudioEngineProviderProps) {
 
     useEffect(() => {
         let isIgnored = false;
+        void audioEngine.hostMode.then((mode) => {
+            if (!isIgnored && mode === "main thread") {
+                toast.error(t("settingsLocale.audioEngine.workerFailed"));
+            }
+        });
+        return () => {
+            isIgnored = true;
+        };
+    }, [audioEngine, t]);
+
+    useEffect(() => {
+        let isIgnored = false;
         void audioEngine.resumeContext().then(() => {
             if (!isIgnored) {
                 setReady(true);

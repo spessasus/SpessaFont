@@ -33,10 +33,10 @@ import type {
     WriteResult
 } from "./protocol.ts";
 import type { KeyboardChannelValues } from "../core_backend/keyboard_channel_store.ts";
+import type { PlaybackReport } from "./playback_worklet.ts";
 
 // The playback worklet plays blocks of this size
 const BLOCK_SIZE = 128;
-const MAX_CHUNKS_QUEUED = 32; // 16 * 128 = 2,048 // Windows does not like small buffer sizes
 const MAX_RENDERED_AT_ONCE = 2;
 /**
  * Seconds of synth time between status updates, which caps the menu bar re-renders.
@@ -54,6 +54,11 @@ const FORWARDED_EVENTS = new Set<string>([
 
 export interface SynthHostOptions {
     sampleRate: number;
+    /**
+     * How many blocks the playback worklet keeps queued at 48 kHz, which sets the latency.
+     * Scaled with the sample rate.
+     */
+    queuedBlocks: number;
     /**
      * The audio context's time, so the synthesizer's clock starts where it is.
      */
@@ -98,6 +103,7 @@ export class SynthHost {
     private readonly port: HostPort;
     private output: MessagePort | undefined;
     private chunksQueued = 0;
+    private underruns = 0;
     private readonly maxChunksQueued: number;
     private lastStatusTime = 0;
     private lastChannel: KeyboardChannelValues | undefined;
@@ -147,9 +153,9 @@ export class SynthHost {
         this.maxChunksQueued = Math.min(
             Math.max(
                 2,
-                Math.round((options.sampleRate / 48_000) * MAX_CHUNKS_QUEUED)
+                Math.round((options.sampleRate / 48_000) * options.queuedBlocks)
             ),
-            32
+            64
         );
         this.addSampleBank();
         this.sequencer = new SpessaSynthSequencer(this.processor);
@@ -222,7 +228,8 @@ export class SynthHost {
                 duration: this.sequencer.duration,
                 isPaused: this.sequencer.paused,
                 hasSong: song !== undefined,
-                songName: song?.getName()
+                songName: song?.getName(),
+                underruns: this.underruns
             }
         });
     }
@@ -584,8 +591,9 @@ export class SynthHost {
 
             case "connectOutput": {
                 this.output = command.port;
-                this.output.onmessage = (e: MessageEvent<number>) => {
-                    this.chunksQueued = e.data;
+                this.output.onmessage = (e: MessageEvent<PlaybackReport>) => {
+                    this.chunksQueued = e.data.queued;
+                    this.underruns = e.data.underruns;
                     this.render();
                 };
                 this.render();

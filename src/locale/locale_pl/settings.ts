@@ -12,6 +12,8 @@ export const SettingsLocale = {
         sampleRate: "Częstotliwość Próbkowania",
         sampleRateRejected:
             "Ta przeglądarka nie obsługuje częstotliwości {{rate}} Hz, więc używana jest domyślna.",
+        workerFailed:
+            "Syntezator nie mógł uruchomić się w tle, więc działa na stronie. W chwilach obciążenia dźwięk może się przerywać.",
         volume: "Głośność",
         voiceCap: "Limit głosów",
         interpolation: {

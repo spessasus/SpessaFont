@@ -14,6 +14,7 @@ import type {
 import { EngineStatusStore } from "./engine_status.ts";
 import { KeyboardChannelStore } from "./keyboard_channel_store.ts";
 import { ListenerSet } from "./listener_set.ts";
+import { logWarn } from "../utils/core_utils.ts";
 
 interface PendingRequest {
     resolve: (value: unknown) => void;
@@ -65,7 +66,11 @@ export class SynthClient {
             }
 
             case "status": {
+                const before = this.status.getSnapshot().underruns;
                 this.status.update(event.status);
+                if (event.status.underruns > before) {
+                    logWarn(`Audio dropouts so far: ${event.status.underruns}`);
+                }
                 return;
             }
 
