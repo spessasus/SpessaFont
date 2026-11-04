@@ -98,7 +98,9 @@ describe("bank views", () => {
         const after = getViews(session).instruments.get(id);
         expect(after).not.toBe(before);
         expect(
-            after?.zones[0].generators[GeneratorTypes.initialAttenuation]
+            after?.zones[0].generators.find(
+                (g) => g.type === GeneratorTypes.initialAttenuation
+            )?.value
         ).toBe(100);
         expect(after?.zones[1]).toBe(before?.zones[1]);
         expect(after?.zones[1].id).toBe(getObjectId(untouched));

@@ -1,7 +1,23 @@
 import { useEffect } from "react";
+import { BasicInstrument, BasicPreset } from "spessasynth_core";
 import type { BankSession } from "../core_backend/bank_session.ts";
 import type { BankEditView } from "../core_backend/bank_view.ts";
 import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
+import type { MirrorTarget } from "../synth_host/bank_mirror.ts";
+import { getObjectId } from "../utils/object_id.ts";
+
+function getTarget(view: BankEditView): MirrorTarget | undefined {
+    if (view === "info") {
+        return undefined;
+    }
+    const id = getObjectId(view);
+    if (view instanceof BasicPreset) {
+        return { kind: "preset", id };
+    }
+    return view instanceof BasicInstrument
+        ? { kind: "instrument", id }
+        : { kind: "sample", id };
+}
 
 /**
  * Makes the keyboard play the shown element: the preset, instrument or sample being edited,
@@ -10,8 +26,8 @@ import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
 export function usePreviewTarget(session: BankSession, view: BankEditView) {
     const { audioEngine } = useAudioEngine();
     useEffect(() => {
-        const bank = session.document.bank;
-        audioEngine.setPreviewTarget(view === "info" ? undefined : view, bank);
-        return () => audioEngine.setPreviewTarget(undefined, bank);
+        const { mirror } = session;
+        audioEngine.setPreviewTarget(mirror, getTarget(view));
+        return () => audioEngine.setPreviewTarget(mirror, undefined);
     }, [audioEngine, session, view]);
 }

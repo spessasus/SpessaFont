@@ -8,7 +8,7 @@ import {
 } from "spessasynth_core";
 import { expect } from "vitest";
 import { BankSession } from "../core_backend/bank_session.ts";
-import { BankDocument } from "../core_backend/bank_document.ts";
+import { loadNewBank, loadSoundBank } from "../core_backend/load_sound_bank.ts";
 import type { BankViews } from "../core_backend/entity_views.ts";
 import { ChangeSet } from "../core_backend/change_set.ts";
 import type { HistoryActionGroup } from "../core_backend/history.ts";
@@ -64,13 +64,10 @@ export class ProcessorHost implements SynthHost {
 }
 
 /**
- * Creates a session holding two copies of the spessasynth_core sample bank.
- * The result has two presets, two instruments and two mono samples,
- * which is enough to exercise linking, deleting and reordering.
- * Pass a host to check what the synthesizer sees.
+ * Two copies of the spessasynth_core sample bank as an SF2 file.
  */
-export function createTestSession(host: SynthHost = new ProcessorHost()) {
-    const { bank } = BankDocument.createEmpty();
+function writeTestBankFile() {
+    const { bank } = loadNewBank();
     const secondCopy = SoundBankLoader.fromArrayBuffer(
         BasicSoundBank.getSampleSoundBankFile()
     );
@@ -85,8 +82,24 @@ export function createTestSession(host: SynthHost = new ProcessorHost()) {
     for (const preset of secondCopy.presets) {
         bank.clonePreset(preset);
     }
-    // The session is made after the bank is complete, so its store starts from the final bank
-    return new BankSession(host, bank);
+    return bank.writeSF2();
+}
+
+const TEST_BANK_FILE = writeTestBankFile();
+
+/**
+ * Creates a session holding two copies of the spessasynth_core sample bank.
+ * The result has two presets, two instruments and two mono samples,
+ * which is enough to exercise linking, deleting and reordering.
+ * Pass a host to check what the synthesizer sees.
+ * The session opens the bank like a file, so the mirror loads the same file.
+ */
+export function createTestSession(host: SynthHost = new ProcessorHost()) {
+    // Each session gets its own buffer, the mirror's samples point into it
+    const loaded = loadSoundBank(TEST_BANK_FILE.slice());
+    // Writing fills in a default name, a new bank has none
+    loaded.bank.soundBankInfo.name = "";
+    return new BankSession(host, loaded);
 }
 
 /**
@@ -123,6 +136,47 @@ function normalizeViews(views: BankViews) {
 export function expectViewsUpToDate(session: BankSession) {
     expect(normalizeViews(session.store.getSnapshot().views)).toEqual(
         normalizeViews(session.store.buildFreshViews())
+    );
+}
+
+/**
+ * The mirror builds zones in view order, so the "used by" lists (one entry per zone) can come
+ * out in another order, which means nothing. An unset range keeps whatever maximum it had.
+ */
+function normalizeForMirror(snapshot: ReturnType<typeof snapshotBank>) {
+    const normalizeZone = <T extends ReturnType<typeof zoneSnapshot>>(
+        zone: T
+    ) => ({
+        ...zone,
+        keyRange: zone.keyRange.min === -1 ? undefined : zone.keyRange,
+        velRange: zone.velRange.min === -1 ? undefined : zone.velRange
+    });
+    return {
+        ...snapshot,
+        presets: snapshot.presets.map((p) => ({
+            ...p,
+            globalZone: normalizeZone(p.globalZone),
+            zones: p.zones.map((z) => normalizeZone(z))
+        })),
+        instruments: snapshot.instruments.map((i) => ({
+            ...i,
+            globalZone: normalizeZone(i.globalZone),
+            zones: i.zones.map((z) => normalizeZone(z)),
+            linkedTo: i.linkedTo.toSorted((a, b) => a.localeCompare(b))
+        })),
+        samples: snapshot.samples.map((s) => ({
+            ...s,
+            linkedTo: s.linkedTo.toSorted((a, b) => a.localeCompare(b))
+        }))
+    };
+}
+
+/**
+ * Checks that the mirror, patched commit by commit, holds the same bank as the editor.
+ */
+export function expectMirrorUpToDate(session: BankSession) {
+    expect(normalizeForMirror(snapshotBank(session.mirror.bank))).toEqual(
+        normalizeForMirror(snapshotBank(session.document.bank))
     );
 }
 
@@ -224,13 +278,16 @@ export function expectRoundTrip(
     const after = snapshotBank(bank);
     expect(after).not.toEqual(before);
     expectViewsUpToDate(session);
+    expectMirrorUpToDate(session);
 
     const undoFocus = session.history.undo();
     expect(snapshotBank(bank)).toEqual(before);
     expectViewsUpToDate(session);
+    expectMirrorUpToDate(session);
 
     const redoFocus = session.history.redo();
     expect(snapshotBank(bank)).toEqual(after);
     expectViewsUpToDate(session);
+    expectMirrorUpToDate(session);
     return { before, after, doFocus, undoFocus, redoFocus };
 }

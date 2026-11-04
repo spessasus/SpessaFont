@@ -1,6 +1,5 @@
 import type { BasicSoundBank } from "spessasynth_core";
-import type { BankViews } from "./entity_views.ts";
-import { diffBankViews, isElementDiffEmpty } from "./view_diff.ts";
+import { isElementDiffEmpty, type ViewDiff } from "./view_diff.ts";
 
 /**
  * What a bank needs from the synthesizer (`AudioEngine`).
@@ -31,22 +30,19 @@ export interface SynthHost {
 }
 
 /**
- * Connects one bank to the shared synthesizer while its tab is active, and tells the
+ * Connects one bank's mirror to the shared synthesizer while its tab is active, and tells the
  * synthesizer what each commit changed.
  */
 export class SynthBinding {
     private readonly host: SynthHost;
     private readonly bank: BasicSoundBank;
-    private views: BankViews;
 
-    public constructor(
-        host: SynthHost,
-        bank: BasicSoundBank,
-        views: BankViews
-    ) {
+    /**
+     * @param bank the mirror's bank, which the synthesizer plays
+     */
+    public constructor(host: SynthHost, bank: BasicSoundBank) {
         this.host = host;
         this.bank = bank;
-        this.views = views;
     }
 
     public get isAttached() {
@@ -65,15 +61,9 @@ export class SynthBinding {
     }
 
     /**
-     * Compares the views with the last ones it saw and refreshes what the change needs.
+     * Refreshes what a commit needs, after the mirror applied it.
      */
-    public update(views: BankViews) {
-        const previous = this.views;
-        this.views = views;
-        if (previous === views) {
-            return;
-        }
-        const diff = diffBankViews(previous, views);
+    public update(diff: ViewDiff) {
         if (this.isAttached && !isElementDiffEmpty(diff.presets)) {
             this.host.refreshPresets();
             return;

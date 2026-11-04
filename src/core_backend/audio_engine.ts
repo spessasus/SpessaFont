@@ -13,7 +13,7 @@ import {
 import { KEYBOARD_TARGET_CHANNEL } from "../keyboard/target_channel.ts";
 import { type SavedSettingsType } from "../settings/save_load/settings_typedef.ts";
 import { logInfo } from "../utils/core_utils.ts";
-import type { BankEntity } from "./bank_view.ts";
+import type { BankMirror, MirrorTarget } from "../synth_host/bank_mirror.ts";
 import { createPreviewPreset } from "./preview_preset.ts";
 import { ListenerSet } from "./listener_set.ts";
 import { EngineStatusStore } from "./engine_status.ts";
@@ -53,7 +53,7 @@ export class AudioEngine implements SynthHost {
      * What the keyboard's channel plays, kept to apply it again after a reset or refresh.
      */
     private previewTarget:
-        { target: BankEntity | undefined; bank: BasicSoundBank } | undefined;
+        { mirror: BankMirror; target: MirrorTarget | undefined } | undefined;
     private isPreviewStale = false;
     private started: Promise<void> | undefined;
     private isChannelRefreshQueued = false;
@@ -181,11 +181,12 @@ export class AudioEngine implements SynthHost {
         if (!this.previewTarget) {
             return;
         }
-        const { target, bank } = this.previewTarget;
+        const { mirror, target } = this.previewTarget;
+        const element = target ? mirror.resolve(target) : undefined;
         // Set directly, as a program change would follow the channel's bank select
-        this.processor.midiChannels[KEYBOARD_TARGET_CHANNEL].preset = target
-            ? createPreviewPreset(target, bank)
-            : bank.presets[0];
+        this.processor.midiChannels[KEYBOARD_TARGET_CHANNEL].preset = element
+            ? createPreviewPreset(element, mirror.bank)
+            : mirror.bank.presets[0];
         this.processor.clearCache();
     }
 
@@ -402,10 +403,10 @@ export class AudioEngine implements SynthHost {
      * The target is kept, so it can be applied again after something resets the channel.
      */
     public setPreviewTarget(
-        target: BankEntity | undefined,
-        bank: BasicSoundBank
+        mirror: BankMirror,
+        target: MirrorTarget | undefined
     ) {
-        this.previewTarget = { target, bank };
+        this.previewTarget = { mirror, target };
         this.applyPreviewTarget();
     }
 

@@ -47,6 +47,11 @@ export interface ModulatorView {
     readonly transformType: ModulatorTransformType;
 }
 
+export interface GeneratorView {
+    readonly type: GeneratorType;
+    readonly value: number;
+}
+
 export interface ZoneView {
     readonly id: number;
     /**
@@ -55,9 +60,9 @@ export interface ZoneView {
     readonly keyRange: RangeView | undefined;
     readonly velocityRange: RangeView | undefined;
     /**
-     * The values of the generators the zone sets, by generator type.
+     * The generators the zone sets, in the zone's order, which a saved file keeps.
      */
-    readonly generators: Readonly<Partial<Record<GeneratorType, number>>>;
+    readonly generators: readonly GeneratorView[];
     readonly modulators: readonly ModulatorView[];
     /**
      * The instrument of a preset zone or the sample of an instrument zone. Undefined for a
@@ -77,6 +82,12 @@ export interface PresetView {
      * GM/GS drums, or an XG drum bank.
      */
     readonly isDrum: boolean;
+    /**
+     * Unused SF2 header fields, kept so a copy of the bank writes the same file.
+     */
+    readonly library: number;
+    readonly genre: number;
+    readonly morphology: number;
     readonly globalZone: ZoneView;
     readonly zones: readonly ZoneView[];
 }
@@ -167,15 +178,14 @@ export function buildModulatorView(modulator: Modulator): ModulatorView {
 }
 
 function buildZoneView(zone: BasicZone, child?: object): ZoneView {
-    const generators: Partial<Record<GeneratorType, number>> = {};
-    for (const generator of zone.generators) {
-        generators[generator.type] = generator.value;
-    }
     return {
         id: getObjectId(zone),
         keyRange: buildRange(zone.keyRange, zone.hasKeyRange),
         velocityRange: buildRange(zone.velRange, zone.hasVelRange),
-        generators,
+        generators: zone.generators.map((g) => ({
+            type: g.type,
+            value: g.value
+        })),
         modulators: zone.modulators.map((m) => buildModulatorView(m)),
         childId: child ? getObjectId(child) : undefined
     };
@@ -190,6 +200,9 @@ export function buildPresetView(preset: BasicPreset): PresetView {
         bankLSB: preset.bankLSB,
         isGMGSDrum: preset.isGMGSDrum,
         isDrum: preset.isDrum,
+        library: preset.library,
+        genre: preset.genre,
+        morphology: preset.morphology,
         globalZone: buildZoneView(preset.globalZone),
         zones: preset.zones.map((z: BasicPresetZone) =>
             buildZoneView(z, z.instrument)

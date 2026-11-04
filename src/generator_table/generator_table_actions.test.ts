@@ -9,6 +9,7 @@ import {
 import {
     createTestSession,
     expectRoundTrip,
+    publishSetUp,
     snapshotBank
 } from "../test_utils/bank_fixture.ts";
 import { SetGeneratorAction } from "./cell/set_generator_action.ts";
@@ -274,8 +275,10 @@ describe("ReplaceZoneChildAction", () => {
         const newRight = new EmptySample();
         newLeft.setLinkedSample(newRight, SampleTypes.leftSample);
         left.setLinkedSample(right, SampleTypes.leftSample);
+        session.document.bank.addSamples(newLeft, newRight);
         const leftZone = instrument.createZone(left);
         const rightZone = instrument.createZone(right);
+        publishSetUp(session);
 
         const actions = createReplaceSampleActions(
             instrument,

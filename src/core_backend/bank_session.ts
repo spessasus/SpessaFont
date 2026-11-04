@@ -1,5 +1,9 @@
-import type { BasicSoundBank, ProgressFunction } from "spessasynth_core";
+import type { ProgressFunction } from "spessasynth_core";
+import { BankMirror } from "../synth_host/bank_mirror.ts";
+import { getObjectId } from "../utils/object_id.ts";
 import { BankDocument } from "./bank_document.ts";
+import { type LoadedBank, loadNewBank } from "./load_sound_bank.ts";
+import { MirrorSync } from "./mirror_sync.ts";
 import { BankStore } from "./bank_store.ts";
 import { HistoryManager } from "./history.ts";
 import { SynthBinding, type SynthHost } from "./synth_binding.ts";
@@ -31,30 +35,44 @@ export class BankSession {
     private writeFormat: WriteFormat;
     private isClosed = false;
     private readonly unsubscribeSynth: () => void;
+    private readonly mirrorSync: MirrorSync;
     public readonly id = nextSessionId++;
     public readonly document: BankDocument;
     public readonly store: BankStore;
     public readonly history: HistoryManager;
     public readonly synth: SynthBinding;
+    /**
+     * The copy of the bank the synthesizer plays, which follows the store.
+     */
+    public readonly mirror: BankMirror;
 
     /**
      * @param synth the shared synthesizer
-     * @param bank the loaded bank, or undefined to start a new one
+     * @param loaded the loaded bank and its file, or undefined to start a new one
      */
-    public constructor(synth: SynthHost, bank?: BasicSoundBank) {
-        this.document = bank
-            ? new BankDocument(bank)
-            : BankDocument.createEmpty();
+    public constructor(synth: SynthHost, loaded: LoadedBank = loadNewBank()) {
+        const { bank, file } = loaded;
+        // The mirror pairs the elements by index, so it is made before the document sorts them
+        this.mirror = BankMirror.fromFile(file, {
+            presets: bank.presets.map((p) => getObjectId(p)),
+            instruments: bank.instruments.map((i) => getObjectId(i)),
+            samples: bank.samples.map((s) => getObjectId(s))
+        });
+        this.document = new BankDocument(bank);
         this.writeFormat = getInitialWriteFormat(this.document.bank);
         this.store = new BankStore(this.document);
-        this.synth = new SynthBinding(
-            synth,
-            this.document.bank,
-            this.store.getSnapshot().views
+        this.mirrorSync = new MirrorSync(
+            this.mirror,
+            this.document,
+            this.store.getSnapshot()
         );
+        this.synth = new SynthBinding(synth, this.mirror.bank);
         // Every commit reaches the synthesizer, including ones made outside the history
         this.unsubscribeSynth = this.store.subscribe(() => {
-            this.synth.update(this.store.getSnapshot().views);
+            const diff = this.mirrorSync.update(this.store.getSnapshot());
+            if (diff) {
+                this.synth.update(diff);
+            }
         });
         this.history = new HistoryManager(this.document, this.store);
     }
@@ -116,5 +134,6 @@ export class BankSession {
         this.unsubscribeSynth();
         this.synth.detach();
         this.document.bank.destroySoundBank();
+        this.mirror.bank.destroySoundBank();
     }
 }

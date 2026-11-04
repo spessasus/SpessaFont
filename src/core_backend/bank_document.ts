@@ -4,8 +4,7 @@ import {
     BasicPreset,
     BasicPresetZone,
     BasicSample,
-    BasicSoundBank,
-    SoundBankLoader
+    type BasicSoundBank
 } from "spessasynth_core";
 import {
     reorderInstrumentZones,
@@ -13,11 +12,8 @@ import {
 } from "../utils/reorder_zones.ts";
 import { presetSorter } from "../utils/preset_sorter.ts";
 import { nameSorter } from "../utils/name_sorter.ts";
-import { SOFTWARE_NAME } from "../utils/software_name.ts";
 import type { BankEntity } from "./bank_view.ts";
 import { getObjectId } from "../utils/object_id.ts";
-
-const SAMPLE_BANK_FILE = BasicSoundBank.getSampleSoundBankFile();
 
 /**
  * Inserts the item before the first item that sorts after it, and returns its index.
@@ -69,16 +65,6 @@ function replaceZones(
  * It keeps the element lists sorted the way the editor shows them.
  */
 export class BankDocument {
-    /**
-     * Creates a document for a new, unnamed bank based on the built-in sample bank.
-     */
-    public static createEmpty() {
-        const bank = SoundBankLoader.fromArrayBuffer(SAMPLE_BANK_FILE.slice());
-        bank.soundBankInfo.software = SOFTWARE_NAME;
-        bank.soundBankInfo.name = "";
-        return new BankDocument(bank);
-    }
-
     public readonly bank: BasicSoundBank;
 
     public constructor(bank: BasicSoundBank) {
