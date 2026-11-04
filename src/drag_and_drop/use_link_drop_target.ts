@@ -11,6 +11,7 @@ import {
 /**
  * Samples dropped on an instrument, or instruments dropped on a preset, are added to it as
  * new zones, like the link button and the "Add to" menu items. Only elements of the same bank.
+ * Elements removed during the drag (an undo or a delete) are left out, as a zone must not use them.
  */
 export function useLinkDropTarget(element: BasicInstrument | BasicPreset) {
     const { session, apply } = useBankEditor();
@@ -21,7 +22,10 @@ export function useLinkDropTarget(element: BasicInstrument | BasicPreset) {
         payload.entities.every((e) => isChild(e));
     return useDropTarget({
         accepts: isOwn,
-        onDrop: ({ entities }) =>
+        onDrop: (payload) => {
+            const entities = payload.entities.filter((e) =>
+                session.document.contains(e)
+            );
             apply(
                 element instanceof BasicInstrument
                     ? createSampleLinkActions(
@@ -32,6 +36,7 @@ export function useLinkDropTarget(element: BasicInstrument | BasicPreset) {
                           element,
                           entities.filter(isInstrument)
                       )
-            )
+            );
+        }
     });
 }

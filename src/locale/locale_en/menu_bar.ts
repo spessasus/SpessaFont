@@ -12,6 +12,9 @@ export const MenuBarLocale = {
         warnSF2:
             "This sound bank contains compressed samples. " +
             "Saving it as SF2 will result in quality loss. Are you sure you want to continue?",
+        warnText:
+            "Some names or bank details use characters outside Latin-1 (like ą, ż or 日). " +
+            "Sound bank files cannot store them, so they will be saved wrong. Are you sure you want to continue?",
         warnSFEData:
             "This sound bank uses SpessaSynth generators or modulators that only SFE files store. " +
             "Saving it as {{format}} will leave them out. Are you sure you want to continue?",

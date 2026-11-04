@@ -19,15 +19,22 @@ const EMPTY = new Set<never>();
 
 /**
  * The selected elements: the multi selection made for this view, or the shown element.
+ * Selected elements the list no longer shows (removed from the bank, or hidden by the search)
+ * are left out, so commands only act on what the user can see selected.
  */
 export function getSelection(
     view: BankEditView,
-    multi: MultiSelection | null
+    multi: MultiSelection | null,
+    isListed: (entity: BankEntity) => boolean
 ): ReadonlySet<BankEntity> {
     if (view === "info") {
         return EMPTY;
     }
-    return multi?.anchor === view ? multi.items : new Set([view]);
+    if (multi?.anchor !== view) {
+        return new Set([view]);
+    }
+    const items = new Set([...multi.items].filter((e) => isListed(e)));
+    return items.size > 0 ? items : new Set([view]);
 }
 
 /**

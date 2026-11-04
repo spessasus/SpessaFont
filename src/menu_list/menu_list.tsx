@@ -50,7 +50,16 @@ export function MenuList({ view, isCovered }: MenuListProps) {
         [presets, instruments, samples, deferredQuery]
     );
 
-    const selection = getSelection(view, multiSelection);
+    const listed = useMemo(
+        () =>
+            new Set<BankEntity>([
+                ...filtered.presets,
+                ...filtered.instruments,
+                ...filtered.samples
+            ]),
+        [filtered]
+    );
+    const selection = getSelection(view, multiSelection, (e) => listed.has(e));
     const selectedPresets = selectionOf(selection, isPreset);
     const selectedInstruments = selectionOf(selection, isInstrument);
     const selectedSamples = selectionOf(selection, isSample);

@@ -4,20 +4,44 @@ import { getClickResult, getSelection } from "./menu_selection.ts";
 import { filterElements } from "./filter_elements.ts";
 
 const NONE = { shiftKey: false, ctrlKey: false };
+const IS_LISTED = () => true;
 
 describe("menu selection", () => {
     it("selects the shown element unless a multi selection was made for it", () => {
         const [a, b] = createTestSession().document.presets;
 
-        expect([...getSelection("info", null)]).toEqual([]);
-        expect([...getSelection(a, null)]).toEqual([a]);
+        expect([...getSelection("info", null, IS_LISTED)]).toEqual([]);
+        expect([...getSelection(a, null, IS_LISTED)]).toEqual([a]);
         expect([
-            ...getSelection(a, { anchor: a, items: new Set([a, b]) })
+            ...getSelection(a, { anchor: a, items: new Set([a, b]) }, IS_LISTED)
         ]).toEqual([a, b]);
         // A multi selection made while another element was shown no longer applies
         expect([
-            ...getSelection(b, { anchor: a, items: new Set([a, b]) })
+            ...getSelection(b, { anchor: a, items: new Set([a, b]) }, IS_LISTED)
         ]).toEqual([b]);
+    });
+
+    it("leaves out selected elements the list no longer shows", () => {
+        const session = createTestSession();
+        const [a, b] = session.document.samples;
+        const multi = { anchor: a, items: new Set([a, b]) };
+        session.document.removeSample(b);
+
+        const selection = getSelection(a, multi, (e) =>
+            session.document.contains(e)
+        );
+
+        expect([...selection]).toEqual([a]);
+    });
+
+    it("falls back to the shown element when nothing selected is listed", () => {
+        const [a, b] = createTestSession().document.samples;
+        const selection = getSelection(
+            a,
+            { anchor: a, items: new Set([a, b]) },
+            () => false
+        );
+        expect([...selection]).toEqual([a]);
     });
 
     it("shows the clicked element without modifiers", () => {

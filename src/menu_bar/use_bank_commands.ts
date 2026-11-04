@@ -11,6 +11,7 @@ import { showToastDialog } from "../toasts/show_toast_dialog.tsx";
 import { yieldToPaint } from "../utils/yield_to_paint.ts";
 import { logError } from "../utils/core_utils.ts";
 import { hasSFEOnlyData } from "../core_backend/sfe_data.ts";
+import { hasTextOutsideLatin1 } from "../core_backend/latin1_text.ts";
 
 const FORMAT_NAMES = {
     sf2: "SF2",
@@ -117,6 +118,9 @@ export function useBankCommands(
             session.document.samples.some((s) => s.isCompressed)
         ) {
             warnings.push(t("menuBarLocale.file.warnSF2"));
+        }
+        if (hasTextOutsideLatin1(session.document.bank)) {
+            warnings.push(t("menuBarLocale.file.warnText"));
         }
         confirmAndSave(format, warnings);
     };
