@@ -9,58 +9,42 @@ import type { BankEditView } from "../core_backend/bank_view.ts";
 const FULL_KEY_RANGE: GenericRange = { min: 0, max: 127 };
 
 /**
- * spessasynth_core marks a key range that is not set with a minimum of -1,
- * which means every key.
+ * The keys a zone plays, the way spessasynth_core picks them: the zone's own range, or the
+ * global zone's when it has none. The global range never narrows a zone's own range.
+ * A range that is not set has a minimum of -1, which means every key.
  */
-function getKeyRange(zone: BasicZone) {
-    return zone.keyRange.min === -1 ? FULL_KEY_RANGE : zone.keyRange;
+function getZoneKeys(zone: BasicZone, globalZone: BasicZone) {
+    const range = zone.hasKeyRange ? zone.keyRange : globalZone.keyRange;
+    return range.min === -1 ? FULL_KEY_RANGE : range;
 }
 
 /**
- * The part of the range inside the bounds, or undefined when they do not overlap.
+ * The keys both ranges cover, or undefined when they do not overlap.
  */
-function clampRange(range: GenericRange, bounds: GenericRange) {
-    if (range.max < bounds.min || range.min > bounds.max) {
-        return undefined;
-    }
-    return {
-        min: Math.max(bounds.min, range.min),
-        max: Math.min(bounds.max, range.max)
-    };
+function intersectRanges(a: GenericRange, b: GenericRange) {
+    const min = Math.max(a.min, b.min);
+    const max = Math.min(a.max, b.max);
+    return min <= max ? { min, max } : undefined;
+}
+
+function getInstrumentSplits(instrument: BasicInstrument) {
+    return instrument.zones.map((zone) =>
+        getZoneKeys(zone, instrument.globalZone)
+    );
 }
 
 /**
- * The key ranges of the zones, clamped to the global range.
+ * A preset zone and an instrument zone are matched separately, so a key plays where both
+ * of their ranges cover it.
  */
-export function getZoneSplits(
-    zones: readonly BasicZone[],
-    global: GenericRange
-) {
-    const splits = new Array<GenericRange>();
-    for (const zone of zones) {
-        const split = clampRange(getKeyRange(zone), global);
-        if (split) {
-            splits.push(split);
-        }
-    }
-    return splits;
-}
-
 function getPresetSplits(preset: BasicPreset) {
-    const presetRange = getKeyRange(preset.globalZone);
     const splits = new Array<GenericRange>();
     for (const zone of preset.zones) {
-        const range = clampRange(
-            getKeyRange(zone),
-            getKeyRange(zone.instrument.globalZone)
-        );
-        if (!range) {
-            continue;
-        }
-        for (const split of getZoneSplits(zone.instrument.zones, range)) {
-            const clamped = clampRange(split, presetRange);
-            if (clamped) {
-                splits.push(clamped);
+        const presetKeys = getZoneKeys(zone, preset.globalZone);
+        for (const instrumentKeys of getInstrumentSplits(zone.instrument)) {
+            const split = intersectRanges(presetKeys, instrumentKeys);
+            if (split) {
+                splits.push(split);
             }
         }
     }
@@ -75,7 +59,7 @@ export function getViewSplits(view: BankEditView): GenericRange[] {
         return getPresetSplits(view);
     }
     if (view instanceof BasicInstrument) {
-        return getZoneSplits(view.zones, getKeyRange(view.globalZone));
+        return getInstrumentSplits(view);
     }
     return [];
 }
