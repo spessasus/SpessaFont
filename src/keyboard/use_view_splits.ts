@@ -12,18 +12,15 @@ function subscribeToNothing() {
 }
 
 /**
- * The key ranges to highlight for the shown element, updated with every bank change.
+ * The key ranges to highlight for the shown element, from the bank's views.
  */
 export function useViewSplits(
     session: BankSession | undefined,
     view: BankEditView
 ) {
-    // The bank revision changes with every edit, so the splits are recomputed
-    useSyncExternalStore(
+    const views = useSyncExternalStore(
         session?.store.subscribe ?? subscribeToNothing,
-        () => session?.store.getSnapshot().revision ?? 0
+        () => session?.store.getSnapshot().views
     );
-    return session && view !== "info" && session.document.contains(view)
-        ? getViewSplits(view)
-        : [];
+    return views ? getViewSplits(view, views) : [];
 }

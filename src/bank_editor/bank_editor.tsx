@@ -41,11 +41,20 @@ export interface BankEditorProps {
  * for example after undoing its creation.
  */
 function useResolvedView(session: BankSession, view: BankEditView) {
-    // Subscribing to the lists re-renders when an element is added or removed
-    useBankSnapshot(session.store, (s) => s.presets);
-    useBankSnapshot(session.store, (s) => s.instruments);
-    useBankSnapshot(session.store, (s) => s.samples);
-    return view !== "info" && session.document.contains(view) ? view : "info";
+    const views = useBankSnapshot(session.store, (s) => s.views);
+    if (view === "info") {
+        return view;
+    }
+    const id = getObjectId(view);
+    let isInBank: boolean;
+    if (view instanceof BasicPreset) {
+        isInBank = views.presets.has(id);
+    } else if (view instanceof BasicInstrument) {
+        isInBank = views.instruments.has(id);
+    } else {
+        isInBank = views.samples.has(id);
+    }
+    return isInBank ? view : "info";
 }
 
 export function BankEditor({
