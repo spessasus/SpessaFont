@@ -6,18 +6,37 @@ import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx
 import { EditInstrumentNameAction } from "./edit_instrument_name_action.ts";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 import { getObjectId } from "../../utils/object_id.ts";
+import { useInstrumentView } from "../../hooks/use_instrument_view.ts";
+import { useBankSnapshot } from "../../hooks/use_bank_snapshot.ts";
+import { useEntityLookup } from "../../hooks/use_entity_lookup.ts";
 
 const MAX_NAME_LENGTH = 40;
 
 interface LinkedPresetsProps {
+    /**
+     * The edited instrument, for the actions. What the bar shows comes from its view.
+     */
     instrument: BasicInstrument;
 }
 
 export function LinkedPresets({ instrument }: LinkedPresetsProps) {
     const { t } = useTranslation();
-    const { apply, setView } = useBankEditor();
+    const { session, apply, setView } = useBankEditor();
+    const view = useInstrumentView(session.store, getObjectId(instrument));
+    const presets = useBankSnapshot(session.store, (s) => s.views.presets);
+    const lookup = useEntityLookup(session.store);
+    // The pane closes when its instrument is removed, this only covers the render before
+    if (!view) {
+        return null;
+    }
     // A preset with several zones of this instrument is listed once
-    const linked = new Set(instrument.linkedTo);
+    const linked = new Set(view.usedBy);
+    const showPreset = (id: number) => {
+        const preset = lookup.preset(id);
+        if (preset) {
+            setView(preset);
+        }
+    };
 
     return (
         <div className={"bottom_bar"}>
@@ -25,7 +44,7 @@ export function LinkedPresets({ instrument }: LinkedPresetsProps) {
                 <WaitingInput
                     className={"monospaced"}
                     type={"text"}
-                    value={instrument.name}
+                    value={view.name}
                     aria-label={t("instrumentLocale.instrumentName")}
                     setValue={(name) => {
                         apply([
@@ -63,14 +82,14 @@ export function LinkedPresets({ instrument }: LinkedPresetsProps) {
             ) : (
                 <>
                     <div>{t("instrumentLocale.usedBy")}:</div>
-                    {Array.from(linked, (preset) => (
+                    {Array.from(linked, (id) => (
                         <button
                             type={"button"}
                             className={"plain_button monospaced"}
-                            onClick={() => setView(preset)}
-                            key={getObjectId(preset)}
+                            onClick={() => showPreset(id)}
+                            key={id}
                         >
-                            {preset.name}
+                            {presets.get(id)?.name}
                         </button>
                     ))}
                 </>

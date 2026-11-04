@@ -8,10 +8,15 @@ import { EditPresetAction } from "./edit_preset_action.ts";
 import { ControllerSwitch } from "../../fancy_inputs/controller_switch/controller_switch.tsx";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 import { useBankSnapshot } from "../../hooks/use_bank_snapshot.ts";
+import { usePresetView } from "../../hooks/use_preset_view.ts";
+import { getObjectId } from "../../utils/object_id.ts";
 
 const MAX_NAME_LENGTH = 40;
 
 interface BottomPresetBarProps {
+    /**
+     * The edited preset, for the actions. What the bar shows comes from its view.
+     */
     preset: BasicPreset;
 }
 
@@ -19,6 +24,11 @@ export function BottomPresetBar({ preset }: BottomPresetBarProps) {
     const { t } = useTranslation();
     const { session, apply } = useBankEditor();
     const presets = useBankSnapshot(session.store, (s) => s.presets);
+    const view = usePresetView(session.store, getObjectId(preset));
+    // The pane closes when its preset is removed, this only covers the render before
+    if (!view) {
+        return null;
+    }
 
     /**
      * Applies a patch change unless another preset already uses the resulting patch.
@@ -58,7 +68,7 @@ export function BottomPresetBar({ preset }: BottomPresetBarProps) {
             <div>
                 <WaitingInput
                     type={"text"}
-                    value={preset.name}
+                    value={view.name}
                     aria-label={t("presetLocale.presetName")}
                     setValue={(name) => {
                         apply([
@@ -81,7 +91,7 @@ export function BottomPresetBar({ preset }: BottomPresetBarProps) {
                     type={"number"}
                     min={0}
                     max={127}
-                    value={preset.bankLSB}
+                    value={view.bankLSB}
                     setValue={setNumber("bankLSB")}
                 />
             </label>
@@ -91,7 +101,7 @@ export function BottomPresetBar({ preset }: BottomPresetBarProps) {
                     type={"number"}
                     min={0}
                     max={127}
-                    value={preset.bankMSB}
+                    value={view.bankMSB}
                     setValue={setNumber("bankMSB")}
                 />
             </label>
@@ -102,7 +112,7 @@ export function BottomPresetBar({ preset }: BottomPresetBarProps) {
                     type={"number"}
                     min={0}
                     max={127}
-                    value={preset.program}
+                    value={view.program}
                     setValue={setNumber("program")}
                 />
             </label>
@@ -110,7 +120,7 @@ export function BottomPresetBar({ preset }: BottomPresetBarProps) {
                 <span>{t("presetLocale.drums")}</span>
                 <ControllerSwitch
                     label={t("presetLocale.drums")}
-                    value={preset.isGMGSDrum}
+                    value={view.isGMGSDrum}
                     // A melodic bank is not a drum kit map, so the switch starts on bank 0
                     onChange={(isGMGSDrum) =>
                         changePatch({ isGMGSDrum, bankLSB: 0, bankMSB: 0 })
