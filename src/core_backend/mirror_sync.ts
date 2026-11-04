@@ -28,6 +28,10 @@ export class MirrorSync {
         BasicSample,
         SampleCopySource
     >();
+    /**
+     * Samples whose next audio change the mirror made itself (a format conversion on save).
+     */
+    private readonly audioInMirror = new WeakSet<BasicSample>();
 
     /**
      * @param snapshot the store's first snapshot. The mirror was loaded from the same file, so
@@ -68,6 +72,15 @@ export class MirrorSync {
     }
 
     /**
+     * The next commit gives these samples the audio the mirror has already, so it is not sent.
+     */
+    public markAudioInMirror(samples: Iterable<BasicSample>) {
+        for (const sample of samples) {
+            this.audioInMirror.add(sample);
+        }
+    }
+
+    /**
      * Sends what changed since the last snapshot and returns the view diff, or undefined when no
      * view changed.
      */
@@ -91,7 +104,9 @@ export class MirrorSync {
             }
             this.sentRevisions.set(view.id, view.audioRevision);
             const copy = this.pendingCopies.get(sample);
-            if (copy) {
+            if (this.audioInMirror.has(sample)) {
+                this.audioInMirror.delete(sample);
+            } else if (copy) {
                 this.pendingCopies.delete(sample);
                 sampleCopies.set(view.id, copy);
             } else if (sample.hasData) {

@@ -152,6 +152,7 @@ export class BankMirror {
     private readonly presets = new Map<number, BasicPreset>();
     private readonly instruments = new Map<number, BasicInstrument>();
     private readonly samples = new Map<number, BasicSample>();
+    private readonly sampleIds = new WeakMap<BasicSample, number>();
     /**
      * The last views applied, to rebuild zones only when they changed.
      */
@@ -180,25 +181,26 @@ export class BankMirror {
         }
         for (const [i, sample] of bank.samples.entries()) {
             this.samples.set(ids.samples[i], sample);
+            this.sampleIds.set(sample, ids.samples[i]);
         }
     }
 
     private applySamples(diff: ElementDiff<SampleView>) {
         for (const view of diff.changed) {
-            if (!this.samples.has(view.id)) {
-                this.samples.set(
-                    view.id,
-                    new BasicSample(
-                        view.name,
-                        view.sampleRate,
-                        view.originalKey,
-                        view.pitchCorrection,
-                        SampleTypes.monoSample,
-                        view.loopStart,
-                        view.loopEnd
-                    )
-                );
+            if (this.samples.has(view.id)) {
+                continue;
             }
+            const sample = new BasicSample(
+                view.name,
+                view.sampleRate,
+                view.originalKey,
+                view.pitchCorrection,
+                SampleTypes.monoSample,
+                view.loopStart,
+                view.loopEnd
+            );
+            this.samples.set(view.id, sample);
+            this.sampleIds.set(sample, view.id);
         }
         for (const view of diff.changed) {
             const sample = getOrThrow(this.samples, view.id, "sample");
@@ -341,12 +343,24 @@ export class BankMirror {
             );
         }
         if (patch.info) {
-            this.bank.soundBankInfo = { ...patch.info };
+            // A deep copy, as a format conversion changes the version object in place
+            this.bank.soundBankInfo = structuredClone(patch.info);
         }
     }
 
     public getSample(id: number) {
         return this.samples.get(id);
+    }
+
+    /**
+     * The editor's id of one of the mirror's samples.
+     */
+    public getSampleId(sample: BasicSample) {
+        const id = this.sampleIds.get(sample);
+        if (id === undefined) {
+            throw new Error(`The sample "${sample.name}" is not the mirror's.`);
+        }
+        return id;
     }
 
     /**

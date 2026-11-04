@@ -86,6 +86,25 @@ export class BankSession implements SampleDataSource {
         return mirrored;
     }
 
+    private recordConversion(before: ReturnType<typeof captureBankFormat>) {
+        const { bank } = this.mirror;
+        const editorSamples = new Map(
+            this.document.samples.map((s) => [getObjectId(s), s])
+        );
+        const conversion = ConvertSamplesAction.between(bank, before, (s) => {
+            const sample = editorSamples.get(this.mirror.getSampleId(s));
+            if (!sample) {
+                throw new Error(`The editor has no sample "${s.name}".`);
+            }
+            return sample;
+        });
+        if (!conversion) {
+            return;
+        }
+        this.mirrorSync.markAudioInMirror(conversion.samples);
+        this.history.do([conversion]);
+    }
+
     /**
      * Gives pasted or duplicated samples (not added yet) the data of their source samples.
      * @param copies each new sample and the sample it copies
@@ -121,6 +140,7 @@ export class BankSession implements SampleDataSource {
     /**
      * Saves the bank: asks for the file first, then converts the samples for an explicit SF2 or
      * SF3 save (recorded in the history), encodes, writes, and marks the position as saved.
+     * The mirror is what gets converted and written, as it has the sample data.
      * Throws when encoding or writing fails, including when the user cancels the file picker.
      */
     public async save(
@@ -128,7 +148,7 @@ export class BankSession implements SampleDataSource {
         unnamed: string,
         progressFunction?: ProgressFunction
     ) {
-        const { bank } = this.document;
+        const { bank } = this.mirror;
         const target = this.getWriteFormat(format);
         const extension = getSaveExtension(bank, format, target);
         const name = `${this.document.getBankName(unnamed)}.${extension}`;
@@ -144,10 +164,11 @@ export class BankSession implements SampleDataSource {
         );
 
         const before = captureBankFormat(bank);
-        await convertSampleFormat(bank, format, progressFunction);
-        const conversion = ConvertSamplesAction.between(bank, before);
-        if (conversion) {
-            this.history.do([conversion]);
+        try {
+            await convertSampleFormat(bank, format, progressFunction);
+        } finally {
+            // A conversion that failed halfway changed some samples already
+            this.recordConversion(before);
         }
         // Edits made while the file is written are not in it, so they keep the bank dirty
         const savedPosition = this.history.position;

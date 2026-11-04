@@ -54,18 +54,22 @@ interface SampleChange {
 }
 
 /**
- * An explicit SF2 or SF3 save converts the samples in place (decoding, or compressing and
- * resampling rates outside 8 to 96 kHz). This action records that conversion, so the editor
- * shows the new state and undo can restore the samples before older edits are undone,
- * which would otherwise put old rates and loops on the converted data.
+ * An explicit SF2 or SF3 save converts the mirror's samples in place (decoding, or compressing
+ * and resampling rates outside 8 to 96 kHz). This action records that conversion on the
+ * editor's samples, so the editor shows the new state and undo can restore the samples before
+ * older edits are undone, which would otherwise put old rates and loops on the converted data.
  */
 export class ConvertSamplesAction implements HistoryAction {
     /**
      * The action for the changes between two captures, or undefined when nothing changed.
+     * @param bank the bank that was converted, the mirror
+     * @param before its capture from before the conversion
+     * @param toEditorSample the editor's sample for one of the bank's samples
      */
     public static between(
         bank: BasicSoundBank,
-        before: BankFormatState
+        before: BankFormatState,
+        toEditorSample: (sample: BasicSample) => BasicSample
     ): ConvertSamplesAction | undefined {
         const changes = new Array<SampleChange>();
         for (const [sample, old] of before.samples) {
@@ -76,7 +80,11 @@ export class ConvertSamplesAction implements HistoryAction {
                 current.loopStart !== old.loopStart ||
                 current.loopEnd !== old.loopEnd
             ) {
-                changes.push({ sample, before: old, after: current });
+                changes.push({
+                    sample: toEditorSample(sample),
+                    before: old,
+                    after: current
+                });
             }
         }
         const version = { ...bank.soundBankInfo.version };
@@ -100,6 +108,13 @@ export class ConvertSamplesAction implements HistoryAction {
         this.changes = changes;
         this.versionBefore = versionBefore;
         this.versionAfter = versionAfter;
+    }
+
+    /**
+     * The editor's samples the conversion changed.
+     */
+    public get samples() {
+        return this.changes.map((c) => c.sample);
     }
 
     public do(document: BankDocument, changes: ChangeSet) {
