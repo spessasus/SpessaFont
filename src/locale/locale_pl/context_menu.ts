@@ -12,6 +12,7 @@ export const ContextMenuLocale = {
     normalize: "Normalizuj",
     autoLoop: "Auto pętla",
     gain: "Zmień wzmocnienie…",
+    rootKeysFromNames: "Ustaw oryginalne klawisze z nazw",
     open: "Otwórz",
     replaceSample: "Zastąp próbkę…",
     replaceInstrument: "Zastąp instrument…",
@@ -24,6 +25,8 @@ export const ContextMenuLocale = {
     gainTitle: "Zmień wzmocnienie zaznaczonych próbek",
     gainLabel: "Wzmocnienie (dB)",
     skippedShort: "Pominięte próbki, zbyt krótkie na pętlę: {{count}}",
+    rootKeysSet: "Ustawione oryginalne klawisze: {{count}}",
+    skippedNoNote: "Pominięte próbki bez nuty w nazwie: {{count}}",
 
     noMatches: "Nic nie pasuje do wyszukiwania.",
     cancel: "Anuluj",

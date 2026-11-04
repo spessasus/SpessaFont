@@ -12,6 +12,7 @@ export const ContextMenuLocale = {
     normalize: "Normalize",
     autoLoop: "Auto Loop",
     gain: "Change Gain…",
+    rootKeysFromNames: "Set Original Keys from Names",
     open: "Open",
     replaceSample: "Replace Sample…",
     replaceInstrument: "Replace Instrument…",
@@ -24,6 +25,8 @@ export const ContextMenuLocale = {
     gainTitle: "Change the gain of the selected samples",
     gainLabel: "Gain (dB)",
     skippedShort: "Skipped samples too short to loop: {{count}}",
+    rootKeysSet: "Original keys set: {{count}}",
+    skippedNoNote: "Skipped samples with no note in the name: {{count}}",
 
     noMatches: "Nothing matches the search.",
     cancel: "Cancel",

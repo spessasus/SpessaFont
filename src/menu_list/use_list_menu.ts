@@ -28,6 +28,7 @@ import {
     FLAT_EQUALIZER
 } from "../sample_editor/equalizer/equalizer.ts";
 import { logError } from "../utils/core_utils.ts";
+import { createRootKeyActions } from "../sample_editor/root_key_actions.ts";
 
 /**
  * Runs an audio tool, which reads the audio first, and reports a failed read.
@@ -123,6 +124,21 @@ export function useListMenu() {
             }
         });
 
+    const setRootKeysFromNames = (selection: ReadonlySet<BankEntity>) => {
+        const { actions, skipped } = createRootKeyActions(
+            selectionOf(selection, isSample)
+        );
+        if (actions.length > 0) {
+            apply(actions);
+            toast.success(
+                t("contextMenu.rootKeysSet", { count: actions.length })
+            );
+        }
+        if (skipped > 0) {
+            toast.error(t("contextMenu.skippedNoNote", { count: skipped }));
+        }
+    };
+
     const normalize = (samples: ReadonlySet<BankEntity>) =>
         runAudioTool(async () => {
             const actions = await createNormalizeActions(
@@ -195,6 +211,10 @@ export function useListMenu() {
                 {
                     label: t("contextMenu.gain"),
                     onSelect: () => void changeGain(samples)
+                },
+                {
+                    label: t("contextMenu.rootKeysFromNames"),
+                    onSelect: () => setRootKeysFromNames(samples)
                 }
             ];
         }
