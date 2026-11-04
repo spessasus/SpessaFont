@@ -13,6 +13,7 @@ export const ContextMenuLocale = {
     autoLoop: "Auto Loop",
     gain: "Change Gain…",
     rootKeysFromNames: "Set Original Keys from Names",
+    spreadSamples: "Spread Samples Across the Keyboard",
     open: "Open",
     replaceSample: "Replace Sample…",
     replaceInstrument: "Replace Instrument…",

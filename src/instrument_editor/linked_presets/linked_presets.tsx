@@ -9,6 +9,7 @@ import { getObjectId } from "../../utils/object_id.ts";
 import { useInstrumentView } from "../../hooks/use_instrument_view.ts";
 import { useBankSnapshot } from "../../hooks/use_bank_snapshot.ts";
 import { useEntityLookup } from "../../hooks/use_entity_lookup.ts";
+import { createSpreadActions } from "../spread_actions.ts";
 
 const MAX_NAME_LENGTH = 40;
 
@@ -59,6 +60,15 @@ export function LinkedPresets({ instrument }: LinkedPresetsProps) {
                     maxLength={MAX_NAME_LENGTH}
                 />
             </div>
+            {view.zones.length > 1 ? (
+                <button
+                    type={"button"}
+                    className={"plain_button"}
+                    onClick={() => apply(createSpreadActions(instrument))}
+                >
+                    {t("contextMenu.spreadSamples")}
+                </button>
+            ) : null}
 
             {linked.size === 0 ? (
                 <>

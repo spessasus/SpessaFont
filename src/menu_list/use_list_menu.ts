@@ -29,6 +29,7 @@ import {
 } from "../sample_editor/equalizer/equalizer.ts";
 import { logError } from "../utils/core_utils.ts";
 import { createRootKeyActions } from "../sample_editor/root_key_actions.ts";
+import { createSpreadActions } from "../instrument_editor/spread_actions.ts";
 
 /**
  * Runs an audio tool, which reads the audio first, and reports a failed read.
@@ -234,6 +235,16 @@ export function useListMenu() {
                         apply([
                             createPresetFromInstruments(document, instruments)
                         ])
+                },
+                "separator",
+                {
+                    label: t("contextMenu.spreadSamples"),
+                    onSelect: () =>
+                        apply(
+                            [...instruments].flatMap((i) =>
+                                createSpreadActions(i)
+                            )
+                        )
                 }
             ];
         }

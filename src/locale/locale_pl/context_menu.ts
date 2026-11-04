@@ -13,6 +13,7 @@ export const ContextMenuLocale = {
     autoLoop: "Auto pętla",
     gain: "Zmień wzmocnienie…",
     rootKeysFromNames: "Ustaw oryginalne klawisze z nazw",
+    spreadSamples: "Rozłóż próbki na klawiaturze",
     open: "Otwórz",
     replaceSample: "Zastąp próbkę…",
     replaceInstrument: "Zastąp instrument…",
