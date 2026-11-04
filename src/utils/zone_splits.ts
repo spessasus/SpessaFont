@@ -6,53 +6,62 @@ import {
 } from "spessasynth_core";
 import type { BankEditView } from "../core_backend/bank_view.ts";
 
+const FULL_KEY_RANGE: GenericRange = { min: 0, max: 127 };
+
+/**
+ * spessasynth_core marks a key range that is not set with a minimum of -1,
+ * which means every key.
+ */
+function getKeyRange(zone: BasicZone) {
+    return zone.keyRange.min === -1 ? FULL_KEY_RANGE : zone.keyRange;
+}
+
+/**
+ * The part of the range inside the bounds, or undefined when they do not overlap.
+ */
+function clampRange(range: GenericRange, bounds: GenericRange) {
+    if (range.max < bounds.min || range.min > bounds.max) {
+        return undefined;
+    }
+    return {
+        min: Math.max(bounds.min, range.min),
+        max: Math.min(bounds.max, range.max)
+    };
+}
+
 /**
  * The key ranges of the zones, clamped to the global range.
- * A zone without a key range covers the whole global range.
  */
 export function getZoneSplits(
     zones: readonly BasicZone[],
     global: GenericRange
-): GenericRange[] {
-    const splits: GenericRange[] = [];
-    for (let {
-        keyRange: { min, max }
-    } of zones) {
-        if (min === -1) {
-            min = global.min;
-            max = global.max;
+) {
+    const splits = new Array<GenericRange>();
+    for (const zone of zones) {
+        const split = clampRange(getKeyRange(zone), global);
+        if (split) {
+            splits.push(split);
         }
-        // don't add out of range
-        if (max < global.min || min > global.max) {
-            continue;
-        }
-        // clamp in range
-        max = Math.min(global.max, max);
-        min = Math.max(global.min, min);
-        splits.push({ min, max });
     }
     return splits;
 }
 
 function getPresetSplits(preset: BasicPreset) {
-    const splits: GenericRange[] = [];
-    const glob = preset.globalZone.keyRange;
-    for (const {
-        keyRange: { min, max },
-        instrument: { zones, globalZone }
-    } of preset.zones) {
-        const range = { ...globalZone.keyRange };
-        range.min = Math.max(range.min, min);
-        range.max = Math.min(range.max, max);
-        for (let { min, max } of getZoneSplits(zones, range)) {
-            // don't add out of range
-            if (max < glob.min || min > glob.max) {
-                continue;
+    const presetRange = getKeyRange(preset.globalZone);
+    const splits = new Array<GenericRange>();
+    for (const zone of preset.zones) {
+        const range = clampRange(
+            getKeyRange(zone),
+            getKeyRange(zone.instrument.globalZone)
+        );
+        if (!range) {
+            continue;
+        }
+        for (const split of getZoneSplits(zone.instrument.zones, range)) {
+            const clamped = clampRange(split, presetRange);
+            if (clamped) {
+                splits.push(clamped);
             }
-            // clamp in range
-            max = Math.min(glob.max, max);
-            min = Math.max(glob.min, min);
-            splits.push({ min, max });
         }
     }
     return splits;
@@ -66,7 +75,7 @@ export function getViewSplits(view: BankEditView): GenericRange[] {
         return getPresetSplits(view);
     }
     if (view instanceof BasicInstrument) {
-        return getZoneSplits(view.zones, view.globalZone.keyRange);
+        return getZoneSplits(view.zones, getKeyRange(view.globalZone));
     }
     return [];
 }
