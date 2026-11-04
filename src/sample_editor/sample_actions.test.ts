@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { EmptySample, SampleTypes, SoundBankLoader } from "spessasynth_core";
+import {
+    type BasicSample,
+    EmptySample,
+    SampleTypes,
+    SoundBankLoader
+} from "spessasynth_core";
 import {
     createTestSession,
-    expectRoundTrip
+    expectRoundTrip,
+    publishSetUp
 } from "../test_utils/bank_fixture.ts";
 import { EditSampleAction } from "./edit_sample_action.ts";
 import { SetSampleTypeAction } from "./set_sample_type_action.ts";
@@ -204,12 +210,35 @@ describe("DeleteSampleAction", () => {
     });
 });
 
+/**
+ * The audio as the mirror has it, which is what the editor reads.
+ */
+async function readAudio(
+    session: ReturnType<typeof createTestSession>,
+    sample: BasicSample
+) {
+    return [...(await session.readAudio(sample))];
+}
+
+/**
+ * Gives a sample new audio outside the history, as a test set-up.
+ */
+function setAudio(
+    session: ReturnType<typeof createTestSession>,
+    sample: BasicSample,
+    data: number[],
+    sampleRate = 44_100
+) {
+    sample.setAudioData(new Float32Array(data), sampleRate);
+    publishSetUp(session);
+}
+
 describe("ReplaceSampleAudioAction", () => {
-    it("replaces the audio and loop points, and undo restores them", () => {
+    it("replaces the audio and loop points, and undo restores them", async () => {
         const session = createTestSession();
         const sample = session.document.samples[0];
         const before = {
-            data: sample.getAudioData(),
+            data: await readAudio(session, sample),
             sampleRate: sample.sampleRate,
             loopStart: sample.loopStart,
             loopEnd: sample.loopEnd
@@ -217,9 +246,12 @@ describe("ReplaceSampleAudioAction", () => {
         const data = new Float32Array([0, 0.5, -0.5, 0.25]);
 
         session.history.do([
-            new ReplaceSampleAudioAction(sample, { data, sampleRate: 22_050 })
+            await ReplaceSampleAudioAction.create(session, sample, {
+                data,
+                sampleRate: 22_050
+            })
         ]);
-        expect(sample.getAudioData()).toBe(data);
+        expect(await readAudio(session, sample)).toEqual([...data]);
         expect(sample).toMatchObject({
             sampleRate: 22_050,
             loopStart: 0,
@@ -228,7 +260,7 @@ describe("ReplaceSampleAudioAction", () => {
         expect(session.history.isDirty).toBe(true);
 
         session.history.undo();
-        expect(sample.getAudioData()).toEqual(before.data);
+        expect(await readAudio(session, sample)).toEqual(before.data);
         expect(sample).toMatchObject({
             sampleRate: before.sampleRate,
             loopStart: before.loopStart,
@@ -236,98 +268,115 @@ describe("ReplaceSampleAudioAction", () => {
         });
 
         session.history.redo();
-        expect(sample.getAudioData()).toBe(data);
+        expect(await readAudio(session, sample)).toEqual([...data]);
     });
 
-    it("restores the compressed stream of a compressed sample", () => {
+    it("restores the compressed stream of a compressed sample", async () => {
         const session = createTestSession();
         const sample = session.document.samples[0];
         const stream = new Uint8Array([1, 2, 3, 4]);
         sample.setCompressedData(stream);
+        publishSetUp(session);
 
         session.history.do([
-            new ReplaceSampleAudioAction(sample, {
+            await ReplaceSampleAudioAction.create(session, sample, {
                 data: new Float32Array(8),
                 sampleRate: 44_100
             })
         ]);
-        expect(sample.isCompressed).toBe(false);
+        const replaced = await session.readStoredData(sample);
+        expect(replaced.form).toBe("float32");
 
         session.history.undo();
-        expect(sample.isCompressed).toBe(true);
-        expect(sample.getRawData(true)).toBe(stream);
+        expect(await session.readStoredData(sample)).toEqual({
+            form: "vorbis",
+            data: stream
+        });
     });
 });
 
 /**
  * `snapshotBank` leaves the audio out, so audio actions check their round trip here.
  */
-function expectAudioRoundTrip(
+async function expectAudioRoundTrip(
     session: ReturnType<typeof createTestSession>,
     actions: HistoryActionGroup
 ) {
-    const audio = () => session.document.samples.map((s) => s.getAudioData());
-    const before = audio();
+    const audio = () =>
+        Promise.all(session.document.samples.map((s) => readAudio(session, s)));
+    const before = await audio();
     session.history.do(actions);
-    const after = audio();
+    const after = await audio();
     expect(after).not.toEqual(before);
     session.history.undo();
-    expect(audio()).toEqual(before);
+    expect(await audio()).toEqual(before);
     session.history.redo();
-    expect(audio()).toEqual(after);
+    expect(await audio()).toEqual(after);
 }
 
 describe("sample audio helpers", () => {
-    it("normalizes a stereo pair by one amount and skips silence", () => {
+    it("normalizes a stereo pair by one amount and skips silence", async () => {
         const session = createTestSession();
         const [left, right] = session.document.samples;
         left.setAudioData(new Float32Array([0.25, -0.5]), 44_100);
-        right.setAudioData(new Float32Array([0.125, 0.25]), 44_100);
         left.setLinkedSample(right, SampleTypes.leftSample);
+        setAudio(session, right, [0.125, 0.25]);
 
-        expectAudioRoundTrip(session, createNormalizeActions([right]));
-        expect([...left.getAudioData()]).toEqual([0.5, -1]);
-        expect([...right.getAudioData()]).toEqual([0.25, 0.5]);
+        await expectAudioRoundTrip(
+            session,
+            await createNormalizeActions(session, [right])
+        );
+        expect(await readAudio(session, left)).toEqual([0.5, -1]);
+        expect(await readAudio(session, right)).toEqual([0.25, 0.5]);
 
         left.setAudioData(new Float32Array(3), 44_100);
-        right.setAudioData(new Float32Array(3), 44_100);
-        expect(createNormalizeActions([left])).toEqual([]);
+        setAudio(session, right, [0, 0, 0]);
+        expect(await createNormalizeActions(session, [left])).toEqual([]);
     });
 
-    it("equalizes both halves once, keeps the loop, and reports clipping", () => {
+    it("equalizes both halves once, keeps the loop, and reports clipping", async () => {
         const session = createTestSession();
         const [left, right] = session.document.samples;
         left.setLinkedSample(right, SampleTypes.leftSample);
-        left.setAudioData(new Float32Array([0.5, -0.25, 0.75]), 44_100);
         left.loopStart = 1;
         left.loopEnd = 2;
+        setAudio(session, left, [0.5, -0.25, 0.75]);
 
         // The source peaks at 0.75, so only the louder version clips
-        expect(createEqualizerActions([left], FLAT_EQUALIZER).isClipping).toBe(
-            false
+        const flat = await createEqualizerActions(
+            session,
+            [left],
+            FLAT_EQUALIZER
         );
+        expect(flat.isClipping).toBe(false);
         const louder = { ...FLAT_EQUALIZER, gain: 20 * Math.log10(2) };
-        const { actions, isClipping } = createEqualizerActions(
+        const { actions, isClipping } = await createEqualizerActions(
+            session,
             [left, right],
             louder
         );
         expect(actions).toHaveLength(2);
         expect(isClipping).toBe(true);
-        expectAudioRoundTrip(session, actions);
-        const data = [...left.getAudioData()];
+        await expectAudioRoundTrip(session, actions);
+        const data = await readAudio(session, left);
         expect(data[0]).toBeCloseTo(1);
         expect(data[2]).toBeCloseTo(1.5);
         expect(left).toMatchObject({ loopStart: 1, loopEnd: 2 });
     });
 
-    it("splits stereo audio over a stereo pair and mixes it for a mono sample", () => {
+    it("splits stereo audio over a stereo pair and mixes it for a mono sample", async () => {
         const session = createTestSession();
         const [left, right] = session.document.samples;
         const channels = [new Float32Array([1, 1]), new Float32Array([0, 0])];
 
-        const mono = createReplaceAudioActions(left, channels, 44_100);
+        const mono = await createReplaceAudioActions(
+            session,
+            left,
+            channels,
+            44_100
+        );
         session.history.do(mono ?? []);
-        expect([...left.getAudioData()]).toEqual([0.5, 0.5]);
+        expect(await readAudio(session, left)).toEqual([0.5, 0.5]);
         session.history.undo();
 
         session.history.do([
@@ -337,16 +386,26 @@ describe("sample audio helpers", () => {
             })
         ]);
         session.history.do(
-            createReplaceAudioActions(right, channels, 44_100) ?? []
+            (await createReplaceAudioActions(
+                session,
+                right,
+                channels,
+                44_100
+            )) ?? []
         );
-        expect([...right.getAudioData()]).toEqual([0, 0]);
-        expect([...left.getAudioData()]).toEqual([1, 1]);
+        expect(await readAudio(session, right)).toEqual([0, 0]);
+        expect(await readAudio(session, left)).toEqual([1, 1]);
         expect(
-            createReplaceAudioActions(left, [...channels, ...channels], 1)
+            await createReplaceAudioActions(
+                session,
+                left,
+                [...channels, ...channels],
+                1
+            )
         ).toBeUndefined();
     });
 
-    it("auto loops a stereo pair with one loop and skips short samples", () => {
+    it("auto loops a stereo pair with one loop and skips short samples", async () => {
         const session = createTestSession();
         const [left, right] = session.document.samples;
         const wave = (phase: number) =>
@@ -356,8 +415,11 @@ describe("sample audio helpers", () => {
         left.setAudioData(wave(0), 44_100);
         right.setAudioData(wave(1), 44_100);
         left.setLinkedSample(right, SampleTypes.leftSample);
+        publishSetUp(session);
 
-        const { actions, skipped } = createAutoLoopActions([left]);
+        const { actions, skipped } = await createAutoLoopActions(session, [
+            left
+        ]);
         expect(skipped).toBe(0);
         expectRoundTrip(session, actions);
         expect(left.loopStart).toBe(right.loopStart);
@@ -365,39 +427,47 @@ describe("sample audio helpers", () => {
         expect(left.loopEnd - left.loopStart).toBeGreaterThan(4410);
 
         left.setAudioData(new Float32Array(100), 44_100);
-        right.setAudioData(new Float32Array(100), 44_100);
-        expect(createAutoLoopActions([right])).toEqual({
+        setAudio(
+            session,
+            right,
+            Array.from({ length: 100 }, () => 0)
+        );
+        expect(await createAutoLoopActions(session, [right])).toEqual({
             actions: [],
             skipped: 2
         });
     });
 
-    it("exports a stereo pair as left and right, padded to one length", () => {
+    it("exports a stereo pair as left and right, padded to one length", async () => {
         const session = createTestSession();
         const [left, right] = session.document.samples;
         left.setAudioData(new Float32Array([1, 2, 3, 4]), 44_100);
-        right.setAudioData(new Float32Array([5, 6]), 44_100);
-        const toArrays = (channels: Float32Array[]) =>
-            channels.map((c) => [...c]);
+        setAudio(session, right, [5, 6]);
+        const exported = async (sample: BasicSample, isLoopOnly: boolean) => {
+            const channels = await getExportChannels(
+                session,
+                sample,
+                isLoopOnly
+            );
+            return channels.map((c) => [...c]);
+        };
 
-        expect(toArrays(getExportChannels(right, false))).toEqual([[5, 6]]);
+        expect(await exported(right, false)).toEqual([[5, 6]]);
 
         right.setLinkedSample(left, SampleTypes.rightSample);
-        expect(toArrays(getExportChannels(right, false))).toEqual([
+        expect(await exported(right, false)).toEqual([
             [1, 2, 3, 4],
             [5, 6, 0, 0]
         ]);
         left.loopStart = 1;
         left.loopEnd = 3;
-        expect(toArrays(getExportChannels(left, true))).toEqual([
+        expect(await exported(left, true)).toEqual([
             [2, 3],
             [6, 0]
         ]);
 
         // Different rates cannot share a file
-        right.setAudioData(new Float32Array([5, 6]), 22_050);
-        expect(toArrays(getExportChannels(left, false))).toEqual([
-            [1, 2, 3, 4]
-        ]);
+        setAudio(session, right, [5, 6], 22_050);
+        expect(await exported(left, false)).toEqual([[1, 2, 3, 4]]);
     });
 });

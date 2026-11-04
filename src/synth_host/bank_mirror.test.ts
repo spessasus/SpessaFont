@@ -32,7 +32,7 @@ function getFirstMirrorSample(session: TestSession) {
 /**
  * A few edits of every kind, so the comparisons below cover more than a fresh load.
  */
-function editBank(session: TestSession) {
+async function editBank(session: TestSession) {
     const { document } = session;
     const [preset] = document.presets;
     const [instrument, otherInstrument] = document.instruments;
@@ -54,7 +54,7 @@ function editBank(session: TestSession) {
     ]);
     const audio = new Float32Array(4000).map((_, i) => Math.sin(i / 8));
     session.history.do([
-        new ReplaceSampleAudioAction(sample, {
+        await ReplaceSampleAudioAction.create(session, sample, {
             data: audio,
             sampleRate: 22_050
         })
@@ -88,9 +88,9 @@ describe("BankMirror", () => {
         expectMirrorUpToDate(createTestSession());
     });
 
-    it("plays the same as the editor's bank after edits", () => {
+    it("plays the same as the editor's bank after edits", async () => {
         const session = createTestSession();
-        editBank(session);
+        await editBank(session);
 
         const fromMirror = render(session.mirror.bank);
 
@@ -98,9 +98,9 @@ describe("BankMirror", () => {
         expect(fromMirror).toEqual(render(session.document.bank));
     });
 
-    it("writes the same file as the editor's bank after edits", () => {
+    it("writes the same file as the editor's bank after edits", async () => {
         const session = createTestSession();
-        editBank(session);
+        await editBank(session);
         const options = { software: "test" };
         // The creation date is written as the bank info has it, so both share it
         const written = new Uint8Array(session.mirror.bank.writeSF2(options));
@@ -110,14 +110,14 @@ describe("BankMirror", () => {
         );
     });
 
-    it("gets the new audio of a replaced sample, and the old one back on undo", () => {
+    it("gets the new audio of a replaced sample, and the old one back on undo", async () => {
         const session = createTestSession();
         const [sample] = session.document.samples;
-        const before = sample.getAudioData().slice();
+        const before = getFirstMirrorSample(session).getAudioData().slice();
         const audio = new Float32Array(100).fill(0.5);
 
         expectRoundTrip(session, [
-            new ReplaceSampleAudioAction(sample, {
+            await ReplaceSampleAudioAction.create(session, sample, {
                 data: audio,
                 sampleRate: 44_100
             })

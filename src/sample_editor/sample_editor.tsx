@@ -22,8 +22,13 @@ import { useSampleAudioCommands } from "./use_sample_audio_commands.ts";
 import { EqualizerPanel } from "./equalizer/equalizer_panel.tsx";
 import { useEqualizerPreview } from "./equalizer/use_equalizer_preview.ts";
 import { type EqualizerState, FLAT_EQUALIZER } from "./equalizer/equalizer.ts";
+import { useSampleAudio } from "../hooks/use_sample_audio.ts";
 
 const MAX_NAME_LENGTH = 40;
+/**
+ * Shown until the audio is read.
+ */
+const NO_AUDIO = new Float32Array(0);
 
 interface SampleEditorProps {
     sample: BasicSample;
@@ -61,8 +66,10 @@ export function SampleEditor({
     // Re-render when the sample's audio, properties, or links change
     useEntityRevision(session.store, sample);
     const edits = useSampleEdits(sample);
+    const data = useSampleAudio(session, getObjectId(sample));
     const player = useSamplePlayer(
         sample,
+        data,
         playerState,
         playRequest,
         onPlayerStateChange
@@ -80,7 +87,7 @@ export function SampleEditor({
                 zoom={zoom}
                 onLoopStartChange={edits.setLoopStart}
                 onLoopEndChange={edits.setLoopEnd}
-                data={sample.getAudioData()}
+                data={data ?? NO_AUDIO}
                 loopStart={sample.loopStart}
                 loopEnd={sample.loopEnd}
                 sampleRate={sample.sampleRate}
@@ -105,7 +112,7 @@ export function SampleEditor({
                     />
                 </div>
                 <ZoomSlider
-                    sampleLength={sample.getAudioData().length}
+                    sampleLength={sample.sampleLength}
                     zoom={zoom}
                     onZoomChange={setZoom}
                 />
@@ -117,8 +124,8 @@ export function SampleEditor({
                     edits={edits}
                 />
                 <SampleTools
-                    sample={sample}
                     isLoading={audio.isLoading}
+                    onExportWav={audio.exportWav}
                     onNormalize={audio.normalize}
                     onAutoLoop={audio.autoLoop}
                     onReplaceAudio={audio.replaceAudio}
@@ -129,7 +136,7 @@ export function SampleEditor({
                     isDisabled={audio.isLoading}
                     onStateChange={onEqualizerChange}
                     onApply={() => {
-                        audio.equalize(equalizer.settings);
+                        void audio.equalize(equalizer.settings);
                         // The audio now has the changes, previewing would apply them twice
                         onEqualizerChange({
                             ...equalizer,

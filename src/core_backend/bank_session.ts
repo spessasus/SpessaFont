@@ -1,9 +1,10 @@
-import type { ProgressFunction } from "spessasynth_core";
+import type { BasicSample, ProgressFunction } from "spessasynth_core";
 import { BankMirror } from "../synth_host/bank_mirror.ts";
 import { getObjectId } from "../utils/object_id.ts";
 import { BankDocument } from "./bank_document.ts";
 import { type LoadedBank, loadNewBank } from "./load_sound_bank.ts";
 import { MirrorSync } from "./mirror_sync.ts";
+import type { SampleDataSource } from "./sample_data_source.ts";
 import { BankStore } from "./bank_store.ts";
 import { HistoryManager } from "./history.ts";
 import { SynthBinding, type SynthHost } from "./synth_binding.ts";
@@ -30,7 +31,7 @@ let nextSessionId = 1;
  * One open sound bank: the document, its store and history, its synthesizer binding,
  * and where it was last saved.
  */
-export class BankSession {
+export class BankSession implements SampleDataSource {
     private saveHandle: SaveFileHandle | undefined;
     private writeFormat: WriteFormat;
     private isClosed = false;
@@ -75,6 +76,22 @@ export class BankSession {
             }
         });
         this.history = new HistoryManager(this.document, this.store);
+    }
+
+    private getMirrorSample(sample: BasicSample) {
+        const mirrored = this.mirror.getSample(getObjectId(sample));
+        if (!mirrored) {
+            throw new Error(`The mirror has no sample "${sample.name}".`);
+        }
+        return mirrored;
+    }
+
+    public readAudio(sample: BasicSample) {
+        return Promise.resolve(this.getMirrorSample(sample).getAudioData());
+    }
+
+    public readStoredData(sample: BasicSample) {
+        return Promise.resolve(this.getMirrorSample(sample).getStoredData());
     }
 
     /**

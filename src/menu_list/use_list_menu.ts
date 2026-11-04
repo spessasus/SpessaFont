@@ -27,6 +27,19 @@ import {
     EQ_MAX_GAIN,
     FLAT_EQUALIZER
 } from "../sample_editor/equalizer/equalizer.ts";
+import { logError } from "../utils/core_utils.ts";
+
+/**
+ * Runs an audio tool, which reads the audio first, and reports a failed read.
+ */
+async function runAudioTool(task: () => Promise<void>) {
+    try {
+        await task();
+    } catch (error) {
+        logError("Failed to process the sample audio.", error);
+        toast.error(String(error));
+    }
+}
 
 /**
  * Builds the right-click menu of the element lists for a selection.
@@ -83,27 +96,41 @@ export function useListMenu() {
         if (gain === undefined || gain === 0) {
             return;
         }
-        const { actions, isClipping } = createEqualizerActions(samples, {
-            ...FLAT_EQUALIZER,
-            gain
+        await runAudioTool(async () => {
+            const { actions, isClipping } = await createEqualizerActions(
+                session,
+                samples,
+                { ...FLAT_EQUALIZER, gain }
+            );
+            apply(actions);
+            if (isClipping) {
+                toast.error(t("sampleLocale.equalizer.clipping"));
+            }
         });
-        apply(actions);
-        if (isClipping) {
-            toast.error(t("sampleLocale.equalizer.clipping"));
-        }
     };
 
-    const autoLoop = (selection: ReadonlySet<BankEntity>) => {
-        const { actions, skipped } = createAutoLoopActions(
-            selectionOf(selection, isSample)
-        );
-        if (actions.length > 0) {
+    const autoLoop = (selection: ReadonlySet<BankEntity>) =>
+        runAudioTool(async () => {
+            const { actions, skipped } = await createAutoLoopActions(
+                session,
+                selectionOf(selection, isSample)
+            );
+            if (actions.length > 0) {
+                apply(actions);
+            }
+            if (skipped > 0) {
+                toast.error(t("contextMenu.skippedShort", { count: skipped }));
+            }
+        });
+
+    const normalize = (samples: ReadonlySet<BankEntity>) =>
+        runAudioTool(async () => {
+            const actions = await createNormalizeActions(
+                session,
+                selectionOf(samples, isSample)
+            );
             apply(actions);
-        }
-        if (skipped > 0) {
-            toast.error(t("contextMenu.skippedShort", { count: skipped }));
-        }
-    };
+        });
 
     return (selection: ReadonlySet<BankEntity>): ContextMenuEntry[] => {
         const hasClipboard =
@@ -159,11 +186,11 @@ export function useListMenu() {
                 "separator",
                 {
                     label: t("contextMenu.normalize"),
-                    onSelect: () => apply(createNormalizeActions(samples))
+                    onSelect: () => void normalize(samples)
                 },
                 {
                     label: t("contextMenu.autoLoop"),
-                    onSelect: () => autoLoop(samples)
+                    onSelect: () => void autoLoop(samples)
                 },
                 {
                     label: t("contextMenu.gain"),

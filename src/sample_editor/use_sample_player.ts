@@ -45,6 +45,7 @@ function createPlaybackBuffer(
  */
 export function useSamplePlayer(
     sample: BasicSample,
+    data: Float32Array | undefined,
     state: SamplePlayerState,
     playRequest: number,
     onStateChange: (state: SamplePlayerState) => void
@@ -61,16 +62,17 @@ export function useSamplePlayer(
     const playerRef = useRef<AudioBufferSourceNode | null>(null);
     const onEnded = useEffectEvent(() => onStateChange("stopped"));
 
-    const data = sample.getAudioData();
     const { sampleRate, loopStart, loopEnd, pitchCorrection } = sample;
     // A dependency of the playback effect, so it must keep its identity between renders
     const buffer = useMemo(
-        () => createPlaybackBuffer(context, data, sampleRate),
+        () =>
+            data ? createPlaybackBuffer(context, data, sampleRate) : undefined,
         [context, data, sampleRate]
     );
 
     useEffect(() => {
-        if (state === "stopped") {
+        // Plays once the audio is read
+        if (state === "stopped" || !buffer) {
             return;
         }
         const player = context.createBufferSource();

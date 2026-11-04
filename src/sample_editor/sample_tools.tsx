@@ -1,13 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { audioToWav, type BasicSample } from "spessasynth_core";
-import { downloadBlob } from "../utils/download_blob.ts";
-import { getExportChannels } from "./sample_audio.ts";
 
 interface SampleToolsProps {
-    sample: BasicSample;
     isLoading: boolean;
-    onNormalize: () => void;
-    onAutoLoop: () => void;
+    onExportWav: (isLoopOnly: boolean) => Promise<void>;
+    onNormalize: () => Promise<void>;
+    onAutoLoop: () => Promise<void>;
     onReplaceAudio: () => Promise<void>;
 }
 
@@ -15,24 +12,13 @@ interface SampleToolsProps {
  * WAV export (both channels of a stereo pair), normalize, auto loop, and audio replacement.
  */
 export function SampleTools({
-    sample,
     isLoading,
+    onExportWav,
     onNormalize,
     onAutoLoop,
     onReplaceAudio
 }: SampleToolsProps) {
     const { t } = useTranslation();
-
-    // The original audio and rate, not the playback buffer, which may be resampled
-    const exportWav = (isLoopOnly: boolean) => {
-        const wav = audioToWav(
-            getExportChannels(sample, isLoopOnly),
-            sample.sampleRate,
-            { normalizeAudio: false }
-        );
-        const name = isLoopOnly ? `${sample.name}_loop` : sample.name;
-        downloadBlob(new Blob([wav], { type: "audio/wav" }), `${name}.wav`);
-    };
 
     const buttonClass = `pretty_button ${isLoading ? "" : "responsive_button hover_brightness"}`;
     return (
@@ -40,14 +26,14 @@ export function SampleTools({
             <button
                 type={"button"}
                 className={buttonClass}
-                onClick={() => exportWav(false)}
+                onClick={() => void onExportWav(false)}
             >
                 {t("sampleLocale.tools.wavExport")}
             </button>
             <button
                 type={"button"}
                 className={buttonClass}
-                onClick={() => exportWav(true)}
+                onClick={() => void onExportWav(true)}
             >
                 {t("sampleLocale.tools.wavExportLoop")}
             </button>
@@ -55,7 +41,7 @@ export function SampleTools({
                 type={"button"}
                 className={buttonClass}
                 disabled={isLoading}
-                onClick={onNormalize}
+                onClick={() => void onNormalize()}
             >
                 {t("sampleLocale.tools.normalize")}
             </button>
@@ -64,7 +50,7 @@ export function SampleTools({
                 className={buttonClass}
                 disabled={isLoading}
                 title={t("sampleLocale.tools.autoLoopTitle")}
-                onClick={onAutoLoop}
+                onClick={() => void onAutoLoop()}
             >
                 {t("sampleLocale.tools.autoLoop")}
             </button>

@@ -104,12 +104,16 @@ export function createTestSession(host: SynthHost = new ProcessorHost()) {
 
 /**
  * Publishes changes a test made to the bank directly (outside the history) while setting up,
- * so the store's views start from the set-up bank.
+ * so the store's views and the mirror start from the set-up bank.
  */
 export function publishSetUp(session: BankSession) {
     const changes = new ChangeSet();
     const { presets, instruments, samples } = session.document;
-    changes.touch(...presets, ...instruments, ...samples);
+    changes.touch(...presets, ...instruments);
+    // The test may have given a sample new audio, which the mirror reads from the sample
+    for (const sample of samples) {
+        changes.touchSampleAudio(sample);
+    }
     changes.touchList("presets");
     changes.touchList("instruments");
     changes.touchList("samples");

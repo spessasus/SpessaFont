@@ -1,23 +1,26 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
-import type { BasicSample } from "spessasynth_core";
+import { audioToWav, type BasicSample } from "spessasynth_core";
 import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { logError } from "../utils/core_utils.ts";
 import { pickFile } from "../utils/pick_file.ts";
+import { downloadBlob } from "../utils/download_blob.ts";
 import {
     createAutoLoopActions,
     createEqualizerActions,
     createNormalizeActions,
-    createReplaceAudioActions
+    createReplaceAudioActions,
+    getExportChannels
 } from "./sample_audio.ts";
 import type { EqualizerSettings } from "./equalizer/equalizer.ts";
 
 /**
- * Normalizing, equalizing, auto looping and replacing the sample's audio, all undoable. All but
- * replacing also change the other half of a stereo pair. Playback stops first, because the
- * playing buffer is the old audio.
+ * Normalizing, equalizing, auto looping, replacing and exporting the sample's audio, all but the
+ * export undoable. All but replacing also change the other half of a stereo pair. Playback stops
+ * first, because the playing buffer is the old audio. The tools read the audio first, so they
+ * are async and disabled while one runs.
  * @param sample the edited sample
  * @param onBeforeChange called before the audio changes
  */
@@ -27,8 +30,20 @@ export function useSampleAudioCommands(
 ) {
     const { t } = useTranslation();
     const { audioEngine } = useAudioEngine();
-    const { apply } = useBankEditor();
+    const { session, apply } = useBankEditor();
     const [isLoading, setIsLoading] = useState(false);
+
+    const run = async (task: () => Promise<void>) => {
+        setIsLoading(true);
+        try {
+            await task();
+        } catch (error) {
+            logError("Failed to process the sample audio.", error);
+            toast.error(String(error));
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const replaceAudio = async () => {
         const file = await pickFile("audio/*");
@@ -36,65 +51,88 @@ export function useSampleAudioCommands(
             return;
         }
         onBeforeChange();
-        setIsLoading(true);
-        let decoded: AudioBuffer;
-        try {
-            decoded = await audioEngine.context.decodeAudioData(
-                await file.arrayBuffer()
+        await run(async () => {
+            let decoded: AudioBuffer;
+            try {
+                decoded = await audioEngine.context.decodeAudioData(
+                    await file.arrayBuffer()
+                );
+            } catch (error) {
+                logError("Failed to decode the audio file.", error);
+                toast.error(t("sampleLocale.tools.invalidAudioFile"));
+                return;
+            }
+            const channels = Array.from(
+                { length: decoded.numberOfChannels },
+                (_, i) => decoded.getChannelData(i)
             );
-        } catch (error) {
-            logError("Failed to decode the audio file.", error);
-            toast.error(t("sampleLocale.tools.invalidAudioFile"));
-            return;
-        } finally {
-            setIsLoading(false);
-        }
-        const channels = Array.from(
-            { length: decoded.numberOfChannels },
-            (_, i) => decoded.getChannelData(i)
-        );
-        const actions = createReplaceAudioActions(
-            sample,
-            channels,
-            decoded.sampleRate
-        );
-        if (actions) {
+            const actions = await createReplaceAudioActions(
+                session,
+                sample,
+                channels,
+                decoded.sampleRate
+            );
+            if (actions) {
+                apply(actions);
+            } else {
+                toast.error(t("sampleLocale.tools.tooManyChannels"));
+            }
+        });
+    };
+
+    const normalize = () =>
+        run(async () => {
+            const actions = await createNormalizeActions(session, [sample]);
+            if (actions.length === 0) {
+                return;
+            }
+            onBeforeChange();
             apply(actions);
-        } else {
-            toast.error(t("sampleLocale.tools.tooManyChannels"));
-        }
-    };
+        });
 
-    const normalize = () => {
-        const actions = createNormalizeActions([sample]);
-        if (actions.length === 0) {
-            return;
-        }
-        onBeforeChange();
-        apply(actions);
-    };
+    const equalize = (settings: EqualizerSettings) =>
+        run(async () => {
+            const { actions, isClipping } = await createEqualizerActions(
+                session,
+                [sample],
+                settings
+            );
+            onBeforeChange();
+            apply(actions);
+            if (isClipping) {
+                toast.error(t("sampleLocale.equalizer.clipping"));
+            }
+        });
 
-    const equalize = (settings: EqualizerSettings) => {
-        onBeforeChange();
-        const { actions, isClipping } = createEqualizerActions(
-            [sample],
-            settings
-        );
-        apply(actions);
-        if (isClipping) {
-            toast.error(t("sampleLocale.equalizer.clipping"));
-        }
-    };
+    const autoLoop = () =>
+        run(async () => {
+            const { actions } = await createAutoLoopActions(session, [sample]);
+            if (actions.length === 0) {
+                toast.error(t("sampleLocale.tools.tooShortToLoop"));
+                return;
+            }
+            onBeforeChange();
+            apply(actions);
+        });
 
-    const autoLoop = () => {
-        const { actions } = createAutoLoopActions([sample]);
-        if (actions.length === 0) {
-            toast.error(t("sampleLocale.tools.tooShortToLoop"));
-            return;
-        }
-        onBeforeChange();
-        apply(actions);
-    };
+    // The original audio and rate, not the playback buffer, which may be resampled
+    const exportWav = (isLoopOnly: boolean) =>
+        run(async () => {
+            const wav = audioToWav(
+                await getExportChannels(session, sample, isLoopOnly),
+                sample.sampleRate,
+                { normalizeAudio: false }
+            );
+            const name = isLoopOnly ? `${sample.name}_loop` : sample.name;
+            downloadBlob(new Blob([wav], { type: "audio/wav" }), `${name}.wav`);
+        });
 
-    return { isLoading, replaceAudio, normalize, equalize, autoLoop };
+    return {
+        isLoading,
+        replaceAudio,
+        normalize,
+        equalize,
+        autoLoop,
+        exportWav
+    };
 }

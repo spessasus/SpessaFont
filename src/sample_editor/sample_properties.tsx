@@ -25,7 +25,7 @@ export function SampleProperties({
 }: SamplePropertiesProps) {
     const { t } = useTranslation();
     const { loopStart, loopEnd, originalKey } = sample;
-    const length = sample.getAudioData().length;
+    const length = sample.sampleLength;
     return (
         <div className={"sample_properties"}>
             <div className={"info_field"}>

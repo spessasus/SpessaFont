@@ -38,7 +38,7 @@ function getStereoSuffix(type: SampleType) {
 export function useSampleEdits(sample: BasicSample) {
     const { apply } = useBankEditor();
     const linkedSample = sample.linkedSample;
-    const length = sample.getAudioData().length;
+    const length = sample.sampleLength;
 
     const changeProperty = <K extends EditableSampleProperty>(
         property: K,

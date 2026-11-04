@@ -81,7 +81,7 @@ export function OffsetGeneratorCell({
         // An offset cannot move past the whole sample
         const limit =
             zone instanceof BasicInstrumentZone
-                ? zone.sample.getAudioData().length - 1
+                ? zone.sample.sampleLength - 1
                 : Infinity;
         const offset = Math.min(limit, Math.max(-limit, typed));
         setOffset(offset);

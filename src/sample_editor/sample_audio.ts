@@ -1,5 +1,6 @@
 import { type BasicSample, SampleTypes } from "spessasynth_core";
 import { ReplaceSampleAudioAction } from "./replace_sample_audio_action.ts";
+import type { SampleDataSource } from "../core_backend/sample_data_source.ts";
 import { crossfadeLoop, findLoopPoints, getFadeLength } from "./auto_loop.ts";
 import {
     applyEqualizer,
@@ -51,8 +52,12 @@ export function getStereoGroups(samples: Iterable<BasicSample>) {
 /**
  * An action that changes the audio but keeps its length, so the loop points stay.
  */
-function replaceData(sample: BasicSample, data: Float32Array) {
-    return new ReplaceSampleAudioAction(sample, {
+function replaceData(
+    source: SampleDataSource,
+    sample: BasicSample,
+    data: Float32Array
+) {
+    return ReplaceSampleAudioAction.create(source, sample, {
         data,
         sampleRate: sample.sampleRate,
         loopStart: sample.loopStart,
@@ -61,43 +66,60 @@ function replaceData(sample: BasicSample, data: Float32Array) {
 }
 
 /**
+ * Reads the audio of each sample of each group.
+ */
+function readGroups(source: SampleDataSource, groups: BasicSample[][]) {
+    return Promise.all(
+        groups.map((group) =>
+            Promise.all(group.map((sample) => source.readAudio(sample)))
+        )
+    );
+}
+
+/**
  * Normalizes the samples. Both halves of a stereo pair are scaled by the same amount,
  * so the balance between them stays. Silent groups are skipped.
  */
-export function createNormalizeActions(samples: Iterable<BasicSample>) {
-    return getStereoGroups(samples).flatMap((group) => {
-        const peak = Math.max(...group.map((s) => getPeak(s.getAudioData())));
+export async function createNormalizeActions(
+    source: SampleDataSource,
+    samples: Iterable<BasicSample>
+) {
+    const groups = getStereoGroups(samples);
+    const audio = await readGroups(source, groups);
+    const actions = groups.flatMap((group, i) => {
+        const peak = Math.max(...audio[i].map((data) => getPeak(data)));
         return peak === 0
             ? []
-            : group.map((sample) =>
+            : group.map((sample, j) =>
                   replaceData(
+                      source,
                       sample,
-                      sample.getAudioData().map((value) => value / peak)
+                      audio[i][j].map((value) => value / peak)
                   )
               );
     });
+    return Promise.all(actions);
 }
 
 /**
  * Runs the samples (and their stereo halves) through the equalizer.
  * `isClipping` tells that the result goes past full scale and will clip when saved.
  */
-export function createEqualizerActions(
+export async function createEqualizerActions(
+    source: SampleDataSource,
     samples: Iterable<BasicSample>,
     settings: EqualizerSettings
 ) {
     let isClipping = false;
-    const actions = getStereoGroups(samples)
-        .flat()
-        .map((sample) => {
-            const data = applyEqualizer(
-                sample.getAudioData(),
-                sample.sampleRate,
-                settings
-            );
+    const all = getStereoGroups(samples).flat();
+    const audio = await Promise.all(all.map((s) => source.readAudio(s)));
+    const actions = await Promise.all(
+        all.map((sample, i) => {
+            const data = applyEqualizer(audio[i], sample.sampleRate, settings);
             isClipping ||= getPeak(data) > 1;
-            return replaceData(sample, data);
-        });
+            return replaceData(source, sample, data);
+        })
+    );
     return { actions, isClipping };
 }
 
@@ -106,15 +128,19 @@ export function createEqualizerActions(
  * found in their mix, so they stay in phase (unless their sample rates differ).
  * `skipped` counts the samples too short to loop.
  */
-export function createAutoLoopActions(samples: Iterable<BasicSample>) {
+export async function createAutoLoopActions(
+    source: SampleDataSource,
+    samples: Iterable<BasicSample>
+) {
     let skipped = 0;
     const loopGroups = getStereoGroups(samples).flatMap((group) =>
         group.every((s) => s.sampleRate === group[0].sampleRate)
             ? [group]
             : group.map((s) => [s])
     );
-    const actions = loopGroups.flatMap((group) => {
-        const channels = group.map((s) => s.getAudioData());
+    const audio = await readGroups(source, loopGroups);
+    const actions = loopGroups.flatMap((group, groupIndex) => {
+        const channels = audio[groupIndex];
         const length = Math.min(...channels.map((c) => c.length));
         const mix = Float32Array.from(
             { length },
@@ -128,17 +154,16 @@ export function createAutoLoopActions(samples: Iterable<BasicSample>) {
             return [];
         }
         const fade = getFadeLength(loop, sampleRate);
-        return group.map(
-            (sample, i) =>
-                new ReplaceSampleAudioAction(sample, {
-                    data: crossfadeLoop(channels[i], loop, fade),
-                    sampleRate,
-                    loopStart: loop.start,
-                    loopEnd: loop.end
-                })
+        return group.map((sample, i) =>
+            ReplaceSampleAudioAction.create(source, sample, {
+                data: crossfadeLoop(channels[i], loop, fade),
+                sampleRate,
+                loopStart: loop.start,
+                loopEnd: loop.end
+            })
         );
     });
-    return { actions, skipped };
+    return { actions: await Promise.all(actions), skipped };
 }
 
 /**
@@ -146,10 +171,14 @@ export function createAutoLoopActions(samples: Iterable<BasicSample>) {
  * otherwise just the sample. `isLoopOnly` cuts both channels to this sample's loop.
  * A shorter channel is padded with silence, as a WAV file needs channels of one length.
  */
-export function getExportChannels(sample: BasicSample, isLoopOnly: boolean) {
+export async function getExportChannels(
+    source: SampleDataSource,
+    sample: BasicSample,
+    isLoopOnly: boolean
+) {
     const cut = (data: Float32Array) =>
         isLoopOnly ? data.slice(sample.loopStart, sample.loopEnd) : data;
-    const own = cut(sample.getAudioData());
+    const own = cut(await source.readAudio(sample));
     const linked = sample.linkedSample;
     const isLeft = sample.sampleType === SampleTypes.leftSample;
     if (
@@ -158,7 +187,7 @@ export function getExportChannels(sample: BasicSample, isLoopOnly: boolean) {
     ) {
         return [own];
     }
-    const other = cut(linked.getAudioData());
+    const other = cut(await source.readAudio(linked));
     const length = Math.max(own.length, other.length);
     const pad = (data: Float32Array) => {
         if (data.length === length) {
@@ -176,36 +205,39 @@ export function getExportChannels(sample: BasicSample, isLoopOnly: boolean) {
  * Two channels go to a stereo pair (left and right), or are mixed to mono for a mono sample.
  * Returns undefined for more than two channels.
  */
-export function createReplaceAudioActions(
+export async function createReplaceAudioActions(
+    source: SampleDataSource,
     sample: BasicSample,
     channels: readonly Float32Array[],
     sampleRate: number
 ) {
+    const replace = (target: BasicSample, data: Float32Array) =>
+        ReplaceSampleAudioAction.create(source, target, { data, sampleRate });
+    let replacements: [BasicSample, Float32Array][];
     if (channels.length === 1) {
-        return [
-            new ReplaceSampleAudioAction(sample, {
-                data: channels[0],
-                sampleRate
-            })
-        ];
-    }
-    if (channels.length !== 2) {
+        replacements = [[sample, channels[0]]];
+    } else if (channels.length === 2) {
+        const [left, right] = channels;
+        const linked = sample.linkedSample;
+        if (linked && sample.sampleType === SampleTypes.leftSample) {
+            replacements = [
+                [sample, left],
+                [linked, right]
+            ];
+        } else if (linked && sample.sampleType === SampleTypes.rightSample) {
+            replacements = [
+                [sample, right],
+                [linked, left]
+            ];
+        } else {
+            replacements = [
+                [sample, left.map((value, i) => (value + right[i]) / 2)]
+            ];
+        }
+    } else {
         return undefined;
     }
-    const [left, right] = channels;
-    const linked = sample.linkedSample;
-    if (linked && sample.sampleType === SampleTypes.leftSample) {
-        return [
-            new ReplaceSampleAudioAction(sample, { data: left, sampleRate }),
-            new ReplaceSampleAudioAction(linked, { data: right, sampleRate })
-        ];
-    }
-    if (linked && sample.sampleType === SampleTypes.rightSample) {
-        return [
-            new ReplaceSampleAudioAction(sample, { data: right, sampleRate }),
-            new ReplaceSampleAudioAction(linked, { data: left, sampleRate })
-        ];
-    }
-    const mono = left.map((value, i) => (value + right[i]) / 2);
-    return [new ReplaceSampleAudioAction(sample, { data: mono, sampleRate })];
+    return Promise.all(
+        replacements.map(([target, data]) => replace(target, data))
+    );
 }
