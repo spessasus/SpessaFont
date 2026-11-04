@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import type { BasicInstrument, BasicPreset } from "spessasynth_core";
 import "./stats.css";
+import type { ZoneView } from "../core_backend/entity_views.ts";
 import { EditIcon } from "../utils/icons/edit_icons.tsx";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
@@ -8,7 +8,12 @@ import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
 /**
  * Counts the generators and modulators of all zones, including the global ones.
  */
-function countZoneData(elements: readonly (BasicPreset | BasicInstrument)[]) {
+function countZoneData(
+    elements: Iterable<{
+        readonly globalZone: ZoneView;
+        readonly zones: readonly ZoneView[];
+    }>
+) {
     let generators = 0;
     let modulators = 0;
     for (const element of elements) {
@@ -44,18 +49,21 @@ export function BankInfoStats({
 }: BankInfoStatsProps) {
     const { t } = useTranslation();
     const { session } = useBankEditor();
-    // The counts below read the mutable bank, so re-render on every change
-    useBankSnapshot(session.store, (s) => s.revision);
-    const bank = session.document.bank;
+    const views = useBankSnapshot(session.store, (s) => s.views);
+    const info = useBankSnapshot(session.store, (s) => s.info);
 
-    const instrumentData = countZoneData(bank.instruments);
-    const presetData = countZoneData(bank.presets);
-    const compressed = bank.samples.filter((s) => s.isCompressed).length;
+    const instrumentData = countZoneData(views.instruments.values());
+    const presetData = countZoneData(views.presets.values());
+    let compressed = 0;
+    for (const sample of views.samples.values()) {
+        if (sample.isCompressed) {
+            compressed++;
+        }
+    }
+    const sampleCount = views.sampleOrder.length;
     const compressedPercent =
-        bank.samples.length > 0
-            ? Math.round((compressed / bank.samples.length) * 100)
-            : 0;
-    const { version, soundEngine, software = "" } = bank.soundBankInfo;
+        sampleCount > 0 ? Math.round((compressed / sampleCount) * 100) : 0;
+    const { version, soundEngine, software = "" } = info;
     const versionString = `${version.major}.${version.minor.toString().padStart(2, "0")}`;
 
     return (
@@ -84,7 +92,7 @@ export function BankInfoStats({
             >
                 <Stat
                     label={t("bankInfo.defaultModulators")}
-                    value={bank.defaultModulators.length}
+                    value={views.defaultModulators.length}
                 />
                 <EditIcon />
             </button>
@@ -95,7 +103,7 @@ export function BankInfoStats({
                 </span>
                 <Stat
                     label={t("bankInfo.count")}
-                    value={bank.instruments.length}
+                    value={views.instrumentOrder.length}
                 />
                 <Stat
                     label={t("bankInfo.generatorCount")}
@@ -109,7 +117,10 @@ export function BankInfoStats({
 
             <div className={"stat_group single_stat"}>
                 <span className={"stat_label"}>{t("bankInfo.presets")}</span>
-                <Stat label={t("bankInfo.count")} value={bank.presets.length} />
+                <Stat
+                    label={t("bankInfo.count")}
+                    value={views.presetOrder.length}
+                />
                 <Stat
                     label={t("bankInfo.generatorCount")}
                     value={presetData.generators}
@@ -122,7 +133,7 @@ export function BankInfoStats({
 
             <div className={"stat_group single_stat"}>
                 <span className={"stat_label"}>{t("bankInfo.samples")}</span>
-                <Stat label={t("bankInfo.count")} value={bank.samples.length} />
+                <Stat label={t("bankInfo.count")} value={sampleCount} />
                 <Stat
                     label={t("bankInfo.compressed")}
                     value={`${compressed} (${compressedPercent}%)`}
