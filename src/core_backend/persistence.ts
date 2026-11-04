@@ -29,6 +29,16 @@ export function getInitialWriteFormat(bank: BasicSoundBank): WriteFormat {
 }
 
 /**
+ * The format a save writes, with "auto" meaning the last one.
+ */
+export function resolveWriteFormat(
+    format: SaveFormat,
+    lastWriteFormat: WriteFormat
+) {
+    return format === "auto" ? lastWriteFormat : format;
+}
+
+/**
  * Writes the bank in the requested format.
  * Explicit SF2 and SF3 saves decompress or compress the samples in place first.
  */
@@ -39,7 +49,7 @@ export async function encodeSoundBank(
     progressFunction?: ProgressFunction
 ): Promise<EncodedSoundBank> {
     const options = { progressFunction, software: SOFTWARE_NAME };
-    const target = format === "auto" ? lastWriteFormat : format;
+    const target = resolveWriteFormat(format, lastWriteFormat);
     let binary: ArrayBuffer;
     switch (target) {
         case "sf2":

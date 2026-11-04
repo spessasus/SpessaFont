@@ -3,6 +3,7 @@ import {
     BasicInstrumentZone,
     type BasicPreset,
     GeneratorLimits,
+    type GeneratorType,
     GeneratorTypes
 } from "spessasynth_core";
 import { SetGeneratorAction } from "./set_generator_action.ts";
@@ -13,6 +14,7 @@ import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 import type { GeneratorRowType } from "../generator_row_type.ts";
 import type { ZoneColumn } from "../zone_columns.ts";
 import { getColumnZones } from "./column_zones.ts";
+import { getGeneratorOptions } from "../generator_options.ts";
 
 const EXCLUSIVE_CLASS_COLORS = 10;
 
@@ -22,6 +24,20 @@ function getExclusiveClassColor(exclusiveClass: number) {
 }
 
 const identity = (v: number) => v;
+
+/**
+ * The range of a generator in an instrument or a preset zone.
+ * spessasynth_core 4.4.5 has no preset ranges for generators 61 to 88, so a preset offset there
+ * may span the whole instrument range in either direction. Preset ranges in core remove this.
+ */
+function getGeneratorRange(generator: GeneratorType, isInstrument: boolean) {
+    const { min, max, presetMin, presetMax } = GeneratorLimits[generator];
+    if (isInstrument) {
+        return { min, max };
+    }
+    const span = max - min;
+    return { min: presetMin ?? -span, max: presetMax ?? span };
+}
 
 interface NumberGeneratorCellProps {
     element: BasicPreset | BasicInstrument;
@@ -51,9 +67,10 @@ export function NumberGeneratorCell({
     const textValue = toText(value);
 
     const limits = GeneratorLimits[generator];
-    const isInstrument = element instanceof BasicInstrument;
-    const min = isInstrument ? limits.min : (limits.presetMin ?? limits.min);
-    const max = isInstrument ? limits.max : (limits.presetMax ?? limits.max);
+    const { min, max } = getGeneratorRange(
+        generator,
+        element instanceof BasicInstrument
+    );
 
     let placeholder = toText(limits.def);
     if (
@@ -103,7 +120,8 @@ export function NumberGeneratorCell({
     );
     const className = `generator_cell ${isModulated ? "modulated" : ""}`;
 
-    if (generator === GeneratorTypes.sampleModes) {
+    const options = getGeneratorOptions(generator);
+    if (options) {
         return (
             <td className={className} colSpan={colSpan}>
                 <select
@@ -118,18 +136,11 @@ export function NumberGeneratorCell({
                     }
                 >
                     <option value={"null"}>{"-"}</option>
-                    <option value={0}>
-                        {t("soundBankLocale.loopingModes.noLoop")}
-                    </option>
-                    <option value={1}>
-                        {t("soundBankLocale.loopingModes.loop")}
-                    </option>
-                    <option value={2}>
-                        {t("soundBankLocale.loopingModes.startOnRelease")}
-                    </option>
-                    <option value={3}>
-                        {t("soundBankLocale.loopingModes.loopUntilRelease")}
-                    </option>
+                    {options.map((option) => (
+                        <option value={option.value} key={option.value}>
+                            {t(option.label)}
+                        </option>
+                    ))}
                 </select>
             </td>
         );

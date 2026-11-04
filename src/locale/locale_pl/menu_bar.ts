@@ -12,6 +12,9 @@ export const MenuBarLocale = {
         warnSF2:
             "Ten bank dźwiękowy zawiera skompresowane próbki. " +
             "Zapisanie go w formacie SF2 bezpowrotnie pogorszy ich jakość. Czy na pewno chcesz kontynuować?",
+        warnSFEData:
+            "Ten bank dźwiękowy używa generatorów lub modulatorów SpessaSynth, które zapisują tylko pliki SFE. " +
+            "Zapis w formacie {{format}} je pominie. Czy na pewno chcesz kontynuować?",
         fullscreen: "Pełny ekran",
         about: "O programie"
     },

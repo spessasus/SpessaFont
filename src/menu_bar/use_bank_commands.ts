@@ -10,6 +10,14 @@ import {
 import { showToastDialog } from "../toasts/show_toast_dialog.tsx";
 import { yieldToPaint } from "../utils/yield_to_paint.ts";
 import { logError } from "../utils/core_utils.ts";
+import { hasSFEOnlyData } from "../core_backend/sfe_data.ts";
+
+const FORMAT_NAMES = {
+    sf2: "SF2",
+    sf3: "SF3",
+    dls: "DLS",
+    sf4: "SFE"
+} as const;
 
 /**
  * The menu bar commands for the active bank, with their toasts.
@@ -72,25 +80,45 @@ export function useBankCommands(
         toast.success(t("loadingAndSaving.savedSuccessfully"), { id });
     };
 
-    const save = (format: SaveFormat) => {
-        if (!session) return;
-        const isLossy =
-            format === "sf2" &&
-            session.document.samples.some((s) => s.isCompressed);
-        if (!isLossy) {
+    /**
+     * Asks about each warning in turn, and saves once all of them are confirmed.
+     */
+    const confirmAndSave = (format: SaveFormat, warnings: string[]) => {
+        const [warning, ...rest] = warnings;
+        if (warning === undefined) {
             void performSave(format);
             return;
         }
         showToastDialog({
-            content: t("menuBarLocale.file.warnSF2"),
+            content: warning,
             buttons: [
                 {
                     label: t("yes"),
-                    onClick: () => void performSave(format)
+                    onClick: () => confirmAndSave(format, rest)
                 },
                 { label: t("no") }
             ]
         });
+    };
+
+    const save = (format: SaveFormat) => {
+        if (!session) return;
+        const target = session.getWriteFormat(format);
+        const warnings = new Array<string>();
+        if (target !== "sf4" && hasSFEOnlyData(session.document.bank)) {
+            warnings.push(
+                t("menuBarLocale.file.warnSFEData", {
+                    format: FORMAT_NAMES[target]
+                })
+            );
+        }
+        if (
+            format === "sf2" &&
+            session.document.samples.some((s) => s.isCompressed)
+        ) {
+            warnings.push(t("menuBarLocale.file.warnSF2"));
+        }
+        confirmAndSave(format, warnings);
     };
 
     const removeUnusedElements = () => {

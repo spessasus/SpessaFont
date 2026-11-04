@@ -27,6 +27,13 @@ export const INSTRUMENT_ROWS: GeneratorRowType[] = [
         precision: 2
     },
     {
+        generator: GeneratorTypes.amplitude,
+        fromGenerator: (v) => v / 10,
+        toGenerator: (v) => v * 10,
+        precision: 1,
+        unit: "percent"
+    },
+    {
         generator: GeneratorTypes.pan,
         unit: "pan"
     },
@@ -63,6 +70,12 @@ export const INSTRUMENT_ROWS: GeneratorRowType[] = [
         unit: "dB"
     },
     {
+        generator: GeneratorTypes.maxFilterFc,
+        fromGenerator: ac2hz,
+        toGenerator: hz2ac,
+        unit: "Hz"
+    },
+    {
         generator: GeneratorTypes.delayVolEnv,
         highlight: true,
         fromGenerator: tc2s,
@@ -96,6 +109,22 @@ export const INSTRUMENT_ROWS: GeneratorRowType[] = [
     },
     {
         generator: GeneratorTypes.sustainVolEnv,
+        highlight: true,
+        fromGenerator: cb2db,
+        toGenerator: db2cb,
+        precision: 1,
+        unit: "dB"
+    },
+    {
+        generator: GeneratorTypes.decay2VolEnv,
+        highlight: true,
+        fromGenerator: tc2s,
+        toGenerator: s2tc,
+        precision: 3,
+        unit: "sec"
+    },
+    {
+        generator: GeneratorTypes.sustain2VolEnv,
         highlight: true,
         fromGenerator: cb2db,
         toGenerator: db2cb,
@@ -179,7 +208,73 @@ export const INSTRUMENT_ROWS: GeneratorRowType[] = [
         unit: "cent"
     },
     {
+        generator: GeneratorTypes.delayModEnv2,
+        fromGenerator: tc2s,
+        toGenerator: s2tc,
+        precision: 3,
+        unit: "sec"
+    },
+    {
+        generator: GeneratorTypes.attackModEnv2,
+        fromGenerator: tc2s,
+        toGenerator: s2tc,
+        precision: 3,
+        unit: "sec"
+    },
+    {
+        generator: GeneratorTypes.holdModEnv2,
+        fromGenerator: tc2s,
+        toGenerator: s2tc,
+        precision: 3,
+        unit: "sec"
+    },
+    {
+        generator: GeneratorTypes.decayModEnv2,
+        fromGenerator: tc2s,
+        toGenerator: s2tc,
+        precision: 3,
+        unit: "sec"
+    },
+    {
+        generator: GeneratorTypes.sustainModEnv2,
+        fromGenerator: (v) => v / 10,
+        toGenerator: (v) => v * 10,
+        precision: 1,
+        unit: "percent"
+    },
+    {
+        generator: GeneratorTypes.releaseModEnv2,
+        fromGenerator: tc2s,
+        toGenerator: s2tc,
+        precision: 3,
+        unit: "sec"
+    },
+    {
+        generator: GeneratorTypes.modEnv2ToFilterFc,
+        unit: "cent"
+    },
+    {
+        generator: GeneratorTypes.modEnv2ToPitch,
+        unit: "cent"
+    },
+    {
+        generator: GeneratorTypes.keyNumToModEnv2Hold,
+        unit: "cent"
+    },
+    {
+        generator: GeneratorTypes.keyNumToModEnv2Decay,
+        unit: "cent"
+    },
+    {
         generator: GeneratorTypes.delayModLFO,
+        highlight: true,
+        fromGenerator: tc2s,
+        toGenerator: s2tc,
+        precision: 3,
+        unit: "sec"
+    },
+    {
+        generator: GeneratorTypes.fadeModLFO,
         highlight: true,
         fromGenerator: tc2s,
         toGenerator: s2tc,
@@ -193,6 +288,23 @@ export const INSTRUMENT_ROWS: GeneratorRowType[] = [
         toGenerator: hz2ac,
         precision: 3,
         unit: "Hz"
+    },
+    {
+        generator: GeneratorTypes.modLfoRate,
+        highlight: true,
+        fromGenerator: (v) => v / 100,
+        toGenerator: (v) => v * 100,
+        precision: 2,
+        unit: "Hz"
+    },
+    {
+        generator: GeneratorTypes.modLfoWaveform,
+        highlight: true
+    },
+    {
+        generator: GeneratorTypes.modLfoStartPhase,
+        highlight: true,
+        unit: "degree"
     },
     {
         generator: GeneratorTypes.modLfoToPitch,
@@ -213,7 +325,22 @@ export const INSTRUMENT_ROWS: GeneratorRowType[] = [
         unit: "dB"
     },
     {
+        generator: GeneratorTypes.modLfoAmplitudeDepth,
+        highlight: true,
+        fromGenerator: (v) => v / 10,
+        toGenerator: (v) => v * 10,
+        precision: 1,
+        unit: "percent"
+    },
+    {
         generator: GeneratorTypes.delayVibLFO,
+        fromGenerator: tc2s,
+        toGenerator: s2tc,
+        precision: 3,
+        unit: "sec"
+    },
+    {
+        generator: GeneratorTypes.fadeVibLFO,
         fromGenerator: tc2s,
         toGenerator: s2tc,
         precision: 3,
@@ -227,12 +354,56 @@ export const INSTRUMENT_ROWS: GeneratorRowType[] = [
         unit: "Hz"
     },
     {
+        generator: GeneratorTypes.vibLfoRate,
+        fromGenerator: (v) => v / 100,
+        toGenerator: (v) => v * 100,
+        precision: 2,
+        unit: "Hz"
+    },
+    {
+        generator: GeneratorTypes.vibLfoWaveform
+    },
+    {
+        generator: GeneratorTypes.vibLfoStartPhase,
+        unit: "degree"
+    },
+    {
         generator: GeneratorTypes.vibLfoToPitch,
         unit: "cent"
     },
     {
+        generator: GeneratorTypes.vibLfoToFilterFc,
+        unit: "cent"
+    },
+    {
+        generator: GeneratorTypes.vibLfoToVolume,
+        fromGenerator: cb2db,
+        toGenerator: db2cb,
+        precision: 1,
+        unit: "dB"
+    },
+    {
+        generator: GeneratorTypes.vibLfoAmplitudeDepth,
+        fromGenerator: (v) => v / 10,
+        toGenerator: (v) => v * 10,
+        precision: 1,
+        unit: "percent"
+    },
+    {
         generator: GeneratorTypes.exclusiveClass,
         highlight: true
+    },
+    {
+        generator: GeneratorTypes.ignoreNoteOff,
+        highlight: true
+    },
+    {
+        generator: GeneratorTypes.delayVoice,
+        highlight: true,
+        fromGenerator: tc2s,
+        toGenerator: s2tc,
+        precision: 3,
+        unit: "sec"
     },
     {
         generator: GeneratorTypes.chorusEffectsSend,

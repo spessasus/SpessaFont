@@ -16,6 +16,14 @@ export const SoundBankLocale = {
         loopUntilRelease: "Until Release",
         startOnRelease: "On Release"
     },
+    switchStates: {
+        off: "Off",
+        on: "On"
+    },
+    lfoWaveforms: {
+        triangle: "Triangle",
+        sawtooth: "Sawtooth"
+    },
     units: {
         // keep the suffixes short
         cent: {
@@ -57,6 +65,11 @@ export const SoundBankLocale = {
         pan: {
             suf: "[-500; 500]",
             full: "-500 = Hard Left; 0 = Center; 500 = Hard Right"
+        },
+
+        degree: {
+            suf: "°",
+            full: "Degrees of a cycle"
         }
     }
 };

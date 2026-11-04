@@ -12,6 +12,9 @@ export const MenuBarLocale = {
         warnSF2:
             "This sound bank contains compressed samples. " +
             "Saving it as SF2 will result in quality loss. Are you sure you want to continue?",
+        warnSFEData:
+            "This sound bank uses SpessaSynth generators or modulators that only SFE files store. " +
+            "Saving it as {{format}} will leave them out. Are you sure you want to continue?",
         fullscreen: "Fullscreen",
         about: "About"
     },

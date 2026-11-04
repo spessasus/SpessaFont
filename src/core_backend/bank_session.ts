@@ -10,6 +10,7 @@ import { SynthBinding } from "./synth_binding.ts";
 import {
     encodeSoundBank,
     getInitialWriteFormat,
+    resolveWriteFormat,
     type SaveFormat,
     writeFile,
     type WriteFormat
@@ -47,6 +48,13 @@ export class BankSession {
             this.store,
             this.synth
         );
+    }
+
+    /**
+     * The format a save with this choice writes, "auto" meaning the last one.
+     */
+    public getWriteFormat(format: SaveFormat) {
+        return resolveWriteFormat(format, this.writeFormat);
     }
 
     /**

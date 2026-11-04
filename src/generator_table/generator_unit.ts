@@ -38,6 +38,10 @@ export const GENERATOR_UNITS = {
     pan: {
         suffix: "soundBankLocale.units.pan.suf",
         full: "soundBankLocale.units.pan.full"
+    },
+    degree: {
+        suffix: "soundBankLocale.units.degree.suf",
+        full: "soundBankLocale.units.degree.full"
     }
 } as const;
 

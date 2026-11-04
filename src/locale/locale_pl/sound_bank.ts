@@ -16,6 +16,14 @@ export const SoundBankLocale = {
         loopUntilRelease: "Do puszczenia klawisza",
         startOnRelease: "Przy puszczeniu klawisza"
     },
+    switchStates: {
+        off: "Wyłączone",
+        on: "Włączone"
+    },
+    lfoWaveforms: {
+        triangle: "Trójkąt",
+        sawtooth: "Piła"
+    },
     units: {
         // keep the suffixes short
         cent: {
@@ -57,6 +65,11 @@ export const SoundBankLocale = {
         pan: {
             suf: "[-500; 500]",
             full: "-500 = Twardo w lewo; 0 = Środek; 500 = Twardo w prawo"
+        },
+
+        degree: {
+            suf: "°",
+            full: "Stopnie cyklu"
         }
     }
 };
