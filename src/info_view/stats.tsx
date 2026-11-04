@@ -4,6 +4,8 @@ import type { ZoneView } from "../core_backend/entity_views.ts";
 import { EditIcon } from "../utils/icons/edit_icons.tsx";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
+import { checkBank } from "./bank_check/check_bank.ts";
+import { useMemo } from "react";
 
 /**
  * Counts the generators and modulators of all zones, including the global ones.
@@ -42,10 +44,12 @@ function Stat({ label, value, className = "" }: StatProps) {
 
 interface BankInfoStatsProps {
     onToggleDefaultModulators: () => void;
+    onToggleBankCheck: () => void;
 }
 
 export function BankInfoStats({
-    onToggleDefaultModulators
+    onToggleDefaultModulators,
+    onToggleBankCheck
 }: BankInfoStatsProps) {
     const { t } = useTranslation();
     const { session } = useBankEditor();
@@ -61,6 +65,7 @@ export function BankInfoStats({
         }
     }
     const sampleCount = views.sampleOrder.length;
+    const issueCount = useMemo(() => checkBank(views).length, [views]);
     const compressedPercent =
         sampleCount > 0 ? Math.round((compressed / sampleCount) * 100) : 0;
     const { version, soundEngine, software = "" } = info;
@@ -94,6 +99,15 @@ export function BankInfoStats({
                     label={t("bankInfo.defaultModulators")}
                     value={views.defaultModulators.length}
                 />
+                <EditIcon />
+            </button>
+
+            <button
+                type={"button"}
+                onClick={onToggleBankCheck}
+                className={"default_modulators_button single_stat"}
+            >
+                <Stat label={t("bankInfo.checkButton")} value={issueCount} />
                 <EditIcon />
             </button>
 
