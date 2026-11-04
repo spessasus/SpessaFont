@@ -2,12 +2,10 @@ import type {
     BasicInstrument,
     BasicPreset,
     BasicSample,
-    Modulator,
     SoundBankInfoData
 } from "spessasynth_core";
 import { type BankViews, updateBankViews } from "./entity_views.ts";
 import type { BankDocument } from "./bank_document.ts";
-import type { BankEntity } from "./bank_view.ts";
 import type { ChangeSet, RestoredAudio } from "./change_set.ts";
 
 export interface HistoryState {
@@ -26,15 +24,21 @@ export interface BankSnapshot {
      * Increases with every change to the bank or the history.
      */
     readonly revision: number;
+    /**
+     * The elements as identities, for the selection and the handlers. Render reads their
+     * data from `views`, never from these objects, which are edited in place.
+     */
     readonly presets: readonly BasicPreset[];
     readonly instruments: readonly BasicInstrument[];
     readonly samples: readonly BasicSample[];
+    /**
+     * A copy of the bank info.
+     */
     readonly info: Readonly<SoundBankInfoData>;
-    readonly defaultModulators: readonly Modulator[];
     readonly history: HistoryState;
     /**
-     * Plain, frozen copies of the elements. They replace the core-object fields above as the
-     * UI moves to them (issue #27).
+     * Plain, frozen copies of the elements, which keep their identity until their data
+     * changes (issue #27).
      */
     readonly views: BankViews;
 }
@@ -46,7 +50,6 @@ export interface BankSnapshot {
 export class BankStore {
     private readonly document: BankDocument;
     private readonly listeners = new Set<() => void>();
-    private readonly entityRevisions = new WeakMap<BankEntity, number>();
     private readonly audioRevisions = new WeakMap<BasicSample, number>();
     /**
      * Samples whose last audio change came back from the host.
@@ -76,26 +79,9 @@ export class BankStore {
             instruments: [...bank.instruments],
             samples: [...bank.samples],
             info: { ...bank.soundBankInfo },
-            defaultModulators: [...bank.defaultModulators],
             history: { canUndo: false, canRedo: false, isDirty: false },
             views: updateBankViews(bank, this.getAudioRevision)
         };
-    }
-
-    /**
-     * Presets show their instruments and instruments show their samples,
-     * so a change to a child is also a change to every element that uses it.
-     */
-    private bumpWithParents(entity: BankEntity, revision: number) {
-        if (this.entityRevisions.get(entity) === revision) {
-            return;
-        }
-        this.entityRevisions.set(entity, revision);
-        if ("linkedTo" in entity) {
-            for (const parent of entity.linkedTo) {
-                this.bumpWithParents(parent, revision);
-            }
-        }
     }
 
     /**
@@ -114,13 +100,6 @@ export class BankStore {
     }
 
     /**
-     * Returns the revision at which the entity or one of its children last changed, 0 if never.
-     */
-    public getEntityRevision(entity: BankEntity) {
-        return this.entityRevisions.get(entity) ?? 0;
-    }
-
-    /**
      * Publishes a new snapshot for the given changes and notifies the subscribers.
      */
     public commit(changes: ChangeSet, history: HistoryState) {
@@ -128,9 +107,6 @@ export class BankStore {
         const revision = previous.revision + 1;
         const bank = this.document.bank;
 
-        for (const entity of changes.entities) {
-            this.bumpWithParents(entity, revision);
-        }
         for (const sample of changes.audio) {
             this.audioRevisions.set(sample, revision);
             const restored = changes.restoredAudio.get(sample);
@@ -160,9 +136,6 @@ export class BankStore {
             info: changes.hasBankInfoChanged
                 ? { ...bank.soundBankInfo }
                 : previous.info,
-            defaultModulators: changes.hasBankInfoChanged
-                ? [...bank.defaultModulators]
-                : previous.defaultModulators,
             history: isHistoryChanged ? { ...history } : previous.history,
             views: updateBankViews(
                 bank,

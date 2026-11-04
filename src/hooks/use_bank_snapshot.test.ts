@@ -6,7 +6,6 @@ import { createTestSession } from "../test_utils/bank_fixture.ts";
 import { SetBankInfoAction } from "../info_view/set_bank_info_action.ts";
 import { SetGeneratorAction } from "../generator_table/cell/set_generator_action.ts";
 import { useBankSnapshot } from "./use_bank_snapshot.ts";
-import { useEntityRevision } from "./use_entity_revision.ts";
 import { useHistoryState } from "./use_history_state.ts";
 import { useSampleView } from "./use_sample_view.ts";
 import { useInstrumentView } from "./use_instrument_view.ts";
@@ -56,35 +55,6 @@ describe("useBankSnapshot", () => {
         });
         expect(renders.count).toBe(2);
         expect(result.current.name).toBe("Renamed");
-    });
-});
-
-describe("useEntityRevision", () => {
-    it("changes when the entity or an element it uses changes", () => {
-        const session = createTestSession();
-        const instrument = session.document.instruments[0];
-        const preset = instrument.linkedTo[0];
-        const otherInstrument = session.document.instruments[1];
-        const { result: instrumentRevision } = renderHook(() =>
-            useEntityRevision(session.store, instrument)
-        );
-        const { result: presetRevision } = renderHook(() =>
-            useEntityRevision(session.store, preset)
-        );
-        const { result: otherRevision } = renderHook(() =>
-            useEntityRevision(session.store, otherInstrument)
-        );
-        const before = {
-            instrument: instrumentRevision.current,
-            preset: presetRevision.current,
-            other: otherRevision.current
-        };
-
-        editPan(session);
-
-        expect(instrumentRevision.current).not.toBe(before.instrument);
-        expect(presetRevision.current).not.toBe(before.preset);
-        expect(otherRevision.current).toBe(before.other);
     });
 });
 

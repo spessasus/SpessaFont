@@ -35,23 +35,6 @@ describe("BankStore", () => {
         expect(after.info).toBe(before.info);
     });
 
-    it("bumps the revision of a changed element and of the elements that use it", () => {
-        const session = createTestSession();
-        const [presetA, presetB] = session.document.presets;
-        const sample = presetA.zones[0].instrument.zones[0].sample;
-        const instrument = presetA.zones[0].instrument;
-
-        session.history.do([
-            new EditSampleAction(sample, "originalKey", sample.originalKey, 70)
-        ]);
-
-        const revision = session.store.getSnapshot().revision;
-        expect(session.store.getEntityRevision(sample)).toBe(revision);
-        expect(session.store.getEntityRevision(instrument)).toBe(revision);
-        expect(session.store.getEntityRevision(presetA)).toBe(revision);
-        expect(session.store.getEntityRevision(presetB)).toBe(0);
-    });
-
     it("publishes a new list when names change, and new info when the info changes", () => {
         const session = createTestSession();
         const before = session.store.getSnapshot();
