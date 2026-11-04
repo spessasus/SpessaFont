@@ -18,7 +18,9 @@ export const SettingsLocale = {
             title: "Interpolation Method",
             nearestNeighbor: "Nearest Neighbor",
             linear: "Linear",
-            cubic: "Cubic"
+            cubic: "Cubic",
+            sinc32: "Sinc (32 point)",
+            sinc128: "Sinc (128 point, very slow)"
         },
         reverbLevel: "Reverb Level",
         chorusLevel: "Chorus Level",

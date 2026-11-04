@@ -11,6 +11,7 @@ import { showToastDialog } from "../toasts/show_toast_dialog.tsx";
 import { yieldToPaint } from "../utils/yield_to_paint.ts";
 import { logError } from "../utils/core_utils.ts";
 import { hasSFEOnlyData } from "../core_backend/sfe_data.ts";
+import { hasBankNumbersLostInSF2 } from "../core_backend/sf2_bank_numbers.ts";
 import { hasTextOutsideLatin1 } from "../core_backend/latin1_text.ts";
 
 const FORMAT_NAMES = {
@@ -109,6 +110,16 @@ export function useBankCommands(
         if (target !== "sf4" && hasSFEOnlyData(session.document.bank)) {
             warnings.push(
                 t("menuBarLocale.file.warnSFEData", {
+                    format: FORMAT_NAMES[target]
+                })
+            );
+        }
+        if (
+            (target === "sf2" || target === "sf3") &&
+            hasBankNumbersLostInSF2(session.document.bank)
+        ) {
+            warnings.push(
+                t("menuBarLocale.file.warnBankNumbers", {
                     format: FORMAT_NAMES[target]
                 })
             );

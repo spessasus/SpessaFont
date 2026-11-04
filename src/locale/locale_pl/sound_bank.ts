@@ -22,7 +22,8 @@ export const SoundBankLocale = {
     },
     lfoWaveforms: {
         triangle: "Trójkąt",
-        sawtooth: "Piła"
+        sawtooth: "Piła",
+        sine: "Sinus"
     },
     units: {
         // keep the suffixes short

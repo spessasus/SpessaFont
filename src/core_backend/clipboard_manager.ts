@@ -55,9 +55,8 @@ const MIDI_VALUES = 128;
  * next bank numbers (MSB, then LSB). Undefined when every patch is taken.
  */
 function findFreePatch(preset: BasicPreset, taken: ReadonlySet<string>) {
-    // A drum preset is told apart by its program only
-    const bankSteps = preset.isGMGSDrum ? 1 : MIDI_VALUES * MIDI_VALUES;
-    for (let bankStep = 0; bankStep < bankSteps; bankStep++) {
+    // Drum kits are told apart by their bank numbers too, so they step through banks as well
+    for (let bankStep = 0; bankStep < MIDI_VALUES * MIDI_VALUES; bankStep++) {
         const msb = preset.bankMSB + bankStep;
         const bankMSB = msb % MIDI_VALUES;
         const bankLSB =

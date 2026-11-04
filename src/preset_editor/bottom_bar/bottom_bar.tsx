@@ -75,30 +75,26 @@ export function BottomPresetBar({ preset }: BottomPresetBarProps) {
                 />
             </div>
 
-            {preset.isGMGSDrum ? null : (
-                <>
-                    <label>
-                        <span>{t("presetLocale.bankLSB")}</span>
-                        <WaitingInput
-                            type={"number"}
-                            min={0}
-                            max={127}
-                            value={preset.bankLSB}
-                            setValue={setNumber("bankLSB")}
-                        />
-                    </label>
-                    <label>
-                        <span>{t("presetLocale.bankMSB")}</span>
-                        <WaitingInput
-                            type={"number"}
-                            min={0}
-                            max={127}
-                            value={preset.bankMSB}
-                            setValue={setNumber("bankMSB")}
-                        />
-                    </label>
-                </>
-            )}
+            <label>
+                <span>{t("presetLocale.bankLSB")}</span>
+                <WaitingInput
+                    type={"number"}
+                    min={0}
+                    max={127}
+                    value={preset.bankLSB}
+                    setValue={setNumber("bankLSB")}
+                />
+            </label>
+            <label>
+                <span>{t("presetLocale.bankMSB")}</span>
+                <WaitingInput
+                    type={"number"}
+                    min={0}
+                    max={127}
+                    value={preset.bankMSB}
+                    setValue={setNumber("bankMSB")}
+                />
+            </label>
 
             <label>
                 <span>{t("presetLocale.programNumber")}</span>
@@ -115,7 +111,7 @@ export function BottomPresetBar({ preset }: BottomPresetBarProps) {
                 <ControllerSwitch
                     label={t("presetLocale.drums")}
                     value={preset.isGMGSDrum}
-                    // Drum presets have no bank numbers
+                    // A melodic bank is not a drum kit map, so the switch starts on bank 0
                     onChange={(isGMGSDrum) =>
                         changePatch({ isGMGSDrum, bankLSB: 0, bankMSB: 0 })
                     }

@@ -149,4 +149,28 @@ describe("ClipboardManager", () => {
         );
         expect(pasted?.name).toBe(preset.name);
     });
+
+    it("moves a drum kit to the next bank when every drum program is taken", () => {
+        const session = createTestSession();
+        const { bank } = session.document;
+        const kits = new Array<BasicPreset>();
+        for (let program = 0; program < 128; program++) {
+            const kit = new BasicPreset(bank);
+            kit.name = `Kit ${program}`;
+            kit.program = program;
+            kit.isGMGSDrum = true;
+            kits.push(kit);
+        }
+        bank.presets.push(...kits);
+
+        const [action] = new ClipboardManager().clonePresets(session.document, [
+            kits[0]
+        ]);
+        session.history.do([action]);
+
+        const pasted = session.document.presets.find(
+            (p) => p.isGMGSDrum && p.bankMSB === 1 && p.program === 0
+        );
+        expect(pasted?.name).toBe("Kit 0");
+    });
 });

@@ -50,6 +50,21 @@ describe("presetSorter", () => {
                 .map((p) => p.name)
         ).toEqual(["drums 0", "drums 8"]);
     });
+
+    it("orders drum kits of one program by bank MSB, then bank LSB", () => {
+        const presets = [
+            preset("GM2", 0, 120, 0, true),
+            preset("SC-88", 0, 0, 2, true),
+            preset("SC-55", 0, 0, 0, true)
+        ];
+
+        expect(
+            presets
+                .slice()
+                .sort(presetSorter)
+                .map((p) => p.name)
+        ).toEqual(["SC-55", "SC-88", "GM2"]);
+    });
 });
 
 describe("nameSorter", () => {

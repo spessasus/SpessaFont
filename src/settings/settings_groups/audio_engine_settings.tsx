@@ -113,6 +113,12 @@ export function AudioEngineSettings({
                     <option value={InterpolationTypes.hermite}>
                         {t("settingsLocale.audioEngine.interpolation.cubic")}
                     </option>
+                    <option value={InterpolationTypes.sinc32}>
+                        {t("settingsLocale.audioEngine.interpolation.sinc32")}
+                    </option>
+                    <option value={InterpolationTypes.sinc128}>
+                        {t("settingsLocale.audioEngine.interpolation.sinc128")}
+                    </option>
                 </select>
             </Setting>
 

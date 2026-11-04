@@ -27,7 +27,8 @@ export default defineConfig({
                     groups: [
                         {
                             name: "spessasynth_core",
-                            test: /node_modules[/\\]spessasynth_core/
+                            // Also matches a linked ../spessasynth_core (npm run debug)
+                            test: /[/\\]spessasynth_core[/\\]/
                         }
                     ]
                 }

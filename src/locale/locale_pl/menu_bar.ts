@@ -18,6 +18,9 @@ export const MenuBarLocale = {
         warnSFEData:
             "Ten bank dźwiękowy używa generatorów lub modulatorów SpessaSynth, które zapisują tylko pliki SFE. " +
             "Zapis w formacie {{format}} je pominie. Czy na pewno chcesz kontynuować?",
+        warnBankNumbers:
+            "Niektóre zestawy perkusyjne ustawiają bank MSB lub LSB, albo niektóre presety ustawiają oba. " +
+            "Pliki {{format}} nie mogą ich przechować, więc te presety zostaną zapisane z innymi numerami banku. Czy na pewno chcesz kontynuować?",
         fullscreen: "Pełny ekran",
         about: "O programie"
     },

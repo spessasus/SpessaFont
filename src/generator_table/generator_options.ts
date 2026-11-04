@@ -7,7 +7,8 @@ const SWITCH_OPTIONS = [
 
 const LFO_WAVEFORM_OPTIONS = [
     { value: 0, label: "soundBankLocale.lfoWaveforms.triangle" },
-    { value: 1, label: "soundBankLocale.lfoWaveforms.sawtooth" }
+    { value: 1, label: "soundBankLocale.lfoWaveforms.sawtooth" },
+    { value: 2, label: "soundBankLocale.lfoWaveforms.sine" }
 ] as const;
 
 /**

@@ -75,15 +75,17 @@ export function PresetDisplay({
                 <div className={"left_group"}>
                     <ExpandButton isOpen={isOpen} onToggle={onToggle} />
                     <span className={"monospaced midi_patch"}>
-                        {preset.isGMGSDrum ? (
-                            `DRUMS:${preset.program}`
-                        ) : (
+                        {preset.isGMGSDrum ? "DRUMS:" : null}
+                        {/* A drum kit shows its bank numbers only when it sets them */}
+                        {preset.isGMGSDrum &&
+                        preset.bankLSB === 0 &&
+                        preset.bankMSB === 0 ? null : (
                             <>
                                 <PatchNumber n={preset.bankLSB} />:
                                 <PatchNumber n={preset.bankMSB} />:
-                                <PatchNumber n={preset.program} />
                             </>
                         )}
+                        <PatchNumber n={preset.program} />
                     </span>
                     {onLink ? (
                         <button

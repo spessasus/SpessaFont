@@ -18,6 +18,9 @@ export const MenuBarLocale = {
         warnSFEData:
             "This sound bank uses SpessaSynth generators or modulators that only SFE files store. " +
             "Saving it as {{format}} will leave them out. Are you sure you want to continue?",
+        warnBankNumbers:
+            "Some drum kits set a bank MSB or LSB, or some presets set both. " +
+            "{{format}} files cannot store them, so those presets will be saved with other bank numbers. Are you sure you want to continue?",
         fullscreen: "Fullscreen",
         about: "About"
     },
