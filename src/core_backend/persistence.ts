@@ -9,15 +9,6 @@ export type SaveFormat = "auto" | "sf2" | "dls" | "sf3" | "sf4";
 
 export type WriteFormat = Exclude<SaveFormat, "auto">;
 
-export interface EncodedSoundBank {
-    binary: ArrayBuffer;
-    extension: WriteFormat;
-    /**
-     * The format the next "auto" save should use.
-     */
-    writeFormat: WriteFormat;
-}
-
 /**
  * Browsers fail to create a single Blob part larger than this.
  */
@@ -39,52 +30,70 @@ export function resolveWriteFormat(
 }
 
 /**
- * Writes the bank in the requested format.
- * Explicit SF2 and SF3 saves decompress or compress the samples in place first.
+ * The file extension a save in this format gets. SF2 and SF3 share a writer, and the result is
+ * SF3 when any sample is compressed: after an explicit SF3 save, or on "auto" with compressed
+ * samples (a loaded SF3, or samples pasted from one).
  */
-export async function encodeSoundBank(
+export function getSaveExtension(
     bank: BasicSoundBank,
     format: SaveFormat,
-    lastWriteFormat: WriteFormat,
+    target: WriteFormat
+): WriteFormat {
+    if (target !== "sf2" && target !== "sf3") {
+        return target;
+    }
+    if (format !== "auto") {
+        return format === "sf3" ? "sf3" : "sf2";
+    }
+    return bank.samples.some((s) => s.isCompressed) ? "sf3" : "sf2";
+}
+
+/**
+ * Explicit SF2 and SF3 saves decompress or compress the samples in place, so later "auto"
+ * saves keep the format.
+ */
+export async function convertSampleFormat(
+    bank: BasicSoundBank,
+    format: SaveFormat,
     progressFunction?: ProgressFunction
-): Promise<EncodedSoundBank> {
+) {
+    if (format === "sf2") {
+        await bank.setSampleFormat({ format: "pcm", progressFunction });
+    } else if (format === "sf3") {
+        // The encoder is only needed here, so it loads on the first SF3 save
+        const { encodeVorbis } = await import("./encode_vorbis.ts");
+        await bank.setSampleFormat({
+            format: "compressed",
+            compressionFunction: encodeVorbis,
+            progressFunction
+        });
+    }
+}
+
+/**
+ * Writes the bank in the format, as it is (see `convertSampleFormat`).
+ */
+export function encodeSoundBank(
+    bank: BasicSoundBank,
+    target: WriteFormat,
+    progressFunction?: ProgressFunction
+) {
     const options = { progressFunction, software: SOFTWARE_NAME };
-    const target = resolveWriteFormat(format, lastWriteFormat);
-    let binary: ArrayBuffer;
     switch (target) {
         case "sf2":
         case "sf3": {
-            if (format === "sf2") {
-                await bank.setSampleFormat({ format: "pcm", progressFunction });
-            } else if (format === "sf3") {
-                // The encoder is only needed here, so it loads on the first SF3 save
-                const { encodeVorbis } = await import("./encode_vorbis.ts");
-                await bank.setSampleFormat({
-                    format: "compressed",
-                    compressionFunction: encodeVorbis,
-                    progressFunction
-                });
-            }
             // An SF2 write keeps compressed samples compressed, which preserves SF3 on "auto"
-            binary = bank.writeSF2(options);
-            break;
+            return bank.writeSF2(options);
         }
 
         case "sf4": {
-            binary = bank.writeSFE(options);
-            break;
+            return bank.writeSFE(options);
         }
 
         case "dls": {
-            binary = bank.writeDLS(options);
-            break;
+            return bank.writeDLS(options);
         }
     }
-    let extension = target;
-    if (target === "sf2" || target === "sf3") {
-        extension = bank.samples.some((s) => s.isCompressed) ? "sf3" : "sf2";
-    }
-    return { binary, extension, writeFormat: target };
 }
 
 function createBlob(binary: ArrayBuffer) {
@@ -99,34 +108,56 @@ function createBlob(binary: ArrayBuffer) {
 }
 
 /**
- * Writes the file with the File System Access API when available, otherwise downloads it.
- * Returns the file handle to reuse for the next save.
+ * The part of a `FileSystemFileHandle` a save uses.
+ */
+export interface SaveFileHandle {
+    readonly name: string;
+    createWritable(): Promise<{
+        write(data: ArrayBuffer): Promise<void>;
+        close(): Promise<void>;
+    }>;
+}
+
+/**
+ * Asks where to save before anything is converted or encoded, so a cancelled picker changes
+ * nothing. Returns the handle to write to, or undefined when the browser can only download.
  * Throws an `AbortError` when the user cancels the file picker.
- * @param binary the file contents
  * @param name the suggested file name
  * @param handle the handle from the previous save, if any
  * @param shouldPickNewFile show the file picker even if a handle exists ("save as")
  */
+export async function pickSaveFile(
+    name: string,
+    handle: SaveFileHandle | undefined,
+    shouldPickNewFile: boolean
+) {
+    if (!("showSaveFilePicker" in globalThis)) {
+        return undefined;
+    }
+    if (handle && !shouldPickNewFile) {
+        return handle;
+    }
+    return showSaveFilePicker({
+        id: "spessafont-save-file",
+        suggestedName: name
+    });
+}
+
+/**
+ * Writes the file to the picked handle, or downloads it when there is none.
+ * Returns the handle to reuse for the next save.
+ */
 export async function writeFile(
     binary: ArrayBuffer,
     name: string,
-    handle: FileSystemFileHandle | undefined,
-    shouldPickNewFile: boolean
+    handle: SaveFileHandle | undefined
 ) {
-    if ("showSaveFilePicker" in globalThis && (shouldPickNewFile || !handle)) {
-        handle = await showSaveFilePicker({
-            id: "spessafont-save-file",
-            suggestedName: name
-        });
-    }
-
     if (handle) {
         const writable = await handle.createWritable();
         await writable.write(binary);
         await writable.close();
         return handle;
     }
-
     downloadBlob(createBlob(binary), name);
     return undefined;
 }

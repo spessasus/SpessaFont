@@ -8,13 +8,21 @@ import { BankStore } from "./bank_store.ts";
 import { HistoryManager } from "./history.ts";
 import { SynthBinding } from "./synth_binding.ts";
 import {
+    convertSampleFormat,
     encodeSoundBank,
     getInitialWriteFormat,
+    getSaveExtension,
+    pickSaveFile,
     resolveWriteFormat,
+    type SaveFileHandle,
     type SaveFormat,
     writeFile,
     type WriteFormat
 } from "./persistence.ts";
+import {
+    captureBankFormat,
+    ConvertSamplesAction
+} from "./convert_samples_action.ts";
 
 let nextSessionId = 1;
 
@@ -23,7 +31,7 @@ let nextSessionId = 1;
  * and where it was last saved.
  */
 export class BankSession {
-    private saveHandle: FileSystemFileHandle | undefined;
+    private saveHandle: SaveFileHandle | undefined;
     private writeFormat: WriteFormat;
     private isClosed = false;
     public readonly id = nextSessionId++;
@@ -58,7 +66,8 @@ export class BankSession {
     }
 
     /**
-     * Encodes and writes the bank, then marks the current history position as saved.
+     * Saves the bank: asks for the file first, then converts the samples for an explicit SF2 or
+     * SF3 save (recorded in the history), encodes, writes, and marks the position as saved.
      * Throws when encoding or writing fails, including when the user cancels the file picker.
      */
     public async save(
@@ -66,20 +75,33 @@ export class BankSession {
         unnamed: string,
         progressFunction?: ProgressFunction
     ) {
-        const encoded = await encodeSoundBank(
-            this.document.bank,
-            format,
-            this.writeFormat,
-            progressFunction
-        );
-        this.saveHandle = await writeFile(
-            encoded.binary,
-            `${this.document.getBankName(unnamed)}.${encoded.extension}`,
+        const { bank } = this.document;
+        const target = this.getWriteFormat(format);
+        const extension = getSaveExtension(bank, format, target);
+        const name = `${this.document.getBankName(unnamed)}.${extension}`;
+        // An "auto" save whose contents no longer match the file (SF3 data for a .sf2 file)
+        // asks for a new file instead of writing over the old one
+        const isOtherFormat =
+            this.saveHandle !== undefined &&
+            !this.saveHandle.name.toLowerCase().endsWith(`.${extension}`);
+        const handle = await pickSaveFile(
+            name,
             this.saveHandle,
-            format !== "auto"
+            format !== "auto" || isOtherFormat
         );
-        this.writeFormat = encoded.writeFormat;
-        this.history.markSaved();
+
+        const before = captureBankFormat(bank);
+        await convertSampleFormat(bank, format, progressFunction);
+        const conversion = ConvertSamplesAction.between(bank, before);
+        if (conversion) {
+            this.history.do([conversion]);
+        }
+        // Edits made while the file is written are not in it, so they keep the bank dirty
+        const savedPosition = this.history.position;
+        const binary = encodeSoundBank(bank, target, progressFunction);
+        this.saveHandle = await writeFile(binary, name, handle);
+        this.writeFormat = target;
+        this.history.markSaved(savedPosition);
     }
 
     /**

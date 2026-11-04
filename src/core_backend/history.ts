@@ -160,10 +160,18 @@ export class HistoryManager {
     }
 
     /**
-     * Records the current position as the saved file contents.
+     * The history position, for `markSaved`.
      */
-    public markSaved() {
-        this.savedPosition = this.done.length;
+    public get position() {
+        return this.done.length;
+    }
+
+    /**
+     * Records the position as the saved file contents.
+     * @param position the position when the file was encoded, the current one by default
+     */
+    public markSaved(position = this.done.length) {
+        this.savedPosition = position;
         this.store.commit(new ChangeSet(), this.state);
     }
 }
