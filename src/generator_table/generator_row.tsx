@@ -1,4 +1,5 @@
 import "./cell/generator_cell.css";
+import type * as React from "react";
 import type { BasicInstrument, BasicPreset } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import { generatorLocaleMap } from "../utils/translated_options/generator_to_locale_map.ts";
@@ -16,9 +17,18 @@ interface GeneratorCellProps {
     row: GeneratorRowType;
     column: ZoneColumn;
     label: string;
+    selectedColumns: readonly ZoneColumn[];
+    onSelect: (event: React.MouseEvent) => void;
 }
 
-function GeneratorCell({ element, row, column, label }: GeneratorCellProps) {
+function GeneratorCell({
+    element,
+    row,
+    column,
+    label,
+    selectedColumns,
+    onSelect
+}: GeneratorCellProps) {
     const { generator } = row;
     if (isRangeGenerator(generator)) {
         return (
@@ -46,6 +56,9 @@ function GeneratorCell({ element, row, column, label }: GeneratorCellProps) {
             column={column}
             row={row}
             label={label}
+            isSelected={selectedColumns.includes(column)}
+            selectedColumns={selectedColumns}
+            onSelect={onSelect}
         />
     );
 }
@@ -57,12 +70,26 @@ interface GeneratorRowProps {
      * The global zone column followed by the zone columns.
      */
     columns: readonly ZoneColumn[];
+    /**
+     * The view ids of the selected zones in this row.
+     */
+    selectedZoneIds: ReadonlySet<number>;
+    onSelectCell: (zoneId: number, event: React.MouseEvent) => void;
 }
 
-export function GeneratorRow({ element, row, columns }: GeneratorRowProps) {
+export function GeneratorRow({
+    element,
+    row,
+    columns,
+    selectedZoneIds,
+    onSelectCell
+}: GeneratorRowProps) {
     const { t } = useTranslation();
     const name = t(generatorLocaleMap[row.generator]);
     const unit = row.unit ? GENERATOR_UNITS[row.unit] : undefined;
+    const selectedColumns = columns.filter((c) =>
+        selectedZoneIds.has(c.zone.id)
+    );
     return (
         <tr
             className={
@@ -85,6 +112,8 @@ export function GeneratorRow({ element, row, columns }: GeneratorRowProps) {
                         generator: name,
                         zone: column.name
                     })}
+                    selectedColumns={selectedColumns}
+                    onSelect={(e) => onSelectCell(column.zone.id, e)}
                 />
             ))}
         </tr>

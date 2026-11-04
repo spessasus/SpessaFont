@@ -1,3 +1,4 @@
+import type * as React from "react";
 import {
     BasicInstrument,
     type BasicPreset,
@@ -14,7 +15,11 @@ import type { GeneratorRowType } from "../generator_row_type.ts";
 import { getViewGenerator, type ZoneColumn } from "../zone_columns.ts";
 import { getColumnZones } from "./column_zones.ts";
 import { getGeneratorOptions } from "../generator_options.ts";
-import { parseGeneratorText } from "./parse_generator_text.ts";
+import {
+    applyCellEdit,
+    parseCellText,
+    parseGeneratorText
+} from "./parse_generator_text.ts";
 
 const EXCLUSIVE_CLASS_COLORS = 10;
 
@@ -44,13 +49,25 @@ interface NumberGeneratorCellProps {
     column: ZoneColumn;
     row: GeneratorRowType;
     label: string;
+    isSelected: boolean;
+    /**
+     * The selected cells of this row, which an edit to a selected cell changes too.
+     */
+    selectedColumns: readonly ZoneColumn[];
+    /**
+     * Ctrl or Shift and a click select cells, a plain click clears the selection.
+     */
+    onSelect: (event: React.MouseEvent) => void;
 }
 
 export function NumberGeneratorCell({
     element,
     column,
     row,
-    label
+    label,
+    isSelected,
+    selectedColumns,
+    onSelect
 }: NumberGeneratorCellProps) {
     const { t } = useTranslation();
     const { apply } = useBankEditor();
@@ -79,44 +96,61 @@ export function NumberGeneratorCell({
         placeholder = "-";
     }
 
-    const setGenerator = (newValue: number | null) =>
+    // Several selected cells of this row take one edit, each from its own value
+    const targets =
+        isSelected && selectedColumns.length > 1 ? selectedColumns : [column];
+
+    const setGenerators = (values: (number | null)[]) =>
         apply(
-            getColumnZones(element, column).map(
-                (z) =>
-                    new SetGeneratorAction(
-                        element,
-                        z,
-                        generator,
-                        z.getGenerator(generator, null),
-                        newValue
-                    )
+            targets.flatMap((target, i) =>
+                getColumnZones(element, target).map(
+                    (z) =>
+                        new SetGeneratorAction(
+                            element,
+                            z,
+                            generator,
+                            z.getGenerator(generator, null),
+                            values[i]
+                        )
+                )
             )
         );
 
     const commitText = (typedText: string) => {
-        if (typedText === textValue) {
+        if (typedText === textValue && targets.length === 1) {
             return textValue;
         }
         if (typedText === "") {
-            setGenerator(null);
+            setGenerators(targets.map(() => null));
             return "";
         }
-        const typed = Number(typedText);
-        if (Number.isNaN(typed)) {
+        const edit = parseCellText(typedText);
+        if (!edit) {
             return textValue;
         }
-        const newValue = parseGeneratorText(typed, toGenerator, min, max);
-        if (newValue === undefined) {
-            return textValue;
-        }
-        setGenerator(newValue);
-        return toText(newValue);
+        const values = targets.map((target) => {
+            // An unset generator changes from what the cell shows for it
+            const current =
+                getViewGenerator(target.zone, generator) ??
+                (isInstrument ? limits.def : 0);
+            const shown = Number(fromGenerator(current).toFixed(precision));
+            return (
+                parseGeneratorText(
+                    applyCellEdit(edit, shown),
+                    toGenerator,
+                    min,
+                    max
+                ) ?? current
+            );
+        });
+        setGenerators(values);
+        return toText(values[targets.indexOf(column)] ?? value);
     };
 
     const isModulated = zone.modulators.some(
         (m) => m.destination === generator
     );
-    const className = `generator_cell ${isModulated ? "modulated" : ""}`;
+    const className = `generator_cell ${isModulated ? "modulated" : ""} ${isSelected ? "selected" : ""}`;
 
     const options = getGeneratorOptions(generator);
     if (options) {
@@ -125,13 +159,13 @@ export function NumberGeneratorCell({
                 <select
                     aria-label={label}
                     value={value ?? "null"}
-                    onChange={(e) =>
-                        setGenerator(
+                    onChange={(e) => {
+                        const picked =
                             e.target.value === "null"
                                 ? null
-                                : Number(e.target.value)
-                        )
-                    }
+                                : Number(e.target.value);
+                        setGenerators(targets.map(() => picked));
+                    }}
                 >
                     <option value={"null"}>{"-"}</option>
                     {options.map((option) => (
@@ -153,7 +187,7 @@ export function NumberGeneratorCell({
         <td className={className} colSpan={colSpan}>
             <GeneratorCellInput
                 aria-label={label}
-                regex={/[^0-9-.]/g}
+                regex={/[^0-9-.+*x]/g}
                 type={"text"}
                 maxLength={10}
                 className={hasExclusiveClass ? "exclusive_class" : undefined}
@@ -164,6 +198,7 @@ export function NumberGeneratorCell({
                 }
                 placeholder={placeholder}
                 value={textValue}
+                onClick={onSelect}
                 onBlur={commitText}
             />
         </td>

@@ -42,6 +42,10 @@
     outline: outset var(--sample-item-color) 0.15rem;
 }
 
+.generator_cell.selected input {
+    background: var(--selection-color);
+}
+
 .generator_cell input:focus,
 .generator_cell select:focus {
     outline: outset var(--border-color) 0.15rem;
