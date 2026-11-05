@@ -1,77 +1,153 @@
-import { type ModulatorCurveType, ModulatorCurveTypes } from "spessasynth_core";
+import { ModulatorCurveTypes } from "spessasynth_core";
 import "./curve_picker.css";
-import { ModulatorCurvePicture } from "./curve_picture.tsx";
+import { type RefObject, useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { useEventListener } from "../../hooks/use_event_listener.ts";
+import { CurvePicture } from "./curve_picture.tsx";
+import { getCurveLabel } from "./curve_label.ts";
+import type { SpessaFontModulatorCurveType } from "./curve_shape.ts";
 
-export interface SpessaFontModulatorCurveType {
-    curveType: ModulatorCurveType;
-    bipolar: boolean;
-    positive: boolean;
+const ALL_CURVE_TYPES = Object.values(ModulatorCurveTypes).flatMap(
+    (curveType) => [
+        { curveType, positive: true, bipolar: false },
+        { curveType, positive: false, bipolar: false },
+        { curveType, positive: true, bipolar: true },
+        { curveType, positive: false, bipolar: true }
+    ]
+);
+
+const curveKey = (c: SpessaFontModulatorCurveType) =>
+    `${c.curveType}-${c.bipolar}-${c.positive}`;
+
+interface CurveOptionsProps {
+    label: string;
+    currentKey: string;
+    /**
+     * The whole picker, toggle included. A press outside of it closes the options.
+     */
+    pickerRef: RefObject<HTMLDivElement | null>;
+    onPick: (c: SpessaFontModulatorCurveType) => void;
+    onClose: () => void;
 }
 
-const allCurveTypes: SpessaFontModulatorCurveType[] = [];
-
-for (const key in ModulatorCurveTypes) {
-    const value = ModulatorCurveTypes[key as keyof typeof ModulatorCurveTypes];
-    allCurveTypes.push(
-        { curveType: value, positive: true, bipolar: false },
-        { curveType: value, positive: false, bipolar: false },
-        { curveType: value, positive: true, bipolar: true },
-        { curveType: value, positive: false, bipolar: true }
+/**
+ * Mounted only while the picker is open, so a closed picker does not listen to the document.
+ */
+function CurveOptions({
+    label,
+    currentKey,
+    pickerRef,
+    onPick,
+    onClose
+}: CurveOptionsProps) {
+    const { t } = useTranslation();
+    useEventListener(document, "pointerdown", (e) => {
+        if (
+            e.target instanceof Node &&
+            !pickerRef.current?.contains(e.target)
+        ) {
+            onClose();
+        }
+    });
+    return (
+        <div
+            className="modulator_curve_showcase pretty_outline"
+            role={"group"}
+            aria-label={label}
+        >
+            {ALL_CURVE_TYPES.map((c) => {
+                const key = curveKey(c);
+                const curveLabel = getCurveLabel(t, c);
+                return (
+                    <button
+                        type={"button"}
+                        key={key}
+                        aria-pressed={key === currentKey}
+                        aria-label={curveLabel}
+                        title={curveLabel}
+                        className={`plain_button modulator_curve_pick pretty_outline responsive_button ${key === currentKey ? "selected" : ""}`}
+                        onClick={() => onPick(c)}
+                    >
+                        <CurvePicture curve={c} />
+                    </button>
+                );
+            })}
+        </div>
     );
 }
 
-export function ModulatorCurvePicker({
-    curveType,
-    setCurveType,
-    isActive,
-    setActive,
-    setNotActive
-}: {
+interface CurvePickerProps {
+    /**
+     * Names the picker for screen readers, for example "Primary source curve".
+     */
+    label: string;
     curveType: SpessaFontModulatorCurveType;
-    setCurveType: (c: SpessaFontModulatorCurveType) => void;
-    id: string;
-    isActive: boolean;
-    setActive: () => void;
-    setNotActive: () => void;
-}) {
-    const handleClick = () => {
-        if (isActive) {
-            setNotActive();
-        } else {
-            setActive();
-        }
+    onChange: (c: SpessaFontModulatorCurveType) => void;
+    isOpen: boolean;
+    onOpenChange: (isOpen: boolean) => void;
+}
+
+/**
+ * A toggle that opens the curve options below it. Picking one or pressing Escape closes them
+ * and returns the focus to the toggle, as the focused option goes away.
+ */
+export function CurvePicker({
+    label,
+    curveType,
+    onChange,
+    isOpen,
+    onOpenChange
+}: CurvePickerProps) {
+    const { t } = useTranslation();
+    const pickerRef = useRef<HTMLDivElement>(null);
+    const toggleRef = useRef<HTMLButtonElement>(null);
+    const currentKey = curveKey(curveType);
+    const buttonLabel = `${label}: ${getCurveLabel(t, curveType)}`;
+
+    const close = () => {
+        onOpenChange(false);
+        toggleRef.current?.focus();
     };
-    const setCurve = (c: SpessaFontModulatorCurveType) => {
-        setNotActive();
-        setCurveType(c);
-    };
+
     return (
-        <div className="modulator_curve_picker">
-            {isActive ? (
-                <>
-                    <div className="modulator_curve_showcase pretty_outline">
-                        {allCurveTypes.map((c, index) => (
-                            <div
-                                key={index}
-                                className={`modulator_curve_pick pretty_outline responsive_button ${c.curveType === curveType.curveType && c.bipolar === curveType.bipolar && c.positive === curveType.positive ? "selected" : ""}`}
-                                onClick={() => setCurve(c)}
-                            >
-                                <ModulatorCurvePicture curve={c} />
-                            </div>
-                        ))}
-                    </div>
-                    <div className="pretty_outline" onClick={handleClick}>
-                        <ModulatorCurvePicture curve={curveType} />
-                    </div>
-                </>
-            ) : (
-                <div
-                    className="pretty_outline hover_brightness responsive_button"
-                    onClick={handleClick}
-                >
-                    <ModulatorCurvePicture curve={curveType} />
-                </div>
-            )}
+        <div
+            className="modulator_curve_picker"
+            ref={pickerRef}
+            onKeyDown={(e) => {
+                if (!isOpen || e.key !== "Escape") {
+                    return;
+                }
+                e.stopPropagation();
+                close();
+            }}
+        >
+            <button
+                type={"button"}
+                ref={toggleRef}
+                className={`plain_button pretty_outline responsive_button ${isOpen ? "" : "hover_brightness"}`}
+                aria-expanded={isOpen}
+                aria-label={buttonLabel}
+                title={buttonLabel}
+                onClick={() => onOpenChange(!isOpen)}
+            >
+                <CurvePicture curve={curveType} />
+            </button>
+            {isOpen ? (
+                <CurveOptions
+                    label={label}
+                    currentKey={currentKey}
+                    pickerRef={pickerRef}
+                    onPick={(c) => {
+                        close();
+                        // Picking the current curve only closes the options
+                        if (curveKey(c) !== currentKey) {
+                            onChange(c);
+                        }
+                    }}
+                    // A press outside keeps the focus where it went
+                    onClose={() => onOpenChange(false)}
+                />
+            ) : null}
         </div>
     );
 }

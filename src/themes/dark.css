@@ -1,0 +1,60 @@
+/*
+ * SpessaFont Dark
+ * The original dark theme, black panels with purple accents.
+ */
+:root,
+:root[data-theme="dark"] {
+    color-scheme: dark;
+
+    /* surfaces */
+    --darker-color-start: #000;
+    --darker-color-end: oklch(14.5% 0 0);
+    --lighter-color-start: oklch(16% 0 0);
+    --lighter-color-end: oklch(20.5% 0 0);
+    --selection-color: oklch(20.5% 0 0);
+    /* selected generator cells, a tint of the focus color so it shows on both row stripes */
+    --cell-selection-color: color-mix(
+        in oklch,
+        var(--focus-color) 35%,
+        transparent
+    );
+    --shadow-color: oklch(0% 0 0 / 20%);
+
+    /* text */
+    --font-color: oklch(95% 0 0);
+    --muted-font-color: oklch(95% 0 0 / 75%);
+    --warning-color: red;
+
+    /* accents */
+    --menu-bar-color: #320056ff;
+    --menu-border-color: #4c037a;
+    --primary-color: #320056ff;
+    --border-color: #4c037a;
+    /* focused fields, 3:1 or more on the panels */
+    --focus-color: #d3a3ff;
+    --light-primary-color: #d3a3ff;
+    --track-color: #333;
+    --track-border-color: oklch(30% 0 0);
+
+    /* element kinds */
+    --preset-item-color: #d42a2a;
+    --instrument-item-color: dodgerblue;
+    --sample-item-color: gold;
+
+    /* generator table, exclusive classes get a hue each at this lightness */
+    --exclusive-class-lightness: 70%;
+
+    /* drawings */
+    --wave-color: #320056ff;
+    --loop-start-color: green;
+    --loop-end-color: red;
+    --curve-color: #6e00b7;
+    --curve-axis-color: #555;
+
+    /* piano */
+    --piano-gap-color: #000;
+    --piano-label-color: #000;
+    --piano-white-key: linear-gradient(90deg, #bbb, #fff);
+    --piano-black-key: linear-gradient(140deg, #222, #000);
+    --piano-disabled-key: linear-gradient(65deg, #333, #888);
+}

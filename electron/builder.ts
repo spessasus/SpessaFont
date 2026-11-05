@@ -1,7 +1,15 @@
 import * as builder from "electron-builder";
+import { existsSync } from "node:fs";
 import path from "node:path";
 
 const projectDir = path.join(import.meta.dirname, "..");
+
+// The app is packaged from the web build, without it the window stays blank
+if (!existsSync(path.join(projectDir, "dist", "index.html"))) {
+    throw new Error(
+        "dist/index.html is missing. Build the app first with `npm run app:dist`."
+    );
+}
 
 await builder.build({
     projectDir,
@@ -22,6 +30,14 @@ await builder.build({
             icon: "public/favicon.ico",
             target: ["nsis", "portable"]
         },
+        // The default names have spaces, which GitHub turns into dots on upload, while
+        // latest.yml names the file with dashes, so the updater could not find the installer
+        nsis: {
+            artifactName: "${productName}-Setup-${version}.${ext}"
+        },
+        portable: {
+            artifactName: "${productName}-${version}-portable.${ext}"
+        },
         mac: {
             category: "Audio"
         },
@@ -29,12 +45,12 @@ await builder.build({
             "dist/assets/*",
             "electron/*.js",
             "package.json",
-            "dist/*.{js,html,css}",
+            // The icon and the manifest that index.html links to
+            "dist/*.{js,html,css,ico,png,webmanifest}",
             "public/*.png",
             "LICENSE",
-            "externals/sl-web-ogg/Ogg-COPYING",
-            "externals/sl-web-ogg/Vorbis-COPYING",
-            "externals/sl-web-ogg/LICENSE"
+            // libogg and libvorbis are compiled into the encoder
+            "licenses/*"
         ],
         fileAssociations: [
             {
@@ -47,6 +63,12 @@ await builder.build({
                 ext: "sf3",
                 name: "SoundFont3",
                 description: "Compressed SoundFont3 sound bank",
+                role: "Editor"
+            },
+            {
+                ext: "sf4",
+                name: "SoundFont4",
+                description: "SF4 sound bank",
                 role: "Editor"
             },
             {

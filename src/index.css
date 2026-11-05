@@ -1,55 +1,30 @@
+@import "./themes/themes.css";
+
 * {
     text-align: center;
     margin: 0;
     box-sizing: border-box;
 }
 
-#root {
-    height: 100lvh;
-    width: 100%;
-    background: black;
-    overflow-x: clip;
-    scrollbar-width: thin;
-    display: flex;
-    flex-direction: column;
-}
-
-/* Dark theme */
-#root * {
-    /* global variables */
-    --lighter-color-start: oklch(16% 0 0);
-    --lighter-color-end: oklch(20.5% 0 0);
+/* Shared sizes and fonts. The colors come from the theme files in src/themes/ */
+:root {
     --lighter-color: linear-gradient(
         201deg,
         var(--lighter-color-start),
         var(--lighter-color-end)
     );
-
-    --font-color: oklch(95% 0 0);
-    --top-index: 100;
-
-    --darker-color-start: #000;
-    --darker-color-end: oklch(14.5% 0 0);
     --darker-color: linear-gradient(
         31deg,
         var(--darker-color-start),
         var(--darker-color-end)
     );
 
+    --main-font: system-ui, "Noto Sans", "Open Sans", sans-serif;
+    --top-index: 100;
+
     --primary-border-radius: 0.5rem;
     --active-scale: 0.9;
     --menu-bar-height: 2rem;
-
-    /* theme colors */
-    --primary-color: #320056ff;
-    --border-color: #4c037a;
-    --light-primary-color: #d3a3ff;
-    --track-color: #333;
-    --track-border-color: oklch(30% 0 0);
-
-    --preset-item-color: darkred;
-    --instrument-item-color: dodgerblue;
-    --sample-item-color: gold;
 
     /*thanks for this bezier mozilla devtools*/
     --bouncy-transition: cubic-bezier(0.68, -0.55, 0.27, 1.55);
@@ -57,32 +32,22 @@
     --flex-gap: 0.5rem;
 }
 
-/* Light theme */
-#root.light_mode * {
-    --lighter-color-start: #efefef;
-    --lighter-color-end: #eee;
-
-    --darker-color-start: #fff;
-    --darker-color-end: #eee;
-
-    --font-color: #111;
-
-    --primary-color: #5f93ff;
-    --border-color: #0023c9;
-    --light-primary-color: #c5d9ff;
-
-    --track-color: #fff;
-    --track-border-color: #aaa;
-
-    --preset-item-color: red;
-    --instrument-item-color: deepskyblue;
-    --sample-item-color: #e58900;
+#root {
+    height: 100lvh;
+    width: 100%;
+    background: var(--darker-color-start);
+    overflow-x: clip;
+    scrollbar-width: thin;
+    /* Themes without their own scrollbar colors keep the native ones */
+    scrollbar-color: var(--scrollbar-colors, auto);
+    display: flex;
+    flex-direction: column;
 }
 
 .spessafont_main * {
     /*global styles*/
     color: var(--font-color);
-    font-family: system-ui, "Noto Sans", "Open Sans", sans-serif;
+    font-family: var(--main-font);
     transition: all 0.2s ease;
 }
 
@@ -109,10 +74,6 @@ input[type="number"] {
     -moz-appearance: textfield;
 }
 
-.hidden {
-    display: none !important;
-}
-
 .monospaced {
     /* This keeps the jetbrains and regular monospace height the same */
     font-size: 1rem;
@@ -129,9 +90,14 @@ input[type="number"] {
     padding: 0.3rem;
 }
 
+.pretty_input::placeholder {
+    color: var(--muted-font-color);
+    opacity: 1;
+}
+
 .pretty_input:focus {
-    border-color: var(--border-color);
-    outline: none;
+    border-color: var(--focus-color);
+    outline: 1px solid var(--focus-color);
 }
 
 .pretty_button {
@@ -159,6 +125,17 @@ input[type="number"] {
     transform: scale(var(--active-scale));
 }
 
+/* A button that looks like the element it replaces, for clickable text and icons */
+.plain_button {
+    all: unset;
+    cursor: pointer;
+}
+
+.plain_button:focus-visible {
+    outline: 2px solid var(--light-primary-color);
+    outline-offset: -2px;
+}
+
 .pretty_outline {
     background: var(--lighter-color-end);
     border-radius: var(--primary-border-radius);
@@ -167,18 +144,14 @@ input[type="number"] {
     padding: 0.2rem;
 }
 
-.disabled {
-    filter: grayscale(10);
-}
-
 .warning {
-    color: red !important;
+    color: var(--warning-color) !important;
 }
 
 input:focus,
 select:focus {
     transition: none;
-    outline: ridge var(--border-color) 0.2rem;
+    outline: ridge var(--focus-color) 0.2rem;
 }
 
 /* Commented for now because native scrollbars seem nice */

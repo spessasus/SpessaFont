@@ -1,22 +1,24 @@
-import {
-    createContext,
-    type Dispatch,
-    type SetStateAction,
-    useContext
-} from "react";
+import { createContext, useContext } from "react";
 
-export type MIDIAccessStatus = "waiting" | "granted" | "denied";
+export type MIDIAccessStatus = "waiting" | "granted" | "denied" | "unsupported";
 
-export const MIDIAccessContext = createContext<{
+export interface MIDIAccessContextType {
     accessStatus: MIDIAccessStatus;
+    /**
+     * The browser's message when access was denied.
+     */
     accessError: string | null;
     devices: MIDIInput[];
     selectedDevice: MIDIInput | null;
-    setSelectedDevice: Dispatch<SetStateAction<MIDIInput | null>>;
-} | null>(null);
+    setSelectedDevice: (device: MIDIInput | null) => void;
+}
 
-export const useMIDIAccess = () => {
+export const MIDIAccessContext = createContext<MIDIAccessContextType | null>(
+    null
+);
+
+export function useMIDIAccess() {
     const ctx = useContext(MIDIAccessContext);
     if (!ctx) throw new Error("Used without MIDIProvider context!");
     return ctx;
-};
+}

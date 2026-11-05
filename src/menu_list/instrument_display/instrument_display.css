@@ -10,7 +10,8 @@
     padding: 0.1rem 0.5rem;
 }
 
-.instrument_item span {
+.instrument_item span,
+.instrument_item_name {
     font-size: 0.9rem;
 }
 
@@ -25,7 +26,7 @@
     justify-content: center;
 }
 
-.instrument_item .left_buttons span {
+.instrument_item .left_buttons button {
     display: flex;
     align-items: center;
 }
@@ -40,7 +41,7 @@
 
 .instrument_item:hover,
 .instrument_item.selected {
-    background: var(--lighter-color-end);
+    background: var(--selection-color);
 }
 
 .instrument_item_name {

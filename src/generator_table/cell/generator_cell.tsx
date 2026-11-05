@@ -1,178 +1,133 @@
-import {
-    BasicInstrumentZone,
-    type BasicPresetZone,
-    BasicZone,
-    GeneratorTypes
-} from "spessasynth_core";
-import type { NumberGeneratorProps } from "../generator_row.tsx";
-import { type CSSProperties, useCallback, useMemo } from "react";
-import { SetGeneratorAction } from "./set_generator_action.ts";
-import { midiNoteToPitchClass } from "../../utils/note_name.ts";
-import { GeneratorCellInput } from "./generator_cell_input.tsx";
+import type * as React from "react";
+import { GeneratorTypes } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
-import { typedMemo } from "../../utils/typed_memo.ts";
+import {
+    type CellInputCommands,
+    GeneratorCellInput
+} from "./generator_cell_input.tsx";
+import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
+import type { ZoneView } from "../../core_backend/entity_views.ts";
+import { getViewZones, type ZoneColumn } from "../zone_columns.ts";
+import {
+    type CellContext,
+    createTextEditActions,
+    getCellDisplay
+} from "./cell_values.ts";
 
-function getDistinctColor(index: number, total = 10) {
-    const hue = ((index - 1) * (360 / total)) % 360;
-    const saturation = 255;
-    const lightness = 50;
-    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+/**
+ * Exclusive classes get one of this many hues, so neighboring classes look apart.
+ */
+const EXCLUSIVE_CLASS_HUES = 10;
+
+interface GeneratorCellProps {
+    context: CellContext;
+    column: ZoneColumn;
+    globalZone: ZoneView;
+    label: string;
+    gridKey: string;
+    isActive: boolean;
+    isSelected: boolean;
+    /**
+     * The selected cells of this row, which an edit to a selected cell changes too.
+     */
+    selectedColumns: readonly ZoneColumn[];
+    /**
+     * Ctrl or Shift and a click select cells, a plain click clears the selection.
+     */
+    onSelect: (event: React.MouseEvent) => void;
+    commands: CellInputCommands;
+    onContextMenu: (e: React.MouseEvent) => void;
 }
 
-type NumberGeneratorCellProps<T> = NumberGeneratorProps & {
-    zone: BasicZone;
-    linkedZone?: T;
-    colSpan: number;
-    min: number;
-    max: number;
-    def: number;
-};
-
-export const NumberGeneratorCell = typedMemo(function <
-    T extends BasicPresetZone | BasicInstrumentZone
->({
-    zone,
-    callback,
-    manager,
-    generator,
-    min,
-    max,
-    def,
-    linkedZone,
-    fromGenerator = (v) => v,
-    toGenerator = (v) => v,
-    precision = 0,
-    colSpan
-}: NumberGeneratorCellProps<T>) {
+/**
+ * A cell that takes typed text: a number, a key or velocity range, or a sample offset.
+ */
+export function GeneratorCell({
+    context,
+    column,
+    globalZone,
+    label,
+    gridKey,
+    isActive,
+    isSelected,
+    selectedColumns,
+    onSelect,
+    commands,
+    onContextMenu
+}: GeneratorCellProps) {
     const { t } = useTranslation();
-    const value = zone.getGenerator(generator, null);
-    const v2txt = useCallback(
-        (v: number | null) =>
-            v === null ? "" : fromGenerator(v).toFixed(precision),
-        [fromGenerator, precision]
-    );
+    const { apply } = useBankEditor();
+    const { generator } = context.row;
+    const display = getCellDisplay(context, column, globalZone);
+    const [firstValue] = display.values;
 
-    const textValue = v2txt(value);
+    // Several selected cells of this row take one edit, each from its own value
+    const targets =
+        isSelected && selectedColumns.length > 1 ? selectedColumns : [column];
 
-    let placeholder = "";
-    if (
-        zone instanceof BasicInstrumentZone &&
-        generator === GeneratorTypes.overridingRootKey
-    ) {
-        placeholder = `${zone.sample.originalKey} (${midiNoteToPitchClass(
-            zone.sample.originalKey
-        )})`;
-    } else if (zone instanceof BasicZone) {
-        placeholder = v2txt(def);
-        if (placeholder === "-1") {
-            placeholder = "-";
+    const didCommit = (typedText: string) => {
+        if (typedText === display.text && targets.length === 1) {
+            return true;
         }
-    }
+        const actions = createTextEditActions(context, targets, typedText);
+        if (!actions) {
+            return false;
+        }
+        if (actions.length > 0) {
+            apply(actions);
+        }
+        return true;
+    };
 
-    const modulated = useMemo(
-        () => zone.modulators.some((m) => m.destination === generator),
-        [generator, zone.modulators]
+    const isModulated = getViewZones(column).some((z) =>
+        z.modulators.some((m) => m.destination === generator)
     );
-
-    const style: CSSProperties = {};
-    if (generator === GeneratorTypes.exclusiveClass && value && value > 0) {
-        style.color = getDistinctColor(value);
-        style.fontWeight = "bold";
-    }
-
-    const setValue = useCallback(
-        (typedText: string) => {
-            if (textValue === typedText) {
-                return textValue;
-            }
-            let newValue: number | null = null;
-            if (typedText !== "") {
-                const num = Number.parseFloat(typedText);
-                const rawNum = Math.floor(toGenerator(num));
-                newValue = Math.max(min, Math.min(max, rawNum));
-            }
-            const actions = [
-                new SetGeneratorAction(
-                    zone,
-                    generator,
-                    value,
-                    newValue,
-                    callback
-                )
-            ];
-            if (linkedZone) {
-                actions.push(
-                    new SetGeneratorAction(
-                        linkedZone,
-                        generator,
-                        value,
-                        newValue,
-                        callback
-                    )
-                );
-            }
-            manager.modifyBank(actions);
-            return v2txt(newValue);
-        },
-        [
-            callback,
-            generator,
-            max,
-            min,
-            linkedZone,
-            manager,
-            textValue,
-            toGenerator,
-            v2txt,
-            value,
-            zone
-        ]
-    );
-
-    // loop playback special case
-    if (generator === GeneratorTypes.sampleModes) {
-        return (
-            <td className={`generator_cell`} colSpan={colSpan}>
-                <select
-                    value={value ?? "none"}
-                    onChange={(e) =>
-                        setValue(
-                            e.target.value === "null" ? "" : e.target.value
-                        )
-                    }
-                >
-                    <option value={"null"}>{"-"}</option>
-                    <option value={0}>
-                        {t("soundBankLocale.loopingModes.noLoop")}
-                    </option>
-                    <option value={1}>
-                        {t("soundBankLocale.loopingModes.loop")}
-                    </option>
-                    <option value={2}>
-                        {t("soundBankLocale.loopingModes.startOnRelease")}
-                    </option>
-                    <option value={3}>
-                        {t("soundBankLocale.loopingModes.loopUntilRelease")}
-                    </option>
-                </select>
-            </td>
-        );
-    }
+    const exclusiveClass =
+        typeof firstValue === "number" &&
+        firstValue > 0 &&
+        !display.isMixed &&
+        generator === GeneratorTypes.exclusiveClass
+            ? firstValue
+            : 0;
+    const [firstText, secondText] = display.parts;
 
     return (
         <td
-            className={`generator_cell ${modulated ? "modulated" : ""}`}
-            colSpan={colSpan}
+            className={`generator_cell ${isModulated ? "modulated" : ""} ${isSelected ? "selected" : ""}`}
+            colSpan={column.colSpan}
+            aria-selected={isSelected}
+            onContextMenu={onContextMenu}
         >
             <GeneratorCellInput
-                regex={/[^0-9-.]/g}
-                type={"text"}
-                maxLength={10}
-                style={style}
-                placeholder={placeholder}
-                value={textValue}
-                onBlur={setValue}
+                label={label}
+                title={
+                    display.isMixed
+                        ? t("toolsLocale.cells.stereoValues", {
+                              first: column.sample?.name ?? "",
+                              firstValue: firstText,
+                              second: column.linkedSample?.name ?? "",
+                              secondValue: secondText
+                          })
+                        : undefined
+                }
+                gridKey={gridKey}
+                isActive={isActive}
+                className={exclusiveClass > 0 ? "exclusive_class" : undefined}
+                style={
+                    exclusiveClass > 0
+                        ? {
+                              "--exclusive-class-hue":
+                                  ((exclusiveClass - 1) * 360) /
+                                  EXCLUSIVE_CLASS_HUES
+                          }
+                        : undefined
+                }
+                placeholder={display.placeholder}
+                value={display.text}
+                onClick={onSelect}
+                onCommit={didCommit}
+                commands={commands}
             />
         </td>
     );
-});
+}

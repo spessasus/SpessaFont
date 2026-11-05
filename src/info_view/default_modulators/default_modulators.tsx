@@ -1,61 +1,72 @@
-import { Modulator } from "spessasynth_core";
-import { useTranslation } from "react-i18next";
+import { BasicSoundBank, Modulator } from "spessasynth_core";
+import { Trans, useTranslation } from "react-i18next";
 import { ModulatorList } from "../../modulator_editing/modulator_list/modulator_list.tsx";
-import { type JSX, useCallback, useState } from "react";
-import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
-import type { ClipboardManager } from "../../core_backend/clipboard_manager.ts";
-import { SetDefaultModulators } from "./set_default_modulators.tsx";
-import { useAudioEngine } from "../../core_backend/audio_engine_context.ts";
+import { SetDefaultModulatorsAction } from "./set_default_modulators_action.ts";
+import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
+import { useBankSnapshot } from "../../hooks/use_bank_snapshot.ts";
 
-export function DefaultModulatorList({
-    manager,
-    clipboard,
-    ccOptions,
-    destinationOptions
-}: {
-    manager: SoundBankManager;
-    clipboard: ClipboardManager;
-    ccOptions: JSX.Element;
-    destinationOptions: JSX.Element;
-}) {
-    const [dmods, setDmods] = useState(manager.defaultModulators);
-    const {
-        audioEngine: { processor }
-    } = useAudioEngine();
-
+export function DefaultModulators() {
     const { t } = useTranslation();
+    const { session, apply } = useBankEditor();
+    const defaultModulators = useBankSnapshot(
+        session.store,
+        (s) => s.views.defaultModulators
+    );
+    // The bank's own list, read when an edit is applied
+    const getModulators = () => session.document.bank.defaultModulators;
+    const info = useBankSnapshot(session.store, (s) => s.info);
 
-    const update = useCallback(() => {
-        setDmods([...manager.defaultModulators]);
-        processor.clearCache();
-    }, [processor, manager.defaultModulators]);
-    if (dmods === undefined) {
-        return <></>;
-    }
-    const setDefaultModulators = (mods: Modulator[]) => {
-        if (manager === undefined) {
-            return;
-        }
-        processor.clearCache();
-        manager.modifyBank([
-            new SetDefaultModulators(update, mods, manager.defaultModulators)
+    const setDefaultModulators = (modulators: Modulator[]) => {
+        apply([
+            new SetDefaultModulatorsAction([...getModulators()], modulators)
         ]);
+    };
+
+    const resetDefaultModulators = () => {
+        // A new bank starts with core's standard list, as fresh copies
+        const standard = new BasicSoundBank().defaultModulators;
+        const current = getModulators();
+        const isStandard =
+            current.length === standard.length &&
+            current.every((mod, i) =>
+                Modulator.isIdentical(mod, standard[i], true)
+            );
+        if (!isStandard) {
+            setDefaultModulators(standard);
+        }
     };
 
     return (
         <div className={"default_modulators"}>
             <h2 className={"default_modulators_title"}>
-                {t("bankInfo.defaultModulatorsFor")}{" "}
-                <i>{manager.getBankName(t("bankInfo.unnamed"))}</i>:
+                <Trans
+                    i18nKey={"bankInfo.defaultModulatorsForBank"}
+                    values={{
+                        name:
+                            info.name.length > 0
+                                ? info.name
+                                : t("bankInfo.unnamed")
+                    }}
+                    components={{ bank: <i /> }}
+                />
             </h2>
             <ModulatorList
-                destinationOptions={destinationOptions}
-                ccOptions={ccOptions}
-                clipboardManager={clipboard}
-                modulatorList={dmods}
-                setModulatorList={setDefaultModulators}
+                modulatorList={defaultModulators}
+                getModulators={getModulators}
+                onModulatorListChange={setDefaultModulators}
                 defaultModulators={[]} // can't override default modulators when editing default modulators
-            ></ModulatorList>
+                extraActions={
+                    <button
+                        type={"button"}
+                        onClick={resetDefaultModulators}
+                        className={
+                            "modulator_main modulator_list_button hover_brightness"
+                        }
+                    >
+                        {t("bankInfo.resetDefaultModulators")}
+                    </button>
+                }
+            />
         </div>
     );
 }

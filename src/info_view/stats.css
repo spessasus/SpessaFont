@@ -40,23 +40,27 @@
     filter: brightness(1.2);
 }
 
-.sound_bank_info .default_modulators_button {
+.sound_bank_info .stats_panel_button {
     display: flex;
+    align-items: center;
     padding: 0;
+    font: inherit;
+    color: inherit;
 }
 
-.sound_bank_info .default_modulators_button,
-.sound_bank_info .default_modulators_button * {
+.sound_bank_info .stats_panel_button,
+.sound_bank_info .stats_panel_button * {
     cursor: pointer;
 }
 
-.sound_bank_info .default_modulators_button span:first-child {
+.sound_bank_info .stats_panel_button .stat_span {
+    flex-grow: 1;
     border-right: solid 1px var(--track-border-color);
     height: 100%;
     padding: 0.3rem;
 }
 
-.sound_bank_info .default_modulators_button svg {
+.sound_bank_info .stats_panel_button svg {
     margin-right: 0.5rem;
     height: 60%;
     width: auto;
@@ -73,7 +77,7 @@
     padding: 0;
 }
 
-.sound_bank_info .stats .stat_group > label {
+.sound_bank_info .stats .stat_group > .stat_label {
     border-bottom: 1px solid var(--track-border-color);
     padding: 0.3rem;
 }
@@ -82,13 +86,13 @@
     padding: 0.3rem;
 }
 
-.sound_bank_info .stats .stat_group span {
+.sound_bank_info .stats .stat_group > span {
     border: none;
     margin-top: auto;
 }
 
 .sound_bank_info .stats pre,
-.sound_bank_info .stats label {
+.sound_bank_info .stats .stat_label {
     font-size: 1rem;
 }
 

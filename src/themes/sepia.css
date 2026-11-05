@@ -1,0 +1,62 @@
+/*
+ * Sepia
+ * Warm parchment panels with brown ink.
+ */
+:root[data-theme="sepia"] {
+    color-scheme: light;
+
+    /* surfaces */
+    --darker-color-start: #f3ead9;
+    --darker-color-end: #efe5cd;
+    --lighter-color-start: #eee4c9;
+    --lighter-color-end: #eadfbd;
+    --selection-color: #e3d3ae;
+    /* selected generator cells, a tint of the focus color so it shows on both row stripes */
+    --cell-selection-color: color-mix(
+        in oklch,
+        var(--focus-color) 35%,
+        transparent
+    );
+    --shadow-color: rgb(74 58 38 / 15%);
+
+    /* text */
+    --font-color: #4a3a26;
+    --muted-font-color: #7d6a4f;
+    --warning-color: #9e1b0f;
+
+    /* accents */
+    --menu-bar-color: #c9a35e;
+    --menu-border-color: #a8813e;
+    --primary-color: #c9a35e;
+    --border-color: #a8813e;
+    --focus-color: #8a6a2e;
+    --light-primary-color: #d9b98a;
+    --track-color: #e6dcc3;
+    --track-border-color: #cdbc94;
+
+    /* element kinds */
+    --preset-item-color: #a8321e;
+    --instrument-item-color: #3e6a8a;
+    --sample-item-color: #9a6a10;
+
+    /* generator table, exclusive classes get a hue each at this lightness */
+    --exclusive-class-lightness: 28%;
+
+    /* drawings */
+    --wave-color: #8a5c26;
+    --loop-start-color: #5f7d26;
+    --loop-end-color: #a8321e;
+    --curve-color: #8a5c26;
+    --curve-axis-color: #cdbc94;
+
+    /* piano */
+    --piano-gap-color: #4a3a26;
+    --piano-label-color: #4a3a26;
+    --piano-white-key: linear-gradient(90deg, #e0d2b4, #fbf6ea);
+    --piano-black-key: linear-gradient(140deg, #5a4630, #3a2c1c);
+    --piano-disabled-key: linear-gradient(65deg, #cdbc94, #e6dcc3);
+
+    /* extras */
+    --scrollbar-colors: #cdbc94 #f3ead9;
+    --main-font: Georgia, "Noto Serif", "Times New Roman", serif;
+}

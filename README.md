@@ -3,7 +3,9 @@
 Fully online SoundFont/DLS Editor, written in TypeScript and React.
 No download needed!
 
-**v1.0.0 is here!**
+**v2.0.0 is here!**
+
+_Complete rewrite with many new features!_
 
 ## [Try it out!](https://spessasus.github.io/SpessaFont)
 
@@ -117,7 +119,7 @@ This does not affect the production build though.
 
 ## Credits
 
-- [sl-web-ogg](https://github.com/erikh2000/sl-web-ogg) - for the Ogg Vorbis encoder
+- [wasm-media-encoders](https://github.com/arseneyr/wasm-media-encoders) - for the Ogg Vorbis encoder
 - [Bootstrap Icons](https://icons.getbootstrap.com/) - for the icons
 
 _Editing sound banks has never been easier!_

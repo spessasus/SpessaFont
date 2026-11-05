@@ -1,62 +1,58 @@
-import { EditableBankInfo } from "./editable_info.tsx";
-import { BankInfoStats } from "./stats.tsx";
+import { EditableInfo } from "./editable_info.tsx";
+import { BankInfoStats } from "./bank_info_stats.tsx";
 import "./sound_bank_info.css";
 import "./default_modulators/default_modulators.css";
-import { type JSX, useState } from "react";
-import { DefaultModulatorList } from "./default_modulators/default_modulators.tsx";
-import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
-import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
-import { useTranslation } from "react-i18next";
+import { DefaultModulators } from "./default_modulators/default_modulators.tsx";
+import { BankCheck } from "./bank_check/bank_check.tsx";
+import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
+import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
+import { checkBank } from "./bank_check/check_bank.ts";
+import type { InfoPanel } from "./info_panel.ts";
 
-export function SoundBankInfo({
-    manager,
-    clipboard,
-    ccOptions,
-    destinationOptions
-}: {
-    manager: SoundBankManager;
-    clipboard: ClipboardManager;
-    ccOptions: JSX.Element;
-    destinationOptions: JSX.Element;
-}) {
-    const { t } = useTranslation();
-    const [defaultMods, setDefaultMods] = useState(false);
-    const [name, setName] = useState(
-        manager.getBankName(t("bankInfo.unnamed"))
-    );
+interface SoundBankInfoProps {
+    /**
+     * Kept by the editor, so the bank check is still open after going to one of its elements
+     * and back.
+     */
+    panel: InfoPanel;
+    onPanelChange: (panel: InfoPanel) => void;
+}
 
-    function toggleDefaultModulators() {
-        setDefaultMods(!defaultMods);
-    }
+export function SoundBankInfo({ panel, onPanelChange }: SoundBankInfoProps) {
+    const { session } = useBankEditor();
+    const views = useBankSnapshot(session.store, (s) => s.views);
+    const info = useBankSnapshot(session.store, (s) => s.info);
+    // The stats show the count and the panel the list, so the check runs once for both
+    const issues = checkBank(views, info);
 
-    if (defaultMods) {
-        return (
-            <div className={"sound_bank_info"}>
-                <DefaultModulatorList
-                    destinationOptions={destinationOptions}
-                    ccOptions={ccOptions}
-                    manager={manager}
-                    clipboard={clipboard}
-                ></DefaultModulatorList>
-                <BankInfoStats
-                    manager={manager}
-                    toggleDefaultModulators={toggleDefaultModulators}
-                ></BankInfoStats>
-            </div>
-        );
+    let content;
+    switch (panel) {
+        case "modulators": {
+            content = <DefaultModulators />;
+            break;
+        }
+
+        case "check": {
+            content = <BankCheck issues={issues} />;
+            break;
+        }
+
+        case "info": {
+            content = <EditableInfo />;
+        }
     }
 
     return (
         <div className={"sound_bank_info"}>
-            <EditableBankInfo
-                name={name}
-                setName={setName}
-                manager={manager}
-            ></EditableBankInfo>
+            {content}
             <BankInfoStats
-                manager={manager}
-                toggleDefaultModulators={toggleDefaultModulators}
-            ></BankInfoStats>
+                issueCount={issues.length}
+                panel={panel}
+                // The buttons open their panel, or go back to the info when it is open
+                onTogglePanel={(target) =>
+                    onPanelChange(panel === target ? "info" : target)
+                }
+            />
         </div>
     );
 }

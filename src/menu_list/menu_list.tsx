@@ -1,376 +1,352 @@
-import { BasicInstrument, BasicPreset, BasicSample } from "spessasynth_core";
-import * as React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import type { MouseEvent, PointerEvent } from "react";
+import { useDeferredValue, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./menu_list.css";
-import SoundBankManager, {
-    type BankEditView
-} from "../core_backend/sound_bank_manager.ts";
-import type { SetViewType } from "../bank_editor/bank_editor.tsx";
-import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
+import type { BankEditView, BankEntity } from "../core_backend/bank_view.ts";
+import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
+import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
 import { SampleList } from "./sample_list.tsx";
 import { InstrumentList } from "./instrument_list.tsx";
 import { PresetList } from "./preset_list.tsx";
-import type { HistoryAction } from "../core_backend/history.ts";
-import { DeleteInstrumentAction } from "../instrument_editor/linked_presets/delete_instrument_action.ts";
-import { DeleteSampleAction } from "../sample_editor/linked_instruments/delete_sample_action.ts";
-import { DeletePresetAction } from "../preset_editor/bottom_bar/delete_preset_action.ts";
-import toast from "react-hot-toast";
-import { presetSorter } from "../utils/preset_sorter.ts";
-
-export const ESTIMATED_ROW_HEIGHT = 30;
-export const OVERSCAN = 5;
-
-export interface MappedPresetType {
-    searchString: string;
-    preset: BasicPreset;
-}
+import { filterElements, keepUnused } from "./filter_elements.ts";
+import { useEventListener } from "../hooks/use_event_listener.ts";
+import {
+    ELEMENT_LIST_SCOPE,
+    isListShortcut
+} from "../utils/is_editor_shortcut.ts";
+import {
+    getClickResult,
+    getListKeyResult,
+    getSelection,
+    isInstrument,
+    isPreset,
+    isSample,
+    type MultiSelection,
+    selectionOf
+} from "./menu_selection.ts";
+import { useMenuShortcuts } from "./use_menu_shortcuts.ts";
+import { useListMenu } from "./use_list_menu.ts";
+import { useContextMenu } from "../context_menu/context_menu_context.ts";
+import { useDragSource } from "../drag_and_drop/drag_context.ts";
+import { getObjectId } from "../utils/object_id.ts";
+import type { FocusRequest } from "./virtual_item_list.tsx";
+import { ListSearchBar } from "./list_search_bar.tsx";
 
 interface MenuListProps {
-    manager: SoundBankManager;
     view: BankEditView;
-    sv: SetViewType;
-    samples: BasicSample[];
-    setSamples: (s: BasicSample[]) => unknown;
-    instruments: BasicInstrument[];
-    setInstruments: (i: BasicInstrument[]) => unknown;
-    presets: BasicPreset[];
-    setPresets: (p: BasicPreset[]) => unknown;
-    clipboard: ClipboardManager;
+    /**
+     * Whether the settings cover the editor, which turns the list shortcuts off.
+     */
+    isCovered: boolean;
 }
 
-export const MenuList = React.memo(function ({
-    view,
-    sv,
-    manager,
-    setSamples,
-    samples,
-    instruments,
-    setInstruments,
-    presets,
-    setPresets,
-    clipboard
-}: MenuListProps) {
+export function MenuList({ view, isCovered }: MenuListProps) {
     const { t } = useTranslation();
-    const [open, setOpen] = useState(true);
+    const { session, setView } = useBankEditor();
+    const samples = useBankSnapshot(session.store, (s) => s.samples);
+    const instruments = useBankSnapshot(session.store, (s) => s.instruments);
+    const presets = useBankSnapshot(session.store, (s) => s.presets);
+    const [isOpen, setIsOpen] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
-    const [selectedSamples, setSelectedSamples] = useState(
-        new Set<BasicSample>()
+    const [isUnusedOnly, setIsUnusedOnly] = useState(false);
+    const searchRef = useRef<HTMLInputElement>(null);
+    const [multiSelection, setMultiSelection] = useState<MultiSelection | null>(
+        null
     );
-    const [selectedInstruments, setSelectedInstruments] = useState(
-        new Set<BasicInstrument>()
+    const [focusRequest, setFocusRequest] = useState<FocusRequest | null>(null);
+    // A multi selection belongs to the view it was made for, so it is dropped when another
+    // element is shown, and does not come back with its anchor later
+    const [selectionView, setSelectionView] = useState(view);
+    if (view !== selectionView) {
+        setSelectionView(view);
+        setMultiSelection(null);
+    }
+
+    // Filtering thousands of elements must not delay typing
+    const deferredQuery = useDeferredValue(searchQuery);
+    const isFiltering = deferredQuery !== "" || isUnusedOnly;
+    // Every edit makes new views, so the lists only follow them while they filter
+    const views = useBankSnapshot(session.store, (s) =>
+        isFiltering ? s.views : null
     );
-    const [selectedPresets, setSelectedPresets] = useState(
-        new Set<BasicPreset>()
-    );
-
-    const setView = useCallback(
-        (v: BankEditView) => {
-            sv(v);
-        },
-        [sv]
-    );
-
-    useEffect(() => {
-        setSearchQuery("");
-    }, [manager]);
-
-    // useeffect for delete, copy and paste
-    useEffect(() => {
-        const onKeyDown = (e: KeyboardEvent) => {
-            switch (e.key) {
-                default: {
-                    return;
-                }
-
-                case "Delete": {
-                    {
-                        let action: HistoryAction;
-                        if (view instanceof BasicInstrument) {
-                            if (view.useCount > 0) {
-                                return;
-                            }
-                            action = new DeleteInstrumentAction(
-                                view,
-                                setInstruments,
-                                setView
-                            );
-                        } else if (view instanceof BasicSample) {
-                            if (view.useCount > 0) {
-                                return;
-                            }
-                            action = new DeleteSampleAction(
-                                view,
-                                setSamples,
-                                setView
-                            );
-                        } else if (view instanceof BasicPreset) {
-                            action = new DeletePresetAction(
-                                view,
-                                setPresets,
-                                setView
-                            );
-                        } else {
-                            return;
-                        }
-                        manager.modifyBank([action]);
-                    }
-                    break;
-                }
-
-                case "c": {
-                    {
-                        if (e.ctrlKey) {
-                            if (selectedSamples.size > 0) {
-                                clipboard.copySamples(selectedSamples);
-                                setSelectedSamples(new Set(selectedSamples));
-                            }
-                            if (selectedPresets.size > 0) {
-                                clipboard.copyPresets(selectedPresets);
-                                setSelectedPresets(new Set(selectedPresets));
-                            }
-                            if (selectedInstruments.size > 0) {
-                                clipboard.copyInstruments(selectedInstruments);
-                                setSelectedInstruments(selectedInstruments);
-                            }
-                        }
-                    }
-                    break;
-                }
-
-                case "v": {
-                    if (e.ctrlKey) {
-                        if (clipboard.hasPresets()) {
-                            clipboard.pastePresets(
-                                manager,
-                                setPresets,
-                                setInstruments,
-                                setSamples,
-                                setView
-                            );
-                            setPresets(
-                                manager.presets.slice().sort(presetSorter)
-                            );
-
-                            toast.success(
-                                t("clipboardLocale.pastedPresets", {
-                                    count: clipboard.presetCount
-                                })
-                            );
-                        }
-
-                        if (clipboard.hasInstruments()) {
-                            clipboard.pasteInstruments(
-                                manager,
-                                setSamples,
-                                setInstruments,
-                                setView
-                            );
-                            setInstruments(
-                                manager.instruments
-                                    .slice()
-                                    .sort((a, b) =>
-                                        a.name > b.name
-                                            ? 1
-                                            : b.name > a.name
-                                              ? -1
-                                              : 0
-                                    )
-                            );
-                            toast.success(
-                                t("clipboardLocale.pastedInstruments", {
-                                    count: clipboard.instrumentCount
-                                })
-                            );
-                        }
-
-                        if (clipboard.hasSamples()) {
-                            clipboard.pasteSamples(
-                                manager,
-                                setSamples,
-                                setView
-                            );
-                            setSamples(
-                                manager.samples
-                                    .slice()
-                                    .sort((a, b) =>
-                                        a.name > b.name
-                                            ? 1
-                                            : b.name > a.name
-                                              ? -1
-                                              : 0
-                                    )
-                            );
-                            toast.success(
-                                t("clipboardLocale.pastedSamples", {
-                                    count: clipboard.sampleCount
-                                })
-                            );
-                        }
-                    }
-                }
+    const filtered = (() => {
+        if (!views) {
+            return { presets, instruments, samples };
+        }
+        const found = filterElements(views, deferredQuery);
+        const ids = isUnusedOnly ? keepUnused(views, found) : found;
+        // The lists keep the core objects as identities, which the selection and handlers use
+        const keep = <T extends object>(
+            list: readonly T[],
+            order: readonly number[]
+        ) => {
+            if (order.length === list.length) {
+                return list;
             }
+            const listed = new Set(order);
+            return list.filter((e) => listed.has(getObjectId(e)));
         };
-        document.addEventListener("keydown", onKeyDown);
-        return () => {
-            document.removeEventListener("keydown", onKeyDown);
+        return {
+            presets: keep(presets, ids.presets),
+            instruments: keep(instruments, ids.instruments),
+            samples: keep(samples, ids.samples)
         };
-    }, [
-        clipboard,
-        manager,
-        selectedInstruments,
-        selectedPresets,
-        selectedSamples,
-        setInstruments,
-        setPresets,
-        setSamples,
-        setView,
-        t,
-        view
-    ]);
+    })();
+    const listOf = (entity: BankEntity): readonly BankEntity[] =>
+        isPreset(entity)
+            ? filtered.presets
+            : isInstrument(entity)
+              ? filtered.instruments
+              : filtered.samples;
 
-    const presetNameMap: MappedPresetType[] = useMemo(() => {
-        return presets.map((p) => {
-            return {
-                searchString: p.toString().toLowerCase(),
-                preset: p
-            };
-        });
-    }, [presets]);
-    const searchQueryLower = useMemo(
-        () => searchQuery.toLowerCase(),
-        [searchQuery]
+    // Only a multi selection needs to know what is listed
+    const listed = multiSelection
+        ? new Set<BankEntity>(listOf(multiSelection.anchor))
+        : undefined;
+    const selection = getSelection(
+        view,
+        multiSelection,
+        (e) => listed?.has(e) ?? false
     );
+    const selectedPresets = selectionOf(selection, isPreset);
+    const selectedInstruments = selectionOf(selection, isInstrument);
+    const selectedSamples = selectionOf(selection, isSample);
+    const cursor =
+        view === "info"
+            ? undefined
+            : multiSelection?.anchor === view
+              ? (multiSelection.cursor ?? view)
+              : view;
+    useMenuShortcuts(selection, isCovered);
 
-    const { filteredSamples, filteredInstruments, filteredPresets } =
-        useMemo(() => {
-            if (searchQueryLower === "") {
-                return {
-                    filteredSamples: samples,
-                    filteredInstruments: instruments,
-                    filteredPresets: presetNameMap
-                };
-            }
+    const show = (entity: BankEntity) => {
+        setMultiSelection(null);
+        setView(entity);
+    };
 
-            const matchedSampleSet = new Set<BasicSample>();
-            const matchedInstrumentSet = new Set<BasicInstrument>();
-            const matchedPresetSet = new Set<MappedPresetType>();
+    useEventListener(document, "keydown", (e) => {
+        if (isCovered) {
+            return;
+        }
+        // Ctrl+F finds elements, the list is what the user searches in the editor
+        if (
+            (e.ctrlKey || e.metaKey) &&
+            e.key.toLowerCase() === "f" &&
+            searchRef.current
+        ) {
+            e.preventDefault();
+            searchRef.current.focus();
+            searchRef.current.select();
+            return;
+        }
+        // The list keys act when the focus is in the element list or on nothing, the editors
+        // handle their own keys
+        if (view === "info" || e.altKey || !isListShortcut(e)) {
+            return;
+        }
+        const result = getListKeyResult(
+            listOf(view),
+            view,
+            multiSelection,
+            e.key,
+            e
+        );
+        if (!result) {
+            return;
+        }
+        e.preventDefault();
+        if (result.type === "show") {
+            show(result.entity);
+            setFocusRequest({ item: result.entity });
+        } else if (result.type === "select") {
+            setMultiSelection(result.selection);
+            setFocusRequest({ item: result.selection.cursor ?? view });
+        } else {
+            setMultiSelection(null);
+        }
+    });
+    const getMenuEntries = useListMenu();
+    const { openMenu } = useContextMenu();
+    const startDrag = useDragSource();
 
-            // match presets directly
-            for (const p of presetNameMap) {
-                if (p.searchString.includes(searchQueryLower)) {
-                    matchedPresetSet.add(p);
-                }
-            }
+    function handleItemClick<T extends BankEntity>(
+        items: readonly T[],
+        selected: ReadonlySet<T>,
+        item: T,
+        event: MouseEvent
+    ) {
+        const result = getClickResult(items, item, view, selected, event);
+        if (result.type === "show") {
+            show(result.entity);
+        } else {
+            setMultiSelection(result.selection);
+        }
+    }
 
-            // match instruments directly
-            for (const i of instruments) {
-                if (i.name.toLowerCase().includes(searchQueryLower)) {
-                    matchedInstrumentSet.add(i);
-                }
-            }
-
-            // match samples directly
-            for (const s of samples) {
-                if (s.name.toLowerCase().includes(searchQueryLower)) {
-                    matchedSampleSet.add(s);
-                }
-            }
-
-            // backfill the presets' instruments
-            for (const p of matchedPresetSet)
-                for (const z of p.preset.zones)
-                    matchedInstrumentSet.add(z.instrument);
-
-            // backfill the instruments' samples
-            for (const i of matchedInstrumentSet)
-                for (const z of i.zones) matchedSampleSet.add(z.sample);
-
-            return {
-                filteredSamples: Array.from(matchedSampleSet),
-                filteredInstruments: Array.from(matchedInstrumentSet),
-                filteredPresets: Array.from(matchedPresetSet)
-            };
-        }, [searchQueryLower, samples, instruments, presetNameMap]);
-
-    if (!open) {
+    if (!isOpen) {
         return (
-            <div className={"menu_list_closed"} onClick={() => setOpen(true)}>
-                {"\u25B6"}
-            </div>
+            <button
+                type={"button"}
+                className={"plain_button menu_list_closed"}
+                aria-label={t("expand")}
+                onClick={() => setIsOpen(true)}
+            >
+                {"\u{25B6}"}
+            </button>
         );
     }
+    // ArrowDown in the search goes to the results, the shown element or the first one listed
+    const focusResults = () => {
+        const shown = cursor && listOf(cursor).includes(cursor) ? cursor : null;
+        const first =
+            shown ??
+            filtered.samples[0] ??
+            filtered.instruments[0] ??
+            filtered.presets[0];
+        if (!first) {
+            return;
+        }
+        if (first !== cursor) {
+            show(first);
+        }
+        setFocusRequest({ item: first });
+    };
+
+    // Like a file manager, the menu acts on the selection when the item is in it,
+    // and otherwise shows the item first and acts on it alone
+    const handleItemContextMenu = (item: BankEntity, event: MouseEvent) => {
+        let target = selection;
+        if (!selection.has(item)) {
+            target = new Set([item]);
+            show(item);
+        }
+        openMenu(event, getMenuEntries(target));
+    };
+
+    // Dragging an item of the selection drags the whole selection
+    const handleItemPointerDown = (item: BankEntity, event: PointerEvent) => {
+        const entities = selection.has(item) ? [...selection] : [item];
+        // The label is the name when the drag starts, read from the views like in render
+        const [first] = entities;
+        const current = session.store.getSnapshot().views;
+        const name =
+            (isPreset(first)
+                ? current.presets
+                : isInstrument(first)
+                  ? current.instruments
+                  : current.samples
+            ).get(getObjectId(first))?.name ?? "";
+        startDrag(event, {
+            session,
+            entities,
+            label:
+                entities.length > 1 ? `${name} +${entities.length - 1}` : name
+        });
+    };
+
+    const isEmpty =
+        filtered.presets.length +
+            filtered.instruments.length +
+            filtered.samples.length ===
+        0;
     return (
-        <>
-            <div className={`menu_list_main`}>
-                <div
-                    onClick={() => setView("info")}
-                    className={`item_group_header hover_brightness ${view === "info" ? "opened" : ""}`}
-                >
-                    <h2>{t("presetList.overview")}</h2>
-                    <div className={"right_buttons"}>
-                        <div
-                            className={"dropdown_triangle"}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                                setOpen(false);
-                            }}
-                        >
-                            {"\u25C0"}
-                        </div>
-                    </div>
-                </div>
-
-                <SampleList
-                    samples={filteredSamples}
-                    view={view}
-                    manager={manager}
-                    setSamples={setSamples}
-                    setView={setView}
-                    clipboard={clipboard}
-                    selectedSamples={selectedSamples}
-                    setSelectedSamples={setSelectedSamples}
-                />
-
-                <InstrumentList
-                    clipboard={clipboard}
-                    instruments={filteredInstruments}
-                    setSamples={setSamples}
-                    setInstruments={setInstruments}
-                    setView={setView}
-                    view={view}
-                    manager={manager}
-                    selectedInstruments={selectedInstruments}
-                    setSelectedInstruments={setSelectedInstruments}
-                    selectedSamples={selectedSamples}
-                />
-
-                <PresetList
-                    view={view}
-                    setView={setView}
-                    clipboard={clipboard}
-                    presets={filteredPresets}
-                    setSamples={setSamples}
-                    setInstruments={setInstruments}
-                    setPresets={setPresets}
-                    manager={manager}
-                    selectedInstruments={selectedInstruments}
-                    selectedPresets={selectedPresets}
-                    setSelectedPresets={setSelectedPresets}
-                />
-                <div className={"search_bar"}>
-                    <input
-                        className={"pretty_input"}
-                        placeholder={t("presetList.search")}
-                        type={"text"}
-                        value={searchQuery}
-                        onInput={(e) =>
-                            setSearchQuery((e.target as HTMLInputElement).value)
-                        }
-                    />
+        // Focusable, so the focus has somewhere to go when the focused row is deleted
+        <div className={`menu_list_main`} {...ELEMENT_LIST_SCOPE} tabIndex={-1}>
+            <div
+                className={`item_group_header hover_brightness ${view === "info" ? "opened" : ""}`}
+            >
+                <h2>
+                    <button
+                        type={"button"}
+                        className={"plain_button item_group_title"}
+                        onClick={() => setView("info")}
+                    >
+                        {t("presetList.overview")}
+                    </button>
+                </h2>
+                <div className={"right_buttons"}>
+                    <button
+                        type={"button"}
+                        className={"plain_button dropdown_triangle"}
+                        aria-label={t("collapse")}
+                        title={t("collapse")}
+                        onClick={() => setIsOpen(false)}
+                    >
+                        {"\u{25C0}"}
+                    </button>
                 </div>
             </div>
-        </>
+
+            <SampleList
+                samples={filtered.samples}
+                view={view}
+                selected={selectedSamples}
+                cursor={cursor}
+                focusRequest={focusRequest}
+                onItemClick={(sample, e) =>
+                    handleItemClick(
+                        filtered.samples,
+                        selectedSamples,
+                        sample,
+                        e
+                    )
+                }
+                onItemContextMenu={handleItemContextMenu}
+                onItemPointerDown={handleItemPointerDown}
+            />
+
+            <InstrumentList
+                instruments={filtered.instruments}
+                view={view}
+                selected={selectedInstruments}
+                selectedSamples={selectedSamples}
+                cursor={cursor}
+                focusRequest={focusRequest}
+                onItemClick={(instrument, e) =>
+                    handleItemClick(
+                        filtered.instruments,
+                        selectedInstruments,
+                        instrument,
+                        e
+                    )
+                }
+                onItemContextMenu={handleItemContextMenu}
+                onItemPointerDown={handleItemPointerDown}
+            />
+
+            <PresetList
+                presets={filtered.presets}
+                view={view}
+                selected={selectedPresets}
+                selectedInstruments={selectedInstruments}
+                cursor={cursor}
+                focusRequest={focusRequest}
+                onItemClick={(preset, e) =>
+                    handleItemClick(
+                        filtered.presets,
+                        selectedPresets,
+                        preset,
+                        e
+                    )
+                }
+                onItemContextMenu={handleItemContextMenu}
+                onItemPointerDown={handleItemPointerDown}
+            />
+            {isFiltering && isEmpty ? (
+                <p className={"menu_list_empty"} role={"status"}>
+                    {deferredQuery === ""
+                        ? t("presetList.nothingUnused")
+                        : t("contextMenu.noMatches")}
+                </p>
+            ) : null}
+            <ListSearchBar
+                inputRef={searchRef}
+                query={searchQuery}
+                onQueryChange={setSearchQuery}
+                isUnusedOnly={isUnusedOnly}
+                onToggleUnusedOnly={() => setIsUnusedOnly((only) => !only)}
+                onFocusResults={focusResults}
+            />
+        </div>
     );
-});
+}

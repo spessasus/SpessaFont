@@ -24,7 +24,7 @@
     border-color: var(--border-color);
 }
 
-.modulator_main svg {
+.modulator_main .modulator_diagram {
     color: var(--font-color);
     margin: -0.5rem;
     cursor: auto;
@@ -34,13 +34,8 @@
     user-select: none;
 }
 
-.modulator_title {
-    display: flex;
-    flex-direction: column;
-    gap: var(--flex-gap);
-}
-
 .modulator_title_left {
+    font-weight: bold;
     position: absolute;
     left: 0.3rem;
     top: 0.3rem;
@@ -53,6 +48,7 @@
     line-height: 1rem;
     top: 0.3rem;
     height: min-content;
+    font-size: 1.5em;
     font-weight: bolder;
 }
 
@@ -68,12 +64,12 @@
     gap: var(--flex-gap);
 }
 
-.modulator_main .amount_input,
+.modulator_main .modulator_amount_input,
 .modulator_main .transform_selector {
     font-size: 1rem;
 }
 
-.amount_input {
+.modulator_amount_input {
     text-align: end;
     width: 8ch;
     border-radius: var(--primary-border-radius);

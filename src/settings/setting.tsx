@@ -1,18 +1,21 @@
-import * as React from "react";
-import { useTranslation } from "react-i18next";
+import type * as React from "react";
 
-export function Setting({
-    locale,
-    children
-}: {
-    locale: string;
-    children?: React.ReactNode;
-}) {
-    const { t } = useTranslation();
+interface SettingProps {
+    label: string;
+    /**
+     * The one control of the row, which the label names.
+     */
+    children: React.ReactNode;
+}
+
+/**
+ * One row of the settings.
+ */
+export function Setting({ label, children }: SettingProps) {
     return (
-        <div className={"setting"}>
-            <label>{t(locale)}</label>
+        <label className={"settings_item"}>
+            <span>{label}</span>
             {children}
-        </div>
+        </label>
     );
 }

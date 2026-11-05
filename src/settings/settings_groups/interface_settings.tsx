@@ -2,77 +2,67 @@ import type { GroupSettingsProps } from "./audio_engine_settings.tsx";
 import { Setting } from "../setting.tsx";
 import { LocaleList } from "../../locale/locale_list.ts";
 import {
-    getSetting,
-    type ThemeType,
-    UNSET_LANGUAGE
-} from "../save_load/settings_typedef.ts";
+    isTheme,
+    THEME_LIST,
+    type ThemeInfo
+} from "../../themes/theme_list.ts";
 import { useTranslation } from "react-i18next";
-import { getUserLocale } from "../save_load/get_user_locale.ts";
-import { logInfo } from "../../utils/core_utils.ts";
+import { resolveLocale } from "../save_load/get_user_locale.ts";
+import { UNSET_LANGUAGE } from "../save_load/settings_typedef.ts";
 
-type interfaceSettingsProps = GroupSettingsProps & {
-    setTheme: (t: ThemeType) => void;
-};
+const THEME_ENTRIES = Object.entries(THEME_LIST);
 
-export function InterfaceSettings({
-    settings,
-    updateSettings,
-    setTheme
-}: interfaceSettingsProps) {
-    const { t, i18n } = useTranslation();
+const SCHEME_LABELS = {
+    dark: "settingsLocale.interface.dark",
+    light: "settingsLocale.interface.light"
+} as const satisfies Record<ThemeInfo["scheme"], string>;
 
-    let language = getSetting("lang", settings);
-    if (language === UNSET_LANGUAGE) {
-        language = getUserLocale(Object.keys(LocaleList));
-    }
-
-    function setLanguage(code: string) {
-        logInfo(`Changing language to: ${code}`);
-        void i18n.changeLanguage(code).then(() => {
-            updateSettings({
-                ...settings,
-                lang: code
-            });
-        });
-    }
-
-    function setAppTheme(t: ThemeType) {
-        updateSettings({
-            ...settings,
-            theme: t
-        });
-        setTheme(t);
-    }
+export function InterfaceSettings({ settings, onChange }: GroupSettingsProps) {
+    const { t } = useTranslation();
 
     return (
         <div className={"settings_group hover_brightness"}>
             <h2>{t("settingsLocale.interface.title")}</h2>
-            <Setting locale={"settingsLocale.interface.language"}>
+            <Setting label={t("settingsLocale.interface.language")}>
                 <select
-                    onChange={(e) => setLanguage(e.target.value)}
+                    onChange={(e) => onChange({ lang: e.target.value })}
                     className={"pretty_input monospaced"}
-                    value={language}
+                    value={settings.lang}
                 >
-                    {Object.keys(LocaleList).map((code, i) => (
-                        <option key={i} value={code}>
-                            {LocaleList[code].name}
+                    <option value={UNSET_LANGUAGE}>
+                        {t("settingsLocale.interface.browserLanguage", {
+                            name: LocaleList[resolveLocale(UNSET_LANGUAGE)].name
+                        })}
+                    </option>
+                    {Object.entries(LocaleList).map(([code, locale]) => (
+                        <option key={code} value={code}>
+                            {locale.name}
                         </option>
                     ))}
                 </select>
             </Setting>
 
-            <Setting locale={"settingsLocale.interface.theme"}>
+            <Setting label={t("settingsLocale.interface.theme")}>
                 <select
-                    onChange={(e) => setAppTheme(e.target.value as ThemeType)}
+                    onChange={(e) => {
+                        if (isTheme(e.target.value)) {
+                            onChange({ theme: e.target.value });
+                        }
+                    }}
                     className={"pretty_input monospaced"}
-                    value={getSetting("theme", settings)}
+                    value={settings.theme}
                 >
-                    <option value={"dark"}>
-                        {t("settingsLocale.interface.dark")}
-                    </option>
-                    <option value={"light"}>
-                        {t("settingsLocale.interface.light")}
-                    </option>
+                    {Object.entries(SCHEME_LABELS).map(([scheme, key]) => (
+                        <optgroup key={scheme} label={t(key)}>
+                            {THEME_ENTRIES.filter(
+                                ([, theme]) => theme.scheme === scheme
+                            ).map(([id, theme]) => (
+                                <option key={id} value={id}>
+                                    {theme.name}
+                                </option>
+                            ))}
+                        </optgroup>
+                    ))}
                 </select>
             </Setting>
         </div>

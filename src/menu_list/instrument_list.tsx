@@ -1,273 +1,127 @@
-import SoundBankManager, {
-    type BankEditView
-} from "../core_backend/sound_bank_manager.ts";
-import type { SetViewType } from "../bank_editor/bank_editor.tsx";
-import {
-    BasicInstrument,
-    type BasicSample,
-    BasicZone,
-    GeneratorTypes,
-    SampleTypes
-} from "spessasynth_core";
-import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
+import { BasicInstrument, type BasicSample } from "spessasynth_core";
+import type { MouseEvent, PointerEvent } from "react";
+import { useTranslation } from "react-i18next";
+import type { BankEditView, BankEntity } from "../core_backend/bank_view.ts";
+import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
+import { useClipboard } from "../clipboard/clipboard_context.ts";
 import { DropdownHeader } from "./dropdown_header/dropdown_header.tsx";
 import { InstrumentDisplay } from "./instrument_display/instrument_display.tsx";
+import { getObjectId } from "../utils/object_id.ts";
+import { type FocusRequest, VirtualItemList } from "./virtual_item_list.tsx";
+import { useExpandedItems, useSectionOpen } from "./use_list_state.ts";
+import { useSelectionCommands } from "./use_selection_commands.ts";
+import {
+    createInstrumentFromSamples,
+    createSampleLinkActions
+} from "./link_actions.ts";
 
-import * as React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import { ESTIMATED_ROW_HEIGHT, OVERSCAN } from "./menu_list.tsx";
-import { CreateInstrumentAction } from "./create_actions/create_instrument_action.ts";
-import { STEREO_REGEX } from "../utils/stereo_regex.ts";
-import type { HistoryAction } from "../core_backend/history.ts";
-import { CreateZoneAction } from "../generator_table/create_zone_action.ts";
-import { addAndReorderStereoSamples } from "../utils/add_stereo_samples.ts";
-import toast from "react-hot-toast";
+interface InstrumentListProps {
+    instruments: readonly BasicInstrument[];
+    view: BankEditView;
+    selected: ReadonlySet<BasicInstrument>;
+    selectedSamples: ReadonlySet<BasicSample>;
+    /**
+     * The element the keyboard is on, kept in view.
+     */
+    cursor: BankEntity | undefined;
+    focusRequest: FocusRequest | null;
+    onItemClick: (instrument: BasicInstrument, event: MouseEvent) => void;
+    onItemContextMenu: (entity: BankEntity, event: MouseEvent) => void;
+    onItemPointerDown: (
+        instrument: BasicInstrument,
+        event: PointerEvent
+    ) => void;
+}
 
 export function InstrumentList({
-    view,
-    setView,
-    clipboard,
     instruments,
-    setSamples,
-    setInstruments,
-    manager,
-    setSelectedInstruments,
-    selectedInstruments,
-    selectedSamples
-}: {
-    view: BankEditView;
-    setView: SetViewType;
-    clipboard: ClipboardManager;
-    instruments: BasicInstrument[];
-    setSamples: (s: BasicSample[]) => unknown;
-    setInstruments: (i: BasicInstrument[]) => unknown;
-    manager: SoundBankManager;
-    selectedInstruments: Set<BasicInstrument>;
-    selectedSamples: Set<BasicSample>;
-    setSelectedInstruments: (i: Set<BasicInstrument>) => unknown;
-}) {
+    view,
+    selected,
+    selectedSamples,
+    cursor,
+    focusRequest,
+    onItemClick,
+    onItemContextMenu,
+    onItemPointerDown
+}: InstrumentListProps) {
     const { t } = useTranslation();
-    const [showInstruments, setShowInstruments] = useState(
+    const { session, apply } = useBankEditor();
+    const { contents } = useClipboard();
+    const commands = useSelectionCommands();
+    const [isOpen, setIsOpen] = useSectionOpen(
+        view,
         view instanceof BasicInstrument
     );
+    const { isExpanded, toggle } = useExpandedItems();
 
-    useEffect(() => {
-        if (view instanceof BasicInstrument) {
-            setSelectedInstruments(new Set<BasicInstrument>([view]));
-        }
-    }, [setSelectedInstruments, view]);
-
-    // keep open states for instruments
-    const [openInstruments, setOpenInstruments] = useState<
-        Record<string, boolean>
-    >({});
-
-    // virtualize
-    const instrumentsParentRef = useRef<HTMLDivElement>(null);
-    const instrumentsVirtualizer = useVirtualizer({
-        count: instruments.length,
-        getScrollElement: () => instrumentsParentRef.current,
-        estimateSize: () => ESTIMATED_ROW_HEIGHT,
-        overscan: OVERSCAN
-    });
-
-    useEffect(() => {
-        if (view instanceof BasicInstrument) {
-            setShowInstruments(true);
-            if (!selectedInstruments.has(view)) {
-                setSelectedInstruments(new Set<BasicInstrument>([view]));
-            }
-            setTimeout(() => {
-                instrumentsVirtualizer.scrollToIndex(instruments.indexOf(view));
-            }, 100);
-        } else if (selectedInstruments.size > 0) {
-            setSelectedInstruments(new Set<BasicInstrument>());
-        }
-    }, [
-        instruments,
-        instrumentsVirtualizer,
-        selectedInstruments,
-        setSelectedInstruments,
-        view
-    ]);
-
-    const handleClick = useCallback(
-        (
-            e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-            inst: BasicInstrument
-        ) => {
-            const newSet = new Set<BasicInstrument>([inst]);
-            if (e.shiftKey && view instanceof BasicInstrument) {
-                const viewIndex = instruments.indexOf(view);
-                const instIndex = instruments.indexOf(inst);
-                const start = Math.min(viewIndex, instIndex);
-                const end = Math.max(viewIndex, instIndex);
-                for (const i of instruments.slice(start, end + 1))
-                    newSet.add(i);
-            } else if (e.ctrlKey && view instanceof BasicInstrument) {
-                for (const i of selectedInstruments) newSet.add(i);
-                if (selectedInstruments.has(inst)) {
-                    newSet.delete(inst);
-                }
-            } else {
-                setView(inst);
-            }
-            setSelectedInstruments(newSet);
-        },
-        [
-            instruments,
-            selectedInstruments,
-            setSelectedInstruments,
-            setView,
-            view
-        ]
-    );
-
-    const createInstrument = useCallback(() => {
-        const samplesToAdd = addAndReorderStereoSamples(selectedSamples);
-
-        const instrument = new BasicInstrument();
-        const firstSample = samplesToAdd[0];
-        instrument.name = firstSample.linkedSample
-            ? firstSample.name.replace(STEREO_REGEX, "")
-            : firstSample.name;
-        // add loop for convenience
-        instrument.globalZone.setGenerator(GeneratorTypes.sampleModes, 1);
-        for (const s of samplesToAdd) {
-            const zone = instrument.createZone(s);
-            // sample types!
-            if (s.sampleType === SampleTypes.leftSample) {
-                zone.setGenerator(GeneratorTypes.pan, -500);
-            } else if (s.sampleType === SampleTypes.rightSample) {
-                zone.setGenerator(GeneratorTypes.pan, 500);
-            }
-        }
-        const action = new CreateInstrumentAction(
-            instrument,
-            setInstruments,
-            setView
-        );
-        manager.modifyBank([action]);
-    }, [manager, selectedSamples, setInstruments, setView]);
-
-    const linkSamples = useCallback(
-        (inst: BasicInstrument) => {
-            const actions: HistoryAction[] = [];
-            const ordered = addAndReorderStereoSamples(selectedSamples);
-            for (const sample of ordered) {
-                const zone = new BasicZone();
-                if (sample.sampleType === SampleTypes.leftSample) {
-                    zone.setGenerator(GeneratorTypes.pan, -500);
-                } else if (sample.sampleType === SampleTypes.rightSample) {
-                    zone.setGenerator(GeneratorTypes.pan, 500);
-                }
-                actions.push(
-                    new CreateZoneAction<BasicInstrument, BasicSample>(
-                        inst,
-                        zone,
-                        sample,
-                        () => {
-                            setInstruments([...instruments]);
-                            setView(inst);
-                        }
-                    )
-                );
-            }
-            manager.modifyBank(actions);
-        },
-        [instruments, manager, selectedSamples, setInstruments, setView]
-    );
-
-    const link = selectedSamples.size > 0;
+    const canLink = selectedSamples.size > 0;
     return (
         <>
             <DropdownHeader
-                add={selectedSamples.size > 0}
-                copy={selectedInstruments.size > 0}
-                onCopy={() => {
-                    clipboard.copyInstruments(selectedInstruments);
-                    setInstruments([...manager.instruments]);
-                    toast.success(
-                        t("clipboardLocale.copiedInstruments", {
-                            count: selectedInstruments.size
-                        })
-                    );
-                }}
-                onPaste={() => {
-                    clipboard.pasteInstruments(
-                        manager,
-                        setSamples,
-                        setInstruments,
-                        setView
-                    );
-                    setInstruments(
-                        manager.instruments
-                            .slice()
-                            .sort((a, b) =>
-                                a.name > b.name ? 1 : b.name > a.name ? -1 : 0
-                            )
-                    );
-                    toast.success(
-                        t("clipboardLocale.pastedInstruments", {
-                            count: clipboard.instrumentCount
-                        })
-                    );
-                }}
-                paste={clipboard.hasInstruments()}
-                onAdd={createInstrument}
-                onClick={() => setShowInstruments(!showInstruments)}
-                open={showInstruments}
                 text={t("presetList.instruments")}
+                isOpen={isOpen}
+                onToggle={() => setIsOpen((open) => !open)}
+                addLabel={t("contextMenu.newInstrument")}
+                addHint={t("presetList.newInstrumentHint")}
+                onAdd={
+                    canLink
+                        ? () =>
+                              apply([
+                                  createInstrumentFromSamples(
+                                      session.document,
+                                      selectedSamples
+                                  )
+                              ])
+                        : undefined
+                }
+                onCopy={
+                    selected.size > 0
+                        ? () => commands.copy(selected)
+                        : undefined
+                }
+                onPaste={contents.instruments > 0 ? commands.paste : undefined}
             />
-            {showInstruments && (
-                <div
-                    className={"menu_list_scrollable"}
-                    ref={instrumentsParentRef}
-                >
-                    <div
-                        className={"item_group"}
-                        style={{
-                            height: `${instrumentsVirtualizer.getTotalSize()}px`
-                        }}
-                    >
-                        {instrumentsVirtualizer.getVirtualItems().map((row) => {
-                            const inst = instruments[row.index];
-                            return (
-                                <div
-                                    key={row.key}
-                                    ref={instrumentsVirtualizer.measureElement}
-                                    data-index={row.index}
-                                    className={"virtual_item"}
-                                    style={{
-                                        transform: `translateY(${row.start}px)`
-                                    }}
-                                >
-                                    <InstrumentDisplay
-                                        open={
-                                            openInstruments[inst.name] ?? false
-                                        }
-                                        setOpen={(o) =>
-                                            setOpenInstruments((prev) => ({
-                                                ...prev,
-                                                [inst.name]: o
-                                            }))
-                                        }
-                                        selected={selectedInstruments.has(inst)}
-                                        view={view}
-                                        instrument={inst}
-                                        onClick={(e) => handleClick(e, inst)}
-                                        setView={setView}
-                                        link={link}
-                                        onLink={() => linkSamples(inst)}
-                                    ></InstrumentDisplay>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
+            {isOpen ? (
+                <VirtualItemList
+                    items={instruments}
+                    focusedItem={
+                        cursor instanceof BasicInstrument ? cursor : undefined
+                    }
+                    focusRequest={focusRequest}
+                    renderItem={(instrument) => {
+                        const key = String(getObjectId(instrument));
+                        return (
+                            <InstrumentDisplay
+                                instrumentId={getObjectId(instrument)}
+                                view={view}
+                                isSelected={selected.has(instrument)}
+                                isShown={view === instrument}
+                                isOpen={isExpanded(key)}
+                                onToggle={() => toggle(key)}
+                                onClick={(e) => onItemClick(instrument, e)}
+                                onContextMenu={(e) =>
+                                    onItemContextMenu(instrument, e)
+                                }
+                                onChildContextMenu={onItemContextMenu}
+                                onPointerDown={(e) =>
+                                    onItemPointerDown(instrument, e)
+                                }
+                                onLink={
+                                    canLink
+                                        ? () =>
+                                              apply(
+                                                  createSampleLinkActions(
+                                                      instrument,
+                                                      selectedSamples
+                                                  )
+                                              )
+                                        : undefined
+                                }
+                            />
+                        );
+                    }}
+                />
+            ) : null}
         </>
     );
 }

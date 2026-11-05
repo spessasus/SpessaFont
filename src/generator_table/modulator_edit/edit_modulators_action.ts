@@ -1,30 +1,39 @@
+import type {
+    BasicInstrument,
+    BasicPreset,
+    BasicZone,
+    Modulator
+} from "spessasynth_core";
 import type { HistoryAction } from "../../core_backend/history.ts";
-import type { BasicZone, Modulator } from "spessasynth_core";
+import type { BankDocument } from "../../core_backend/bank_document.ts";
+import type { ChangeSet } from "../../core_backend/change_set.ts";
 
 export class EditModulatorsAction implements HistoryAction {
-    private readonly oldMods: Modulator[];
-    private readonly newMods: Modulator[];
-    private readonly callback: () => unknown;
+    private readonly element: BasicPreset | BasicInstrument;
     private readonly zone: BasicZone;
+    private readonly oldModulators: Modulator[];
+    private readonly newModulators: Modulator[];
 
-    constructor(
+    public readonly label = "editModulators";
+
+    public constructor(
+        element: BasicPreset | BasicInstrument,
         zone: BasicZone,
-        newMods: Modulator[],
-        callback: () => unknown
+        newModulators: Modulator[]
     ) {
-        this.oldMods = [...zone.modulators];
-        this.newMods = newMods;
-        this.callback = callback;
+        this.element = element;
         this.zone = zone;
+        this.oldModulators = [...zone.modulators];
+        this.newModulators = [...newModulators];
     }
 
-    do() {
-        this.zone.modulators = [...this.newMods];
-        this.callback();
+    public do(_document: BankDocument, changes: ChangeSet) {
+        this.zone.modulators = [...this.newModulators];
+        changes.touch(this.element);
     }
 
-    undo() {
-        this.zone.modulators = [...this.oldMods];
-        this.callback();
+    public undo(_document: BankDocument, changes: ChangeSet) {
+        this.zone.modulators = [...this.oldModulators];
+        changes.touch(this.element);
     }
 }

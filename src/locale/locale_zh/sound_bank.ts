@@ -1,12 +1,13 @@
 // Translated by: 迎春心情（Yingchun Soul）
 
 export const SoundBankLocale = {
+    deleteZone: "删除分层{{name}}",
+    cellLabel: "{{generator}}，{{zone}}",
     globalZone: "全局",
     createNewZone: "添加新分层",
     thisIsAStereoSamplePair: "这是一对立体声采样对。",
 
     modifiedSamples: "修改了{{count}}个采样",
-    noSamplesWereChanged: "未修改采样。",
     removedElements: "已删除{{instruments}}个乐器和{{samples}}个采样。",
 
     loopingModes: {

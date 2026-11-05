@@ -1,0 +1,21 @@
+{
+    // public/service-worker.js, typed through JSDoc. @types/serviceworker replaces the DOM
+    // and WebWorker libs, which would clash with it
+    "compilerOptions": {
+        "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.sw.tsbuildinfo",
+        "target": "ES2022",
+        "lib": ["ES2023"],
+        "types": ["serviceworker"],
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "skipLibCheck": true,
+        "allowJs": true,
+        "checkJs": true,
+        "noEmit": true,
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noFallthroughCasesInSwitch": true
+    },
+    "include": ["public/service-worker.js"]
+}

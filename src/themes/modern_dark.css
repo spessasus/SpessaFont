@@ -1,0 +1,73 @@
+/*
+ * Modern Dark
+ * Flat graphite panels and hairline borders, lit by one amber accent.
+ */
+:root[data-theme="modern_dark"] {
+    color-scheme: dark;
+
+    /* surfaces */
+    --darker-color-start: oklch(16.5% 0.012 255);
+    --darker-color-end: oklch(16.5% 0.012 255);
+    --lighter-color-start: oklch(21.5% 0.012 255);
+    --lighter-color-end: oklch(21.5% 0.012 255);
+    --selection-color: oklch(80% 0.15 75 / 14%);
+    /* selected generator cells, a tint of the focus color so it shows on both row stripes */
+    --cell-selection-color: color-mix(
+        in oklch,
+        var(--focus-color) 35%,
+        transparent
+    );
+    --shadow-color: oklch(8% 0.01 255 / 45%);
+
+    /* text */
+    --font-color: oklch(93% 0.008 255);
+    --muted-font-color: oklch(68% 0.015 255);
+    --warning-color: oklch(68% 0.19 25);
+
+    /* accents */
+    --menu-bar-color: oklch(19% 0.012 255);
+    --menu-border-color: oklch(30% 0.012 255);
+    --primary-color: oklch(42% 0.09 70);
+    --border-color: oklch(78% 0.15 75);
+    --focus-color: oklch(78% 0.15 75);
+    --light-primary-color: oklch(86% 0.12 80);
+    --track-color: oklch(26% 0.012 255);
+    --track-border-color: oklch(31% 0.012 255);
+
+    /* element kinds */
+    --preset-item-color: oklch(72% 0.16 20);
+    --instrument-item-color: oklch(74% 0.11 235);
+    --sample-item-color: oklch(84% 0.14 85);
+
+    /* generator table, exclusive classes get a hue each at this lightness */
+    --exclusive-class-lightness: 70%;
+
+    /* drawings */
+    --wave-color: oklch(80% 0.15 75);
+    --loop-start-color: oklch(78% 0.13 165);
+    --loop-end-color: oklch(70% 0.18 20);
+    --curve-color: oklch(80% 0.15 75);
+    --curve-axis-color: oklch(34% 0.012 255);
+
+    /* piano */
+    --piano-gap-color: oklch(12% 0.01 255);
+    --piano-label-color: oklch(12% 0.01 255);
+    --piano-white-key: linear-gradient(
+        90deg,
+        oklch(86% 0.006 255),
+        oklch(97% 0.004 255)
+    );
+    --piano-black-key: linear-gradient(
+        140deg,
+        oklch(25% 0.012 255),
+        oklch(15% 0.01 255)
+    );
+    --piano-disabled-key: linear-gradient(
+        65deg,
+        oklch(30% 0.012 255),
+        oklch(44% 0.012 255)
+    );
+
+    /* extras */
+    --scrollbar-colors: oklch(36% 0.012 255) transparent;
+}

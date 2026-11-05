@@ -1,4 +1,6 @@
 .sample_display {
+    box-sizing: border-box;
+    width: 100%;
     padding: 0 0.3rem;
     display: flex;
     justify-content: space-between;
@@ -28,5 +30,5 @@
 
 .sample_display:hover,
 .sample_display.selected {
-    background: var(--lighter-color-end);
+    background: var(--selection-color);
 }

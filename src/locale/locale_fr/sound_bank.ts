@@ -1,11 +1,12 @@
 export const SoundBankLocale = {
+    deleteZone: "Supprimer la zone {{name}}",
+    cellLabel: "{{generator}}, {{zone}}",
     globalZone: "Zone Globale",
     createNewZone: "Créer une Nouvelle Zone",
     thisIsAStereoSamplePair:
         "Cette échantillon fait partie une paire d'échantillons stéréo.",
 
     modifiedSamples: "{{count}} échantillons ont été modifiés.",
-    noSamplesWereChanged: "Aucun échantillon n'a été changé.",
     removedElements:
         "{{instruments}} instruments et {{samples}} échantillons ont été enlevés.",
 

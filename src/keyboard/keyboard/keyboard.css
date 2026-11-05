@@ -6,7 +6,7 @@
     align-items: stretch;
     height: 5vw;
     min-height: 3rem;
-    background: black;
+    background: var(--piano-gap-color);
     overflow-x: auto;
     min-width: 100%;
     touch-action: none;
@@ -39,7 +39,28 @@
         translateX(calc(var(--flat-half-translate) * -1));
     --flat-right-transform: scale(var(--flat-half-width), 1)
         translateX(var(--flat-half-translate));
-    outline: solid 1px black;
+    outline: solid 1px var(--piano-gap-color);
+}
+
+/* Narrower than the 128 keys at their smallest, so swiping sideways scrolls the keyboard
+   instead of playing (a swipe cancels its note) */
+@media (max-width: 77rem) {
+    .keyboard,
+    .keyboard .key {
+        touch-action: pan-x;
+    }
+}
+
+.keyboard:focus-visible {
+    outline: none;
+}
+
+/* Two tones, so the ring shows on white, black, highlighted and pressed keys alike */
+.keyboard:focus-visible .key.focused {
+    outline: 2px solid var(--border-color);
+    outline-offset: -2px;
+    box-shadow: inset 0 0 0 4px var(--light-primary-color);
+    z-index: 2;
 }
 
 .keyboard .sharp_key.zone_highlight {
@@ -56,23 +77,19 @@
     filter: none !important;
 }
 
-.keyboard .key.disabled {
-    background: linear-gradient(65deg, #333, #888);
+.keyboard .key.key_disabled {
+    background: var(--piano-disabled-key);
 }
 
 .keyboard .flat_key {
-    background: linear-gradient(90deg, #bbb, white);
+    background: var(--piano-white-key);
     z-index: 0;
-}
-
-.keyboard .flat_dark_key {
-    background: linear-gradient(100deg, #111, #000);
 }
 
 .keyboard .sharp_key {
     transform: var(--sharp-transform);
     z-index: 1;
-    background: linear-gradient(140deg, #222, black);
+    background: var(--piano-black-key);
 }
 
 .keyboard .flat_key.between_sharps {
@@ -85,4 +102,21 @@
 
 .keyboard .flat_key.right_sharp {
     transform: var(--flat-right-transform);
+}
+
+.keyboard .key_label {
+    position: absolute;
+    bottom: 0.1rem;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 0.6rem;
+    white-space: nowrap;
+    color: var(--piano-label-color);
+    pointer-events: none;
+}
+
+/* C keys are widened under their sharp, the label keeps its shape */
+.keyboard .right_sharp .key_label {
+    transform: scale(calc(1 / var(--flat-half-width)), 1);
 }

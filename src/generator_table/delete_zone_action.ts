@@ -1,56 +1,39 @@
-import type { HistoryAction } from "../core_backend/history.ts";
-import {
+import type {
     BasicInstrument,
-    type BasicInstrumentZone,
+    BasicInstrumentZone,
     BasicPreset,
-    type BasicPresetZone,
-    type BasicZone
+    BasicPresetZone
 } from "spessasynth_core";
-import {
-    reorderInstrumentZones,
-    ZONE_SORTING_FUNCTION
-} from "../utils/reorder_zones.ts";
+import type { HistoryAction } from "../core_backend/history.ts";
+import type { BankDocument } from "../core_backend/bank_document.ts";
+import type { ChangeSet } from "../core_backend/change_set.ts";
 
-export class DeleteZoneAction<
-    T extends BasicInstrument | BasicPreset
-> implements HistoryAction {
-    private readonly zone: BasicZone;
-    private readonly el: T;
-    private readonly index: number;
-    private readonly callback: () => unknown;
+export class DeleteZoneAction implements HistoryAction {
+    private readonly element: BasicPreset | BasicInstrument;
+    private readonly zone: BasicPresetZone | BasicInstrumentZone;
+    private index = -1;
 
-    constructor(element: T, index: number, callback: () => unknown) {
-        this.el = element;
-        this.callback = callback;
-        this.index = index;
-        this.zone = element.zones[index];
+    public readonly label = "deleteZone";
+
+    public constructor(
+        element: BasicPreset | BasicInstrument,
+        zone: BasicPresetZone | BasicInstrumentZone
+    ) {
+        this.element = element;
+        this.zone = zone;
     }
 
-    do() {
-        this.el.deleteZone(this.index, true);
-        this.applyChanges();
+    private get child() {
+        return "sample" in this.zone ? this.zone.sample : this.zone.instrument;
     }
 
-    undo() {
-        if (this.el instanceof BasicInstrument) {
-            const z = this.el.createZone(
-                (this.zone as BasicInstrumentZone).sample
-            );
-            z.copyFrom(this.zone);
-        } else {
-            const z = this.el.createZone(
-                (this.zone as BasicPresetZone).instrument
-            );
-            z.copyFrom(this.zone);
-        }
-        this.applyChanges();
+    public do(document: BankDocument, changes: ChangeSet) {
+        this.index = document.removeZone(this.element, this.zone);
+        changes.touch(this.element, this.child);
     }
 
-    private applyChanges() {
-        this.el.zones =
-            this.el instanceof BasicInstrument
-                ? reorderInstrumentZones(this.el.zones)
-                : this.el.zones.slice().sort(ZONE_SORTING_FUNCTION);
-        this.callback();
+    public undo(document: BankDocument, changes: ChangeSet) {
+        document.restoreZone(this.element, this.zone, this.index);
+        changes.touch(this.element, this.child);
     }
 }

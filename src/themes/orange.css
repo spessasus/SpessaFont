@@ -1,0 +1,61 @@
+/*
+ * Orange
+ * Warm charcoal panels with orange accents.
+ */
+:root[data-theme="orange"] {
+    color-scheme: dark;
+
+    /* surfaces */
+    --darker-color-start: #0a0605;
+    --darker-color-end: #140b07;
+    --lighter-color-start: #1c120c;
+    --lighter-color-end: #261810;
+    --selection-color: #3a2214;
+    /* selected generator cells, a tint of the focus color so it shows on both row stripes */
+    --cell-selection-color: color-mix(
+        in oklch,
+        var(--focus-color) 35%,
+        transparent
+    );
+    --shadow-color: rgb(20 8 0 / 40%);
+
+    /* text */
+    --font-color: #efd9c4;
+    --muted-font-color: #b39a84;
+    --warning-color: #ff4a3a;
+
+    /* accents */
+    --menu-bar-color: #6e2a0e;
+    --menu-border-color: #e0662a;
+    --primary-color: #9c3510;
+    --border-color: #e0662a;
+    --focus-color: #e0662a;
+    --light-primary-color: #ffb36b;
+    --track-color: #2e1c14;
+    --track-border-color: #4a2c1e;
+
+    /* element kinds */
+    --preset-item-color: #ff5326;
+    --instrument-item-color: #8fc7d8;
+    --sample-item-color: #ffd04a;
+
+    /* generator table, exclusive classes get a hue each at this lightness */
+    --exclusive-class-lightness: 70%;
+
+    /* drawings */
+    --wave-color: #f08a2c;
+    --loop-start-color: #9bd36a;
+    --loop-end-color: #ff4a2a;
+    --curve-color: #e0662a;
+    --curve-axis-color: #4a2c1e;
+
+    /* piano */
+    --piano-gap-color: #0a0605;
+    --piano-label-color: #0a0605;
+    --piano-white-key: linear-gradient(90deg, #cdb8a4, #fff5ea);
+    --piano-black-key: linear-gradient(140deg, #2e1c14, #0a0605);
+    --piano-disabled-key: linear-gradient(65deg, #2e1c14, #6e5444);
+
+    /* extras */
+    --scrollbar-colors: #7a3a1a #0a0605;
+}

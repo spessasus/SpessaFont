@@ -1,48 +1,45 @@
+import type { BasicSample } from "spessasynth_core";
 import type { HistoryAction } from "../../core_backend/history.ts";
-import { type BasicSample } from "spessasynth_core";
-import type { SetViewType } from "../../bank_editor/bank_editor.tsx";
-import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
+import type { BankDocument } from "../../core_backend/bank_document.ts";
+import type { ChangeSet } from "../../core_backend/change_set.ts";
+import { neighborOrInfo } from "../../core_backend/neighbor_or_info.ts";
+import {
+    captureSampleLinks,
+    restoreSampleLinks
+} from "../../core_backend/sample_links.ts";
 
+/**
+ * Removes a sample. A stereo partner that stays in the bank becomes mono, as it would otherwise
+ * point at a sample that is gone (and save a link to sample 0). Undo restores the pair.
+ */
 export class DeleteSampleAction implements HistoryAction {
     private readonly sample: BasicSample;
-    private sampleIndex?: number;
-    private readonly setSamples: (s: BasicSample[]) => void;
-    private readonly setView: SetViewType;
+    private index = -1;
+    private links = captureSampleLinks([]);
 
-    constructor(
-        sample: BasicSample,
-        setSamples: (s: BasicSample[]) => void,
-        setView: SetViewType
-    ) {
+    public readonly label = "deleteSample";
+
+    public constructor(sample: BasicSample) {
         this.sample = sample;
-        this.setSamples = setSamples;
-        this.setView = setView;
     }
 
-    do(b: SoundBankManager) {
-        this.sampleIndex = b.samples.indexOf(this.sample);
-        if (this.sampleIndex < 0) {
-            throw new Error(
-                `${this.sample.name} does not exist in ${b.soundBankInfo.name}`
-            );
+    public do(document: BankDocument, changes: ChangeSet) {
+        const partner = this.sample.linkedSample;
+        this.links = captureSampleLinks([this.sample, partner]);
+        this.sample.unlinkSample();
+        this.index = document.removeSample(this.sample);
+        changes.touchList("samples");
+        if (partner) {
+            changes.touch(partner);
         }
-        // do not use deleteSample as it unlinks the other sample!
-        b.samples.splice(this.sampleIndex, 1);
-        this.setSamples([...b.samples]);
-        // check if there are samples to switch to
-        if (b.samples.length > 0) {
-            this.setView(b.samples[Math.max(this.sampleIndex - 1, 0)]);
-        } else {
-            this.setView("info");
-        }
+        changes.focusOn(neighborOrInfo(document.samples, this.index));
     }
 
-    undo(b: SoundBankManager) {
-        if (this.sampleIndex === undefined) {
-            return;
-        }
-        b.samples.splice(this.sampleIndex, 0, this.sample);
-        this.setSamples([...b.samples]);
-        this.setView(this.sample);
+    public undo(document: BankDocument, changes: ChangeSet) {
+        document.restoreSample(this.sample, this.index);
+        restoreSampleLinks(this.links);
+        changes.touchList("samples");
+        changes.touch(...this.links.map((l) => l.sample));
+        changes.focusOn(this.sample);
     }
 }

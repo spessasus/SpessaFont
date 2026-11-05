@@ -1,0 +1,32 @@
+/* Follows the pointer and never catches it, so the target below stays findable */
+.drag_label {
+    position: fixed;
+    left: var(--drag-x);
+    top: var(--drag-y);
+    translate: 0.8rem 0.6rem;
+    z-index: var(--top-index);
+    pointer-events: none;
+    max-width: 20rem;
+    padding: 0.2rem 0.6rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: "JetBrains Mono", "Monospaced", monospace;
+    color: var(--font-color);
+    background: var(--lighter-color-end);
+    border: 1px dashed var(--track-border-color);
+    border-radius: var(--primary-border-radius);
+    box-shadow: 0 0.2rem 0.6rem var(--shadow-color);
+    opacity: 0.85;
+}
+
+.drag_label.accepted {
+    border-style: solid;
+    border-color: var(--light-primary-color);
+    opacity: 1;
+}
+
+[data-drop-over="true"] {
+    outline: 2px dashed var(--light-primary-color);
+    outline-offset: -2px;
+}

@@ -89,8 +89,7 @@ $RECYCLE.BIN/
 *.msp
 
 # Windows shortcuts
-*.lnk!/src/externals/sl-web-ogg/dist/
-!/externals/sl-web-ogg/dist/
+*.lnk
 
 
 # Diagnostic reports (https://nodejs.org/api/report.html)

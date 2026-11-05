@@ -1,207 +1,109 @@
-import { BasicSample, EmptySample, SampleTypes } from "spessasynth_core";
-import { DropdownHeader } from "./dropdown_header/dropdown_header.tsx";
-import * as React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import { ESTIMATED_ROW_HEIGHT, OVERSCAN } from "./menu_list.tsx";
+import { getObjectId } from "../utils/object_id.ts";
+import { BasicSample } from "spessasynth_core";
+import { type MouseEvent, type PointerEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
-import SoundBankManager, {
-    type BankEditView
-} from "../core_backend/sound_bank_manager.ts";
-import { CreateSampleAction } from "./create_actions/create_sample_action.ts";
-import type { SetViewType } from "../bank_editor/bank_editor.tsx";
-import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
-import { SampleDisplay } from "./sample_display/sample_display.tsx";
 import toast from "react-hot-toast";
-import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
+import { DropdownHeader } from "./dropdown_header/dropdown_header.tsx";
+import type { BankEditView, BankEntity } from "../core_backend/bank_view.ts";
+import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
+import { useClipboard } from "../clipboard/clipboard_context.ts";
+import { SampleDisplay } from "./sample_display/sample_display.tsx";
+import { pickFiles } from "../utils/pick_file.ts";
+import { useSampleImport } from "./use_sample_import.ts";
+import { type FocusRequest, VirtualItemList } from "./virtual_item_list.tsx";
+import { useSectionOpen } from "./use_list_state.ts";
+import { useSelectionCommands } from "./use_selection_commands.ts";
+import { logError } from "../utils/core_utils.ts";
+
+interface SampleListProps {
+    samples: readonly BasicSample[];
+    view: BankEditView;
+    selected: ReadonlySet<BasicSample>;
+    /**
+     * The element the keyboard is on, kept in view.
+     */
+    cursor: BankEntity | undefined;
+    focusRequest: FocusRequest | null;
+    onItemClick: (sample: BasicSample, event: MouseEvent) => void;
+    onItemContextMenu: (sample: BasicSample, event: MouseEvent) => void;
+    onItemPointerDown: (sample: BasicSample, event: PointerEvent) => void;
+}
 
 export function SampleList({
     samples,
     view,
-    setView,
-    manager,
-    setSamples,
-    clipboard,
-    selectedSamples,
-    setSelectedSamples
-}: {
-    samples: BasicSample[];
-    view: BankEditView;
-    setView: SetViewType;
-    manager: SoundBankManager;
-    setSamples: (s: BasicSample[]) => unknown;
-    clipboard: ClipboardManager;
-    selectedSamples: Set<BasicSample>;
-    setSelectedSamples: (s: Set<BasicSample>) => unknown;
-}) {
+    selected,
+    cursor,
+    focusRequest,
+    onItemClick,
+    onItemContextMenu,
+    onItemPointerDown
+}: SampleListProps) {
     const { t } = useTranslation();
-    const { audioEngine } = useAudioEngine();
-    const [showSamples, setShowSamples] = useState(view instanceof BasicSample);
-    const samplesParentRef = useRef<HTMLDivElement>(null);
-    const samplesVirtualizer = useVirtualizer({
-        count: samples.length,
-        getScrollElement: () => samplesParentRef.current,
-        estimateSize: () => ESTIMATED_ROW_HEIGHT,
-        overscan: OVERSCAN
-    });
+    const importSamples = useSampleImport();
+    const { session, apply, playSample } = useBankEditor();
+    const { contents } = useClipboard();
+    const commands = useSelectionCommands();
+    const [isOpen, setIsOpen] = useSectionOpen(
+        view,
+        view instanceof BasicSample
+    );
+    const [isImporting, setIsImporting] = useState(false);
 
-    useEffect(() => {
-        if (view instanceof BasicSample) {
-            if (!selectedSamples.has(view)) {
-                setSelectedSamples(new Set<BasicSample>([view]));
-            }
-            setShowSamples(true);
-            setTimeout(
-                () => samplesVirtualizer.scrollToIndex(samples.indexOf(view)),
-                100
-            );
-        } else if (selectedSamples.size > 0) {
-            setSelectedSamples(new Set<BasicSample>());
+    // One import at a time, a second one would race the first for the free names
+    const addSamples = async () => {
+        const files = await pickFiles("audio/*");
+        if (files.length === 0) {
+            return;
         }
-    }, [
-        samples,
-        samplesVirtualizer,
-        selectedSamples,
-        setSelectedSamples,
-        view
-    ]);
-
-    const addSample = useCallback(() => {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = "audio/*";
-        input.onchange = async () => {
-            const file = input?.files?.[0];
-            if (!file) {
-                return;
+        setIsImporting(true);
+        try {
+            if ((await importSamples(files, session.document, apply)) > 0) {
+                setIsOpen(true);
             }
-            const buffer = await file.arrayBuffer();
-            let audioBuffer: AudioBuffer;
-            try {
-                audioBuffer = await audioEngine.context.decodeAudioData(buffer);
-            } catch {
-                toast.error(t("sampleLocale.tools.invalidAudioFile"));
-                return;
-            }
-            const out = audioBuffer.getChannelData(0);
-            let sampleName = file.name;
-            const lastDotIndex = sampleName.lastIndexOf(".");
-            if (lastDotIndex !== -1) {
-                sampleName = sampleName.slice(0, Math.max(0, lastDotIndex));
-            }
-            sampleName = sampleName.slice(0, 39); // keep spare space for "R" or "L"
-
-            const sample = new EmptySample();
-            sample.name =
-                sampleName + (audioBuffer.numberOfChannels > 1 ? "L" : "");
-            sample.setAudioData(out, audioBuffer.sampleRate);
-            const actions = [
-                new CreateSampleAction(sample, setSamples, setView)
-            ];
-            // add the stereo sample if more channels
-            if (audioBuffer.numberOfChannels > 1) {
-                const otherOut = audioBuffer.getChannelData(1);
-                const sample2 = new EmptySample();
-                sample2.name = sampleName + "R";
-                sample2.setAudioData(otherOut, audioBuffer.sampleRate);
-                sample2.setLinkedSample(sample, SampleTypes.rightSample);
-                actions.push(
-                    new CreateSampleAction(sample2, setSamples, setView)
-                );
-            }
-            manager.modifyBank(actions);
-            setShowSamples(true);
-        };
-        input.click();
-    }, [audioEngine.context, manager, setSamples, setView, t]);
-
-    const handleClick = (
-        e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-        sample: BasicSample
-    ) => {
-        const newSet = new Set<BasicSample>([sample]);
-        if (e.shiftKey && view instanceof BasicSample) {
-            const viewIndex = samples.indexOf(view);
-            const sampleIndex = samples.indexOf(sample);
-            const start = Math.min(viewIndex, sampleIndex);
-            const end = Math.max(viewIndex, sampleIndex);
-            for (const s of samples.slice(start, end + 1)) newSet.add(s);
-        } else if (e.ctrlKey && view instanceof BasicSample) {
-            for (const s of selectedSamples) newSet.add(s);
-            if (selectedSamples.has(sample)) {
-                newSet.delete(sample);
-            }
-        } else {
-            setView(sample);
+        } catch (error) {
+            logError("Failed to import the audio files.", error);
+            toast.error(String(error));
+            toast.error(t("errorBoundary.actionFailed"));
         }
-        setSelectedSamples(newSet);
+        setIsImporting(false);
     };
 
     return (
         <>
             <DropdownHeader
-                onAdd={addSample}
-                onClick={() => setShowSamples(!showSamples)}
                 text={t("presetList.samples")}
-                open={showSamples}
-                copy={selectedSamples.size > 0}
-                onCopy={() => {
-                    clipboard.copySamples(selectedSamples);
-                    setSamples([...manager.samples]);
-                    toast.success(
-                        t("clipboardLocale.copiedSamples", {
-                            count: selectedSamples.size
-                        })
-                    );
-                }}
-                paste={clipboard.hasSamples()}
-                onPaste={() => {
-                    clipboard.pasteSamples(manager, setSamples, setView);
-                    setSamples(
-                        manager.samples
-                            .slice()
-                            .sort((a, b) =>
-                                a.name > b.name ? 1 : b.name > a.name ? -1 : 0
-                            )
-                    );
-                    toast.success(
-                        t("clipboardLocale.pastedSamples", {
-                            count: clipboard.sampleCount
-                        })
-                    );
-                }}
+                isOpen={isOpen}
+                onToggle={() => setIsOpen((open) => !open)}
+                addLabel={t("presetList.importSamples")}
+                onAdd={isImporting ? undefined : () => void addSamples()}
+                onCopy={
+                    selected.size > 0
+                        ? () => commands.copy(selected)
+                        : undefined
+                }
+                onPaste={contents.samples > 0 ? commands.paste : undefined}
             />
-            {showSamples && (
-                <div className="menu_list_scrollable" ref={samplesParentRef}>
-                    <div
-                        className="item_group"
-                        style={{
-                            height: `${samplesVirtualizer.getTotalSize()}px`
-                        }}
-                    >
-                        {samplesVirtualizer.getVirtualItems().map((row) => {
-                            const sample = samples[row.index];
-                            return (
-                                <div
-                                    key={row.key}
-                                    ref={samplesVirtualizer.measureElement}
-                                    data-index={row.index}
-                                    className={"virtual_item"}
-                                    style={{
-                                        transform: `translateY(${row.start}px)`
-                                    }}
-                                >
-                                    <SampleDisplay
-                                        selected={selectedSamples.has(sample)}
-                                        sample={sample}
-                                        onClick={(e) => handleClick(e, sample)}
-                                    />
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
+            {isOpen ? (
+                <VirtualItemList
+                    items={samples}
+                    focusedItem={
+                        cursor instanceof BasicSample ? cursor : undefined
+                    }
+                    focusRequest={focusRequest}
+                    renderItem={(sample) => (
+                        <SampleDisplay
+                            sampleId={getObjectId(sample)}
+                            isSelected={selected.has(sample)}
+                            isShown={view === sample}
+                            onClick={(e) => onItemClick(sample, e)}
+                            onContextMenu={(e) => onItemContextMenu(sample, e)}
+                            onPointerDown={(e) => onItemPointerDown(sample, e)}
+                            onDoubleClick={() => playSample(sample)}
+                        />
+                    )}
+                />
+            ) : null}
         </>
     );
 }

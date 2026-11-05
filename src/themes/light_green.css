@@ -1,0 +1,61 @@
+/*
+ * Light Green
+ * Soft green panels with olive accents.
+ */
+:root[data-theme="light_green"] {
+    color-scheme: light;
+
+    /* surfaces */
+    --darker-color-start: #f7f6ec;
+    --darker-color-end: #eef0da;
+    --lighter-color-start: #eef1dc;
+    --lighter-color-end: #e7ecd2;
+    --selection-color: #dfe6c4;
+    /* selected generator cells, a tint of the focus color so it shows on both row stripes */
+    --cell-selection-color: color-mix(
+        in oklch,
+        var(--focus-color) 35%,
+        transparent
+    );
+    --shadow-color: rgb(50 65 40 / 15%);
+
+    /* text */
+    --font-color: #33412a;
+    --muted-font-color: #66734f;
+    --warning-color: #b3261e;
+
+    /* accents */
+    --menu-bar-color: #93b56f;
+    --menu-border-color: #5a7d43;
+    --primary-color: #93b56f;
+    --border-color: #5a7d43;
+    --focus-color: #5a7d43;
+    --light-primary-color: #b9d497;
+    --track-color: #e3e4c9;
+    --track-border-color: #c2c49a;
+
+    /* element kinds */
+    --preset-item-color: #c0442a;
+    --instrument-item-color: #3f7fa0;
+    --sample-item-color: #b08a10;
+
+    /* generator table, exclusive classes get a hue each at this lightness */
+    --exclusive-class-lightness: 28%;
+
+    /* drawings */
+    --wave-color: #5a7d43;
+    --loop-start-color: #34a639;
+    --loop-end-color: #c0442a;
+    --curve-color: #5a7d43;
+    --curve-axis-color: #c2c49a;
+
+    /* piano */
+    --piano-gap-color: #33412a;
+    --piano-label-color: #33412a;
+    --piano-white-key: linear-gradient(90deg, #dcdcc0, #fffef5);
+    --piano-black-key: linear-gradient(140deg, #4a5a3a, #33412a);
+    --piano-disabled-key: linear-gradient(65deg, #c2c49a, #e3e4c9);
+
+    /* extras */
+    --scrollbar-colors: #c2c49a #f7f6ec;
+}

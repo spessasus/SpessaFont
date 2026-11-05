@@ -1,360 +1,298 @@
 import { MenuBar } from "./menu_bar/menu_bar.tsx";
-import {
-    getSetting,
-    type SavedSettingsType
-} from "./settings/save_load/settings_typedef.ts";
 import { useTranslation } from "react-i18next";
-import SoundBankManager from "./core_backend/sound_bank_manager.ts";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ClipboardManager } from "./core_backend/clipboard_manager.ts";
+import { useRef, useState } from "react";
 import { Settings } from "./settings/settings.tsx";
 import { TabList } from "./tab_list/tab_list.tsx";
 import { KeyboardController } from "./keyboard/keyboard_controller.tsx";
-import { DestinationsOptions } from "./utils/translated_options/destination_options.tsx";
-import { ModulableControllerOptions } from "./utils/translated_options/modulable_controller_options.tsx";
-import { BankEditor, type BankEditorRef } from "./bank_editor/bank_editor.tsx";
+import { BankEditor } from "./bank_editor/bank_editor.tsx";
 import { ACCEPTED_SOUNDBANK_FORMATS } from "./utils/accepted_formats.ts";
-import { loadSoundBank } from "./core_backend/load_sound_bank.ts";
-import type { BasicSoundBank, GenericRange } from "spessasynth_core";
 import toast, { Toaster } from "react-hot-toast";
-import "./toasts.css";
+import "./toasts/toasts.css";
+import "./app.css";
 import { Welcome } from "./welcome/welcome.tsx";
-import type { ElectronAPI } from "./types/electron.ts";
-import { IS_CHROME, IS_ELECTRON } from "./utils/environment_detection.ts";
-import { useAudioEngine } from "./core_backend/audio_engine_context.ts"; // apply locale
-import { useMIDIAccess } from "./settings/midi_context/midi_context.ts"; // for MIDI listener
+import { logError, logInfo } from "./utils/core_utils.ts";
+import { useAudioEngine } from "./core_backend/audio_engine_context.ts";
+import { useMIDIInput } from "./keyboard/use_midi_input.ts";
+import { useBankTabs } from "./tab_list/use_bank_tabs.ts";
+import { useBankFileOpener } from "./hooks/use_bank_file_opener.ts";
+import { useLaunchQueue } from "./hooks/use_launch_queue.ts";
+import { useElectronFileOpen } from "./hooks/use_electron_file_open.ts";
+import { useEventListener } from "./hooks/use_event_listener.ts";
+import {
+    isEditorShortcut,
+    isInModal,
+    isTextField
+} from "./utils/is_editor_shortcut.ts";
+import { useUncaughtErrorToasts } from "./hooks/use_uncaught_error_toasts.ts";
+import { pickFile } from "./utils/pick_file.ts";
+import { getFileName } from "./utils/file_path.ts";
+import { useFileDrop } from "./hooks/use_file_drop.ts";
+import { useSampleImport } from "./menu_list/use_sample_import.ts";
+import { ErrorBoundary } from "./error_boundary/error_boundary.tsx";
+import { PartErrorFallback } from "./error_boundary/part_error_fallback.tsx";
+import { IS_MAC } from "./utils/environment_detection.ts";
+import { rememberFocus } from "./utils/focus_return.ts";
+import { ToolsMenuSlotContext } from "./menu_bar/tools_menu_slot.ts";
 
-// shared clipboard
-const clipboardManager = new ClipboardManager();
+const SOUND_BANK_EXTENSIONS = ACCEPTED_SOUNDBANK_FORMATS.split(",");
 
-interface LaunchParams {
-    files: readonly FileSystemFileHandle[];
+// A failing tab, keyboard or settings page keeps the other tabs and their unsaved edits
+function renderPartError(error: unknown, reset: () => void) {
+    return <PartErrorFallback error={error} onRetry={reset} />;
 }
 
-interface LaunchQueue {
-    setConsumer(consumer: (params: LaunchParams) => void): void;
+function isSoundBankFile(file: File) {
+    const name = file.name.toLowerCase();
+    return SOUND_BANK_EXTENSIONS.some((extension) => name.endsWith(extension));
 }
 
-interface GlobalThisLaunch {
-    launchQueue?: LaunchQueue;
-}
-
-// Service workers are unsafe on electron
-if (navigator.serviceWorker && !IS_ELECTRON) {
-    await navigator.serviceWorker.register("service-worker.js");
-    console.info("Registered service worker");
-}
-
-function App({ initialSettings }: { initialSettings: SavedSettingsType }) {
+export function App() {
     const { t } = useTranslation();
     const { audioEngine } = useAudioEngine();
-    const [tabs, setTabs] = useState<SoundBankManager[]>([]);
-    const [showKeyboard, setShowKeyboard] = useState(false);
-    const [settings, setSettings] = useState(false);
-    const [theme, setTheme] = useState(getSetting("theme", initialSettings));
-    const [activeTab, setActiveTab] = useState<number>(0); // index in tabs[]
-    const bankEditorRef: BankEditorRef = useRef(null);
-    const [splits, setSplits] = useState<GenericRange[]>([]);
+    useUncaughtErrorToasts();
+    useMIDIInput();
+    const {
+        tabs,
+        activeSession,
+        activeView,
+        openSession,
+        requestClose,
+        activate,
+        setActiveView,
+        setSessionView,
+        goBack,
+        goForward
+    } = useBankTabs();
+    const importSamples = useSampleImport();
+    const [isKeyboardShown, setIsKeyboardShown] = useState(false);
+    const [areSettingsShown, setAreSettingsShown] = useState(false);
+    // Gives the focus back to where it was when the settings opened
+    const restoreSettingsFocus = useRef<(() => void) | null>(null);
 
-    const currentManager: SoundBankManager | undefined = useMemo(
-        () => tabs[activeTab],
-        [activeTab, tabs]
+    const closeSettings = () => {
+        setAreSettingsShown(false);
+        restoreSettingsFocus.current?.();
+        restoreSettingsFocus.current = null;
+    };
+    // The editor puts its tools menu here, see ToolsMenu
+    const [toolsMenuSlot, setToolsMenuSlot] = useState<HTMLDivElement | null>(
+        null
     );
-
-    // cached translated options
-    // note: I can't use JSX here as it calls MCO 9 times for some reason?
-    const ccOptions = useMemo(
-        () => ModulableControllerOptions({ t: t, padLength: 5 }),
-        [t]
-    );
-    const destinationOptions = useMemo(
-        () => <>{DestinationsOptions({ t: t })}</>,
-        [t]
-    );
-
-    // Theme change, on #root for audio provider to be themed as well
-    useEffect(() => {
-        switch (theme) {
-            default:
-            case "dark": {
-                document.querySelector("#root")!.classList.remove("light_mode");
-                break;
+    const toolsMenuContext = {
+        node: toolsMenuSlot,
+        onReveal: () => {
+            if (areSettingsShown) {
+                closeSettings();
             }
+        }
+    };
+    const toggleSettings = () => {
+        if (areSettingsShown) {
+            closeSettings();
+            return;
+        }
+        restoreSettingsFocus.current = rememberFocus();
+        setAreSettingsShown(true);
+    };
 
-            case "light": {
-                document.querySelector("#root")!.classList.add("light_mode");
+    // A bank opened while the settings are shown would stay hidden behind them
+    const openBankFile = useBankFileOpener((session) => {
+        setAreSettingsShown(false);
+        restoreSettingsFocus.current = null;
+        openSession(session);
+    });
+
+    // Files opened by the OS arrive without a user gesture on the page
+    const openFileFromOS = async (file: File) => {
+        await audioEngine.context.resume();
+        logInfo(`Opening file ${file.name}`);
+        await openBankFile(file);
+    };
+    useLaunchQueue(openFileFromOS);
+    useElectronFileOpen(openFileFromOS, (path, error) => {
+        logError(`Failed to open ${path}.`, error);
+        toast.error(
+            t("loadingAndSaving.electronOpenError", {
+                name: getFileName(path)
+            })
+        );
+    });
+
+    // Sound banks open in new tabs, anything else is tried as audio for the open bank, or for
+    // the last bank dropped with it. All the audio files are one undo step
+    const handleDroppedFiles = async (files: File[]) => {
+        const audioFiles = files.filter((file) => !isSoundBankFile(file));
+        let target = activeSession;
+        for (const file of files) {
+            if (isSoundBankFile(file)) {
+                target = (await openBankFile(file)) ?? target;
             }
+        }
+        if (audioFiles.length === 0) {
+            return;
+        }
+        if (!target) {
+            toast.error(t("loadingAndSaving.openBankForSamples"));
+            return;
+        }
+        setAreSettingsShown(false);
+        const session = target;
+        await importSamples(audioFiles, session.document, (actions) => {
+            const focus = session.history.do(actions);
+            if (focus) {
+                setSessionView(session.id, focus);
+            }
+        });
+    };
+    useFileDrop((files) => void handleDroppedFiles(files));
+
+    const handleOpenFile = async () => {
+        const file = await pickFile(ACCEPTED_SOUNDBANK_FORMATS);
+        if (file) {
+            await openBankFile(file);
+        }
+    };
+
+    const isEditorShown = activeSession !== undefined && !areSettingsShown;
+
+    // Alt+Left and Right, and the mouse's side buttons, go back and forward between elements.
+    // The page has no history of its own, so the browser would leave it instead, even where
+    // the keys do nothing in the app (a field, a dialog, the settings)
+    useEventListener(document, "keydown", (e) => {
+        if (
+            e.defaultPrevented ||
+            !e.altKey ||
+            (e.key !== "ArrowLeft" && e.key !== "ArrowRight")
+        ) {
+            return;
+        }
+        // On macOS Option and an arrow move the cursor by a word
+        if (IS_MAC && isTextField(e.target)) {
+            return;
+        }
+        e.preventDefault();
+        if (!isEditorShown || !isEditorShortcut(e)) {
+            return;
+        }
+        if (e.key === "ArrowLeft") {
+            goBack();
+        } else {
+            goForward();
+        }
+    });
+    useEventListener(document, "mousedown", (e) => {
+        if (e.button === 3 || e.button === 4) {
+            e.preventDefault();
+        }
+    });
+    useEventListener(document, "mouseup", (e) => {
+        if (e.button !== 3 && e.button !== 4) {
+            return;
+        }
+        e.preventDefault();
+        // Nothing changes behind a dialog
+        if (!isEditorShown || isInModal(e.target)) {
+            return;
+        }
+        if (e.button === 3) {
+            goBack();
+        } else {
+            goForward();
         }
     });
 
-    // Pause MIDI when unloading tabs
-    useEffect(() => {
-        if (tabs.length > 0 && tabs[activeTab])
-            tabs[activeTab].sendBankToSynth();
-        else audioEngine.pauseMIDI();
-    }, [activeTab, audioEngine, tabs]);
-
-    const toggleSettings = () => setSettings(!settings);
-
-    useEffect(() => {
-        function handleUnload(e: BeforeUnloadEvent) {
-            if (tabs.some((t) => t.dirty)) {
-                e.preventDefault();
-            }
+    useEventListener(document, "keydown", (e) => {
+        if (
+            !areSettingsShown ||
+            e.defaultPrevented ||
+            e.key !== "Escape" ||
+            isInModal(e.target)
+        ) {
+            return;
         }
-
-        window.addEventListener("beforeunload", handleUnload);
-        return () => {
-            window.removeEventListener("beforeunload", handleUnload);
-        };
-    }, [tabs]);
-
-    const openNewBankTab = useCallback(
-        async (bankFile?: File) => {
-            const id = toast.loading(t("loadingAndSaving.loadingFileFromDisk"));
-            let bank: BasicSoundBank | undefined = undefined;
-            if (bankFile instanceof File) {
-                if (
-                    bankFile.size > 2_147_483_648 &&
-                    IS_CHROME &&
-                    !IS_ELECTRON
-                ) {
-                    // this not anti-chrome code,
-                    // loading 4GB sound banks throws NotReadable error,
-                    // uncomment this code and try it for yourself
-                    toast.dismiss(id);
-                    toast.error(t("loadingAndSaving.chromeError"));
-                    return;
-                }
-                try {
-                    const buffer = await bankFile.arrayBuffer();
-                    toast.loading(t("loadingAndSaving.parsingSoundBank"), {
-                        id
-                    });
-                    await new Promise((r) => setTimeout(r, 100));
-                    bank = loadSoundBank(buffer);
-                } catch (error) {
-                    console.error(error);
-                    toast.dismiss(id);
-                    if ((error as Error).name === "NotReadableError") {
-                        // special Electron error
-                        toast.error(t("loadingAndSaving.electronError"));
-                    } else {
-                        // make so the error appears at the bottom
-                        toast.error(`${error as string}`);
-                        toast.error(
-                            t("loadingAndSaving.errorLoadingSoundBank")
-                        );
-                    }
-                    return;
-                }
-            }
-
-            // will automatically create an empty bank if not provided
-            const newManager = new SoundBankManager(
-                audioEngine.processor,
-                audioEngine.sequencer,
-                bank
-            );
-            toast.dismiss(id);
-            newManager.sendBankToSynth();
-            setTabs((prev) => [newManager, ...prev]);
-            setActiveTab(0); // newly added tab
-        },
-        [audioEngine.processor, audioEngine.sequencer, t]
-    );
-
-    // Electron ready signal
-    useEffect(() => {
-        if (IS_ELECTRON && "electronAPI" in globalThis) {
-            const api = (globalThis as unknown as { electronAPI: ElectronAPI })
-                .electronAPI;
-            api.appReady();
-        }
-    }, []);
-
-    // Loading files with electron or launch queue
-    useEffect(() => {
-        if ("launchQueue" in globalThis) {
-            const launch = (globalThis as GlobalThisLaunch).launchQueue!;
-            launch.setConsumer(async (launchParams) => {
-                await audioEngine.context.resume();
-                for (const fileHandle of launchParams.files) {
-                    console.info(`Opening file ${fileHandle.name}`);
-                    const file = await fileHandle.getFile();
-                    await openNewBankTab(file);
-                }
-            });
-        }
-        if ("electronAPI" in globalThis) {
-            const api = (globalThis as unknown as { electronAPI: ElectronAPI })
-                .electronAPI;
-
-            api.onFileOpened(async (path: string) => {
-                try {
-                    await audioEngine.context.resume();
-                    console.info(`Attempting to open ${path}`);
-                    const response = await fetch(`file://${path}`);
-                    const blob = await response.blob();
-
-                    const file = new File(
-                        [blob],
-                        path.split("/").pop() ?? "soundfont"
-                    );
-
-                    await openNewBankTab(file);
-                } catch (error) {
-                    toast.error(
-                        `Failed to open file ${path.split("/").at(-1)}\n` +
-                            `${(error as Error).message}\n` +
-                            "Are you in development mode?"
-                    );
-                }
-            });
-            console.info("Connected to Electron file handlers");
-        }
-    }, [audioEngine.context, openNewBankTab]);
-
-    const { selectedDevice } = useMIDIAccess();
-    useEffect(() => {
-        if (!selectedDevice) return;
-
-        const handler = (e: MIDIMessageEvent) => {
-            if (e.data) {
-                audioEngine.processRealTime(e.data);
-            }
-        };
-
-        selectedDevice.addEventListener("midimessage", handler);
-        return () => {
-            selectedDevice.removeEventListener("midimessage", handler);
-        };
-    }, [audioEngine, selectedDevice]);
-
-    const openFile = useCallback(() => {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = ACCEPTED_SOUNDBANK_FORMATS;
-        input.click();
-        input.onchange = async () => {
-            const file: File | undefined = input.files?.[0];
-            if (!file) {
-                return;
-            }
-            await openNewBankTab(file);
-        };
-    }, [openNewBankTab]);
-
-    const closeTabLocal = useCallback(
-        (index: number) => {
-            if (!tabs[index]) {
-                return;
-            }
-            setTabs((prevTabs) => {
-                const tab = prevTabs[index];
-                tab.close();
-                return prevTabs.filter((_, i) => i !== index);
-            });
-            if (activeTab === index) {
-                setActiveTab(0);
-            }
-        },
-        [activeTab, tabs]
-    );
-
-    const closeTab = useCallback(
-        (index: number) => {
-            if (!tabs[index]) {
-                return;
-            }
-            const tab = tabs[index];
-            if (!tab.dirty) {
-                closeTabLocal(index);
-                return;
-            }
-            toast.error(
-                (tost) => (
-                    <div className={"toast_col"}>
-                        <span>{t("unsavedChanges")}</span>
-                        <div className={"toast_row"}>
-                            <span
-                                onClick={() => {
-                                    toast.dismiss(tost.id);
-                                    closeTabLocal(index);
-                                }}
-                                className={"pretty_outline"}
-                            >
-                                {t("discard")}
-                            </span>
-                            <span
-                                onClick={() => toast.dismiss(tost.id)}
-                                className={"pretty_outline"}
-                            >
-                                {t("keep")}
-                            </span>
-                        </div>
-                    </div>
-                ),
-                {
-                    duration: Infinity
-                }
-            );
-        },
-        [closeTabLocal, t, tabs]
-    );
-
-    const showTabList = !settings;
-    const showWelcome = tabs.length === 0 && !settings;
-    const showSettings = settings;
-    const showEditor = !showWelcome && !showSettings && !!currentManager;
+        e.preventDefault();
+        closeSettings();
+    });
 
     return (
         <div className={`spessafont_main`}>
             <Toaster toastOptions={{ className: "toasts" }} />
             <MenuBar
-                bankEditorRef={bankEditorRef}
-                showMidiPlayer={tabs.length > 0}
-                toggleSettings={toggleSettings}
-                openTab={openNewBankTab}
-                closeTab={() => closeTab(activeTab)}
-                manager={currentManager}
-                toggleKeyboard={() => setShowKeyboard(!showKeyboard)}
+                showMIDIPlayer={tabs.length > 0}
+                onToggleSettings={toggleSettings}
+                onOpenFile={() => void handleOpenFile()}
+                onNewFile={() => void openBankFile()}
+                onCloseFile={() => {
+                    if (!activeSession) return;
+                    // The tab that closes should be the one on screen
+                    setAreSettingsShown(false);
+                    requestClose(activeSession);
+                }}
+                session={activeSession}
+                onViewChange={setActiveView}
+                onToggleKeyboard={() => setIsKeyboardShown((shown) => !shown)}
+                isEditorCovered={areSettingsShown}
+                isKeyboardShown={isKeyboardShown}
+                toolsMenuSlotRef={setToolsMenuSlot}
             />
-            {showTabList && (
-                <TabList
-                    activeTab={activeTab}
-                    closeTab={closeTab}
-                    setActiveTab={setActiveTab}
-                    tabs={tabs}
-                />
-            )}
+            <div className={"app_body"}>
+                {/* Covered by the settings, nothing in here takes the focus or a click */}
+                <div className={"app_covered"} inert={areSettingsShown}>
+                    <TabList
+                        activeId={activeSession?.id}
+                        onSelect={activate}
+                        onClose={requestClose}
+                        tabs={tabs}
+                    />
+                    {activeSession && (
+                        <ErrorBoundary
+                            key={activeSession.id}
+                            fallback={renderPartError}
+                        >
+                            <ToolsMenuSlotContext value={toolsMenuContext}>
+                                <BankEditor
+                                    session={activeSession}
+                                    view={activeView}
+                                    onViewChange={setActiveView}
+                                    isCovered={areSettingsShown}
+                                />
+                            </ToolsMenuSlotContext>
+                        </ErrorBoundary>
+                    )}
+                    {tabs.length === 0 && (
+                        <Welcome
+                            onOpenFile={() => void handleOpenFile()}
+                            onNewFile={() => void openBankFile()}
+                        />
+                    )}
+                </div>
+                {areSettingsShown && (
+                    <div className={"app_settings_layer"}>
+                        <button
+                            type={"button"}
+                            className={"pretty_button app_settings_close"}
+                            autoFocus={true}
+                            onClick={closeSettings}
+                            title={t("settingsLocale.closeSettings")}
+                            aria-label={t("settingsLocale.closeSettings")}
+                        >
+                            &times;
+                        </button>
+                        <ErrorBoundary fallback={renderPartError}>
+                            <Settings openSessions={tabs} />
+                        </ErrorBoundary>
+                    </div>
+                )}
+            </div>
 
-            {showSettings && <Settings setTheme={setTheme} />}
-
-            {currentManager && (
-                <BankEditor
-                    ref={bankEditorRef}
-                    shown={showEditor}
-                    destinationOptions={destinationOptions}
-                    ccOptions={ccOptions}
-                    manager={currentManager}
-                    clipboardManager={clipboardManager}
-                    setSplits={setSplits}
-                />
-            )}
-
-            {showWelcome && (
-                <Welcome openFile={openFile} openNewBankTab={openNewBankTab} />
-            )}
-
-            {showKeyboard && (
-                <KeyboardController
-                    splits={splits}
-                    ccOptions={ccOptions}
-                ></KeyboardController>
+            {isKeyboardShown && (
+                <ErrorBoundary fallback={renderPartError}>
+                    <KeyboardController
+                        session={isEditorShown ? activeSession : undefined}
+                        view={activeView}
+                    />
+                </ErrorBoundary>
             )}
         </div>
     );
 }
-
-export default App;

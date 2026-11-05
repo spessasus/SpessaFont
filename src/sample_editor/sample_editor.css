@@ -1,61 +1,131 @@
+/* The waveform takes whatever height the toolbar and the panels leave */
 .sample_editor {
     display: flex;
     flex-direction: column;
     gap: var(--flex-gap);
     height: 100%;
+    min-height: 0;
+    overflow-y: auto;
 }
 
-.info_split {
+.sample_editor_toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--flex-gap) 1rem;
+}
+
+/* The play buttons take the height of the name, so they read as one row */
+.sample_editor_title {
+    display: flex;
+    gap: var(--flex-gap);
+    flex: 1 1 30rem;
+    min-width: 0;
+}
+
+.sample_editor_name {
+    font-size: 1.5rem;
+    flex: 1 1 12rem;
+    min-width: 0;
+}
+
+.sample_playback {
     display: flex;
     gap: var(--flex-gap);
 }
 
-.info_column {
+.sample_playback button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.8rem;
+    white-space: nowrap;
+}
+
+.sample_playback button {
+    min-width: 7rem;
+}
+
+.sample_playback_label {
+    display: grid;
+}
+
+/* The global transition would fade the visibility and show both labels for a moment */
+.sample_playback_label > span {
+    grid-area: 1 / 1;
+    transition: none;
+}
+
+.sample_playback_label > span[data-hidden="true"] {
+    visibility: hidden;
+}
+
+.sample_playback button[data-active="true"] {
+    border-color: var(--border-color);
+    background: var(--primary-color);
+}
+
+.sample_editor_toolbar .controller_range_wrapper {
+    width: 16rem;
+}
+
+/* Properties, tools, and the equalizer side by side, wrapping on narrow screens */
+.sample_editor_panels {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: start;
+    gap: var(--flex-gap) 1.5rem;
+}
+
+.sample_properties {
+    display: grid;
+    /* At most four columns, so the seven fields make two even rows on wide screens */
+    grid-template-columns: repeat(
+        auto-fill,
+        minmax(max(8rem, (100% - 3rem) / 4), 1fr)
+    );
+    gap: var(--flex-gap) 1rem;
+    flex: 1 1 17rem;
+    max-width: 47rem;
+    /* Firefox sizes the auto-fill grid at its widest by default, which pushes the equalizer
+       onto its own line */
+    min-width: 0;
+}
+
+/* A label too long for its column (Polish) wraps, and the fields of a row stay level at the
+   bottom */
+.sample_editor_field {
     display: flex;
     flex-direction: column;
-    gap: var(--flex-gap);
-    width: 100%;
+    justify-content: end;
+    align-items: stretch;
+    gap: 0.2rem;
+    min-width: 0;
 }
 
-.sample_name {
-    font-size: 1.5rem;
-}
-
-.tools {
-    align-items: center;
-    justify-content: start;
-    width: 100%;
-}
-
-.tools > * {
-    text-align: center;
-    white-space: nowrap;
-    width: 100%;
-}
-
-.tools h2 {
-    /*these values are to even out the height with the sample name input*/
-    font-size: 1.5rem;
-    padding: 0.3rem;
-    border: 0.2rem solid transparent;
-}
-
-.tools .controller_range_wrapper {
-    padding: 0 0.5rem;
-}
-
-.info_field {
-    display: flex;
-    justify-content: space-between;
-    gap: var(--flex-gap);
-    align-items: center;
-}
-
-.info_field span {
+.sample_editor_field span {
     text-align: start;
-    white-space: nowrap;
+    overflow-wrap: break-word;
+    font-size: 0.85rem;
+    color: var(--muted-font-color);
 }
 
-.info_field input {
+.sample_editor_field input,
+.sample_editor_field select,
+.sample_editor_field button {
     text-align: end;
+    width: 100%;
+}
+
+/* Long sample names end in an ellipsis, the title shows the whole name */
+.sample_link_button {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.sample_link_button:disabled {
+    cursor: default;
 }

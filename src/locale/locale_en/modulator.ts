@@ -1,5 +1,28 @@
 export const ModulatorLocale = {
+    modulatorNumber: "Modulator #{{number}}",
+    deleteModulator: "Delete modulator #{{number}}",
+    primarySource: "Primary source",
+    secondarySource: "Secondary source",
+    primaryCurve: "Primary source curve",
+    secondaryCurve: "Secondary source curve",
+    transform: "Transform",
+    destination: "Destination",
+    curves: {
+        linear: "Linear",
+        concave: "Concave",
+        convex: "Convex",
+        switch: "Switch",
+        unipolar: "unipolar",
+        bipolar: "bipolar",
+        positive: "positive",
+        negative: "negative",
+        label: "{{shape}}, {{polarity}}, {{direction}}"
+    },
+    editModulators: "Edit modulators for {{name}}",
+    closeEditor: "Close the modulator editor",
     modulators: "Modulators", // plural
+    modulatorCount: "Modulators: {{count}}",
+    newModulator: "New",
     editingModulators: "Editing Modulators for {{name}}",
     overriding: "Overriding Default Modulator",
     sources: {
@@ -10,8 +33,12 @@ export const ModulatorLocale = {
         channelPressure: "Channel Pressure",
         pitchWheel: "Pitch Wheel",
         pitchWheelRange: "Pitch Wheel Range",
-        midiController: "MIDI Controller"
+        link: "Linked Modulator (not supported)",
+        otherSource: "Source {{number}}",
+        otherController: "CC#{{number}}"
     },
+    otherDestination: "Generator {{number}}",
+    linkDestination: "Linked or invalid (not supported)",
     transforms: {
         noOperation: "No Operation",
         absoluteValue: "Absolute Value"

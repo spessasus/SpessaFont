@@ -1,0 +1,58 @@
+/*
+ * SpessaFont Light
+ * The original light theme, white panels with blue accents.
+ */
+:root[data-theme="light"] {
+    color-scheme: light;
+
+    /* surfaces */
+    --darker-color-start: #fff;
+    --darker-color-end: #eee;
+    --lighter-color-start: #efefef;
+    --lighter-color-end: #eee;
+    --selection-color: #eee;
+    /* selected generator cells, a tint of the focus color so it shows on both row stripes */
+    --cell-selection-color: color-mix(
+        in oklch,
+        var(--focus-color) 35%,
+        transparent
+    );
+    --shadow-color: oklch(0% 0 0 / 20%);
+
+    /* text */
+    --font-color: #111;
+    --muted-font-color: rgb(17 17 17 / 75%);
+    --warning-color: red;
+
+    /* accents */
+    --menu-bar-color: #5f93ff;
+    --menu-border-color: #0023c9;
+    --primary-color: #5f93ff;
+    --border-color: #0023c9;
+    --focus-color: #0023c9;
+    --light-primary-color: #c5d9ff;
+    --track-color: #fff;
+    --track-border-color: #aaa;
+
+    /* element kinds */
+    --preset-item-color: red;
+    --instrument-item-color: #0077b6;
+    --sample-item-color: #e58900;
+
+    /* generator table, exclusive classes get a hue each at this lightness */
+    --exclusive-class-lightness: 28%;
+
+    /* drawings */
+    --wave-color: #5f93ff;
+    --loop-start-color: green;
+    --loop-end-color: red;
+    --curve-color: #6e00b7;
+    --curve-axis-color: #555;
+
+    /* piano */
+    --piano-gap-color: #000;
+    --piano-label-color: #000;
+    --piano-white-key: linear-gradient(90deg, #bbb, #fff);
+    --piano-black-key: linear-gradient(140deg, #222, #000);
+    --piano-disabled-key: linear-gradient(65deg, #333, #888);
+}

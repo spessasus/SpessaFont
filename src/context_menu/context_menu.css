@@ -1,0 +1,65 @@
+/* Opens at the pointer, and moves left or up by as much as it would stick out of the window */
+.context_menu {
+    position: fixed;
+    left: var(--menu-x);
+    top: var(--menu-y);
+    translate: min(0px, 100vw - var(--menu-x) - 100%)
+        min(0px, 100vh - var(--menu-y) - 100%);
+    z-index: var(--top-index);
+    display: flex;
+    flex-direction: column;
+    min-width: 12rem;
+    max-width: min(24rem, 100vw);
+    max-height: 100vh;
+    overflow-y: auto;
+    padding: 0.25rem;
+    background: var(--lighter-color-end);
+    border: 1px solid var(--track-border-color);
+    border-radius: var(--primary-border-radius);
+    box-shadow: 0 0.3rem 1rem var(--shadow-color);
+}
+
+/* The menu is drawn outside of the app, so it sets the app font itself */
+.context_menu * {
+    transition: none;
+    color: var(--font-color);
+    font-family: var(--main-font);
+    font-size: 0.95rem;
+}
+
+/* Beats the reset of .plain_button */
+.context_menu .context_menu_item {
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5rem;
+    text-align: start;
+    padding: 0.35rem 0.75rem;
+    border-radius: calc(var(--primary-border-radius) / 2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.context_menu .context_menu_item:hover:not(:disabled),
+.context_menu .context_menu_item:focus-visible {
+    background: var(--selection-color);
+    outline: none;
+}
+
+/* The label sets its color itself (.context_menu *), so it is muted directly */
+.context_menu .context_menu_item:disabled,
+.context_menu .context_menu_item:disabled * {
+    cursor: default;
+    color: var(--muted-font-color);
+}
+
+.context_menu hr {
+    border: none;
+    border-top: 1px solid var(--track-border-color);
+    margin: 0.25rem 0.5rem;
+}
+
+.context_menu .context_menu_shortcut {
+    color: var(--muted-font-color);
+    font-size: 0.85rem;
+}

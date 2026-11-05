@@ -1,71 +1,140 @@
 import "./instrument_display.css";
-import type { BasicInstrument } from "spessasynth_core";
-import * as React from "react";
+import type { MouseEvent, PointerEvent } from "react";
+import type { BankEditView, BankEntity } from "../../core_backend/bank_view.ts";
 import { SampleDisplay } from "../sample_display/sample_display.tsx";
-import { type BankEditView } from "../../core_backend/sound_bank_manager.ts";
-import type { SetViewType } from "../../bank_editor/bank_editor.tsx";
+import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
+import { useInstrumentView } from "../../hooks/use_instrument_view.ts";
+import { useEntityLookup } from "../../hooks/use_entity_lookup.ts";
 import { useTranslation } from "react-i18next";
-import { LinkIcon } from "../../utils/icons.tsx";
+import { LinkIcon } from "../../utils/icons/edit_icons.tsx";
+import { getObjectId } from "../../utils/object_id.ts";
+import { useLinkDropTarget } from "../../drag_and_drop/use_link_drop_target.ts";
+import { ExpandButton } from "../expand_button.tsx";
+
+interface InstrumentDisplayProps {
+    /**
+     * The instrument's view id.
+     */
+    instrumentId: number;
+    view: BankEditView;
+    isSelected: boolean;
+    /**
+     * Whether the instrument is the shown element.
+     */
+    isShown: boolean;
+    isOpen: boolean;
+    onToggle: () => void;
+    onClick: (event: MouseEvent) => void;
+    /**
+     * Opens the menu on the whole row. The name button inside it gets the menu key.
+     */
+    onContextMenu?: (event: MouseEvent) => void;
+    /**
+     * Starts dragging the row.
+     */
+    onPointerDown?: (event: PointerEvent) => void;
+    /**
+     * Opens the menu of a listed sample of this instrument.
+     */
+    onChildContextMenu: (entity: BankEntity, event: MouseEvent) => void;
+    /**
+     * Shows the "link selected samples" button when set.
+     */
+    onLink?: () => void;
+}
 
 export function InstrumentDisplay({
-    instrument,
-    setView,
-    onClick,
+    instrumentId,
     view,
-    open,
-    setOpen,
-    selected,
-    link,
+    isSelected,
+    isShown,
+    isOpen,
+    onToggle,
+    onClick,
+    onContextMenu,
+    onPointerDown,
+    onChildContextMenu,
     onLink
-}: {
-    instrument: BasicInstrument;
-    selected: boolean;
-    setView: SetViewType;
-    onClick: React.MouseEventHandler<HTMLDivElement>;
-    view: BankEditView;
-    open: boolean;
-    setOpen: (o: boolean) => unknown;
-    link: boolean;
-    onLink?: () => unknown;
-}) {
+}: InstrumentDisplayProps) {
     const { t } = useTranslation();
+    const { session, setView } = useBankEditor();
+    const instrument = useInstrumentView(session.store, instrumentId);
+    const lookup = useEntityLookup(session.store);
+    const dropTarget = useLinkDropTarget(lookup.instrument(instrumentId));
+    // The row can render once more after its instrument was removed, before the list updates
+    if (!instrument) {
+        return null;
+    }
+    const viewId = view === "info" ? undefined : getObjectId(view);
+    const showSample = (id: number) => {
+        const sample = lookup.sample(id);
+        if (sample) {
+            setView(sample);
+        }
+    };
     return (
         <div className={"instrument_item_wrapper"}>
             <div
-                className={`instrument_item ${selected ? "selected" : ""}`}
+                className={`instrument_item ${isSelected ? "selected" : ""}`}
+                onContextMenu={onContextMenu}
+                onPointerDown={onPointerDown}
+                {...dropTarget}
                 title={instrument.name}
             >
                 <div className={"left_buttons"}>
-                    <span className={"triangle"} onClick={() => setOpen(!open)}>
-                        {open ? "\u25BC" : "\u25B6"}
-                    </span>
-                    {link && (
-                        <span
+                    <ExpandButton isOpen={isOpen} onToggle={onToggle} />
+                    {onLink ? (
+                        <button
+                            type={"button"}
+                            className={"plain_button"}
                             title={t("instrumentLocale.linkSelectedSamples")}
+                            aria-label={t(
+                                "instrumentLocale.linkSelectedSamples"
+                            )}
                             onClick={onLink}
                         >
                             <LinkIcon />
-                        </span>
-                    )}
+                        </button>
+                    ) : null}
                 </div>
-                <span
-                    className={"monospaced instrument_item_name"}
+                <button
+                    type={"button"}
+                    className={"plain_button monospaced instrument_item_name"}
+                    data-list-row={true}
+                    aria-current={isShown}
+                    aria-description={
+                        isSelected && !isShown
+                            ? t("presetList.selected")
+                            : undefined
+                    }
                     onClick={onClick}
                 >
                     {instrument.name}
-                </span>
+                </button>
             </div>
-            <div className={"instrument_samples"}>
-                {open &&
-                    instrument.zones.map((z, i) => (
-                        <SampleDisplay
-                            selected={view === z.sample}
-                            key={i}
-                            sample={z.sample}
-                            onClick={() => setView(z.sample)}
-                        ></SampleDisplay>
-                    ))}
-            </div>
+            {isOpen ? (
+                <div className={"instrument_samples"}>
+                    {instrument.zones.map((zone) =>
+                        zone.childId === undefined ? null : (
+                            <SampleDisplay
+                                key={zone.id}
+                                isSelected={viewId === zone.childId}
+                                isShown={viewId === zone.childId}
+                                sampleId={zone.childId}
+                                onClick={() => showSample(zone.childId ?? -1)}
+                                onContextMenu={(e) => {
+                                    const sample = lookup.sample(
+                                        zone.childId ?? -1
+                                    );
+                                    if (sample) {
+                                        onChildContextMenu(sample, e);
+                                    }
+                                }}
+                            />
+                        )
+                    )}
+                </div>
+            ) : null}
         </div>
     );
 }

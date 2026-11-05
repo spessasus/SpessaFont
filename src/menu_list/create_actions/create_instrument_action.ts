@@ -1,32 +1,40 @@
-import type { HistoryAction } from "../../core_backend/history.ts";
 import type { BasicInstrument } from "spessasynth_core";
-import type { SetViewType } from "../../bank_editor/bank_editor.tsx";
-import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
+import type { HistoryAction } from "../../core_backend/history.ts";
+import type { BankDocument } from "../../core_backend/bank_document.ts";
+import type { ChangeSet } from "../../core_backend/change_set.ts";
+import { neighborOrInfo } from "../../core_backend/neighbor_or_info.ts";
 
 export class CreateInstrumentAction implements HistoryAction {
     private readonly instrument: BasicInstrument;
-    private readonly setInstruments: (s: BasicInstrument[]) => void;
-    private readonly setView: SetViewType;
+    // Where undo removed it from, so redo puts it back there with its links
+    private removedIndex: number | undefined;
 
-    constructor(
-        instrument: BasicInstrument,
-        setInstruments: (s: BasicInstrument[]) => void,
-        setView: SetViewType
-    ) {
+    public readonly label = "addInstrument";
+
+    public constructor(instrument: BasicInstrument) {
         this.instrument = instrument;
-        this.setInstruments = setInstruments;
-        this.setView = setView;
     }
 
-    do(b: SoundBankManager) {
-        b.instruments = [...b.instruments, this.instrument];
-        this.setInstruments(b.instruments);
-        this.setView(this.instrument);
+    public do(document: BankDocument, changes: ChangeSet) {
+        if (this.removedIndex === undefined) {
+            document.addInstrument(this.instrument);
+        } else {
+            document.restoreInstrument(this.instrument, this.removedIndex);
+        }
+        changes.touchList("instruments");
+        changes.touch(
+            this.instrument,
+            ...this.instrument.zones.map((z) => z.sample)
+        );
+        changes.focusOn(this.instrument);
     }
 
-    undo(b: SoundBankManager) {
-        b.instruments = b.instruments.filter((i) => i !== this.instrument);
-        this.setInstruments(b.instruments);
-        this.setView(b.instruments?.[0] ?? "info");
+    public undo(document: BankDocument, changes: ChangeSet) {
+        this.removedIndex = document.removeInstrument(this.instrument);
+        changes.touchList("instruments");
+        changes.touch(...this.instrument.zones.map((z) => z.sample));
+        changes.focusOn(
+            neighborOrInfo(document.instruments, this.removedIndex)
+        );
     }
 }

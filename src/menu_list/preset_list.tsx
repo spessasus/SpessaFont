@@ -1,243 +1,132 @@
-import SoundBankManager, {
-    type BankEditView
-} from "../core_backend/sound_bank_manager.ts";
-import type { SetViewType } from "../bank_editor/bank_editor.tsx";
-import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
-import {
-    type BasicInstrument,
-    BasicPreset,
-    BasicSample,
-    BasicZone
-} from "spessasynth_core";
+import { type BasicInstrument, BasicPreset } from "spessasynth_core";
+import type { MouseEvent, PointerEvent } from "react";
 import { useTranslation } from "react-i18next";
-import * as React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import {
-    ESTIMATED_ROW_HEIGHT,
-    type MappedPresetType,
-    OVERSCAN
-} from "./menu_list.tsx";
+import type { BankEditView, BankEntity } from "../core_backend/bank_view.ts";
+import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
+import { useClipboard } from "../clipboard/clipboard_context.ts";
 import { DropdownHeader } from "./dropdown_header/dropdown_header.tsx";
+import { PresetDisplay } from "./preset_display/preset_display.tsx";
+import { getObjectId } from "../utils/object_id.ts";
+import { type FocusRequest, VirtualItemList } from "./virtual_item_list.tsx";
+import { useSelectionCommands } from "./use_selection_commands.ts";
+import { useExpandedItems, useSectionOpen } from "./use_list_state.ts";
 import {
-    type OpenPresetDisplayType,
-    PresetDisplay
-} from "./preset_display/preset_display.tsx";
-import { CreatePresetAction } from "./create_actions/create_preset_actions.ts";
-import type { HistoryAction } from "../core_backend/history.ts";
-import { CreateZoneAction } from "../generator_table/create_zone_action.ts";
-import toast from "react-hot-toast";
-import { presetSorter } from "../utils/preset_sorter.ts";
+    createInstrumentLinkActions,
+    createPresetFromInstruments
+} from "./link_actions.ts";
+
+interface PresetListProps {
+    presets: readonly BasicPreset[];
+    view: BankEditView;
+    selected: ReadonlySet<BasicPreset>;
+    selectedInstruments: ReadonlySet<BasicInstrument>;
+    /**
+     * The element the keyboard is on, kept in view.
+     */
+    cursor: BankEntity | undefined;
+    focusRequest: FocusRequest | null;
+    onItemClick: (preset: BasicPreset, event: MouseEvent) => void;
+    onItemContextMenu: (entity: BankEntity, event: MouseEvent) => void;
+    onItemPointerDown: (preset: BasicPreset, event: PointerEvent) => void;
+}
 
 export function PresetList({
-    view,
-    setView,
-    clipboard,
     presets,
-    setPresets,
-    manager,
+    view,
+    selected,
     selectedInstruments,
-    setInstruments,
-    setSamples,
-    selectedPresets,
-    setSelectedPresets
-}: {
-    view: BankEditView;
-    setView: SetViewType;
-    clipboard: ClipboardManager;
-    presets: MappedPresetType[];
-    setPresets: (i: BasicPreset[]) => unknown;
-    setInstruments: (i: BasicInstrument[]) => unknown;
-    setSamples: (s: BasicSample[]) => unknown;
-    selectedInstruments: Set<BasicInstrument>;
-    selectedPresets: Set<BasicPreset>;
-    setSelectedPresets: (p: Set<BasicPreset>) => unknown;
-    manager: SoundBankManager;
-}) {
+    cursor,
+    focusRequest,
+    onItemClick,
+    onItemContextMenu,
+    onItemPointerDown
+}: PresetListProps) {
     const { t } = useTranslation();
-    const [showPresets, setShowPresets] = useState(view instanceof BasicPreset);
-    // keep open states for instruments and presets
-    const [openPresets, setOpenPresets] = useState<
-        Record<string, OpenPresetDisplayType>
-    >({});
-
-    // virtualize
-    const presetsParentRef = useRef<HTMLDivElement>(null);
-    const presetsVirtualizer = useVirtualizer({
-        count: presets.length,
-        getScrollElement: () => presetsParentRef.current,
-        estimateSize: () => ESTIMATED_ROW_HEIGHT,
-        overscan: OVERSCAN
-    });
-
-    // update selected presets based on view
-    useEffect(() => {
-        if (view instanceof BasicPreset) {
-            setShowPresets(true);
-            if (!selectedPresets.has(view)) {
-                setSelectedPresets(new Set<BasicPreset>([view]));
-            }
-            setTimeout(
-                () =>
-                    presetsVirtualizer.scrollToIndex(
-                        presets.findIndex((p) => p.preset === view)
-                    ),
-                100
-            );
-        } else if (selectedPresets.size > 0) {
-            setSelectedPresets(new Set<BasicPreset>());
-        }
-    }, [
-        presets,
-        presetsVirtualizer,
-        selectedPresets,
-        setSelectedPresets,
-        view
-    ]);
-
-    const handleClick = useCallback(
-        (
-            e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-            preset: MappedPresetType
-        ) => {
-            const newSet = new Set<BasicPreset>([preset.preset]);
-            if (e.shiftKey && view instanceof BasicPreset) {
-                const viewIndex = presets.findIndex((p) => p.preset === view);
-                const presetIndex = presets.indexOf(preset);
-                const start = Math.min(viewIndex, presetIndex);
-                const end = Math.max(viewIndex, presetIndex);
-                for (const i of presets.slice(start, end + 1))
-                    newSet.add(i.preset);
-            } else if (e.ctrlKey && view instanceof BasicPreset) {
-                for (const i of selectedPresets) newSet.add(i);
-                if (selectedPresets.has(preset.preset)) {
-                    newSet.delete(preset.preset);
-                }
-            } else {
-                setView(preset.preset);
-            }
-            setSelectedPresets(newSet);
-        },
-        [presets, selectedPresets, setSelectedPresets, setView, view]
+    const { session, apply } = useBankEditor();
+    const { contents } = useClipboard();
+    const commands = useSelectionCommands();
+    const [isOpen, setIsOpen] = useSectionOpen(
+        view,
+        view instanceof BasicPreset
     );
+    const { isExpanded, toggle } = useExpandedItems();
 
-    const createPreset = useCallback(() => {
-        const preset = new BasicPreset(manager);
-        preset.name = [...selectedInstruments][0].name;
-        for (const i of selectedInstruments) {
-            preset.createZone(i);
-        }
-        let found = presets.some((p) => p.preset.matches(preset));
-        let i = 0;
-        while (found) {
-            i++;
-            preset.bankMSB = i & 0x7f;
-            preset.bankLSB = Math.max(i >> 7, 0);
-            found = presets.some((p) => p.preset.matches(preset));
-        }
-        const action = new CreatePresetAction(preset, setPresets, setView);
-        manager.modifyBank([action]);
-    }, [manager, presets, selectedInstruments, setPresets, setView]);
-
-    const linkInstruments = useCallback(
-        (preset: BasicPreset) => {
-            const actions: HistoryAction[] = [];
-            for (const inst of selectedInstruments)
-                actions.push(
-                    new CreateZoneAction<BasicPreset, BasicInstrument>(
-                        preset,
-                        new BasicZone(),
-                        inst,
-                        () => {
-                            setPresets([...manager.presets]);
-                            setView(preset);
-                        }
-                    )
-                );
-            manager.modifyBank(actions);
-        },
-        [manager, selectedInstruments, setPresets, setView]
-    );
-
+    const canLink = selectedInstruments.size > 0;
     return (
         <>
             <DropdownHeader
-                add={selectedInstruments.size > 0}
-                copy={selectedPresets.size > 0}
-                paste={clipboard.hasPresets()}
-                onCopy={() => {
-                    clipboard.copyPresets(selectedPresets);
-                    setPresets([...manager.presets]);
-                    toast.success(
-                        t("clipboardLocale.copiedPresets", {
-                            count: selectedPresets.size
-                        })
-                    );
-                }}
-                onPaste={() => {
-                    clipboard.pastePresets(
-                        manager,
-                        setPresets,
-                        setInstruments,
-                        setSamples,
-                        setView
-                    );
-                    setPresets(manager.presets.slice().sort(presetSorter));
-                    toast.success(
-                        t("clipboardLocale.pastedPresets", {
-                            count: clipboard.presetCount
-                        })
-                    );
-                }}
-                onAdd={createPreset}
-                onClick={() => setShowPresets(!showPresets)}
-                open={showPresets}
                 text={t("presetList.presets")}
+                isOpen={isOpen}
+                onToggle={() => setIsOpen((open) => !open)}
+                addLabel={t("contextMenu.newPreset")}
+                addHint={t("presetList.newPresetHint")}
+                onAdd={
+                    canLink
+                        ? () =>
+                              apply([
+                                  createPresetFromInstruments(
+                                      session.document,
+                                      selectedInstruments
+                                  )
+                              ])
+                        : undefined
+                }
+                onCopy={
+                    selected.size > 0
+                        ? () => commands.copy(selected)
+                        : undefined
+                }
+                onPaste={contents.presets > 0 ? commands.paste : undefined}
             />
-            {showPresets && (
-                <div className={"menu_list_scrollable"} ref={presetsParentRef}>
-                    <div
-                        className={"item_group"}
-                        style={{
-                            height: `${presetsVirtualizer.getTotalSize()}px`
-                        }}
-                    >
-                        {presetsVirtualizer.getVirtualItems().map((row) => {
-                            const p = presets[row.index];
-                            return (
-                                <div
-                                    key={row.key}
-                                    ref={presetsVirtualizer.measureElement}
-                                    data-index={row.index}
-                                    className={"virtual_item"}
-                                    style={{
-                                        transform: `translateY(${row.start}px)`
-                                    }}
-                                >
-                                    <PresetDisplay
-                                        openedData={
-                                            openPresets[p.searchString] ?? false
-                                        }
-                                        setOpenedData={(o) =>
-                                            setOpenPresets((prev) => ({
-                                                ...prev,
-                                                [p.searchString]: o
-                                            }))
-                                        }
-                                        onClick={(e) => handleClick(e, p)}
-                                        p={p}
-                                        setView={setView}
-                                        view={view}
-                                        selected={selectedPresets.has(p.preset)}
-                                        link={selectedInstruments.size > 0}
-                                        onLink={() => linkInstruments(p.preset)}
-                                    />
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
+            {isOpen ? (
+                <VirtualItemList
+                    items={presets}
+                    focusedItem={
+                        cursor instanceof BasicPreset ? cursor : undefined
+                    }
+                    focusRequest={focusRequest}
+                    renderItem={(preset) => {
+                        const key = String(getObjectId(preset));
+                        const instrumentKey = (instrumentId: number) =>
+                            `${key}-${instrumentId}`;
+                        return (
+                            <PresetDisplay
+                                preset={preset}
+                                view={view}
+                                isSelected={selected.has(preset)}
+                                isShown={view === preset}
+                                isOpen={isExpanded(key)}
+                                onToggle={() => toggle(key)}
+                                isInstrumentOpen={(id) =>
+                                    isExpanded(instrumentKey(id))
+                                }
+                                onToggleInstrument={(id) =>
+                                    toggle(instrumentKey(id))
+                                }
+                                onClick={(e) => onItemClick(preset, e)}
+                                onContextMenu={(e) =>
+                                    onItemContextMenu(preset, e)
+                                }
+                                onChildContextMenu={onItemContextMenu}
+                                onPointerDown={(e) =>
+                                    onItemPointerDown(preset, e)
+                                }
+                                onLink={
+                                    canLink
+                                        ? () =>
+                                              apply(
+                                                  createInstrumentLinkActions(
+                                                      preset,
+                                                      selectedInstruments
+                                                  )
+                                              )
+                                        : undefined
+                                }
+                            />
+                        );
+                    }}
+                />
+            ) : null}
         </>
     );
 }

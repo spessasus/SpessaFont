@@ -1,0 +1,188 @@
+.equalizer {
+    --eq-slider-height: 7rem;
+    --eq-thumb-height: 0.8rem;
+    --eq-label-height: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: var(--flex-gap);
+    /* Room for ten bands and a gain label of a few letters more than "Gain" */
+    flex: 1 1 26rem;
+    max-width: 32rem;
+    min-width: min(26rem, 100%);
+    /* Wide screens leave the space before it, so it stays at the right edge */
+    margin-inline-start: auto;
+}
+
+/* The buttons wrap below the title when their labels are long (Polish) */
+.equalizer_header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--flex-gap);
+}
+
+.equalizer_header h3 {
+    font-size: 1rem;
+    font-weight: normal;
+    margin-inline-end: auto;
+    color: var(--muted-font-color);
+}
+
+.equalizer_header button {
+    padding: 0.2rem 0.7rem;
+}
+
+.equalizer_header button[aria-pressed="true"] {
+    border-color: var(--border-color);
+    background: var(--primary-color);
+}
+
+.equalizer_header button:disabled {
+    cursor: default;
+    opacity: 0.5;
+    transform: none;
+    filter: none;
+}
+
+.equalizer_body {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.equalizer_bands {
+    position: relative;
+    display: flex;
+    flex: 1;
+    border-radius: var(--primary-border-radius);
+    background: var(--lighter-color-end);
+    border: 1px solid var(--track-border-color);
+}
+
+/* Spans the slider travel exactly, so the curve meets the thumbs */
+.equalizer_curve {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    top: calc(var(--eq-label-height) + var(--eq-thumb-height) / 2);
+    height: calc(var(--eq-slider-height) - var(--eq-thumb-height));
+    pointer-events: none;
+}
+
+.equalizer_curve * {
+    vector-effect: non-scaling-stroke;
+    transition: none;
+}
+
+.equalizer_curve_axis {
+    stroke: var(--curve-axis-color);
+    stroke-width: 1;
+    stroke-dasharray: 3 3;
+}
+
+.equalizer_curve_line {
+    fill: none;
+    stroke: var(--curve-color);
+    stroke-width: 2;
+    stroke-linejoin: round;
+}
+
+.equalizer_curve_fill {
+    fill: color-mix(in srgb, var(--curve-color) 18%, transparent);
+    stroke: none;
+}
+
+/* The gain slider is as wide as its label, which is longer in some languages */
+.equalizer_slider {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 2.3rem;
+}
+
+.equalizer_bands .equalizer_slider {
+    flex: 1;
+    width: auto;
+    min-width: 2rem;
+}
+
+.equalizer_value,
+.equalizer_label {
+    height: var(--eq-label-height);
+    line-height: var(--eq-label-height);
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+
+.equalizer_value {
+    color: var(--muted-font-color);
+}
+
+.equalizer_value.changed {
+    color: var(--font-color);
+}
+
+.equalizer_label {
+    color: var(--muted-font-color);
+}
+
+.equalizer_slider input {
+    -webkit-appearance: none;
+    appearance: none;
+    writing-mode: vertical-lr;
+    direction: rtl;
+    width: 1.4rem;
+    height: var(--eq-slider-height);
+    margin: 0;
+    background: transparent;
+    cursor: ns-resize;
+}
+
+.equalizer_slider input:disabled {
+    cursor: default;
+    opacity: 0.35;
+}
+
+.equalizer_slider input::-webkit-slider-runnable-track {
+    width: 2px;
+    margin: 0 auto;
+    background: var(--track-border-color);
+    border-radius: 1px;
+}
+
+.equalizer_slider input::-moz-range-track {
+    width: 2px;
+    background: var(--track-border-color);
+    border-radius: 1px;
+}
+
+.equalizer_slider input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 1.3rem;
+    height: var(--eq-thumb-height);
+    /* Physical, the inline direction of a vertical slider is vertical */
+    margin-left: calc(1px - 0.65rem);
+    border-radius: 0.3rem;
+    border: 1px solid var(--border-color);
+    background: var(--primary-color);
+}
+
+.equalizer_slider input::-moz-range-thumb {
+    width: 1.3rem;
+    height: var(--eq-thumb-height);
+    border-radius: 0.3rem;
+    border: 1px solid var(--border-color);
+    background: var(--primary-color);
+}
+
+.equalizer_slider input:focus {
+    outline: none;
+}
+
+.equalizer_slider input:focus-visible::-webkit-slider-thumb {
+    outline: 2px solid var(--light-primary-color);
+}
+
+.equalizer_slider input:focus-visible::-moz-range-thumb {
+    outline: 2px solid var(--light-primary-color);
+}

@@ -29,9 +29,11 @@ export const MenuBarLocale = {
         player: "MIDI播放器",
         play: "播放MIDI",
         pause: "暂停",
-        resume: "继续"
+        resume: "继续",
+        loadError: "无法加载 {{name}}。",
+        noName: "无名称",
+        rewind: "稍微后退"
     },
 
-    voices: "复音数：",
-    settings: "设置"
+    voices: "复音数："
 };

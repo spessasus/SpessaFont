@@ -6,6 +6,10 @@
         "module": "ESNext",
         "skipLibCheck": true,
         "esModuleInterop": true,
+        // electron/main.js and electron/preload.js are JavaScript typed through JSDoc
+        "allowJs": true,
+        "checkJs": true,
+        "types": ["node"],
         /* Bundler mode */
         "moduleResolution": "bundler",
         "allowImportingTsExtensions": true,

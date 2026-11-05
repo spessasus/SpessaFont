@@ -1,223 +1,184 @@
-import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
-import { BasicPreset } from "spessasynth_core";
+import {
+    type BasicPreset,
+    type MIDIPatch,
+    MIDIPatchTools
+} from "spessasynth_core";
 import "../../bank_editor/bottom_bar.css";
 import { useTranslation } from "react-i18next";
 import { DeletePresetAction } from "./delete_preset_action.ts";
-import type { SetViewType } from "../../bank_editor/bank_editor.tsx";
 import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
 import { EditPresetAction } from "./edit_preset_action.ts";
 import { ControllerSwitch } from "../../fancy_inputs/controller_switch/controller_switch.tsx";
-import toast from "react-hot-toast";
+import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
+import { usePresetView } from "../../hooks/use_preset_view.ts";
+import { getObjectId } from "../../utils/object_id.ts";
+import { useScopedToastDialog } from "../../hooks/use_scoped_toast_dialog.ts";
+import {
+    findFreePatch,
+    getTakenPatches
+} from "../../core_backend/free_patch.ts";
+import { MAX_NAME_LENGTH } from "../../utils/element_name.ts";
 
-export function BottomPresetBar({
-    manager,
-    setPresets,
-    preset,
-    presets,
-    setView
-}: {
-    manager: SoundBankManager;
-    setPresets: (p: BasicPreset[]) => unknown;
-    presets: BasicPreset[];
+interface BottomBarProps {
+    /**
+     * The edited preset, for the actions. What the bar shows comes from its view.
+     */
     preset: BasicPreset;
-    setView: SetViewType;
-}) {
-    const { t } = useTranslation();
+}
 
-    const deletePreset = () => {
-        manager.modifyBank([
-            new DeletePresetAction(preset, setPresets, setView)
-        ]);
+export function BottomBar({ preset }: BottomBarProps) {
+    const { t } = useTranslation();
+    const { session, apply } = useBankEditor();
+    const view = usePresetView(session.store, getObjectId(preset));
+    const showScopedToastDialog = useScopedToastDialog();
+    // The pane closes when its preset is removed, this only covers the render before
+    if (!view) {
+        return null;
+    }
+
+    const applyPatch = (patch: MIDIPatch) =>
+        apply(
+            (["program", "bankMSB", "bankLSB", "isGMGSDrum"] as const)
+                .filter((key) => preset[key] !== patch[key])
+                .map(
+                    (key) =>
+                        new EditPresetAction(
+                            preset,
+                            key,
+                            preset[key],
+                            patch[key]
+                        )
+                )
+        );
+
+    /**
+     * Applies a patch change unless another preset already uses the resulting patch.
+     * Then it offers the next free patch instead, and returns the preset that blocked it.
+     * The offer checks again when taken, as the bank may have changed in the meantime.
+     */
+    const changePatch = (changes: Partial<MIDIPatch>) => {
+        const { presets } = session.document;
+        if (!presets.includes(preset)) {
+            return undefined;
+        }
+        const patch: MIDIPatch = {
+            program: preset.program,
+            bankMSB: preset.bankMSB,
+            bankLSB: preset.bankLSB,
+            isGMGSDrum: preset.isGMGSDrum,
+            ...changes
+        };
+        const duplicate = presets.find((p) => p !== preset && p.matches(patch));
+        if (!duplicate) {
+            applyPatch(patch);
+            return undefined;
+        }
+        // Its own patch counts as taken, "Keep" already offers that
+        const free = findFreePatch(patch, getTakenPatches(presets));
+        showScopedToastDialog({
+            content: t("presetLocale.patchTaken", {
+                name: duplicate.name
+            }),
+            isError: true,
+            buttons: free
+                ? [
+                      {
+                          label: t("presetLocale.useFreePatch", {
+                              patch: MIDIPatchTools.toMIDIString(free)
+                          }),
+                          onClick: () => {
+                              changePatch(free);
+                          }
+                      },
+                      { label: t("presetLocale.keepPatch") }
+                  ]
+                : [{ label: t("presetLocale.keepPatch") }]
+        });
+        return duplicate;
     };
+
+    const setNumber = (key: "program" | "bankMSB" | "bankLSB") => {
+        // A fraction never matches a program change and saves rounded down, so it is rounded here
+        return (typed: number) => {
+            const value = Math.round(typed);
+            return changePatch({ [key]: value }) ? preset[key] : value;
+        };
+    };
+
     return (
         <div className={"bottom_bar"}>
             <div>
                 <WaitingInput
+                    className={"monospaced"}
                     type={"text"}
-                    value={preset.name}
-                    setValue={(v) => {
-                        const action = new EditPresetAction(
-                            preset,
-                            "name",
-                            preset.name,
-                            v,
-                            () => setPresets([...presets])
-                        );
-                        manager.modifyBank([action]);
-                        return v;
+                    value={view.name}
+                    aria-label={t("presetLocale.presetName")}
+                    onCommit={(name) => {
+                        apply([
+                            new EditPresetAction(
+                                preset,
+                                "name",
+                                preset.name,
+                                name
+                            )
+                        ]);
+                        return name;
                     }}
-                    maxLength={40}
+                    maxLength={MAX_NAME_LENGTH}
                 />
             </div>
 
-            {!preset.isGMGSDrum && (
-                <>
-                    <div>
-                        <span>{t("presetLocale.bankLSB")}</span>
-                        <WaitingInput
-                            type={"number"}
-                            min={0}
-                            max={128}
-                            value={preset.bankLSB}
-                            setValue={(v) => {
-                                const checker = {
-                                    ...preset,
-                                    bankLSB: v
-                                };
-                                // no duplicates
-                                const duplicate = presets.find((p) =>
-                                    p.matches(checker)
-                                );
-                                if (duplicate) {
-                                    toast.error(
-                                        `${t("presetLocale.presetWithTheParametersExists")} (${duplicate.name}) `
-                                    );
-                                    return preset.bankLSB;
-                                }
-                                const action = new EditPresetAction(
-                                    preset,
-                                    "bankLSB",
-                                    preset.bankLSB,
-                                    v,
-                                    () => {
-                                        manager.flushAndSortPresets();
-                                        setPresets([...presets]);
-                                    }
-                                );
-                                manager.modifyBank([action]);
-                                return v;
-                            }}
-                        />
-                    </div>
-                    <div>
-                        <span>{t("presetLocale.bankMSB")}</span>
-                        <WaitingInput
-                            type={"number"}
-                            min={0}
-                            max={128}
-                            value={preset.bankMSB}
-                            setValue={(v) => {
-                                const checker = {
-                                    ...preset,
-                                    bankMSB: v
-                                };
-                                // no duplicates
-                                const duplicate = presets.find((p) =>
-                                    p.matches(checker)
-                                );
-                                if (duplicate) {
-                                    toast.error(
-                                        `${t("presetLocale.presetWithTheParametersExists")} (${duplicate.name}) `
-                                    );
-                                    return preset.bankMSB;
-                                }
-                                const action = new EditPresetAction(
-                                    preset,
-                                    "bankMSB",
-                                    preset.bankMSB,
-                                    v,
-                                    () => {
-                                        manager.flushAndSortPresets();
-                                        setPresets([...presets]);
-                                    }
-                                );
-                                manager.modifyBank([action]);
-                                return v;
-                            }}
-                        />
-                    </div>
-                </>
-            )}
+            <label>
+                <span>{t("presetLocale.bankLSB")}</span>
+                <WaitingInput
+                    type={"number"}
+                    min={0}
+                    max={127}
+                    value={view.bankLSB}
+                    onCommit={setNumber("bankLSB")}
+                />
+            </label>
+            <label>
+                <span>{t("presetLocale.bankMSB")}</span>
+                <WaitingInput
+                    type={"number"}
+                    min={0}
+                    max={127}
+                    value={view.bankMSB}
+                    onCommit={setNumber("bankMSB")}
+                />
+            </label>
 
-            <div>
+            <label>
                 <span>{t("presetLocale.programNumber")}</span>
                 <WaitingInput
                     type={"number"}
                     min={0}
                     max={127}
-                    value={preset.program}
-                    setValue={(v) => {
-                        const checker = {
-                            ...preset,
-                            program: v
-                        };
-                        // no duplicates
-                        const duplicate = presets.find((p) =>
-                            p.matches(checker)
-                        );
-                        if (duplicate) {
-                            toast.error(
-                                `${t("presetLocale.presetWithTheParametersExists")} (${duplicate.name}) `
-                            );
-                            return preset.program;
-                        }
-                        const action = new EditPresetAction(
-                            preset,
-                            "program",
-                            preset.program,
-                            v,
-                            () => {
-                                manager.flushAndSortPresets();
-                                setPresets([...presets]);
-                            }
-                        );
-                        manager.modifyBank([action]);
-                        return v;
-                    }}
+                    value={view.program}
+                    onCommit={setNumber("program")}
                 />
-            </div>
+            </label>
             <div className={"drums_toggle"}>
                 <span>{t("presetLocale.drums")}</span>
                 <ControllerSwitch
-                    value={preset.isGMGSDrum}
-                    onChange={(v) => {
-                        const checker = {
-                            ...preset,
-                            isGMGSDrum: v
-                        };
-                        // no duplicates
-                        const duplicate = presets.find((p) =>
-                            p.matches(checker)
-                        );
-                        if (duplicate) {
-                            toast.error(
-                                `${t("presetLocale.presetWithTheParametersExists")} (${duplicate.name}) `
-                            );
-                            return;
-                        }
-                        // Set banks to 0
-                        const actions = [
-                            new EditPresetAction(
-                                preset,
-                                "isGMGSDrum",
-                                preset.isGMGSDrum,
-                                v,
-                                () => void 0
-                            ),
-                            new EditPresetAction(
-                                preset,
-                                "bankLSB",
-                                preset.bankLSB,
-                                0,
-                                () => void 0
-                            ),
-                            new EditPresetAction(
-                                preset,
-                                "bankMSB",
-                                preset.bankMSB,
-                                0,
-                                () => setPresets([...presets])
-                            )
-                        ];
-                        manager.modifyBank(actions);
-                    }}
+                    label={t("presetLocale.drums")}
+                    value={view.isGMGSDrum}
+                    // A melodic bank is not a drum kit map, so the switch starts on bank 0
+                    onChange={(isGMGSDrum) =>
+                        changePatch({ isGMGSDrum, bankLSB: 0, bankMSB: 0 })
+                    }
                 />
             </div>
-            <div onClick={deletePreset}>
+            <button
+                type={"button"}
+                className={"plain_button"}
+                onClick={() => apply([new DeletePresetAction(preset)])}
+            >
                 <strong className={"warning"}>
                     {t("presetLocale.deletePreset")}
                 </strong>
-            </div>
+            </button>
         </div>
     );
 }

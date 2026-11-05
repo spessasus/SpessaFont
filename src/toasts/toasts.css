@@ -1,0 +1,32 @@
+.toasts {
+    background: var(--lighter-color-end) !important;
+    border: solid 1px var(--track-border-color) !important;
+    color: var(--font-color) !important;
+    user-select: none;
+}
+
+.toast_col {
+    display: flex;
+    flex-direction: column;
+    gap: var(--flex-gap);
+}
+
+.toast_row {
+    display: flex;
+    gap: var(--flex-gap);
+    justify-content: center;
+}
+
+.toasts .pretty_outline {
+    cursor: pointer;
+}
+
+.toast_button {
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--font-color);
+}
+
+.toast_button:focus-visible {
+    outline: 2px solid var(--light-primary-color);
+}

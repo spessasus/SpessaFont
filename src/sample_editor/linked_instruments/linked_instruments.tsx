@@ -1,39 +1,58 @@
-import { BasicInstrument, type BasicSample } from "spessasynth_core";
 import "../../bank_editor/bottom_bar.css";
-import type { SetViewType } from "../../bank_editor/bank_editor.tsx";
 import { useTranslation } from "react-i18next";
-import { useMemo } from "react";
 
 import { DeleteSampleAction } from "./delete_sample_action.ts";
-import type SoundBankManager from "../../core_backend/sound_bank_manager.ts";
+import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
+import { useSampleView } from "../../hooks/use_sample_view.ts";
+import { useBankSnapshot } from "../../hooks/use_bank_snapshot.ts";
+import { createInstrumentFromSamples } from "../../menu_list/link_actions.ts";
 
-export function LinkedInstruments({
-    sample,
-    setView,
-    setSamples,
-    manager
-}: {
-    manager: SoundBankManager;
-    sample: BasicSample;
-    setView: SetViewType;
-    setSamples: (s: BasicSample[]) => void;
-}) {
+interface LinkedInstrumentsProps {
+    /**
+     * The sample's view id.
+     */
+    sampleId: number;
+}
+
+export function LinkedInstruments({ sampleId }: LinkedInstrumentsProps) {
     const { t } = useTranslation();
-    const linked = useMemo(() => {
-        const l = new Set<BasicInstrument>();
-        for (const i of sample.linkedTo) l.add(i);
-        return l;
-    }, [sample.linkedTo]);
+    const { session, apply, setView } = useBankEditor();
+    const sample = useSampleView(session.store, sampleId);
+    const instruments = useBankSnapshot(
+        session.store,
+        (s) => s.views.instruments
+    );
+    if (!sample) {
+        return null;
+    }
+    // An instrument with several zones of this sample is listed once
+    const linked = [...new Set(sample.usedBy)];
 
     const deleteSample = () => {
-        const actions = [new DeleteSampleAction(sample, setSamples, setView)];
-        // delete the other one too if linked and unused
-        if (sample?.linkedSample?.useCount === 0) {
-            actions.push(
-                new DeleteSampleAction(sample.linkedSample, setSamples, setView)
-            );
+        const toDelete = session.document.getSample(sampleId);
+        if (!toDelete) {
+            return;
         }
-        manager.modifyBank(actions);
+        const actions = [new DeleteSampleAction(toDelete)];
+        // delete the other one too if linked and unused
+        if (toDelete.linkedSample?.useCount === 0) {
+            actions.push(new DeleteSampleAction(toDelete.linkedSample));
+        }
+        apply(actions);
+    };
+
+    const createInstrument = () => {
+        const toLink = session.document.getSample(sampleId);
+        if (toLink) {
+            apply([createInstrumentFromSamples(session.document, [toLink])]);
+        }
+    };
+
+    const showInstrument = (id: number) => {
+        const instrument = session.document.getInstrument(id);
+        if (instrument) {
+            setView(instrument);
+        }
     };
 
     return (
@@ -47,29 +66,40 @@ export function LinkedInstruments({
                     </strong>
                 </div>
             )}
-            {sample.linkedTo.length === 0 && (
+            {linked.length === 0 ? (
                 <>
                     <div>
                         <strong>
                             {t("sampleLocale.notLinkedToInstrument")}
                         </strong>
                     </div>
-                    <div onClick={deleteSample} className={"warning"}>
+                    <button
+                        type={"button"}
+                        onClick={createInstrument}
+                        className={"plain_button"}
+                    >
+                        {t("sampleLocale.newInstrumentFromSample")}
+                    </button>
+                    <button
+                        type={"button"}
+                        onClick={deleteSample}
+                        className={"plain_button warning"}
+                    >
                         {t("sampleLocale.deleteSample")}
-                    </div>
+                    </button>
                 </>
-            )}
-            {sample.linkedTo.length > 0 && (
+            ) : (
                 <>
-                    <div>{t("sampleLocale.usedBy")}:</div>
-                    {Array.from(linked).map((inst, i) => (
-                        <div
-                            className={"monospaced"}
-                            onClick={() => setView(inst)}
-                            key={i}
+                    <div>{t("sampleLocale.usedBy")}</div>
+                    {linked.map((id) => (
+                        <button
+                            type={"button"}
+                            className={"plain_button monospaced"}
+                            onClick={() => showInstrument(id)}
+                            key={id}
                         >
-                            {inst.name}
-                        </div>
+                            {instruments.get(id)?.name}
+                        </button>
                     ))}
                 </>
             )}

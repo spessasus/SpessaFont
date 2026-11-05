@@ -2,7 +2,7 @@ import { useMIDIAccess } from "../midi_context/midi_context.ts";
 import { Setting } from "../setting.tsx";
 import { useTranslation } from "react-i18next";
 
-export function MidiSettings() {
+export function MIDISettings() {
     const {
         devices,
         accessStatus,
@@ -20,12 +20,15 @@ export function MidiSettings() {
             </div>
         );
 
-    if (accessStatus === "denied")
+    if (accessStatus === "denied" || accessStatus === "unsupported")
         return (
             <div className="settings_group hover_brightness">
                 <h2>{t("settingsLocale.midi.title")}</h2>
-                <p className={"warning"}>
-                    {accessError ?? "MIDI Access error."}
+                {/* The browser's reason is not translated, so it is only a tooltip */}
+                <p className={"warning"} title={accessError ?? undefined}>
+                    {accessStatus === "unsupported"
+                        ? t("settingsLocale.midi.notSupported")
+                        : t("settingsLocale.midi.accessError")}
                 </p>
             </div>
         );
@@ -33,7 +36,7 @@ export function MidiSettings() {
     return (
         <div className="settings_group hover_brightness">
             <h2>{t("settingsLocale.midi.title")}</h2>
-            <Setting locale={"settingsLocale.midi.midiInput"}>
+            <Setting label={t("settingsLocale.midi.midiInput")}>
                 <select
                     className={"pretty_input monospaced"}
                     value={selectedDevice?.id ?? "NO_DEVICE"}

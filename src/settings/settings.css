@@ -5,6 +5,8 @@
     justify-content: start;
     padding-top: 1rem;
     flex-grow: 1;
+    /* Fits the layer, so the groups scroll instead of running under the keyboard */
+    min-height: 0;
 }
 
 .settings p {
@@ -18,6 +20,9 @@
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
+    /* Firefox sizes a centered wrapping row narrower than its groups need, so they wrap early */
+    align-self: stretch;
+    min-height: 0;
     overflow-y: auto;
     align-items: baseline;
     justify-content: center;
@@ -36,7 +41,7 @@
     align-self: stretch;
 }
 
-.setting {
+.settings_item {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -46,14 +51,21 @@
     border: solid 1px var(--track-border-color);
     border-radius: var(--primary-border-radius);
     width: 100%;
+    gap: 1ch;
 }
 
-.setting:hover {
+.settings_item > span {
+    /* Long labels wrap, so one long setting does not widen its whole group */
+    max-width: 24ch;
+    text-align: start;
+}
+
+.settings_item:hover {
     filter: brightness(1.2);
 }
 
-.setting input,
-.setting select {
+.settings_item input,
+.settings_item select {
     font-size: 1rem;
     text-align: center;
 }

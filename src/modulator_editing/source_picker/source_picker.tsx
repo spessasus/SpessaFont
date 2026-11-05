@@ -1,72 +1,88 @@
-import {
-    ModulatorControllerSources,
-    type ModulatorSourceIndex
-} from "spessasynth_core";
+import { ModulatorControllerSources } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
-import type { ChangeEvent, JSX } from "react";
+import type { ChangeEvent } from "react";
 import "./source_picker.css";
+import { isLinkSource } from "../linked_modulator.ts";
+import { OptionList } from "../../utils/translated_options/option_list.tsx";
+import { useTranslatedOptions } from "../../utils/translated_options/translated_options_context.ts";
+import {
+    fromSourceOptionValue,
+    NON_CC_SOURCES,
+    type SpessaFontModulatorSource,
+    toSourceOptionValue
+} from "./source_option_value.ts";
 
-export interface SpessaFontModulatorSource {
-    usesCC: boolean;
-    sourceIndex: ModulatorSourceIndex;
+export type { SpessaFontModulatorSource } from "./source_option_value.ts";
+
+const NON_CC_SOURCE_LABELS = {
+    [ModulatorControllerSources.noController]:
+        "modulatorLocale.sources.noController",
+    [ModulatorControllerSources.noteOnVelocity]:
+        "modulatorLocale.sources.velocity",
+    [ModulatorControllerSources.noteOnKeyNum]:
+        "modulatorLocale.sources.midiNote",
+    [ModulatorControllerSources.polyPressure]:
+        "modulatorLocale.sources.polyPressure",
+    [ModulatorControllerSources.channelPressure]:
+        "modulatorLocale.sources.channelPressure",
+    [ModulatorControllerSources.pitchWheel]:
+        "modulatorLocale.sources.pitchWheel",
+    [ModulatorControllerSources.pitchWheelRange]:
+        "modulatorLocale.sources.pitchWheelRange"
+} as const;
+
+interface SourcePickerProps {
+    label: string;
+    source: SpessaFontModulatorSource;
+    onChange: (s: SpessaFontModulatorSource) => void;
 }
 
-export function ModulatorSourcePicker({
-    source,
-    setSource,
-    ccOptions
-}: {
-    source: SpessaFontModulatorSource;
-    setSource: (s: SpessaFontModulatorSource) => void;
-    ccOptions: JSX.Element;
-}) {
+export function SourcePicker({ label, source, onChange }: SourcePickerProps) {
     const { t } = useTranslation();
-    const isCC = source.usesCC;
-    const selectValue = isCC
-        ? source.sourceIndex.toString()
-        : (-source.sourceIndex).toString();
+    const { controllers } = useTranslatedOptions();
+    const selectValue = toSourceOptionValue(source);
+    // A source the lists do not offer (a modulator link, an illegal CC) still shows as itself
+    const isListed = source.usesCC
+        ? controllers.some((c) => c.value === source.sourceIndex)
+        : NON_CC_SOURCES.some((s) => s === source.sourceIndex);
+    let unlistedLabel = "";
+    if (!isListed) {
+        unlistedLabel = source.usesCC
+            ? t("modulatorLocale.sources.otherController", {
+                  number: source.sourceIndex
+              })
+            : isLinkSource({ isCC: false, index: source.sourceIndex })
+              ? t("modulatorLocale.sources.link")
+              : t("modulatorLocale.sources.otherSource", {
+                    number: source.sourceIndex
+                });
+    }
 
-    const handleSelectChange = (e: ChangeEvent<HTMLSelectElement>) => {
-        const num = Number.parseInt(e.target.value) as ModulatorSourceIndex;
-
-        if (num >= 0) {
-            setSource({ usesCC: true, sourceIndex: num });
-        } else {
-            setSource({
-                usesCC: false,
-                sourceIndex: -num as ModulatorSourceIndex
-            });
-        }
-    };
+    const handleSelectChange = (e: ChangeEvent<HTMLSelectElement>) =>
+        onChange(fromSourceOptionValue(e.target.value));
 
     return (
         <select
             className="source_picker pretty_outline monospaced"
+            aria-label={label}
             onChange={handleSelectChange}
             value={selectValue}
         >
-            <option value={-ModulatorControllerSources.noController}>
-                {t("modulatorLocale.sources.noController")}
-            </option>
-            <option value={-ModulatorControllerSources.noteOnVelocity}>
-                {t("modulatorLocale.sources.velocity")}
-            </option>
-            <option value={-ModulatorControllerSources.noteOnKeyNum}>
-                {t("modulatorLocale.sources.midiNote")}
-            </option>
-            <option value={-ModulatorControllerSources.polyPressure}>
-                {t("modulatorLocale.sources.polyPressure")}
-            </option>
-            <option value={-ModulatorControllerSources.channelPressure}>
-                {t("modulatorLocale.sources.channelPressure")}
-            </option>
-            <option value={-ModulatorControllerSources.pitchWheel}>
-                {t("modulatorLocale.sources.pitchWheel")}
-            </option>
-            <option value={-ModulatorControllerSources.pitchWheelRange}>
-                {t("modulatorLocale.sources.pitchWheelRange")}
-            </option>
-            {ccOptions}
+            {isListed ? null : (
+                <option value={selectValue}>{unlistedLabel}</option>
+            )}
+            {NON_CC_SOURCES.map((index) => (
+                <option
+                    key={index}
+                    value={toSourceOptionValue({
+                        usesCC: false,
+                        sourceIndex: index
+                    })}
+                >
+                    {t(NON_CC_SOURCE_LABELS[index])}
+                </option>
+            ))}
+            <OptionList options={controllers} />
         </select>
     );
 }

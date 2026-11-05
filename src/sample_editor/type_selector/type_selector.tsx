@@ -1,91 +1,51 @@
-import {
-    type BasicSample,
-    type SampleType,
-    SampleTypes
-} from "spessasynth_core";
+import { type SampleType, SampleTypes } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
-import { useMemo } from "react";
+import type { SampleView } from "../../core_backend/entity_views.ts";
 
+interface TypeSelectorProps {
+    sample: SampleView;
+    /**
+     * The name of the other half of the pair, if any.
+     */
+    partnerName: string | undefined;
+    /**
+     * Whether another sample is free to pair with this one.
+     */
+    canLink: boolean;
+    onTypeChange: (type: SampleType) => void;
+    /**
+     * Asks for the other half of the pair.
+     */
+    onPickPartner: () => void;
+}
+
+/**
+ * The sample type (mono, left, or right) and the other sample of a stereo pair. The partner is
+ * picked in a searchable dialog, so the bank's samples are not all rendered here.
+ */
 export function TypeSelector({
-    sampleType,
-    linkedSample,
-    setLinkedSample,
-    samples,
-    sample
-}: {
-    sampleType: SampleType;
-    linkedSample: BasicSample | undefined;
-    setLinkedSample: (type: SampleType, s?: BasicSample) => void;
-    samples: BasicSample[];
-    sample: BasicSample;
-}) {
+    sample,
+    partnerName,
+    canLink,
+    onTypeChange,
+    onPickPartner
+}: TypeSelectorProps) {
     const { t } = useTranslation();
-    const linkedIndex = useMemo(() => {
-        if (!linkedSample) {
-            return 0;
-        }
-        return samples.indexOf(linkedSample);
-    }, [linkedSample, samples]);
+    const sampleType = sample.type;
+    const partnerLabel = partnerName ?? t("sampleLocale.unlinked");
 
-    const availableSamples = useMemo(() => {
-        const indexedSamples: { s: BasicSample; i: number }[] = [];
-
-        for (let i = 0; i < samples.length; i++) {
-            const s = samples[i];
-            if (
-                (s.linkedSample === undefined || s.linkedSample === sample) &&
-                s !== sample
-            ) {
-                indexedSamples.push({ s, i });
-            }
-        }
-
-        return indexedSamples;
-    }, [sample, samples]);
-
-    const sampleElements = useMemo(
-        () => (
-            <>
-                <option value={-1}>-</option>
-                {availableSamples.map((sam, i) => (
-                    <option value={sam.i} key={i}>
-                        {sam.s.name}
-                    </option>
-                ))}
-            </>
-        ),
-        [availableSamples]
-    );
-
-    const nothingToLink =
-        availableSamples.length === 0 ||
-        (availableSamples.length < 2 && linkedSample);
-
-    const setType = (t: SampleType) => {
-        const linked: BasicSample = linkedSample ?? samples[0];
-        switch (t) {
-            case SampleTypes.rightSample:
-            case SampleTypes.leftSample:
-            case SampleTypes.linkedSample: {
-                setLinkedSample(t, linked);
-                break;
-            }
-
-            default: {
-                // set to mono unlinked
-                setLinkedSample(t);
-            }
-        }
-    };
     return (
         <>
-            <div className={"info_field"}>
+            <div className={"sample_editor_field"}>
                 <span>{t("sampleLocale.type")}</span>
                 <select
                     className={"pretty_input monospaced"}
+                    aria-label={t("sampleLocale.type")}
                     value={sampleType}
                     onChange={(e) =>
-                        setType(Number.parseInt(e.target.value) as SampleType)
+                        onTypeChange(
+                            Number.parseInt(e.target.value) as SampleType
+                        )
                     }
                 >
                     <option disabled={true} value={0}>
@@ -96,8 +56,7 @@ export function TypeSelector({
                     </option>
                     <option
                         disabled={
-                            nothingToLink &&
-                            sampleType !== SampleTypes.rightSample
+                            !canLink && sampleType !== SampleTypes.rightSample
                         }
                         value={SampleTypes.leftSample}
                     >
@@ -105,8 +64,7 @@ export function TypeSelector({
                     </option>
                     <option
                         disabled={
-                            nothingToLink &&
-                            sampleType !== SampleTypes.leftSample
+                            !canLink && sampleType !== SampleTypes.leftSample
                         }
                         value={SampleTypes.rightSample}
                     >
@@ -115,7 +73,6 @@ export function TypeSelector({
                     <option disabled={true} value={SampleTypes.linkedSample}>
                         {t("sampleLocale.types.linked")}
                     </option>
-
                     <option disabled={true} value={SampleTypes.romMonoSample}>
                         {t("sampleLocale.types.romMono")}
                     </option>
@@ -130,21 +87,18 @@ export function TypeSelector({
                     </option>
                 </select>
             </div>
-            <div className={"info_field"}>
+            <div className={"sample_editor_field"}>
                 <span>{t("sampleLocale.link")}</span>
-                <select
-                    disabled={linkedSample === undefined}
-                    className={"pretty_input monospaced"}
-                    value={linkedSample === undefined ? -1 : linkedIndex}
-                    onChange={(e) =>
-                        setLinkedSample(
-                            sampleType,
-                            samples[Number.parseInt(e.target.value)]
-                        )
-                    }
+                <button
+                    type={"button"}
+                    disabled={!canLink}
+                    className={"pretty_input monospaced sample_link_button"}
+                    aria-label={`${t("sampleLocale.link")}: ${partnerLabel}`}
+                    title={partnerLabel}
+                    onClick={onPickPartner}
                 >
-                    {sampleElements}
-                </select>
+                    {partnerLabel}
+                </button>
             </div>
         </>
     );

@@ -1,0 +1,64 @@
+.key_curve_graph {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.2rem 0.4rem;
+    font-size: 0.8rem;
+    color: var(--muted-font-color);
+}
+
+.key_curve_plot {
+    position: relative;
+}
+
+.key_curve_graph svg {
+    display: block;
+    width: 100%;
+    height: 10rem;
+    border: 1px solid var(--track-border-color);
+    border-radius: var(--primary-border-radius);
+    cursor: crosshair;
+    touch-action: none;
+}
+
+.key_curve_graph_labels {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: end;
+}
+
+.key_curve_graph_keys {
+    grid-column: 2;
+    display: flex;
+    justify-content: space-between;
+}
+
+.key_curve_axis {
+    stroke: var(--curve-axis-color);
+    stroke-width: 1px;
+    vector-effect: non-scaling-stroke;
+}
+
+.key_curve_line {
+    fill: none;
+    stroke: var(--curve-color);
+    stroke-width: 2px;
+    vector-effect: non-scaling-stroke;
+}
+
+.key_curve_marker {
+    position: absolute;
+    left: calc(var(--marker-x) * 100%);
+    top: calc(var(--marker-y) * 100%);
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 50%;
+    background: var(--curve-color);
+    border: 1px solid var(--font-color);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.key_curve_marker.excluded {
+    opacity: 0.3;
+}

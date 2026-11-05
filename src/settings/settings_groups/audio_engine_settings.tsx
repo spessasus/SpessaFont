@@ -2,221 +2,180 @@ import { useTranslation } from "react-i18next";
 import { type InterpolationType, InterpolationTypes } from "spessasynth_core";
 import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
 import {
-    getSetting,
-    type SavedSettingsType
+    clampSetting,
+    type SavedSettingsType,
+    SETTING_LIMITS
 } from "../save_load/settings_typedef.ts";
 import { Setting } from "../setting.tsx";
 
 export interface GroupSettingsProps {
     settings: SavedSettingsType;
-    updateSettings: (s: SavedSettingsType) => void;
+    onChange: (changes: Partial<SavedSettingsType>) => void;
 }
 
-const MAX_GAIN = 10;
-const MAX_REVERB = 10;
-const MAX_CHORUS = 10;
-const MAX_DELAY = 10;
-const MAX_VOICE_CAP = 2048;
+type LimitedSetting = keyof typeof SETTING_LIMITS;
+
+interface NumberSettingProps extends GroupSettingsProps {
+    label: string;
+    name: LimitedSetting;
+    /**
+     * Shows the gain times 100, with a % suffix.
+     */
+    isPercent?: boolean;
+    suffix?: string;
+    maxLength?: number;
+    /**
+     * Applied to the typed value before it is clamped.
+     */
+    normalize?: (value: number) => number;
+    /**
+     * A value outside the range is taken as a typo and keeps the old value, instead of being
+     * clamped. For settings where the limit is as bad as a wrong value.
+     */
+    isRangeStrict?: boolean;
+}
+
+function NumberSetting({
+    label,
+    name,
+    settings,
+    onChange,
+    isPercent = false,
+    suffix,
+    maxLength = 5,
+    normalize,
+    isRangeStrict = false
+}: NumberSettingProps) {
+    const scale = isPercent ? 100 : 1;
+    return (
+        <Setting label={label}>
+            <WaitingInput
+                onCommit={(typed) => {
+                    const current = settings[name] * scale;
+                    if (!Number.isFinite(typed)) {
+                        return current;
+                    }
+                    const scaled = typed / scale;
+                    const normalized = normalize ? normalize(scaled) : scaled;
+                    const { min, max } = SETTING_LIMITS[name];
+                    if (
+                        isRangeStrict &&
+                        (normalized < min || normalized > max)
+                    ) {
+                        return current;
+                    }
+                    const value = clampSetting(name, normalized);
+                    onChange({ [name]: value });
+                    return value * scale;
+                }}
+                type={"text"}
+                maxLength={maxLength}
+                className={"pretty_input monospaced"}
+                suffix={isPercent ? "%" : suffix}
+                value={
+                    isPercent
+                        ? // Rounded, as 0.29 * 100 is 28.999...
+                          Math.round(settings[name] * scale)
+                        : settings[name]
+                }
+            />
+        </Setting>
+    );
+}
 
 export function AudioEngineSettings({
-    updateSettings,
+    onChange,
     settings
 }: GroupSettingsProps) {
-    function setInterpolation(t: InterpolationType) {
-        updateSettings({
-            ...settings,
-            interpolation: t
-        });
-    }
-
-    function setVolume(v: number) {
-        const vol = Math.max(0, Math.min(MAX_GAIN, v / 100));
-        updateSettings({
-            ...settings,
-            volume: vol
-        });
-        return vol * 100;
-    }
-
-    function setReverb(v: number) {
-        const vReal = Math.max(0, Math.min(MAX_REVERB, v / 100));
-        updateSettings({
-            ...settings,
-            reverbLevel: vReal
-        });
-        return vReal * 100;
-    }
-
-    function setChorus(v: number) {
-        const vReal = Math.max(0, Math.min(MAX_CHORUS, v / 100));
-        updateSettings({
-            ...settings,
-            chorusLevel: vReal
-        });
-        return vReal * 100;
-    }
-
-    function setDelay(v: number) {
-        const vReal = Math.max(0, Math.min(MAX_DELAY, v / 100));
-        updateSettings({
-            ...settings,
-            delayLevel: vReal
-        });
-        return vReal * 100;
-    }
-
-    function setVelocitySenseDepth(v: number) {
-        const vReal = Math.max(0, Math.min(127, v));
-        updateSettings({
-            ...settings,
-            velocitySenseDepth: vReal
-        });
-        return vReal;
-    }
-
-    function setVelocitySenseOffset(v: number) {
-        const vReal = Math.max(0, Math.min(127, v));
-        updateSettings({
-            ...settings,
-            velocitySenseOffset: vReal
-        });
-        return vReal;
-    }
-
-    function setVoiceCap(v: number) {
-        const vReal = Math.max(
-            0,
-            Math.min(Math.round(Math.abs(v)), MAX_VOICE_CAP)
-        );
-        updateSettings({
-            ...settings,
-            voiceCap: vReal
-        });
-        return vReal;
-    }
-
-    function setSampleRate(v: number) {
-        updateSettings({
-            ...settings,
-            sampleRate: v
-        });
-        return v;
-    }
-
     const { t } = useTranslation();
-    const engineT = "settingsLocale.audioEngine.";
+    const shared = { settings, onChange };
     return (
         <div className={"settings_group hover_brightness"}>
-            <h2>{t(`${engineT}title`)}</h2>
-            <Setting locale={`${engineT}sampleRate`}>
-                <WaitingInput
-                    setValue={setSampleRate}
-                    type={"text"}
-                    maxLength={8}
-                    className={"pretty_input monospaced"}
-                    suffix={"Hz"}
-                    value={getSetting("sampleRate", settings)}
-                />
-            </Setting>
-            <Setting locale={`${engineT}volume`}>
-                <WaitingInput
-                    setValue={setVolume}
-                    type={"text"}
-                    maxLength={5}
-                    className={"pretty_input monospaced"}
-                    suffix={"%"}
-                    value={Math.floor(getSetting("volume", settings) * 100)}
-                />
-            </Setting>
+            <h2>{t("settingsLocale.audioEngine.title")}</h2>
+            <NumberSetting
+                {...shared}
+                label={t("settingsLocale.audioEngine.sampleRate")}
+                name={"sampleRate"}
+                suffix={"Hz"}
+                maxLength={8}
+                normalize={Math.round}
+                isRangeStrict={true}
+            />
+            <NumberSetting
+                {...shared}
+                label={t("settingsLocale.audioEngine.volume")}
+                name={"volume"}
+                isPercent={true}
+            />
 
-            <Setting locale={`${engineT}interpolation.title`}>
+            <Setting
+                label={t("settingsLocale.audioEngine.interpolation.title")}
+            >
                 <select
                     onChange={(e) =>
-                        setInterpolation(
-                            Number.parseInt(e.target.value) as InterpolationType
-                        )
+                        onChange({
+                            interpolation: Number.parseInt(
+                                e.target.value
+                            ) as InterpolationType
+                        })
                     }
                     className={"pretty_input monospaced"}
-                    value={getSetting("interpolation", settings)}
+                    value={settings.interpolation}
                 >
                     <option value={InterpolationTypes.nearestNeighbor}>
-                        {t(`${engineT}interpolation.nearestNeighbor`)}
+                        {t(
+                            "settingsLocale.audioEngine.interpolation.nearestNeighbor"
+                        )}
                     </option>
                     <option value={InterpolationTypes.linear}>
-                        {t(`${engineT}interpolation.linear`)}
+                        {t("settingsLocale.audioEngine.interpolation.linear")}
                     </option>
                     <option value={InterpolationTypes.hermite}>
-                        {t(`${engineT}interpolation.cubic`)}
+                        {t("settingsLocale.audioEngine.interpolation.cubic")}
+                    </option>
+                    <option value={InterpolationTypes.sinc32}>
+                        {t("settingsLocale.audioEngine.interpolation.sinc32")}
+                    </option>
+                    <option value={InterpolationTypes.sinc128}>
+                        {t("settingsLocale.audioEngine.interpolation.sinc128")}
                     </option>
                 </select>
             </Setting>
 
-            <Setting locale={`${engineT}voiceCap`}>
-                <WaitingInput
-                    setValue={setVoiceCap}
-                    type={"text"}
-                    maxLength={5}
-                    className={"pretty_input monospaced"}
-                    value={getSetting("voiceCap", settings)}
-                />
-            </Setting>
-
-            <Setting locale={`${engineT}velocitySenseDepth`}>
-                <WaitingInput
-                    setValue={setVelocitySenseDepth}
-                    type={"text"}
-                    maxLength={5}
-                    className={"pretty_input monospaced"}
-                    value={getSetting("velocitySenseDepth", settings)}
-                />
-            </Setting>
-
-            <Setting locale={`${engineT}velocitySenseOffset`}>
-                <WaitingInput
-                    setValue={setVelocitySenseOffset}
-                    type={"text"}
-                    maxLength={5}
-                    className={"pretty_input monospaced"}
-                    value={getSetting("velocitySenseOffset", settings)}
-                />
-            </Setting>
-
-            <Setting locale={`${engineT}reverbLevel`}>
-                <WaitingInput
-                    setValue={setReverb}
-                    type={"text"}
-                    maxLength={5}
-                    className={"pretty_input monospaced"}
-                    value={Math.floor(
-                        getSetting("reverbLevel", settings) * 100
-                    )}
-                    suffix={`%`}
-                />
-            </Setting>
-
-            <Setting locale={`${engineT}chorusLevel`}>
-                <WaitingInput
-                    setValue={setChorus}
-                    value={Math.floor(
-                        getSetting("chorusLevel", settings) * 100
-                    )}
-                    type={"text"}
-                    maxLength={5}
-                    className={"pretty_input monospaced"}
-                    suffix={`%`}
-                />
-            </Setting>
-
-            <Setting locale={`${engineT}delayLevel`}>
-                <WaitingInput
-                    setValue={setDelay}
-                    value={Math.floor(getSetting("delayLevel", settings) * 100)}
-                    type={"text"}
-                    maxLength={5}
-                    className={"pretty_input monospaced"}
-                    suffix={`%`}
-                />
-            </Setting>
+            <NumberSetting
+                {...shared}
+                label={t("settingsLocale.audioEngine.voiceCap")}
+                name={"voiceCap"}
+                normalize={(value) => Math.round(Math.abs(value))}
+            />
+            <NumberSetting
+                {...shared}
+                label={t("settingsLocale.audioEngine.velocitySenseDepth")}
+                name={"velocitySenseDepth"}
+            />
+            <NumberSetting
+                {...shared}
+                label={t("settingsLocale.audioEngine.velocitySenseOffset")}
+                name={"velocitySenseOffset"}
+            />
+            <NumberSetting
+                {...shared}
+                label={t("settingsLocale.audioEngine.reverbLevel")}
+                name={"reverbLevel"}
+                isPercent={true}
+            />
+            <NumberSetting
+                {...shared}
+                label={t("settingsLocale.audioEngine.chorusLevel")}
+                name={"chorusLevel"}
+                isPercent={true}
+            />
+            <NumberSetting
+                {...shared}
+                label={t("settingsLocale.audioEngine.delayLevel")}
+                name={"delayLevel"}
+                isPercent={true}
+            />
         </div>
     );
 }

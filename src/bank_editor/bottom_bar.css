@@ -1,21 +1,33 @@
+/* One row, which scrolls sideways when a long list of users does not fit */
 .bottom_bar {
-    overflow-x: auto;
     display: flex;
+    flex-shrink: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
     border-top: solid 1px var(--track-border-color);
     width: 100%;
     margin-top: auto;
 }
 
-.bottom_bar > div {
+.bottom_bar > div,
+.bottom_bar > label,
+.bottom_bar > button {
     user-select: none;
-    cursor: pointer;
     padding: 0.3rem 1rem;
     text-align: center;
     white-space: nowrap;
+    flex-shrink: 0;
     border-right: solid 1px var(--track-border-color);
 }
 
-.bottom_bar div:hover {
+/* Only what can be used reacts to the pointer, not the plain text */
+.bottom_bar > label,
+.bottom_bar > button {
+    cursor: pointer;
+}
+
+.bottom_bar > label:hover,
+.bottom_bar > button:hover {
     background: var(--lighter-color);
 }
 
@@ -28,4 +40,5 @@
 
 .bottom_bar input[type="text"] {
     width: 30ch;
+    max-width: 100%;
 }

@@ -1,305 +1,141 @@
-import { MenuBarDropdown, MenuBarIcon } from "./dropdown.tsx";
 import { MIDIPlayer } from "./midi_player.tsx";
 import { VoiceDisplay } from "./voice_display.tsx";
 import "./menu_bar.css";
 import { useTranslation } from "react-i18next";
-import { useCallback, useEffect } from "react";
-import type { BankEditorRef } from "../bank_editor/bank_editor.tsx";
-import { ACCEPTED_SOUNDBANK_FORMATS } from "../utils/accepted_formats.ts";
-import toast from "react-hot-toast";
-import {
-    CloseFileIcon,
-    DeleteIcon,
-    Discord,
-    FullscreenIcon,
-    Gear,
-    GitHub,
-    InfoIcon,
-    LinkIcon,
-    NewFileIcon,
-    OpenFileIcon,
-    RedoIcon,
-    SaveFileIcon,
-    UndoIcon
-} from "../utils/icons.tsx";
-import SoundBankManager, {
-    type SaveFormat
-} from "../core_backend/sound_bank_manager.ts";
+import { Discord, Gear, GitHub } from "../utils/icons/app_icons.tsx";
 import { IS_CHROME, IS_ELECTRON } from "../utils/environment_detection.ts";
+import type { BankSession } from "../core_backend/bank_session.ts";
+import type { BankEditView } from "../core_backend/bank_view.ts";
+import { useEventListener } from "../hooks/use_event_listener.ts";
+import { useBankCommands } from "./use_bank_commands.ts";
+import { FileMenu } from "./file_menu.tsx";
+import { EditMenu } from "./edit_menu.tsx";
+import { isEditorShortcut, isTextField } from "../utils/is_editor_shortcut.ts";
 
-const waitForRefresh = () => new Promise((r) => setTimeout(r, 200));
+interface MenuBarProps {
+    session: BankSession | undefined;
+    /**
+     * Selects an element in the active tab, used for the focus hints of undo and redo.
+     */
+    onViewChange: (view: BankEditView) => void;
+    showMIDIPlayer: boolean;
+    onToggleSettings: () => void;
+    onToggleKeyboard: () => void;
+    onOpenFile: () => void;
+    onNewFile: () => void;
+    onCloseFile: () => void;
+    /**
+     * Whether the settings cover the editor, which turns the editing shortcuts off.
+     */
+    isEditorCovered: boolean;
+    isKeyboardShown: boolean;
+    /**
+     * Receives the place for the shown element's tools menu, which the editor renders.
+     */
+    toolsMenuSlotRef: (node: HTMLDivElement | null) => void;
+}
 
 export function MenuBar({
-    toggleSettings,
-    openTab,
-    closeTab,
-    manager,
-    showMidiPlayer,
-    toggleKeyboard,
-    bankEditorRef
-}: {
-    toggleSettings: () => void;
-    openTab: (b?: File) => void;
-    closeTab: () => void;
-    manager: SoundBankManager | undefined;
-    showMidiPlayer: boolean;
-    toggleKeyboard: () => void;
-    bankEditorRef: BankEditorRef;
-}) {
-    const fLoc = "menuBarLocale.file.";
-    const eLoc = "menuBarLocale.edit.";
+    session,
+    onViewChange,
+    showMIDIPlayer,
+    onToggleSettings,
+    onToggleKeyboard,
+    onOpenFile,
+    onNewFile,
+    onCloseFile,
+    isEditorCovered,
+    isKeyboardShown,
+    toolsMenuSlotRef
+}: MenuBarProps) {
     const { t } = useTranslation();
+    const {
+        undo,
+        redo,
+        save,
+        removeUnusedElements,
+        autoLinkSamples,
+        mergeDuplicateSamples
+    } = useBankCommands(session, onViewChange);
 
-    function openFile() {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = ACCEPTED_SOUNDBANK_FORMATS;
-        input.click();
-        input.onchange = () => {
-            const file: File | undefined = input.files?.[0];
-            if (!file) {
-                return;
-            }
-            openTab(file);
-        };
-    }
-
-    function newFile() {
-        openTab();
-    }
-
-    const performSave = useCallback(
-        async (format: SaveFormat) => {
-            if (!manager) return;
-            const id = toast.loading(t("loadingAndSaving.savingSoundBank"));
-            await waitForRefresh();
-            try {
-                const saved = await manager.save(format, (progress) => {
-                    toast.loading(
-                        `${t("loadingAndSaving.writingSamples")} (${
-                            Math.floor(progress * 10_000) / 100 + "%"
-                        })`,
-                        {
-                            id
-                        }
-                    );
-                });
-                if (!saved) {
-                    // don't show success
-                    toast.dismiss(id);
-                    return;
-                }
-            } catch (error) {
-                // make so the error appears at the bottom
-                toast.error(`${error as string}`);
-                toast.error(t("loadingAndSaving.writingFailed"), { id });
-                return;
-            }
-            toast.success(t("loadingAndSaving.savedSuccessfully"), { id });
-        },
-        [manager, t]
-    );
-
-    const saveWithToasts = useCallback(
-        (format: SaveFormat) => {
-            if (!manager) return;
+    useEventListener(document, "keydown", (e) => {
+        if (e.defaultPrevented || !(e.ctrlKey || e.metaKey)) {
+            return;
+        }
+        // Shift or Caps Lock gives upper case letters, and Ctrl+Shift+Z is redo too
+        const key = e.key.toLowerCase();
+        // Ctrl+S saves the bank from anywhere, the browser would save the web page instead.
+        // Only a dialog or a toast question keeps it: the save's own questions could not be
+        // answered behind a dialog, and a toast may be the save asking something already
+        if (key === "s") {
+            e.preventDefault();
+            // Holding the keys would start a save for every repeat
             if (
-                format === "sf2" &&
-                manager.samples.some((s) => s.isCompressed)
+                !session ||
+                e.repeat ||
+                (e.target instanceof Element &&
+                    e.target.closest("dialog, [role=alertdialog]") !== null)
             ) {
-                toast(
-                    (tost) => (
-                        <div className={"toast_col"}>
-                            <span>{t(fLoc + "warnSF2")}</span>
-                            <span
-                                onClick={() => {
-                                    toast.dismiss(tost.id);
-                                    void performSave(format);
-                                }}
-                                className={"pretty_outline"}
-                            >
-                                {t("yes")}
-                            </span>
-                            <span
-                                onClick={() => toast.dismiss(tost.id)}
-                                className={"pretty_outline"}
-                            >
-                                {t("no")}
-                            </span>
-                        </div>
-                    ),
-                    {
-                        duration: Infinity
-                    }
-                );
-            } else void performSave(format);
-        },
-        [manager, performSave, t]
-    );
-
-    // keybinds
-
-    useEffect(() => {
-        function handleKeyDown(e: KeyboardEvent) {
-            if (!manager) {
                 return;
             }
-            if (e.ctrlKey || e.metaKey) {
-                switch (e.key) {
-                    case "z": {
-                        e.preventDefault();
-                        manager.undo();
-                        break;
-                    }
-                    case "y": {
-                        e.preventDefault();
-                        manager.redo();
-                        break;
-                    }
-                    case "s": {
-                        e.preventDefault();
-                        void saveWithToasts("auto");
-                        break;
-                    }
-                    default: {
-                        return;
-                    }
+            // The field applies its draft when it loses the focus, so the save includes it
+            if (isTextField(e.target) && e.target instanceof HTMLElement) {
+                e.target.blur();
+                e.target.focus();
+            }
+            save("auto");
+            return;
+        }
+        if (isEditorCovered || !session || !isEditorShortcut(e)) {
+            return;
+        }
+        switch (key) {
+            case "z": {
+                e.preventDefault();
+                if (e.shiftKey) {
+                    redo();
+                } else {
+                    undo();
                 }
+                break;
+            }
+            case "y": {
+                e.preventDefault();
+                redo();
+                break;
             }
         }
+    });
 
-        document.addEventListener("keydown", handleKeyDown);
-
-        return () => {
-            document.removeEventListener("keydown", handleKeyDown);
-        };
-    }, [manager, saveWithToasts]);
-
-    const about = useCallback(() => {
-        toast(
-            (tost) => (
-                <div className={"toast_col"}>
-                    <span>
-                        <strong>{t("titleMessage")}</strong>
-                    </span>
-                    <span>{t("welcome.copyrightTwo")}</span>
-                    <span>{"v" + __APP_VERSION__}</span>
-                    <span
-                        onClick={() => toast.dismiss(tost.id)}
-                        className={"pretty_outline"}
-                    >
-                        {t(fLoc + "close")}
-                    </span>
-                </div>
-            ),
-            {
-                duration: Infinity
-            }
-        );
-    }, [t]);
+    // The menus edit the active bank, so the settings make way to show what changed
+    const revealed = (command: () => void) => () => {
+        if (isEditorCovered) {
+            onToggleSettings();
+        }
+        command();
+    };
 
     return (
         <div className={"menu_bar_main"}>
-            <MenuBarDropdown main={t(fLoc + "file")}>
-                <MenuBarIcon click={newFile} text={t(fLoc + "new")}>
-                    <NewFileIcon />
-                </MenuBarIcon>
-                <MenuBarIcon click={openFile} text={t(fLoc + "open")}>
-                    <OpenFileIcon />
-                </MenuBarIcon>
-                {manager && (
-                    <>
-                        <MenuBarIcon click={closeTab} text={t(fLoc + "close")}>
-                            <CloseFileIcon />
-                        </MenuBarIcon>
-
-                        <MenuBarIcon
-                            click={() => void saveWithToasts("auto")}
-                            text={t(fLoc + "save")}
-                        >
-                            <SaveFileIcon />
-                        </MenuBarIcon>
-                        <MenuBarIcon
-                            click={() => void saveWithToasts("sf2")}
-                            text={t(fLoc + "saveSF2")}
-                        >
-                            <SaveFileIcon />
-                        </MenuBarIcon>
-                        <MenuBarIcon
-                            click={() => void saveWithToasts("dls")}
-                            text={t(fLoc + "saveDLS")}
-                        >
-                            <SaveFileIcon format={"DLS"} />
-                        </MenuBarIcon>
-                        <MenuBarIcon
-                            click={() => void saveWithToasts("sf3")}
-                            text={t(fLoc + "saveSF3")}
-                        >
-                            <SaveFileIcon format={"SF3"} />
-                        </MenuBarIcon>
-                        <MenuBarIcon
-                            click={() => void saveWithToasts("sf4")}
-                            text={t(fLoc + "saveSFE")}
-                        >
-                            <SaveFileIcon format={"SFe"} />
-                        </MenuBarIcon>
-                    </>
-                )}
-                <MenuBarIcon
-                    click={() => void document.body.requestFullscreen()}
-                    text={t(fLoc + "fullscreen")}
-                >
-                    <FullscreenIcon />
-                </MenuBarIcon>
-                <MenuBarIcon click={about} text={t(fLoc + "about")}>
-                    <InfoIcon />
-                </MenuBarIcon>
-            </MenuBarDropdown>
-            {manager && (
-                <>
-                    <MenuBarDropdown main={t(eLoc + "edit")}>
-                        <MenuBarIcon
-                            click={() => {
-                                if (manager.history.length === 0) {
-                                    toast(t(eLoc + "nothingToUndo"));
-                                }
-                                manager.undo();
-                            }}
-                            text={t(eLoc + "undo")}
-                        >
-                            <UndoIcon />
-                        </MenuBarIcon>
-                        <MenuBarIcon
-                            click={() => {
-                                if (manager.history.undoLength < 1) {
-                                    toast(t(eLoc + "nothingToRedo"));
-                                }
-                                manager.redo();
-                            }}
-                            text={t(eLoc + "redo")}
-                        >
-                            <RedoIcon />
-                        </MenuBarIcon>
-                        <MenuBarIcon
-                            click={() =>
-                                bankEditorRef?.current?.removeUnusedElements()
-                            }
-                            text={t(eLoc + "removeUnusedElements")}
-                        >
-                            <DeleteIcon />
-                        </MenuBarIcon>
-                        <MenuBarIcon
-                            text={t(eLoc + "autoLinkSamples")}
-                            click={() =>
-                                bankEditorRef?.current?.autoLinkSamples()
-                            }
-                        >
-                            <LinkIcon />
-                        </MenuBarIcon>
-                    </MenuBarDropdown>
-                </>
-            )}
-            {showMidiPlayer && <MIDIPlayer></MIDIPlayer>}
+            <FileMenu
+                isBankOpen={session !== undefined}
+                onNewFile={onNewFile}
+                onOpenFile={onOpenFile}
+                onCloseFile={onCloseFile}
+                onSave={save}
+            />
+            {session ? (
+                <EditMenu
+                    store={session.store}
+                    onUndo={revealed(undo)}
+                    onRedo={revealed(redo)}
+                    onRemoveUnusedElements={revealed(removeUnusedElements)}
+                    onAutoLinkSamples={revealed(autoLinkSamples)}
+                    onMergeDuplicateSamples={revealed(mergeDuplicateSamples)}
+                />
+            ) : null}
+            <div ref={toolsMenuSlotRef} className={"menu_bar_tools_slot"} />
+            {showMIDIPlayer && <MIDIPlayer />}
             <a
                 className={"menu_bar_button"}
                 href={"https://spessasus.github.io/SpessaSynth"}
@@ -308,14 +144,17 @@ export function MenuBar({
                 {"SpessaSynth"}
             </a>
             {IS_CHROME && !IS_ELECTRON && (
-                <MenuBarDropdown main={t("firefox")}></MenuBarDropdown>
+                <span className={"menu_bar_button menu_bar_note"}>
+                    {t("firefox")}
+                </span>
             )}
-            <div style={{ flex: 1 }}></div>
+            <div className={"menu_bar_spacer"}></div>
             <a
                 className={"menu_bar_button"}
                 href={"https://github.com/spessasus/SpessaFont"}
                 target={"_blank"}
                 title={t("githubPage")}
+                aria-label={t("githubPage")}
             >
                 <GitHub />
             </a>
@@ -324,19 +163,29 @@ export function MenuBar({
                 href={"https://discord.gg/TAVVxMFnsn"}
                 target={"_blank"}
                 title={t("discord")}
+                aria-label={t("discord")}
             >
                 <Discord />
             </a>
-            <div className={"menu_bar_button"} onClick={toggleKeyboard}>
+            <button
+                type={"button"}
+                className={"menu_bar_button"}
+                aria-pressed={isKeyboardShown}
+                onClick={onToggleKeyboard}
+            >
                 {t("keyboard")}
-            </div>
+            </button>
             <VoiceDisplay />
-            <div
-                className={"menu_bar_button settings_button"}
-                onClick={toggleSettings}
+            <button
+                type={"button"}
+                className={"menu_bar_button menu_bar_settings_button"}
+                aria-pressed={isEditorCovered}
+                onClick={onToggleSettings}
+                title={t("settingsLocale.settings")}
+                aria-label={t("settingsLocale.settings")}
             >
                 <Gear />
-            </div>
+            </button>
         </div>
     );
 }

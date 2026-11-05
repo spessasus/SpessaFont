@@ -16,7 +16,6 @@ import { ClipboardLocale } from "./clipboard.ts";
  *
  */
 export const localeSpanish = {
-    localeName: "Español",
     // title message
     titleMessage: "SpessaFont: Editor en Línea de SoundFont2/DLS",
     welcome: {
@@ -31,9 +30,19 @@ export const localeSpanish = {
     firefox: "Considera usar Firefox para cargar archivos grandes.",
     getUserInput: "Presiona en cualquier lugar para iniciar la aplicación",
 
-    unsavedChanges: "Este archivo tiene cambios sin guardar.",
+    closeTab: "Cerrar {{name}}",
     discard: "Descartar",
     keep: "Mantener",
+
+    errorBoundary: {
+        title: "Algo salió mal",
+        description:
+            "SpessaFont encontró un error y no pudo continuar. Recargar la página reinicia la aplicación. Los cambios no guardados se perderán.",
+        reload: "Recargar",
+        paneTitle: "Este editor encontró un error",
+        paneDescription:
+            "El resto de SpessaFont sigue funcionando. Selecciona otro elemento, o deshaz el último cambio y vuelve a seleccionar este."
+    },
 
     loadingAndSaving: {
         loadingFileFromDisk: "Cargando archivo del disco...",
@@ -43,10 +52,11 @@ export const localeSpanish = {
             "Archivo demasiado grande para ser abierto en navegadores basados en Chromium.",
         electronError:
             "Este archivo solo se puede abrir en SpessaFont Web en Firefox.",
+        electronOpenError:
+            "No se pudo abrir {{name}}. ¿Estás en modo de desarrollo?",
 
         savingSoundBank: "Guardando banco de sonido...",
         savedSuccessfully: "¡Guardado correctamente!",
-        writingSamples: "Escribiendo Muestras...",
         writingFailed: "¡Error escribiendo el banco de sonido!"
     },
 
@@ -58,16 +68,13 @@ export const localeSpanish = {
         debianPackage: "Paquete Debian"
     },
 
-    error: "Error",
     yes: "Sí",
     no: "No",
-    none: "Ninguno",
     githubPage: "Página del Proyecto",
     discord: "¡Únete al servidor de Discord!",
     keyboard: "Teclado",
 
     // generic stuff
-    addNew: "Agregar Nuevo",
     copy: "Copiar",
     paste: "Pegar",
     delete: "Eliminar",

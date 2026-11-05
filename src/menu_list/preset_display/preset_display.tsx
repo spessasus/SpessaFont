@@ -1,127 +1,186 @@
-import type { MappedPresetType } from "../menu_list.tsx";
 import "./preset_display.css";
-import * as React from "react";
+import type { MouseEvent, PointerEvent } from "react";
+import type { BasicInstrument, BasicPreset } from "spessasynth_core";
 import { InstrumentDisplay } from "../instrument_display/instrument_display.tsx";
-import type { BankEditView } from "../../core_backend/sound_bank_manager.ts";
-import type { SetViewType } from "../../bank_editor/bank_editor.tsx";
+import { useLinkDropTarget } from "../../drag_and_drop/use_link_drop_target.ts";
+import { ExpandButton } from "../expand_button.tsx";
+import type { BankEditView, BankEntity } from "../../core_backend/bank_view.ts";
+import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
+import { usePresetView } from "../../hooks/use_preset_view.ts";
+import { useEntityLookup } from "../../hooks/use_entity_lookup.ts";
 import { useTranslation } from "react-i18next";
-import { LinkIcon } from "../../utils/icons.tsx";
-import { typedMemo } from "../../utils/typed_memo.ts";
+import { LinkIcon } from "../../utils/icons/edit_icons.tsx";
+import { getObjectId } from "../../utils/object_id.ts";
 
-export interface OpenPresetDisplayType {
-    open: boolean;
-    openInstruments: Record<string, boolean>;
+interface PatchNumberProps {
+    n: number;
 }
 
-const PresetString = typedMemo(({ n }: { n: number }) => {
+function PatchNumber({ n }: PatchNumberProps) {
     return (
-        <span className={"monospaced"} style={{ opacity: n === 0 ? 0.5 : 1 }}>
+        <span className={`monospaced ${n === 0 ? "patch_number_zero" : ""}`}>
             {n.toString().padStart(3, "0")}
         </span>
     );
-});
+}
+
+interface PresetDisplayProps {
+    /**
+     * The preset's identity, for the drop target and the handlers. What is shown comes from
+     * its view.
+     */
+    preset: BasicPreset;
+    view: BankEditView;
+    isSelected: boolean;
+    /**
+     * Whether the preset is the shown element.
+     */
+    isShown: boolean;
+    isOpen: boolean;
+    onToggle: () => void;
+    /**
+     * Whether each listed instrument of this preset is expanded.
+     */
+    isInstrumentOpen: (instrumentId: number) => boolean;
+    onToggleInstrument: (instrumentId: number) => void;
+    onClick: (event: MouseEvent) => void;
+    /**
+     * Opens the menu on the whole row. The name button inside it gets the menu key.
+     */
+    onContextMenu?: (event: MouseEvent) => void;
+    /**
+     * Starts dragging the row.
+     */
+    onPointerDown?: (event: PointerEvent) => void;
+    /**
+     * Opens the menu of a listed instrument of this preset, or of one of its samples.
+     */
+    onChildContextMenu: (entity: BankEntity, event: MouseEvent) => void;
+    /**
+     * Shows the "link selected instruments" button when set.
+     */
+    onLink?: () => void;
+}
 
 export function PresetDisplay({
-    p,
-    onClick,
+    preset,
     view,
-    openedData,
-    setOpenedData,
-    setView,
-    selected,
-    link,
+    isSelected,
+    isShown,
+    isOpen,
+    onToggle,
+    isInstrumentOpen,
+    onToggleInstrument,
+    onClick,
+    onContextMenu,
+    onPointerDown,
+    onChildContextMenu,
     onLink
-}: {
-    p: MappedPresetType;
-    setView: SetViewType;
-    onClick: React.MouseEventHandler<HTMLDivElement>;
-    view: BankEditView;
-    openedData: OpenPresetDisplayType;
-    setOpenedData: (o: OpenPresetDisplayType) => unknown;
-    selected: boolean;
-    link: boolean;
-    onLink?: () => unknown;
-}) {
+}: PresetDisplayProps) {
     const { t } = useTranslation();
-    const open = openedData.open;
-    const openedInstruments: Record<string, boolean> =
-        openedData.openInstruments ?? {};
+    const { session, setView } = useBankEditor();
+    const presetView = usePresetView(session.store, getObjectId(preset));
+    const lookup = useEntityLookup(session.store);
+    const dropTarget = useLinkDropTarget(preset);
+    // The row can render once more after its preset was removed, before the list updates
+    if (!presetView) {
+        return null;
+    }
+    const viewId = view === "info" ? undefined : getObjectId(view);
+    const showInstrument = (id: number) => {
+        const instrument: BasicInstrument | undefined = lookup.instrument(id);
+        if (instrument) {
+            setView(instrument);
+        }
+    };
     return (
         <div className={"preset_item_wrapper"}>
             <div
-                className={`preset_item ${selected ? "selected" : ""}`}
-                title={p.preset.name}
+                className={`preset_item ${isSelected ? "selected" : ""}`}
+                onContextMenu={onContextMenu}
+                onPointerDown={onPointerDown}
+                {...dropTarget}
+                title={presetView.name}
             >
-                <div className={"left_group"}>
-                    <span
-                        className={"triangle"}
-                        onClick={() =>
-                            setOpenedData({
-                                openInstruments: openedInstruments,
-                                open: !open
-                            })
-                        }
-                    >
-                        {open ? "\u25BC" : "\u25B6"}
-                    </span>
-                    <span
-                        className={"monospaced midi_patch"}
-                        onClick={() =>
-                            setOpenedData({
-                                openInstruments: openedInstruments,
-                                open: !open
-                            })
-                        }
-                    >
-                        {p.preset.isGMGSDrum && `DRUMS:${p.preset.program}`}
-                        {!p.preset.isGMGSDrum && (
-                            <>
-                                <PresetString n={p.preset.bankLSB} />:
-                                <PresetString n={p.preset.bankMSB} />:
-                                <PresetString n={p.preset.program} />
-                            </>
-                        )}
-                    </span>
-                    {link && (
-                        <span
+                <div className={"preset_item_left"}>
+                    {/* Clicking the patch expands the preset too */}
+                    <ExpandButton isOpen={isOpen} onToggle={onToggle}>
+                        <span className={"monospaced preset_item_patch"}>
+                            {presetView.isGMGSDrum
+                                ? t("presetList.drumsPrefix")
+                                : null}
+                            {/* A drum kit shows its bank numbers only when it sets them */}
+                            {presetView.isGMGSDrum &&
+                            presetView.bankLSB === 0 &&
+                            presetView.bankMSB === 0 ? null : (
+                                <>
+                                    <PatchNumber n={presetView.bankLSB} />:
+                                    <PatchNumber n={presetView.bankMSB} />:
+                                </>
+                            )}
+                            <PatchNumber n={presetView.program} />
+                        </span>
+                    </ExpandButton>
+                    {onLink ? (
+                        <button
+                            type={"button"}
+                            className={"plain_button"}
                             title={t("presetLocale.linkSelectedInstruments")}
+                            aria-label={t(
+                                "presetLocale.linkSelectedInstruments"
+                            )}
                             onClick={onLink}
                         >
                             <LinkIcon />
-                        </span>
-                    )}
+                        </button>
+                    ) : null}
                 </div>
-                <span
-                    className={"monospaced preset_item_name"}
+                <button
+                    type={"button"}
+                    className={"plain_button monospaced preset_item_name"}
+                    data-list-row={true}
+                    aria-current={isShown}
+                    aria-description={
+                        isSelected && !isShown
+                            ? t("presetList.selected")
+                            : undefined
+                    }
                     onClick={onClick}
                 >
-                    {p.preset.name}
-                </span>
+                    {presetView.name}
+                </button>
             </div>
-            <div className={"preset_instruments"}>
-                {open &&
-                    p.preset.zones.map((z, i) => (
-                        <InstrumentDisplay
-                            open={openedInstruments[z.instrument.name] ?? false}
-                            setOpen={(isOpen) =>
-                                setOpenedData({
-                                    ...openedData,
-                                    openInstruments: {
-                                        ...openedInstruments,
-                                        [z.instrument.name]: isOpen
+            {isOpen ? (
+                <div className={"preset_instruments"}>
+                    {presetView.zones.map((zone) =>
+                        zone.childId === undefined ? null : (
+                            <InstrumentDisplay
+                                key={zone.id}
+                                instrumentId={zone.childId}
+                                view={view}
+                                isSelected={viewId === zone.childId}
+                                isShown={viewId === zone.childId}
+                                isOpen={isInstrumentOpen(zone.childId)}
+                                onToggle={() =>
+                                    onToggleInstrument(zone.childId ?? -1)
+                                }
+                                onClick={() =>
+                                    showInstrument(zone.childId ?? -1)
+                                }
+                                onContextMenu={(e) => {
+                                    const instrument = lookup.instrument(
+                                        zone.childId ?? -1
+                                    );
+                                    if (instrument) {
+                                        onChildContextMenu(instrument, e);
                                     }
-                                })
-                            }
-                            selected={view === z.instrument}
-                            view={view}
-                            key={i}
-                            instrument={z.instrument}
-                            setView={setView}
-                            onClick={() => setView(z.instrument)}
-                            link={false}
-                        ></InstrumentDisplay>
-                    ))}
-            </div>
+                                }}
+                                onChildContextMenu={onChildContextMenu}
+                            />
+                        )
+                    )}
+                </div>
+            ) : null}
         </div>
     );
 }

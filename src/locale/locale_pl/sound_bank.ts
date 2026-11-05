@@ -1,18 +1,35 @@
 export const SoundBankLocale = {
+    deleteZone: "Usuń strefę {{name}}",
+    cellLabel: "{{generator}}, {{zone}}",
     globalZone: "Strefa globalna",
+    pickZoneSample: "Dodać strefę z którą próbką?",
+    pickZoneInstrument: "Dodać strefę z którym instrumentem?",
     createNewZone: "Utwórz nową strefę",
     thisIsAStereoSamplePair: "To jest para próbek stereo.",
 
-    modifiedSamples: "Zmodyfikowano {{count}} próbek.",
-    noSamplesWereChanged: "Nie zmieniono żadnych próbek.",
+    modifiedSamples_one: "Zmodyfikowano {{count}} próbkę.",
+    modifiedSamples_few: "Zmodyfikowano {{count}} próbki.",
+    modifiedSamples_many: "Zmodyfikowano {{count}} próbek.",
+    modifiedSamples_other: "Zmodyfikowano {{count}} próbki.",
+    nothingToRemove:
+        "Wszystkie instrumenty i próbki są używane, nic nie usunięto.",
     removedElements:
-        "Usunięto {{instruments}} instrumentów i {{samples}} próbek.",
+        "Usunięto nieużywane elementy. Instrumenty: {{instruments}}, próbki: {{samples}}",
 
     loopingModes: {
         noLoop: "Brak pętli",
         loop: "Pętla",
         loopUntilRelease: "Do puszczenia klawisza",
         startOnRelease: "Przy puszczeniu klawisza"
+    },
+    switchStates: {
+        off: "Wyłączone",
+        on: "Włączone"
+    },
+    lfoWaveforms: {
+        triangle: "Trójkąt",
+        sawtooth: "Piła",
+        sine: "Sinus"
     },
     units: {
         // keep the suffixes short
@@ -32,6 +49,10 @@ export const SoundBankLocale = {
             suf: "cent/klawisz",
             full: "Centy na numer klawisza"
         },
+        tcentPerKey: {
+            suf: "tcent/klawisz",
+            full: "Centy czasowe na numer klawisza"
+        },
         sec: {
             suf: "sek",
             full: "Sekundy"
@@ -44,7 +65,7 @@ export const SoundBankLocale = {
 
         Hz: {
             suf: "Hz",
-            full: "Herc"
+            full: "Herce"
         },
 
         percent: {
@@ -54,7 +75,17 @@ export const SoundBankLocale = {
 
         pan: {
             suf: "[-500; 500]",
-            full: "-500 = Twardo w lewo; 0 = Środek; 500 = Twardo w prawo"
+            full: "-500 = Całkowicie w lewo; 0 = Środek; 500 = Całkowicie w prawo"
+        },
+
+        presetPan: {
+            suf: "[-1000; 1000]",
+            full: "Dodawane do panoramy instrumentu. -1000 = Całkowicie w lewo; 0 = Bez zmian; 1000 = Całkowicie w prawo"
+        },
+
+        degree: {
+            suf: "°",
+            full: "Stopnie cyklu"
         }
     }
 };

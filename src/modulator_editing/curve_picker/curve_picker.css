@@ -8,8 +8,22 @@
 }
 
 .modulator_curve {
+    display: block;
+    width: var(--source-picker-height);
     height: var(--source-picker-height);
-    border-radius: var(--primary-border-radius);
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.modulator_curve_axis {
+    stroke: var(--curve-axis-color);
+    stroke-width: 3;
+}
+
+.modulator_curve_line {
+    stroke: var(--curve-color);
+    stroke-width: 7;
 }
 
 .modulator_curve_showcase {
@@ -25,8 +39,8 @@
 }
 
 .modulator_curve_showcase .modulator_curve {
+    width: calc(var(--source-picker-height) * 2);
     height: calc(var(--source-picker-height) * 2);
-    border-radius: var(--primary-border-radius);
 }
 
 .modulator_curve_pick {

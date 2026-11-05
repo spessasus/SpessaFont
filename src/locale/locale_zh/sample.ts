@@ -10,9 +10,6 @@ export const SampleLocale = {
     type: "类型",
     link: "链接",
     unlinked: "未连接任何采样",
-    waveZoom: "波形缩放",
-    length: "采样长度",
-    loop: "循环长度",
     types: {
         invalid: "无效",
         mono: "单声道",

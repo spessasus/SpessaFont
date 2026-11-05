@@ -1,72 +1,57 @@
-import {
-    BasicInstrument,
-    BasicInstrumentZone,
-    type BasicPreset,
-    type BasicPresetZone
-} from "spessasynth_core";
-import type { LinkedZoneMap } from "./generator_table.tsx";
 import { useTranslation } from "react-i18next";
-import { STEREO_REGEX } from "../utils/stereo_regex.ts";
-import { typedMemo } from "../utils/typed_memo.ts";
+import type { ZoneColumn } from "./zone_columns.ts";
+import { getModulatorKey } from "./table_navigation.ts";
 
-export const GeneratorTableModulatorRow = typedMemo(function <
-    ZoneType extends BasicPresetZone | BasicInstrumentZone,
-    ElementType extends BasicInstrument | BasicPreset
->({
-    element,
-    zones,
-    linkedZoneMap,
-    editModulators
-}: {
-    editModulators: (z: ZoneType, name: string) => unknown;
-    zones: ZoneType[];
-    element: ElementType;
-    linkedZoneMap: LinkedZoneMap<ZoneType>;
-}) {
+interface ModulatorRowProps {
+    /**
+     * The global zone column followed by the zone columns. A stereo pair whose zones have
+     * different modulators is split, so each zone's own list is shown and edited.
+     */
+    columns: readonly ZoneColumn[];
+    /**
+     * The key of the table's Tab stop when it is in this row.
+     */
+    activeKey: string | undefined;
+    /**
+     * Opens the modulator editor of the zone with this view id.
+     */
+    onEditModulators: (zoneId: number) => void;
+}
+
+export function ModulatorRow({
+    columns,
+    activeKey,
+    onEditModulators
+}: ModulatorRowProps) {
     const { t } = useTranslation();
     return (
-        <tr className={"header_row"}>
-            <th className={"generator_cell_header"}>
+        <tr className={"generator_table_header_row"}>
+            <th className={"generator_cell_header"} scope={"row"}>
                 {t("modulatorLocale.modulators")}
             </th>
-            <th
-                className={`modulator_cell ${element.globalZone.modulators.length > 0 ? "modulated" : ""}`}
-                onClick={() =>
-                    editModulators(
-                        // fu ts >:)
-                        element.globalZone as ZoneType,
-                        t("soundBankLocale.globalZone")
-                    )
-                }
-            >
-                <span>{element.globalZone.modulators.length}</span>
-            </th>
-            {zones.map((z, i) => {
-                const linked = linkedZoneMap[i];
-                if (linked.index === 1) {
-                    return null;
-                }
-                let span = 1;
-                let name =
-                    z instanceof BasicInstrumentZone
-                        ? z.sample.name
-                        : z.instrument.name;
-                if (linked.index === 2) {
-                    span = 2;
-                    name = name.replace(STEREO_REGEX, "").trim();
-                }
-                const modLength = z.modulators.length;
+            {columns.map(({ zone, name, colSpan }) => {
+                const count = zone.modulators.length;
+                const key = getModulatorKey(zone.id);
                 return (
                     <th
-                        key={i}
-                        colSpan={span}
-                        className={`modulator_cell ${modLength > 0 ? "modulated" : ""}`}
-                        onClick={() => editModulators(z, name)}
+                        key={zone.id}
+                        colSpan={colSpan}
+                        className={`modulator_cell ${count > 0 ? "modulated" : ""}`}
                     >
-                        <span>{modLength}</span>
+                        <button
+                            type={"button"}
+                            className={"plain_button modulator_count"}
+                            data-grid-key={key}
+                            tabIndex={key === activeKey ? 0 : -1}
+                            // The label replaces the visible count, so it says it too
+                            aria-label={`${t("modulatorLocale.editModulators", { name })} (${count})`}
+                            onClick={() => onEditModulators(zone.id)}
+                        >
+                            {count}
+                        </button>
                     </th>
                 );
             })}
         </tr>
     );
-});
+}

@@ -1,288 +1,150 @@
-import SoundBankManager, {
-    type BankEditView
-} from "../core_backend/sound_bank_manager.ts";
-import type { ClipboardManager } from "../core_backend/clipboard_manager.ts";
-import {
-    type JSX,
-    type RefObject,
-    useCallback,
-    useEffect,
-    useImperativeHandle,
-    useState
-} from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { MenuList } from "../menu_list/menu_list.tsx";
 import "./bank_editor.css";
 import { SoundBankInfo } from "../info_view/sound_bank_info.tsx";
-import {
-    BasicInstrument,
-    BasicPreset,
-    BasicSample,
-    type GenericRange,
-    type SampleType,
-    SampleTypes
-} from "spessasynth_core";
+import type { InfoPanel } from "../info_view/info_panel.ts";
+import { BasicInstrument, BasicPreset, BasicSample } from "spessasynth_core";
 import { PresetEditor } from "../preset_editor/preset_editor.tsx";
 import { InstrumentEditor } from "../instrument_editor/instrument_editor.tsx";
 import { SampleEditor } from "../sample_editor/sample_editor.tsx";
-import { DeleteSampleAction } from "../sample_editor/linked_instruments/delete_sample_action.ts";
-import { DeleteInstrumentAction } from "../instrument_editor/linked_presets/delete_instrument_action.ts";
-import { SetSampleTypeAction } from "../sample_editor/set_sample_type_action.ts";
-import toast from "react-hot-toast";
-import { useTranslation } from "react-i18next";
+import type { BankSession } from "../core_backend/bank_session.ts";
+import type { BankEditView } from "../core_backend/bank_view.ts";
+import type { HistoryActionGroup } from "../core_backend/history.ts";
+import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
+import {
+    BankEditorContext,
+    type BankEditorContextType
+} from "./bank_editor_context.ts";
+import { usePreviewTarget } from "./use_preview_target.ts";
+import { ErrorBoundary } from "../error_boundary/error_boundary.tsx";
+import { PaneErrorFallback } from "../error_boundary/pane_error_fallback.tsx";
+import { getObjectId } from "../utils/object_id.ts";
+import type { SamplePlayerState } from "../sample_editor/use_sample_player.ts";
+import { DEFAULT_EQUALIZER_STATE } from "../sample_editor/equalizer/equalizer.ts";
 
-export interface BankEditorProps {
-    manager: SoundBankManager;
-    clipboardManager: ClipboardManager;
-    destinationOptions: JSX.Element;
-    ccOptions: JSX.Element;
-    shown: boolean;
-    ref: BankEditorRef;
-    setSplits: (s: GenericRange[]) => unknown;
+function renderPaneError(error: unknown) {
+    return <PaneErrorFallback error={error} />;
 }
 
-export type SetViewType = (v: BankEditView) => unknown;
+export interface BankEditorProps {
+    session: BankSession;
+    view: BankEditView;
+    onViewChange: (view: BankEditView) => void;
+    /**
+     * The settings are drawn over the editor, which turns its shortcuts off.
+     */
+    isCovered: boolean;
+}
 
-export type BankEditorRef = RefObject<{
-    removeUnusedElements: () => void;
-    autoLinkSamples: () => void;
-} | null>;
+/**
+ * Falls back to the overview when the selected element is no longer in the bank,
+ * for example after undoing its creation.
+ */
+function useResolvedView(session: BankSession, view: BankEditView) {
+    const views = useBankSnapshot(session.store, (s) => s.views);
+    if (view === "info") {
+        return view;
+    }
+    const id = getObjectId(view);
+    let isInBank: boolean;
+    if (view instanceof BasicPreset) {
+        isInBank = views.presets.has(id);
+    } else if (view instanceof BasicInstrument) {
+        isInBank = views.instruments.has(id);
+    } else {
+        isInBank = views.samples.has(id);
+    }
+    return isInBank ? view : "info";
+}
 
 export function BankEditor({
-    manager,
-    clipboardManager,
-    destinationOptions,
-    ccOptions,
-    shown,
-    ref,
-    setSplits
+    session,
+    view: selectedView,
+    onViewChange,
+    isCovered
 }: BankEditorProps) {
     const { t } = useTranslation();
-    const [view, setViewLocal] = useState<BankEditView>(manager.currentView);
-    const [samples, setSamples] = useState(manager.samples);
-    const [instruments, setInstruments] = useState(manager.instruments);
-    const [presets, setPresets] = useState(manager.presets);
+    const view = useResolvedView(session, selectedView);
+    usePreviewTarget(session, view);
+    const { name } = useBankSnapshot(session.store, (s) => s.info);
+    const bankName = name.length > 0 ? name : t("bankInfo.unnamed");
 
-    const setView = useCallback(
-        (v: BankEditView) => {
-            manager.currentView = v;
-            setViewLocal(v);
-        },
-        [manager]
+    // The title follows the active tab, and goes back to the default when the tab closes
+    useEffect(() => {
+        const previousTitle = document.title;
+        document.title = `SpessaFont - ${bankName}`;
+        return () => {
+            document.title = previousTitle;
+        };
+    }, [bankName]);
+    // Lives here so switching samples keeps playing, and stops when no sample is shown
+    const [samplePlayerState, setSamplePlayerState] =
+        useState<SamplePlayerState>("stopped");
+    if (samplePlayerState !== "stopped" && !(view instanceof BasicSample)) {
+        setSamplePlayerState("stopped");
+    }
+    // Counts the requests to play from the start, so playing the shown sample again restarts it
+    const [playRequest, setPlayRequest] = useState(0);
+    const [equalizer, setEqualizer] = useState(DEFAULT_EQUALIZER_STATE);
+    const [infoPanel, setInfoPanel] = useState<InfoPanel>("info");
+
+    const context: BankEditorContextType = useMemo(
+        () => ({
+            session,
+            setView: onViewChange,
+            apply: (actions: HistoryActionGroup, mergeKey?: string) => {
+                const focus = session.history.do(actions, mergeKey);
+                if (focus) {
+                    onViewChange(focus);
+                }
+            },
+            playSample: (sample: BasicSample) => {
+                onViewChange(sample);
+                setSamplePlayerState("playing");
+                setPlayRequest((r) => r + 1);
+            }
+        }),
+        [session, onViewChange]
     );
 
-    // update on manager update
-    useEffect(() => {
-        setSamples(manager.samples);
-        setInstruments(manager.instruments);
-        setPresets(manager.presets);
-        setView(manager.currentView);
-    }, [manager, setView]);
-    useEffect(() => {
-        if (
-            !shown ||
-            (!(view instanceof BasicInstrument) &&
-                !(view instanceof BasicPreset))
-        ) {
-            setSplits([]);
-        }
-    }, [setSplits, shown, view]);
-
-    // cleanup, set no splits
-    useEffect(() => {
-        return () => {
-            setSplits([]);
-        };
-    }, [setSplits]);
-
-    useImperativeHandle(ref, () => {
-        return {
-            removeUnusedElements: () => {
-                // remove unused elements with history
-                const deletedInstruments = new Set<BasicInstrument>();
-                const instrumentActions = new Array<DeleteInstrumentAction>();
-                for (const instrument of manager.instruments) {
-                    if (instrument.useCount === 0) {
-                        deletedInstruments.add(instrument);
-                        instrumentActions.push(
-                            new DeleteInstrumentAction(
-                                instrument,
-                                setInstruments,
-                                setView
-                            )
-                        );
-                    }
-                }
-
-                const sampleActions = new Array<DeleteSampleAction>();
-                for (const sample of manager.samples) {
-                    // determine the use count
-                    let useCount = sample.useCount;
-                    for (const i of sample.linkedTo) {
-                        if (deletedInstruments.has(i)) {
-                            useCount--;
-                        }
-                    }
-                    if (useCount === 0) {
-                        sampleActions.push(
-                            new DeleteSampleAction(sample, setSamples, setView)
-                        );
-                    }
-                }
-                manager.modifyBank([...sampleActions, ...instrumentActions]);
-                toast.success(
-                    t("soundBankLocale.removedElements", {
-                        instruments: instrumentActions.length,
-                        samples: sampleActions.length
-                    })
-                );
-            },
-
-            // automatically link stereo samples based on the name
-            autoLinkSamples: () => {
-                const actions: SetSampleTypeAction[] = [];
-                const linkedSamples = new Set<BasicSample>();
-                for (const sample of samples) {
-                    if (sample.linkedSample) {
-                        continue;
-                    }
-
-                    const match = /[a-zA-Z!](?=\s*$|\)|$)/.exec(
-                        sample.name
-                    )?.[0];
-                    if (
-                        match?.toLowerCase() !== "l" &&
-                        match?.toLowerCase() !== "r"
-                    ) {
-                        continue;
-                    }
-                    let replacement: string;
-                    let type: SampleType;
-                    switch (match) {
-                        default:
-                        case "l": {
-                            replacement = "r";
-                            type = SampleTypes.leftSample;
-                            break;
-                        }
-
-                        case "L": {
-                            replacement = "R";
-                            type = SampleTypes.leftSample;
-                            break;
-                        }
-
-                        case "r": {
-                            replacement = "l";
-                            type = SampleTypes.rightSample;
-                            break;
-                        }
-
-                        case "R": {
-                            replacement = "L";
-                            type = SampleTypes.rightSample;
-                            break;
-                        }
-                    }
-                    const linkedName = sample.name.replace(
-                        /([a-zA-Z!])(?!.*[a-zA-Z!])/,
-                        replacement
-                    );
-                    const linkedSample = samples.find(
-                        (s) =>
-                            s.name === linkedName &&
-                            !linkedSamples.has(s) &&
-                            !s.linkedSample
-                    );
-                    if (linkedSample) {
-                        linkedSamples.add(sample);
-                        linkedSamples.add(linkedSample);
-                        actions.push(
-                            new SetSampleTypeAction(
-                                sample,
-                                undefined,
-                                sample.sampleType,
-                                linkedSample,
-                                type,
-                                () => {
-                                    setSamples([...samples]);
-                                }
-                            )
-                        );
-                    }
-                }
-                if (actions.length > 0) {
-                    toast.success(
-                        t("soundBankLocale.modifiedSamples", {
-                            count: actions.length
-                        })
-                    );
-                    manager.modifyBank(actions);
-                } else {
-                    toast(t("soundBankLocale.noSamplesWereChanged"));
-                }
-            }
-        };
-    }, [manager, samples, setView, t]);
-
     return (
-        <div className={"main_content" + (shown ? "" : " hidden")}>
-            <MenuList
-                view={view}
-                sv={setView}
-                manager={manager}
-                setPresets={setPresets}
-                presets={presets}
-                samples={samples}
-                setSamples={setSamples}
-                instruments={instruments}
-                setInstruments={setInstruments}
-                clipboard={clipboardManager}
-            ></MenuList>
-            <div className={"main_content_window"}>
-                {view === "info" && (
-                    <SoundBankInfo
-                        destinationOptions={destinationOptions}
-                        ccOptions={ccOptions}
-                        manager={manager}
-                        clipboard={clipboardManager}
-                    ></SoundBankInfo>
-                )}
-                {view instanceof BasicPreset && (
-                    <PresetEditor
-                        manager={manager}
-                        preset={view}
-                        setView={setView}
-                        presets={presets}
-                        setPresets={setPresets}
-                        setSplits={setSplits}
-                        clipboardManager={clipboardManager}
-                        ccOptions={ccOptions}
-                        destinationOptions={destinationOptions}
-                    ></PresetEditor>
-                )}
-                {view instanceof BasicInstrument && (
-                    <InstrumentEditor
-                        instrument={view}
-                        manager={manager}
-                        setView={setView}
-                        setInstruments={setInstruments}
-                        instruments={instruments}
-                        setSplits={setSplits}
-                        clipboardManager={clipboardManager}
-                        ccOptions={ccOptions}
-                        destinationOptions={destinationOptions}
-                    ></InstrumentEditor>
-                )}
-                {view instanceof BasicSample && (
-                    <SampleEditor
-                        manager={manager}
-                        setView={setView}
-                        sample={view}
-                        setSamples={setSamples}
-                        samples={samples}
-                    ></SampleEditor>
-                )}
+        <BankEditorContext value={context}>
+            <div className={"bank_editor_content"}>
+                <MenuList view={view} isCovered={isCovered} />
+                {/* Focusable, so a click on its text takes the focus off the page, and Delete or
+                    Ctrl+V there do not act on the list's selection (see isListShortcut) */}
+                <div className={"bank_editor_window"} tabIndex={-1}>
+                    {/* A failing editor resets when another element is shown */}
+                    <ErrorBoundary
+                        key={view === "info" ? "info" : getObjectId(view)}
+                        fallback={renderPaneError}
+                    >
+                        {view === "info" && (
+                            <SoundBankInfo
+                                panel={infoPanel}
+                                onPanelChange={setInfoPanel}
+                            />
+                        )}
+                        {view instanceof BasicPreset && (
+                            <PresetEditor preset={view} />
+                        )}
+                        {view instanceof BasicInstrument && (
+                            <InstrumentEditor instrument={view} />
+                        )}
+                        {view instanceof BasicSample && (
+                            <SampleEditor
+                                sample={view}
+                                playerState={samplePlayerState}
+                                playRequest={playRequest}
+                                onPlayerStateChange={setSamplePlayerState}
+                                equalizer={equalizer}
+                                onEqualizerChange={setEqualizer}
+                            />
+                        )}
+                    </ErrorBoundary>
+                </div>
             </div>
-        </div>
+        </BankEditorContext>
     );
 }

@@ -1,6 +1,7 @@
 .wave_view {
     background: var(--darker-color-start);
-    min-height: 0;
+    /* On short screens the editor scrolls instead of squeezing the waveform away */
+    min-height: 10rem;
     min-width: 0;
     flex-grow: 1;
     cursor: pointer;
@@ -22,20 +23,49 @@
     overflow-x: auto;
 }
 
-.fake_scroll {
+.wave_view_scroll {
     position: absolute;
     height: 100%;
-    width: 100%;
+    width: calc(var(--wave-zoom) * 100%);
     opacity: 0;
     z-index: 100;
 }
 
+/* Until the audio is read, a click would set a loop point at 0 */
+.wave_view[data-loading="true"] {
+    cursor: progress;
+}
+
+/* An outline, not a border: a border would make the canvases narrower than the view, and the
+   pointer and the scroll range are measured on the view */
 .wave_view canvas {
     position: absolute;
     border-radius: var(--primary-border-radius);
-    border: solid 1px var(--track-border-color);
+    outline: solid 1px var(--track-border-color);
+    outline-offset: -1px;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
+}
+
+.wave_view_text {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    text-align: start;
+    line-height: 18px;
+    color: var(--font-color);
+    pointer-events: none;
+    white-space: pre;
+}
+
+.wave_view_hover {
+    left: auto;
+    right: 6px;
+    align-items: end;
+    text-align: end;
 }

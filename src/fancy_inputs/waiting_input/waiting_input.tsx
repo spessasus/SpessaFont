@@ -1,89 +1,92 @@
-import * as React from "react";
-import { useCallback, useEffect, useState } from "react";
+import type { InputHTMLAttributes } from "react";
+import { useRef, useState } from "react";
+import { parseTypedNumber } from "./parse_typed_number.ts";
 
-type WaitingInputProps<T extends string | number> = Omit<
-    React.InputHTMLAttributes<HTMLInputElement>,
+interface WaitingInputProps<T extends string | number> extends Omit<
+    InputHTMLAttributes<HTMLInputElement>,
     "value" | "onChange"
-> & {
+> {
     value: T;
-    setValue: (v: T) => T;
+    /**
+     * Applies the typed value and returns the value that was applied (it may be clamped).
+     */
+    onCommit: (v: T) => T;
     suffix?: string;
-};
+}
 
+/**
+ * An input that applies its value when it loses focus or Enter is pressed, not on every key.
+ * While the user types, the input shows the draft. Otherwise it shows `value`.
+ * Escape drops the draft and leaves the value as it was, and so does a number field left
+ * empty or with text that is not a number.
+ */
 export function WaitingInput<T extends string | number>({
     value,
-    setValue,
+    onCommit,
     suffix = "",
     max,
     min,
     maxLength,
     ...attributes
 }: WaitingInputProps<T>) {
-    const [text, setText] = useState(value.toString());
+    const [draft, setDraft] = useState<string | null>(null);
+    // Set by Escape, so the blur that follows does not apply the draft
+    const cancelRef = useRef(false);
 
-    const isNumber = typeof value === "number";
-
-    const clampNumber = useCallback(
-        (val: number): number => {
-            const minVal = min === undefined ? -Infinity : Number(min);
-            const maxVal = max === undefined ? Infinity : Number(max);
-            return Math.min(Math.max(val, minVal), maxVal);
-        },
-        [max, min]
-    );
-
-    const setVal = (v: string) => {
-        let parsedValue: T;
-
-        if (isNumber) {
-            let num = Number.parseFloat(v);
-            if (Number.isNaN(num)) {
-                num = 0;
+    /**
+     * The value the text stands for, or undefined to keep the current one.
+     */
+    const parse = (text: string) => {
+        if (typeof value === "number") {
+            const number = parseTypedNumber(text, suffix);
+            if (number === undefined) {
+                return undefined;
             }
-            num = clampNumber(num);
-            parsedValue = num as T;
-        } else {
-            if (maxLength !== undefined) {
-                v = v.slice(0, maxLength);
-            }
-            parsedValue = v as T;
+            const minValue = min === undefined ? -Infinity : Number(min);
+            const maxValue = max === undefined ? Infinity : Number(max);
+            // T is number here, TypeScript cannot narrow a type parameter from a value
+            return Math.min(Math.max(number, minValue), maxValue) as T;
         }
-
-        if (parsedValue.toString() === value.toString()) {
-            setText(value.toString());
-            return;
-        }
-
-        const newValue = setValue(parsedValue);
-        setText(newValue.toString());
+        return (maxLength === undefined ? text : text.slice(0, maxLength)) as T;
     };
 
-    useEffect(() => {
-        setText(value.toString());
-    }, [value]);
+    const commit = (text: string) => {
+        setDraft(null);
+        if (cancelRef.current) {
+            cancelRef.current = false;
+            return;
+        }
+        const parsed = parse(text);
+        if (parsed !== undefined && parsed.toString() !== value.toString()) {
+            onCommit(parsed);
+        }
+    };
 
     return (
         <input
             {...attributes}
             min={min}
-            maxLength={maxLength}
+            // The limit is for the typed text, the suffix comes on top
+            maxLength={
+                maxLength === undefined ? undefined : maxLength + suffix.length
+            }
             size={maxLength}
             max={max}
-            value={text + suffix}
-            onBlur={(e) => {
-                const stripped = e.target.value.replaceAll(suffix, "");
-                setVal(stripped);
-            }}
+            value={(draft ?? value.toString()) + suffix}
+            onBlur={(e) => commit(e.target.value.replaceAll(suffix, ""))}
             onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                    e.preventDefault();
-                    (e.target as HTMLInputElement).blur();
+                if (e.key !== "Enter" && e.key !== "Escape") {
+                    return;
                 }
+                e.preventDefault();
+                if (e.key === "Escape") {
+                    // Only cancels the edit, not a dialog or menu around it
+                    e.stopPropagation();
+                    cancelRef.current = true;
+                }
+                e.currentTarget.blur();
             }}
-            onChange={(e) => {
-                const stripped = e.target.value.replaceAll(suffix, "");
-                setText(stripped);
-            }}
+            onChange={(e) => setDraft(e.target.value.replaceAll(suffix, ""))}
         />
     );
 }

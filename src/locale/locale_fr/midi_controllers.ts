@@ -3,12 +3,10 @@ export const MIDIControllersLocale = {
     // translate "Undefined", this is just so JS works fine
     notDefined: "Non défini",
 
-    bankSelect: "Sélection de la banque",
     modulationWheel: "Molette de Modulation",
     breathController: "Contrôleur de Souffle",
     footController: "Contrôleur au Pied",
     portamentoTime: "Temps de Portamento",
-    dataEntryMsb: "Entrée de Données MSB",
     mainVolume: "Volume Principal",
     balance: "Équilibre",
     pan: "Balance",
@@ -19,21 +17,6 @@ export const MIDIControllersLocale = {
     generalPurposeController2: "Contrôleur à Usage Général 2",
     generalPurposeController3: "Contrôleur à Usage Général 3",
     generalPurposeController4: "Contrôleur à Usage Général 4",
-    lsbForControl0BankSelect: "LSB pour le Contrôle 0 Sélection de Banque",
-    lsbForControl1ModulationWheel:
-        "LSB pour le Contrôle 1 Molette de Modulation",
-    lsbForControl2BreathController:
-        "LSB pour le Contrôle 2 Contrôleur de Souffle",
-    lsbForControl4FootController: "LSB pour le Contrôle 4 Contrôleur au Pied",
-    lsbForControl5PortamentoTime: "LSB pour le Contrôle 5 Temps de Portamento",
-    lsbForControl6DataEntry: "LSB pour le Contrôle 6 Entrée de Données",
-    lsbForControl7MainVolume: "LSB pour le Contrôle 7 Volume Principal",
-    lsbForControl8Balance: "LSB pour le Contrôle 8 Équilibre",
-    lsbForControl10Pan: "LSB pour le Contrôle 10 Panoramique",
-    lsbForControl11ExpressionController:
-        "LSB pour le Contrôle 11 Contrôleur d'Expression",
-    lsbForControl12EffectControl1: "LSB pour le Contrôle 12 Contrôle d'Effet 1",
-    lsbForControl13EffectControl2: "LSB pour le Contrôle 13 Contrôle d'Effet 2",
     sustainPedal: "Pédale de Soutien",
     portamentoOnOff: "Portamento Activé/Désactivé",
     sostenutoPedal: "Pédale Sostenuto",
@@ -61,17 +44,5 @@ export const MIDIControllersLocale = {
     variationDepth: "Profondeur de Variation",
     phaserDepth: "Profondeur du Phaser",
     dataIncrement: "Incrémentation Des Données",
-    dataDecrement: "Décrémentation Des Données",
-    NRPNLsb: "NRPN LSB",
-    NRPNMsb: "NRPN MSB",
-    RPNLsb: "RPN LSB",
-    RPNMsb: "RPN MSB",
-    allSoundOff: "Arrêt de tous les Sons",
-    resetAllControllers: "Réinitialiser tous les Contrôleurs",
-    localControlOnOff: "Contrôle Local Activé/Désactivé",
-    allNotesOff: "Arrêt de toutes les Notes",
-    omniModeOff: "Mode Omni Désactivé",
-    omniModeOn: "Mode Omni Activé",
-    monoModeOn: "Mode Mono Activé",
-    polyModeOn: "Mode Poly Activé"
+    dataDecrement: "Décrémentation Des Données"
 };

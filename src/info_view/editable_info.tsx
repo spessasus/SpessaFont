@@ -1,210 +1,184 @@
-import type { SoundBankInfoData } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
-import type SoundBankManager from "../core_backend/sound_bank_manager.ts";
-import type { HistoryAction } from "../core_backend/history.ts";
+import { useRef, useState } from "react";
+import type { SoundBankInfoData } from "spessasynth_core";
+import { SetBankInfoAction } from "./set_bank_info_action.ts";
+import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
+import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
+import { WaitingInput } from "../fancy_inputs/waiting_input/waiting_input.tsx";
+import { WaitingTextArea } from "../fancy_inputs/waiting_input/waiting_text_area.tsx";
 
-class SetBankInfo<K extends keyof SoundBankInfoData> implements HistoryAction {
-    callback: (s: NonNullable<SoundBankInfoData[K]>) => void;
-    private readonly oldVal: NonNullable<SoundBankInfoData[K]>;
-    private readonly newVal: NonNullable<SoundBankInfoData[K]>;
-    private readonly fourCC: K;
+const MS_PER_MINUTE = 60_000;
 
-    constructor(
-        callback: (s: NonNullable<SoundBankInfoData[K]>) => void,
-        oldVal: NonNullable<SoundBankInfoData[K]>,
-        newVal: NonNullable<SoundBankInfoData[K]>,
-        fourCC: K
-    ) {
-        this.callback = callback;
-        this.oldVal = oldVal;
-        this.newVal = newVal;
-        this.fourCC = fourCC;
+/**
+ * An SF2 INFO text is at most 256 bytes with its closing zero, and core writes a byte per
+ * character. The comment may be 65,536 bytes. DLS has no limits, but a name this long is enough.
+ */
+const INFO_TEXT_LENGTH = 255;
+const COMMENT_LENGTH = 65_535;
+
+/**
+ * Formats a date as local 'YYYY-MM-DDTHH:MM', which is what datetime-local inputs use.
+ */
+function toLocalDateTimeValue(date: Date) {
+    const local = new Date(
+        date.getTime() - date.getTimezoneOffset() * MS_PER_MINUTE
+    );
+    if (Number.isNaN(local.getTime())) {
+        return "";
     }
-
-    do(b: SoundBankManager) {
-        b.soundBankInfo[this.fourCC] = this.newVal;
-        this.callback(this.newVal);
-    }
-
-    undo(b: SoundBankManager) {
-        b.soundBankInfo[this.fourCC] = this.oldVal;
-        this.callback(this.oldVal);
-    }
+    // Years past 9999 do not fit the field
+    return local.getUTCFullYear() > 9999
+        ? ""
+        : local.toISOString().slice(0, 16);
 }
 
-export function EditableBankInfo({
-    manager,
-    name,
-    setName
-}: {
-    manager: SoundBankManager;
-    name: string;
-    setName: (n: string) => void;
-}) {
+interface InfoTextFieldProps {
+    id: string;
+    label: string;
+    value: string;
+    onCommit: (value: string) => void;
+}
+
+function InfoTextField({ id, label, value, onCommit }: InfoTextFieldProps) {
+    return (
+        <span>
+            <label htmlFor={id}>{label}</label>
+            <WaitingInput
+                className={"pretty_input hover_brightness"}
+                id={id}
+                maxLength={INFO_TEXT_LENGTH}
+                onCommit={(v) => {
+                    onCommit(v);
+                    return v;
+                }}
+                value={value}
+                placeholder={label}
+            />
+        </span>
+    );
+}
+
+interface CreationDateFieldProps {
+    date: Date;
+    onCommit: (date: Date) => void;
+}
+
+/**
+ * Commits on blur, typing a year digit by digit would make an undo step each. The field is not
+ * controlled, as a half typed date has no value to control it with.
+ */
+function CreationDateField({ date, onCommit }: CreationDateFieldProps) {
     const { t } = useTranslation();
+    // Remounts the field, which shows the bank's date again after Escape or emptying it
+    const [revision, setRevision] = useState(0);
+    // Set by Escape, so the blur that follows does not apply the draft
+    const cancelRef = useRef(false);
+    const value = toLocalDateTimeValue(date);
+    return (
+        <span>
+            <label htmlFor={"ICRD"}>{t("bankInfo.creationDate")}</label>
+            <input
+                type={"datetime-local"}
+                className={"pretty_input hover_brightness"}
+                id={"ICRD"}
+                // A new value from outside (undo, another bank) replaces the field
+                key={`${value}-${revision}`}
+                defaultValue={value}
+                // toISOString writes longer years in another form, which breaks the field
+                min={"0001-01-01T00:00"}
+                max={"9999-12-31T23:59"}
+                onKeyDown={(e) => {
+                    if (e.key !== "Escape") {
+                        return;
+                    }
+                    // Only cancels the edit, not a dialog or menu around it
+                    e.preventDefault();
+                    e.stopPropagation();
+                    cancelRef.current = true;
+                    e.currentTarget.blur();
+                }}
+                onBlur={(e) => {
+                    const isCanceled = cancelRef.current;
+                    cancelRef.current = false;
+                    // The value is local time, valueAsDate does not work for this input type
+                    const typed = new Date(e.target.value);
+                    const isValid = !Number.isNaN(typed.getTime());
+                    if (
+                        !isCanceled &&
+                        isValid &&
+                        toLocalDateTimeValue(typed) !== value
+                    ) {
+                        onCommit(typed);
+                    } else if (e.target.value !== value) {
+                        setRevision((r) => r + 1);
+                    }
+                }}
+            />
+        </span>
+    );
+}
 
-    const [date, setDate] = useState(new Date());
-    const [engineer, setEngineer] = useState("");
-    const [prod, setProd] = useState("");
-    const [copy, setCopy] = useState("");
-    const [subject, setSubject] = useState("");
-    const [cmt, setCmt] = useState("");
-    useEffect(() => {
-        document.title = `SpessaFont - ${manager.getBankName(t("bankInfo.unnamed"))}`;
-    }, [manager, t, name]);
+export function EditableInfo() {
+    const { t } = useTranslation();
+    const { session, apply } = useBankEditor();
+    const info = useBankSnapshot(session.store, (s) => s.info);
 
-    const bank = manager;
+    function setInfo<K extends keyof SoundBankInfoData>(
+        fourCC: K,
+        value: SoundBankInfoData[K]
+    ) {
+        apply([new SetBankInfoAction(fourCC, info[fourCC], value)]);
+    }
 
-    useEffect(() => {
-        if (bank !== undefined) {
-            setName(manager.getInfo("name"));
-            setDate(manager.getInfo("creationDate"));
-            setEngineer(manager.getInfo("engineer") ?? "");
-            setProd(manager.getInfo("product") ?? "");
-            setCopy(manager.getInfo("copyright") ?? "");
-            setSubject(manager.getInfo("subject") ?? "");
-            setCmt(manager.getInfo("comment") ?? "");
-        }
-    }, [bank, manager, setName]);
+    const getTextField = (
+        field: "engineer" | "product" | "copyright" | "subject",
+        id: string,
+        label: string
+    ) => (
+        <InfoTextField
+            id={id}
+            label={label}
+            value={info[field] ?? ""}
+            onCommit={(v) => setInfo(field, v)}
+        />
+    );
+
+    // SF2 saves write the subject at the end of the comment, and both must fit in one text
+    const subjectLength = info.subject ? info.subject.length + 1 : 0;
 
     return (
         <div className={"editable"}>
-            <input
+            <WaitingInput
                 className={"pretty_input hover_brightness"}
                 id={"INAM"}
-                onChange={(e) => {
-                    manager.modifyBank([
-                        new SetBankInfo(
-                            setName,
-                            manager.getInfo("name"),
-                            e.target.value,
-                            "name"
-                        )
-                    ]);
+                aria-label={t("bankInfo.name")}
+                maxLength={INFO_TEXT_LENGTH}
+                onCommit={(name) => {
+                    setInfo("name", name);
+                    return name;
                 }}
-                value={name}
+                value={info.name}
                 placeholder={t("bankInfo.name")}
             />
 
             <div className={"fields"}>
-                <span>
-                    <label htmlFor={"IENG"}>{t("bankInfo.engineer")}</label>
-                    <input
-                        className={"pretty_input"}
-                        id={"IENG"}
-                        onChange={(e) => {
-                            manager.modifyBank([
-                                new SetBankInfo(
-                                    setEngineer,
-                                    manager.getInfo("engineer") ?? "",
-                                    e.target.value,
-                                    "engineer"
-                                )
-                            ]);
-                        }}
-                        value={engineer}
-                        placeholder={t("bankInfo.engineer")}
-                    />
-                </span>
-
-                <span>
-                    <label htmlFor={"ICRD"}>{t("bankInfo.creationDate")}</label>
-                    <input
-                        type={"datetime-local"}
-                        className={"pretty_input hover_brightness"}
-                        id={"ICRD"}
-                        onChange={(e) => {
-                            manager.modifyBank([
-                                new SetBankInfo(
-                                    setDate,
-                                    manager.getInfo("creationDate") ??
-                                        new Date(),
-                                    e.target.valueAsDate ?? new Date(),
-                                    "creationDate"
-                                )
-                            ]);
-                        }}
-                        value={date.toISOString().slice(0, 16)} // Format to 'YYYY-MM-DDTHH:MM' so input is happy
-                        placeholder={t("bankInfo.creationDate")}
-                    />
-                </span>
-
-                <span>
-                    <label htmlFor={"IPRD"}>{t("bankInfo.product")}</label>
-                    <input
-                        className={"pretty_input hover_brightness"}
-                        id={"IPRD"}
-                        onChange={(e) => {
-                            manager.modifyBank([
-                                new SetBankInfo(
-                                    setProd,
-                                    manager.getInfo("product") ?? "",
-                                    e.target.value,
-                                    "product"
-                                )
-                            ]);
-                        }}
-                        value={prod}
-                        placeholder={t("bankInfo.product")}
-                    />
-                </span>
-
-                <span>
-                    <label htmlFor={"ICOP"}>{t("bankInfo.copyright")}</label>
-                    <input
-                        className={"pretty_input hover_brightness"}
-                        id={"ICOP"}
-                        onChange={(e) => {
-                            manager.modifyBank([
-                                new SetBankInfo(
-                                    setCopy,
-                                    manager.getInfo("copyright") ?? "",
-                                    e.target.value,
-                                    "copyright"
-                                )
-                            ]);
-                        }}
-                        value={copy}
-                        placeholder={t("bankInfo.copyright")}
-                    />
-                </span>
-
-                <span>
-                    <label htmlFor={"ISBJ"}>{t("bankInfo.subject")}</label>
-                    <input
-                        className={"pretty_input hover_brightness"}
-                        id={"ISBJ"}
-                        onChange={(e) => {
-                            manager.modifyBank([
-                                new SetBankInfo(
-                                    setSubject,
-                                    manager.getInfo("subject") ?? "",
-                                    e.target.value,
-                                    "subject"
-                                )
-                            ]);
-                        }}
-                        value={subject}
-                        placeholder={t("bankInfo.subject")}
-                    />
-                </span>
+                {getTextField("engineer", "IENG", t("bankInfo.engineer"))}
+                <CreationDateField
+                    date={info.creationDate}
+                    onCommit={(date) => setInfo("creationDate", date)}
+                />
+                {getTextField("product", "IPRD", t("bankInfo.product"))}
+                {getTextField("copyright", "ICOP", t("bankInfo.copyright"))}
+                {getTextField("subject", "ISBJ", t("bankInfo.subject"))}
             </div>
             <div className={"comment"}>
-                <textarea
+                <WaitingTextArea
                     className={"pretty_input hover_brightness"}
                     id={"ICMT"}
-                    onChange={(e) => {
-                        manager.modifyBank([
-                            new SetBankInfo(
-                                setCmt,
-                                manager.getInfo("comment") ?? "",
-                                e.target.value,
-                                "comment"
-                            )
-                        ]);
-                    }}
-                    value={cmt}
+                    aria-label={t("bankInfo.description")}
+                    maxLength={COMMENT_LENGTH - subjectLength}
+                    onCommit={(v) => setInfo("comment", v)}
+                    value={info.comment ?? ""}
                     placeholder={t("bankInfo.description")}
                 />
             </div>

@@ -11,18 +11,19 @@ import { SoundBankLocale } from "./sound_bank.ts";
 import { InstrumentLocale } from "./instrument.ts";
 import { PresetLocale } from "./preset.ts";
 import { ClipboardLocale } from "./clipboard.ts";
+import { ContextMenuLocale } from "./context_menu.ts";
+import { ToolsLocale } from "./tools.ts";
 
 /**
  *
  */
 export const localeEnglish = {
-    localeName: "English",
     // title message
     titleMessage: "SpessaFont: Online SoundFont2/DLS Editor",
     welcome: {
         main: "Welcome to SpessaFont, an online SoundFont2/DLS Editor!",
         openPrompt: "Open a file to get started",
-        newPrompt: "Or start with an empty file...",
+        newPrompt: "Or start with an empty file…",
         downloadPrompt: "Download SpessaFont Desktop",
         copyright: "Created by Spessasus using spessasynth_core.",
         copyrightTwo: `Copyright © Spessasus ${new Date().getFullYear()}, Licensed under the Apache-2.0 License.`
@@ -31,22 +32,55 @@ export const localeEnglish = {
     firefox: "Consider using Firefox to load large files.",
     getUserInput: "Press anywhere to start the app",
 
-    unsavedChanges: "This file has unsaved changes.",
+    unsavedBanksTitle: "Unsaved changes",
+    unsavedBanksMessage: "Some sound banks have unsaved changes. Discard them?",
+    bankHasUnsavedChanges: "{{name}} has unsaved changes.",
+    openBanks: "Open sound banks",
+    closeTab: "Close {{name}}",
+    saveAndClose: "Save and close",
     discard: "Discard",
     keep: "Keep",
 
+    errorBoundary: {
+        title: "Something went wrong",
+        description:
+            "SpessaFont ran into an error and could not continue. Reloading the page restarts the app. Unsaved changes will be lost.",
+        reload: "Reload",
+        paneTitle: "This editor ran into an error",
+        paneDescription:
+            "The rest of SpessaFont still works. Select another element, or undo the last change and select this one again.",
+        actionFailed: "SpessaFont ran into an error. The details are above.",
+        partTitle: "This part of SpessaFont ran into an error",
+        partDescription:
+            "The rest of SpessaFont still works and your banks stay open. Try again, or save your banks and reload the page.",
+        tryAgain: "Try again"
+    },
+
     loadingAndSaving: {
-        loadingFileFromDisk: "Loading file from disk...",
-        parsingSoundBank: "Parsing sound bank...",
+        loadingFileFromDisk: "Loading file from disk…",
+        creatingNewBank: "Creating a new sound bank…",
+        parsingSoundBank: "Parsing sound bank…",
         errorLoadingSoundBank: "Error loading sound bank!",
+        undecodableSamples_one:
+            "{{count}} sample could not be decoded, so it plays as silence. Saving as SF2 or DLS turns it into that silence.",
+        undecodableSamples_other:
+            "{{count}} samples could not be decoded, so they play as silence. Saving as SF2 or DLS turns them into that silence.",
         chromeError: "File too large to be opened on Chromium-based browsers.",
         electronError:
             "This file can only be opened in SpessaFont Web on Firefox.",
+        electronOpenError: "Failed to open {{name}}.",
 
-        savingSoundBank: "Saving sound bank...",
+        savingSoundBank: "Saving sound bank…",
         savedSuccessfully: "Saved successfully!",
-        writingSamples: "Writing Samples...",
-        writingFailed: "Error writing the sound bank!"
+        writingSamplesProgress: "Writing samples… ({{percent}}%)",
+        writingFailed: "Error writing the sound bank!",
+        encoderUnavailable:
+            "The Vorbis encoder for SF3 could not be loaded. Check your connection and try again.",
+        dlsTooLarge:
+            "A preset has too many zones to save as DLS, where each pair of a preset zone and an instrument zone becomes a region. Use fewer zones or save in another format.",
+        saveRunning: "This sound bank is being saved already.",
+        unsupportedFile: "{{name}} is neither a sound bank nor an audio file.",
+        openBankForSamples: "Open or create a sound bank to add samples to it."
     },
 
     downloadDesktop: {
@@ -57,16 +91,13 @@ export const localeEnglish = {
         debianPackage: "Debian Package"
     },
 
-    error: "Error",
     yes: "Yes",
     no: "No",
-    none: "None",
     githubPage: "Project page",
     discord: "Join the Discord server!",
     keyboard: "Keyboard",
 
     // generic stuff
-    addNew: "Add New",
     copy: "Copy",
     paste: "Paste",
     delete: "Delete",
@@ -86,5 +117,7 @@ export const localeEnglish = {
     instrumentLocale: InstrumentLocale,
     presetLocale: PresetLocale,
     soundBankLocale: SoundBankLocale,
-    clipboardLocale: ClipboardLocale
+    clipboardLocale: ClipboardLocale,
+    contextMenu: ContextMenuLocale,
+    toolsLocale: ToolsLocale
 };

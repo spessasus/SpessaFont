@@ -1,5 +1,9 @@
-.midi_patch {
+.preset_item_patch {
     display: flex;
+}
+
+.patch_number_zero {
+    color: var(--muted-font-color);
 }
 
 .preset_item_wrapper {
@@ -17,7 +21,7 @@
 
 .preset_item:hover,
 .preset_item.selected {
-    background: var(--lighter-color-end);
+    background: var(--selection-color);
 }
 
 .preset_item span {
@@ -32,23 +36,31 @@
     flex-grow: 1;
 }
 
-.left_group {
+.preset_item_left {
     display: flex;
     align-items: center;
     gap: 0.3rem;
 }
 
-.left_group span:not(.monospaced) {
+.preset_item_left span:not(.monospaced),
+.preset_item_left button {
     font-size: 1rem;
     display: flex;
 }
 
-.left_group .triangle {
+.preset_item_left .triangle {
     color: var(--preset-item-color);
     flex-grow: 1;
+    align-items: center;
+    gap: 0.3rem;
 }
 
-.left_group svg {
+/* The patch is part of the expand button, but keeps the text color */
+.preset_item_left .triangle .preset_item_patch {
+    color: var(--font-color);
+}
+
+.preset_item_left svg {
     cursor: pointer;
 }
 

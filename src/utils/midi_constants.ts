@@ -14,7 +14,7 @@ export const ILLEGAL_CC_DESTINATIONS: MIDIController[] = [
     101, 120, 121, 122, 123, 124, 125, 126, 127
 ];
 
-const MODULABLE_CCS: number[] = [];
+const MODULABLE_CCS = new Array<number>();
 for (let i = 0; i < 128; i++) {
     if (!ILLEGAL_CC_DESTINATIONS.includes(i as MIDIController)) {
         MODULABLE_CCS.push(i);

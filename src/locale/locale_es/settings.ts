@@ -20,13 +20,17 @@ export const SettingsLocale = {
         },
         reverbLevel: "Nivel de Reverberación",
         chorusLevel: "Nivel de Coro",
-        delayLevel: "Nivel de Retardo"
+        delayLevel: "Nivel de Retardo",
+        velocitySenseDepth: "Profundidad de Sensibilidad a la Velocidad",
+        velocitySenseOffset: "Desplazamiento de Sensibilidad a la Velocidad"
     },
 
     midi: {
         title: "Configuración de MIDI",
         waitingForAccess: "Esperando Acceso a MIDI...",
         midiInput: "Entrada MIDI",
-        noInput: "Sin Entrada"
+        noInput: "Sin Entrada",
+        notSupported: "Tu navegador no es compatible con WebMIDI.",
+        accessError: "Error de acceso a MIDI."
     }
 };

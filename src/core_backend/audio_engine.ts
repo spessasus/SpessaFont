@@ -1,84 +1,137 @@
-import {
-    type BasicMIDI,
-    BasicSoundBank,
-    DEFAULT_SYNTH_MODE,
-    MIDIMessageTypes,
-    MIDIUtils,
-    SoundBankLoader,
-    SpessaLog,
-    SpessaSynthProcessor,
-    SpessaSynthSequencer
-} from "spessasynth_core";
-import { KEYBOARD_TARGET_CHANNEL } from "../keyboard/target_channel.ts";
-import {
-    getSetting,
-    type SavedSettingsType
-} from "../settings/save_load/settings_typedef.ts";
+import { MIDIMessageTypes } from "spessasynth_core";
+import { type SavedSettingsType } from "../settings/save_load/settings_typedef.ts";
 import { logInfo } from "../utils/core_utils.ts";
+import type { HostSettings } from "../synth_host/protocol.ts";
+import playbackWorkletURL from "../synth_host/playback_worklet.ts?worker&url";
+import { SynthClient } from "./synth_client.ts";
+import { startHost } from "./start_host.ts";
+import { IS_FIREFOX } from "../utils/environment_detection.ts";
 
-// audio worklet processor operates at that
-const BLOCK_SIZE = 128;
-const MAX_CHUNKS_QUEUED = 32; // 16 * 128 = 2,048 // Windows does not like small buffer sizes
-const MAX_RENDERED_AT_ONCE = 2;
+/**
+ * Blocks of 128 frames the playback worklet keeps queued at 48 kHz, the smallest with a margin
+ * that played without dropouts on a CPU in powersave mode (`AUDIO_WORKLET_MIGRATION_PLAN.md`,
+ * phase 5). Chromium played 690 voices at 24 (about 64 ms). Firefox needs 64 (about 171 ms),
+ * it dropped blocks at 48 with 180 voices.
+ */
+const QUEUED_BLOCKS = IS_FIREFOX ? 64 : 24;
 
-const dummy = BasicSoundBank.getSampleSoundBankFile();
+/**
+ * A chain of audio nodes, from the first to the last.
+ */
+export interface OutputInsert {
+    input: AudioNode;
+    output: AudioNode;
+}
 
+export function getHostSettings(settings: SavedSettingsType): HostSettings {
+    return {
+        interpolation: settings.interpolation,
+        velocitySenseDepth: settings.velocitySenseDepth,
+        velocitySenseOffset: settings.velocitySenseOffset,
+        reverbLevel: settings.reverbLevel,
+        chorusLevel: settings.chorusLevel,
+        delayLevel: settings.delayLevel,
+        voiceCap: settings.voiceCap
+    };
+}
+
+/**
+ * The editor's audio: the Web Audio graph on this thread, and the synthesizer host, which it
+ * talks to only through `client`.
+ */
 export class AudioEngine {
-    context: AudioContext;
-
-    processor: SpessaSynthProcessor;
-    sequencer: SpessaSynthSequencer;
-    analyser: AnalyserNode;
-
-    targetNode: GainNode;
-
-    audioChunksQueued = 0;
-
-    readonly maxChunksQueued;
-    private readonly currentSampleRate;
-
     private worklet: AudioWorkletNode | undefined;
+    private outputInsert: OutputInsert | undefined;
+    private started: Promise<void> | undefined;
+    public readonly context: AudioContext;
+    public readonly analyser: AnalyserNode;
+    /**
+     * Where the synthesizer and the sample player connect. It goes to `targetNode`, through
+     * the output insert when there is one.
+     */
+    public readonly inputNode: GainNode;
+    public readonly targetNode: GainNode;
+    /**
+     * The synthesizer host, which also keeps every open bank's mirror.
+     */
+    public readonly client: SynthClient;
+    /**
+     * Where the host runs, once it started: a Worker, or this thread when the Worker failed.
+     */
+    public readonly hostMode;
 
-    constructor(context: AudioContext, initialSettings: SavedSettingsType) {
+    public constructor(
+        context: AudioContext,
+        initialSettings: SavedSettingsType
+    ) {
         this.context = context;
-        this.processor = new SpessaSynthProcessor(context.sampleRate, {
-            initialTime: context.currentTime
-        });
-        this.maxChunksQueued = Math.min(
-            Math.max(
-                2,
-                Math.round((context.sampleRate / 48_000) * MAX_CHUNKS_QUEUED)
-            ),
-            32
-        );
-        this.processor.soundBankManager.addSoundBank(
-            SoundBankLoader.fromArrayBuffer(dummy.slice()),
-            "main"
-        );
-
-        this.sequencer = new SpessaSynthSequencer(this.processor);
-        this.sequencer.loopCount = Infinity;
-        // analyser
-        this.analyser = new AnalyserNode(this.context);
-        this.analyser.connect(this.context.destination);
-        this.targetNode = new GainNode(context);
-        this.targetNode.connect(this.analyser);
         const isDev = import.meta.env.MODE === "development";
         if (isDev) {
             logInfo("Dev mode on");
         }
-        SpessaLog.setLogLevel(isDev, isDev, isDev);
+        const { port, mode } = startHost({
+            sampleRate: context.sampleRate,
+            queuedBlocks: QUEUED_BLOCKS,
+            currentTime: context.currentTime,
+            settings: getHostSettings(initialSettings),
+            isVerbose: isDev
+        });
+        this.client = new SynthClient(port);
+        this.hostMode = mode;
+        this.analyser = new AnalyserNode(this.context, { fftSize: 1024 });
+        this.analyser.connect(this.context.destination);
+        this.targetNode = new GainNode(context);
+        this.targetNode.connect(this.analyser);
+        this.inputNode = new GainNode(context);
+        this.inputNode.connect(this.targetNode);
 
-        this.currentSampleRate = context.sampleRate;
-        this.applySettings(initialSettings);
+        this.setVolume(initialSettings.volume);
     }
 
-    get MIDIPaused() {
-        return this.sequencer.paused;
+    private async start() {
+        await this.context.resume();
+        logInfo("Setting up audio loop");
+        await this.context.audioWorklet.addModule(playbackWorkletURL);
+        this.worklet = new AudioWorkletNode(
+            this.context,
+            "playback-processor",
+            {
+                outputChannelCount: [2],
+                numberOfOutputs: 1
+            }
+        );
+        this.worklet.connect(this.inputNode);
+        // The host sends the rendered audio straight to the worklet
+        const output = new MessageChannel();
+        this.worklet.port.postMessage(output.port1, [output.port1]);
+        this.client.send({ type: "connectOutput", port: output.port2 }, [
+            output.port2
+        ]);
+    }
+
+    /**
+     * Every note on, note off, stop all and reset event of the synthesizer.
+     */
+    public get synthEvents() {
+        return this.client.synthEvents;
+    }
+
+    /**
+     * Voice count and sequencer state.
+     */
+    public get status() {
+        return this.client.status;
+    }
+
+    /**
+     * The keyboard channel's controllers, pitch wheel and pressure.
+     */
+    public get keyboardChannel() {
+        return this.client.keyboardChannel;
     }
 
     public processRealTime(msg: number[] | Uint8Array) {
-        this.processor.processMessage(msg, 0);
+        this.client.midi(msg);
     }
 
     public ccChangeRealTime(ch: number, cc: number, value: number) {
@@ -101,166 +154,93 @@ export class AudioEngine {
         ]);
     }
 
-    applySettings(settings: SavedSettingsType) {
-        const processor = this.processor;
-        this.setVolume(getSetting("volume", settings));
-        processor.setSystemParameter(
-            "interpolationType",
-            getSetting("interpolation", settings)
-        );
+    /**
+     * Applies everything but the sample rate, which only a reload changes
+     * (`reloadWithSampleRate`).
+     */
+    public applySettings(settings: SavedSettingsType) {
+        this.setVolume(settings.volume);
+        this.client.applySettings(getHostSettings(settings));
+    }
 
-        processor.midiChannels[KEYBOARD_TARGET_CHANNEL].lockMIDIParameter(
-            "velocitySenseDepth",
-            false
-        );
-        processor.processMessages(
-            MIDIUtils.setChannelMIDIParameter(
-                0,
-                KEYBOARD_TARGET_CHANNEL,
-                DEFAULT_SYNTH_MODE,
-                "velocitySenseDepth",
-                getSetting("velocitySenseDepth", settings)
-            )
-        );
-        processor.midiChannels[KEYBOARD_TARGET_CHANNEL].lockMIDIParameter(
-            "velocitySenseDepth",
-            true
-        );
+    /**
+     * Resumes the context and starts the audio loop. Calling it again (StrictMode runs the
+     * provider's effect twice) waits for the same start, so there is one worklet.
+     */
+    public resumeContext() {
+        this.started ??= this.start();
+        return this.started;
+    }
 
-        processor.midiChannels[KEYBOARD_TARGET_CHANNEL].lockMIDIParameter(
-            "velocitySenseOffset",
-            false
-        );
-        processor.processMessages(
-            MIDIUtils.setChannelMIDIParameter(
-                0,
-                KEYBOARD_TARGET_CHANNEL,
-                DEFAULT_SYNTH_MODE,
-                "velocitySenseOffset",
-                getSetting("velocitySenseOffset", settings)
-            )
-        );
-        processor.midiChannels[KEYBOARD_TARGET_CHANNEL].lockMIDIParameter(
-            "velocitySenseOffset",
-            true
-        );
-
-        processor.setSystemParameter(
-            "reverbGain",
-            getSetting("reverbLevel", settings)
-        );
-        processor.setSystemParameter(
-            "chorusGain",
-            getSetting("chorusLevel", settings)
-        );
-        processor.setSystemParameter(
-            "gsDelayGain",
-            getSetting("delayLevel", settings)
-        );
-
-        processor.setSystemParameter(
-            "xgVariationGain",
-            getSetting("delayLevel", settings)
-        );
-
-        processor.setSystemParameter(
-            "voiceCap",
-            getSetting("voiceCap", settings)
-        );
-        const rate = getSetting("sampleRate", settings);
-        if (this.currentSampleRate !== rate) {
-            const url = new URL(globalThis.location.href);
-            url.searchParams.set("samplerate", rate.toString());
-            globalThis.location.replace(url);
+    /**
+     * Puts a chain of nodes between the sound sources and the volume, so it changes everything
+     * that plays. Undefined takes it out. There is one at a time.
+     */
+    public setOutputInsert(insert: OutputInsert | undefined) {
+        this.inputNode.disconnect();
+        this.outputInsert?.output.disconnect(this.targetNode);
+        this.outputInsert = insert;
+        if (insert) {
+            this.inputNode.connect(insert.input);
+            insert.output.connect(this.targetNode);
+        } else {
+            this.inputNode.connect(this.targetNode);
         }
     }
 
-    async resumeContext() {
-        await this.context.resume();
-        console.info("setting up audio loop");
-        await this.context.audioWorklet.addModule("./audio_worklet.js");
-        this.worklet = new AudioWorkletNode(
-            this.context,
-            "playback-processor",
-            {
-                outputChannelCount: [2],
-                numberOfOutputs: 1
-            }
-        );
-        this.worklet.connect(this.targetNode);
-        // Disable for performance
-
-        this.worklet.port.onmessage = (e: MessageEvent<number>) => {
-            this.audioChunksQueued = e.data;
-            this.audioLoop();
-        };
-        this.audioLoop();
-    }
-
-    audioLoop() {
-        if (this.audioChunksQueued >= this.maxChunksQueued) {
-            return;
-        }
-        const toRender = Math.min(
-            MAX_RENDERED_AT_ONCE,
-            this.maxChunksQueued - this.audioChunksQueued
-        );
-        const data: Float32Array[] = [];
-        const transferList: ArrayBuffer[] = [];
-
-        // encode the rendered data into a single f32array as it's faster
-        for (let i = 0; i < toRender; i++) {
-            const dataChunk = new Float32Array(BLOCK_SIZE * 2);
-            let byteOffset = 0;
-            // dry
-            const dL = new Float32Array(
-                dataChunk.buffer,
-                byteOffset,
-                BLOCK_SIZE
-            );
-            byteOffset += Float32Array.BYTES_PER_ELEMENT * BLOCK_SIZE;
-            const dR = new Float32Array(
-                dataChunk.buffer,
-                byteOffset,
-                BLOCK_SIZE
-            );
-
-            // render!
-            this.sequencer.processTick();
-            this.processor.process(dL, dR);
-            // copy out
-            data.push(dataChunk);
-            transferList.push(dataChunk.buffer);
-        }
-
-        // send to worklet
-        if (this.worklet) {
-            this.worklet.port.postMessage(data, transferList);
-        }
-    }
-
-    setVolume(volume: number) {
+    public setVolume(volume: number) {
         this.targetNode.gain.value = volume;
     }
 
-    toggleMIDI() {
-        if (this.sequencer.paused) {
-            this.resumeMIDI();
-        } else {
-            this.pauseMIDI();
-        }
+    public toggleMIDI() {
+        this.client.send({ type: "toggle" });
     }
 
-    playMIDI(mid: BasicMIDI) {
-        this.sequencer.loadNewSongList([mid]);
-        this.sequencer.play();
+    /**
+     * Plays a MIDI file, which only the host parses. Rejects when the file is broken.
+     * The buffer moves to the host.
+     */
+    public playMIDI(file: ArrayBuffer, name: string) {
+        return this.client.loadSong(file, name);
     }
 
-    pauseMIDI() {
-        this.sequencer.pause();
+    public pauseMIDI() {
+        this.client.send({ type: "pause" });
     }
 
-    resumeMIDI() {
-        this.sequencer.play();
+    /**
+     * Jumps back a little, which plays the notes at that point again.
+     */
+    public rewindMIDI() {
+        this.client.send({ type: "seekBy", seconds: -0.1 });
+    }
+
+    /**
+     * Releases every playing note, as if each key was let go.
+     */
+    public releaseAllNotes() {
+        this.client.send({ type: "stopAll", force: false });
+    }
+
+    /**
+     * Cuts every note at once, the MIDI panic.
+     */
+    public stopAllNotes() {
+        this.client.send({ type: "stopAll", force: true });
+    }
+
+    /**
+     * Cuts every note and puts every channel and system parameter back to its default.
+     */
+    public resetSynthesizer() {
+        this.client.send({ type: "reset" });
+    }
+
+    public pitchWheel(channel: number, value: number) {
+        this.client.send({ type: "pitchWheel", channel, value });
+    }
+
+    public channelPressure(channel: number, value: number) {
+        this.client.send({ type: "channelPressure", channel, value });
     }
 }

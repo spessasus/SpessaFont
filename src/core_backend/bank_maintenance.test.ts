@@ -1,0 +1,86 @@
+import { describe, expect, it } from "vitest";
+import { BasicInstrument, EmptySample, SampleTypes } from "spessasynth_core";
+import {
+    createTestSession,
+    expectRoundTrip
+} from "../test_utils/bank_fixture.ts";
+import {
+    createAutoLinkActions,
+    createRemoveUnusedActions
+} from "./bank_maintenance.ts";
+
+describe("createRemoveUnusedActions", () => {
+    it("removes unused instruments, then samples that only they used", () => {
+        const session = createTestSession();
+        const document = session.document;
+        const lonelySample = new EmptySample();
+        lonelySample.name = "Lonely";
+        document.addSample(lonelySample);
+        const unusedInstrument = new BasicInstrument();
+        unusedInstrument.name = "Unused";
+        unusedInstrument.createZone(lonelySample);
+        document.addInstrument(unusedInstrument);
+
+        const { actions, instrumentCount, sampleCount } =
+            createRemoveUnusedActions(document);
+        expect(instrumentCount).toBe(1);
+        expect(sampleCount).toBe(1);
+
+        const { after } = expectRoundTrip(session, actions);
+        expect(after.instruments.map((i) => i.name)).not.toContain("Unused");
+        expect(after.samples.map((s) => s.name)).not.toContain("Lonely");
+
+        session.history.undo();
+        expect(lonelySample.linkedTo).toEqual([unusedInstrument]);
+    });
+
+    it("keeps a stereo half whose partner stays used, as the bank check does", () => {
+        const session = createTestSession();
+        const [left, right] = session.document.samples;
+        const [instrument, other] = session.document.instruments;
+        const [, preset] = session.document.presets;
+        left.setLinkedSample(right, SampleTypes.leftSample);
+        // Only the first instrument stays used, and only it plays the left half
+        preset.zones[0].instrument = instrument;
+        other.deleteZone(0, true);
+        other.deleteZone(0, true);
+        expect(right.useCount).toBe(0);
+        expect(left.useCount).toBeGreaterThan(0);
+
+        const { actions, instrumentCount, sampleCount } =
+            createRemoveUnusedActions(session.document);
+        expect(instrumentCount).toBe(1);
+        expect(sampleCount).toBe(0);
+        session.history.do(actions);
+
+        expect(session.document.samples).toContain(right);
+        expect(left.linkedSample).toBe(right);
+    });
+
+    it("returns no actions for a bank without unused elements", () => {
+        const session = createTestSession();
+        expect(createRemoveUnusedActions(session.document).actions).toEqual([]);
+    });
+});
+
+describe("createAutoLinkActions", () => {
+    it("links samples whose names end in L and R", () => {
+        const session = createTestSession();
+        const [left, right] = session.document.samples;
+        left.name = "Piano L";
+        right.name = "Piano R";
+
+        const actions = createAutoLinkActions(session.document.samples);
+        expect(actions).toHaveLength(1);
+        session.history.do(actions);
+
+        expect(left.linkedSample).toBe(right);
+        expect(left.sampleType).toBe(SampleTypes.leftSample);
+        expect(right.sampleType).toBe(SampleTypes.rightSample);
+    });
+
+    it("ignores samples without a matching pair", () => {
+        const session = createTestSession();
+        expect(createAutoLinkActions(session.document.samples)).toEqual([]);
+    });
+});

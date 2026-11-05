@@ -10,7 +10,7 @@
 }
 
 .tab {
-    padding: 0 0.5rem;
+    padding: 0 0 0 0.5rem;
     border: solid 1px var(--track-border-color);
     border-radius: var(--primary-border-radius);
     user-select: none;
@@ -24,16 +24,30 @@
     background: transparent;
     border: none;
     cursor: pointer;
+    font: inherit;
+    color: var(--font-color);
+    height: 100%;
+    border-radius: var(--primary-border-radius);
+}
+
+.tab button:focus-visible {
+    outline: 2px solid var(--light-primary-color);
+}
+
+.tab_select {
+    padding: 0;
+    white-space: nowrap;
+}
+
+.tab .tab_close {
     font-size: 1.3rem;
     display: flex;
     justify-content: center;
     align-items: center;
     width: 2rem;
-    height: 100%;
-    border-radius: var(--primary-border-radius);
 }
 
-.tab button:hover {
+.tab .tab_close:hover {
     background: var(--lighter-color);
 }
 

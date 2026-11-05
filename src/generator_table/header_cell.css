@@ -1,10 +1,9 @@
-.header_row {
+.generator_table_header_row {
     background: var(--track-border-color);
 }
 
 .header_cell {
     padding: 0.5rem;
-    cursor: pointer;
     max-width: 15ch;
     min-width: 10ch;
     position: relative;
@@ -31,13 +30,14 @@
     font-weight: bold;
 }
 
-.header_cell span {
+.header_cell .header_cell_name {
+    cursor: pointer;
     word-break: break-word;
     white-space: break-spaces;
     margin-right: 1rem;
 }
 
-.header_cell.stereo span:first-child {
+.header_cell.stereo .header_cell_name {
     font-style: italic;
     cursor: help;
 }
@@ -46,10 +46,24 @@
     cursor: pointer;
     filter: brightness(0.8);
     position: absolute;
-    right: -0.8rem;
+    right: 0.2rem;
     top: 0;
 }
 
 .header_cell .delete_zone:hover {
     filter: none;
+}
+
+.header_cell .header_cell_title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.header_cell .add_zone {
+    font-size: 1.2em;
+    line-height: 1;
+    padding: 0 0.3rem;
+    cursor: pointer;
 }

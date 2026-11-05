@@ -12,10 +12,17 @@
 
 .item_group_header h2 {
     font-weight: normal;
-    margin-left: 0.3rem;
-    padding: 0.3rem;
-    text-align: center;
     width: 100%;
+}
+
+/* The title button covers the header, the side buttons sit above it */
+.item_group_title {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0.3rem 0.3rem 0.3rem 0.6rem;
+    text-align: center;
+    font-size: inherit;
 }
 
 .item_group_header .left_buttons,
@@ -77,4 +84,10 @@
 .item_group_header:active,
 .item_group_header.opened {
     border-color: var(--border-color);
+}
+
+/* The buttons stay in place when there is nothing to add, copy or paste */
+.item_group_header button:disabled {
+    cursor: default;
+    opacity: 0.35;
 }
