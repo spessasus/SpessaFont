@@ -10,6 +10,21 @@ import path from "node:path";
 const CHUNK_SIZE_LIMIT_KB = 860;
 
 /**
+ * The folders the app is built from. The dev server watches only these and the files in the
+ * root, so other folders there (notes, local tools) can change without waking it.
+ */
+const SOURCE_FOLDERS = new Set(["src", "public"]);
+
+function isOutsideSources(file: string) {
+    const relative = path.relative(import.meta.dirname, file);
+    const [top] = relative.split(path.sep);
+    // A linked spessasynth_core lives outside the project and is still watched
+    return (
+        relative.includes(path.sep) && top !== ".." && !SOURCE_FOLDERS.has(top)
+    );
+}
+
+/**
  * Lists the built files in precache.json, which the service worker caches on install. Without
  * it, a file loaded only later (the Worker's own copy of the encoder) is cached only when it was
  * used online.
@@ -68,7 +83,8 @@ export default defineConfig({
     server: {
         port: 5173,
         strictPort: true,
-        host: "127.0.0.1"
+        host: "127.0.0.1",
+        watch: { ignored: isOutsideSources }
     },
     // The React Compiler caches by identity, which works as render reads only the frozen views
     plugins: [
