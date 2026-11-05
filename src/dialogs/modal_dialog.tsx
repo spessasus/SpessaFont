@@ -1,5 +1,6 @@
 import "./dialogs.css";
 import { type MouseEvent, type ReactNode, useEffect, useRef } from "react";
+import { rememberFocus } from "../utils/focus_return.ts";
 
 interface ModalDialogProps {
     title: string;
@@ -29,7 +30,8 @@ function isOnBackdrop(e: MouseEvent<HTMLDialogElement>) {
 }
 
 /**
- * A native modal dialog, shown while it is mounted.
+ * A native modal dialog, shown while it is mounted. The focus goes back to where it was when
+ * it closes.
  */
 export function ModalDialog({
     title,
@@ -41,8 +43,13 @@ export function ModalDialog({
     const backdropPress = useRef(false);
     useEffect(() => {
         const dialog = dialogRef.current;
+        // The browser would return the focus itself, but React removes the dialog first
+        const restoreFocus = rememberFocus();
         dialog?.showModal();
-        return () => dialog?.close();
+        return () => {
+            dialog?.close();
+            restoreFocus();
+        };
     }, []);
     return (
         <dialog

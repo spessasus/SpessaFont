@@ -4,8 +4,11 @@ export const ToolsLocale = {
 
     cells: {
         clear: "Wyczyść",
-        otherGenerator:
-            "Skopiowane komórki są innego generatora, wklej je do tego samego wiersza."
+        otherTable:
+            "Komórek skopiowanych z instrumentu nie można wkleić do presetu ani odwrotnie, bo wartości presetu dodają się do wartości jego instrumentów.",
+        invalidText:
+            "„{{text}}” nie jest wartością, którą ta komórka może przyjąć.",
+        stereoValues: "{{first}}: {{firstValue}}, {{second}}: {{secondValue}}"
     },
 
     keyCurve: {
@@ -37,10 +40,11 @@ export const ToolsLocale = {
         velocityMin: "Najmniejsza siła nacisku",
         velocityMax: "Największa siła nacisku",
         clickHint:
-            "Kliknij wykres, aby przesunąć bliższy koniec krzywej, prawy przycisk przesuwa jej koniec.",
+            "Kliknij wykres, aby przesunąć bliższy koniec krzywej, prawy przycisk przesuwa koniec „Do klawisza”.",
         drawHint: "Narysuj krzywą na wykresie.",
         randomHint:
             "Każdy klawisz dostaje pokazaną wartość, losuj ponownie, aby dostać inne.",
+        flat: "Minimum i maksimum są równe, więc każda strefa dostanie tę wartość.",
         noZones: "Żadna strefa nie jest w zakresie siły nacisku."
     },
 
@@ -92,8 +96,14 @@ export const ToolsLocale = {
             "Jedna strefa na każdą siłę nacisku robi do 128 stref z każdej strefy, zwykle wystarcza większa szerokość.",
         nothingToSplit: "Nie ma czego dzielić.",
         skipped: "Pominięte elementy bez stref do podziału: {{count}}",
-        confirmMany:
-            "Podział utworzy {{count}} stref w jednym elemencie. Podzielić mimo to?"
+        confirmMany_one:
+            "Podział utworzy {{count}} strefę w jednym elemencie. Podzielić mimo to?",
+        confirmMany_few:
+            "Podział utworzy {{count}} strefy w jednym elemencie. Podzielić mimo to?",
+        confirmMany_many:
+            "Podział utworzy {{count}} stref w jednym elemencie. Podzielić mimo to?",
+        confirmMany_other:
+            "Podział utworzy {{count}} strefy w jednym elemencie. Podzielić mimo to?"
     },
 
     shift: {
@@ -101,7 +111,7 @@ export const ToolsLocale = {
         title: "Przesuń właściwość zaznaczonych próbek",
         property: "Właściwość",
         originalKey: "Oryginalny klawisz",
-        pitchCorrection: "Korekcja wysokości",
+        pitchCorrection: "Korekta centów",
         loopStart: "Początek pętli",
         loopEnd: "Koniec pętli",
         operation: "Działanie",
@@ -117,6 +127,8 @@ export const ToolsLocale = {
         trimAfterLoopTitle:
             "Usuwa dźwięk po końcu pętli, zostawiając kilka ramek do interpolacji",
         noSilence: "Na początku nie ma ciszy.",
+        loopAtStart:
+            "Pętla zaczyna się na samym początku próbki, więc ciszy przed dźwiękiem nie można usunąć.",
         skippedSilent: "Pominięte ciche próbki: {{count}}",
         skippedNoLoop:
             "Pominięte próbki bez pętli lub bez niczego po niej: {{count}}",
@@ -127,12 +139,12 @@ export const ToolsLocale = {
         losesTail_many:
             "{{count}} przyciętych próbek jest granych przez strefę za pętlą i straciło koniec dźwięku. Cofnij, jeśli nie było to zamierzone.",
         losesTail_other:
-            "{{count}} przyciętej próbki jest granej przez strefę za pętlą. Cofnij, jeśli nie było to zamierzone."
+            "{{count}} przyciętej próbki jest grane przez strefę za pętlą i straciło koniec dźwięku. Cofnij, jeśli nie było to zamierzone."
     },
 
     merge: {
         menuSelection: "Scal duplikaty",
-        searching: "Szukanie powtarzających się próbek...",
+        searching: "Szukanie powtarzających się próbek…",
         none: "Nie znaleziono powtarzających się próbek.",
         merged: "Scalone powtarzające się próbki: {{count}}"
     }

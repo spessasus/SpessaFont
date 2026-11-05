@@ -1,18 +1,19 @@
 import { GeneratorTypes, Modulator, ModulatorSource } from "spessasynth_core";
 import type * as React from "react";
 import {
-    ModulatorView,
+    ModulatorCard,
     type ModulatorSourceSlot
-} from "../modulator/modulator.tsx";
+} from "../modulator/modulator_card.tsx";
 import "./modulator_list.css";
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useClipboard } from "../../clipboard/clipboard_context.ts";
 import toast from "react-hot-toast";
 import { getObjectId, shareObjectId } from "../../utils/object_id.ts";
 import type { ModulatorView as ModulatorData } from "../../core_backend/entity_views.ts";
 import { getClickedSelection } from "./modulator_selection.ts";
 import { ModulatorListActions } from "./modulator_list_actions.tsx";
+import { isSameModulator } from "../same_modulator.ts";
 
 interface ModulatorListProps {
     modulatorList: readonly ModulatorData[];
@@ -20,45 +21,34 @@ interface ModulatorListProps {
      * The current modulators, read when an edit is applied. The list renders from the views.
      */
     getModulators: () => readonly Modulator[];
-    setModulatorList: (l: Modulator[]) => void;
+    onModulatorListChange: (l: Modulator[]) => void;
     defaultModulators: readonly ModulatorData[];
+    /**
+     * Extra buttons for the action bar, after the list's own.
+     */
+    extraActions?: React.ReactNode;
 }
 
-function isSameSource(
-    a: ModulatorData["primarySource"],
-    b: ModulatorData["primarySource"]
-) {
+function isTyping(target: EventTarget) {
     return (
-        a.index === b.index &&
-        a.isCC === b.isCC &&
-        a.isBipolar === b.isBipolar &&
-        a.isNegative === b.isNegative &&
-        a.curveType === b.curveType
-    );
-}
-
-/**
- * Core's `Modulator.isIdentical` on views: the same sources, destination and transform, which
- * is what makes a zone modulator override a default one.
- */
-function isSameModulator(a: ModulatorData, b: ModulatorData) {
-    return (
-        isSameSource(a.primarySource, b.primarySource) &&
-        isSameSource(a.secondarySource, b.secondarySource) &&
-        a.destination === b.destination &&
-        a.transformType === b.transformType
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement
     );
 }
 
 /**
  * Selection and the open curve picker are kept by modulator id, and an edited modulator keeps
  * the id of the one it replaces, so both survive edits.
+ * The list handles its own Delete, Ctrl+A, C, X and V for the selected modulators, so the
+ * element list's shortcuts do not run while the focus is in it.
  */
 export function ModulatorList({
     modulatorList,
     getModulators,
-    setModulatorList,
-    defaultModulators
+    onModulatorListChange,
+    defaultModulators,
+    extraActions
 }: ModulatorListProps) {
     const { t } = useTranslation();
     const { clipboard, contents } = useClipboard();
@@ -70,10 +60,32 @@ export function ModulatorList({
         id: number;
         slot: ModulatorSourceSlot;
     } | null>(null);
+    // Focusable, so a click on the empty area of a card keeps the keys here
+    const rootRef = useRef<HTMLDivElement>(null);
+    const numberButtons = useRef(new Map<number, HTMLButtonElement>());
 
     const selectedCount = modulatorList.filter((m) =>
         selectedIds.has(m.id)
     ).length;
+
+    /**
+     * Moves the focus off the modulators about to be removed, to the next one that stays, or
+     * the last one before them, or the list itself.
+     */
+    const focusAfterRemoval = (removedIds: ReadonlySet<number>) => {
+        const ids = modulatorList.map((m) => m.id);
+        const firstRemoved = ids.findIndex((id) => removedIds.has(id));
+        const remaining = (from: readonly number[]) =>
+            from.filter((id) => !removedIds.has(id));
+        const nextId =
+            remaining(ids.slice(firstRemoved)).at(0) ??
+            remaining(ids.slice(0, firstRemoved)).at(-1);
+        const button =
+            nextId === undefined
+                ? undefined
+                : numberButtons.current.get(nextId);
+        (button ?? rootRef.current)?.focus();
+    };
 
     const addModulator = () => {
         const mod = new Modulator(
@@ -83,14 +95,22 @@ export function ModulatorList({
             0,
             0
         );
-        setModulatorList([mod, ...getModulators()]);
+        onModulatorListChange([mod, ...getModulators()]);
     };
 
     const deleteSelected = () => {
-        setModulatorList(
+        focusAfterRemoval(selectedIds);
+        onModulatorListChange(
             getModulators().filter((m) => !selectedIds.has(getObjectId(m)))
         );
         setSelectedIds(new Set());
+    };
+
+    const deleteOne = (id: number) => {
+        focusAfterRemoval(new Set([id]));
+        onModulatorListChange(
+            getModulators().filter((m) => getObjectId(m) !== id)
+        );
     };
 
     const copySelected = () => {
@@ -107,10 +127,67 @@ export function ModulatorList({
 
     const paste = () => {
         const pasted = clipboard.getModulators();
-        setModulatorList([...pasted, ...getModulators()]);
+        onModulatorListChange([...pasted, ...getModulators()]);
         toast.success(
             t("clipboardLocale.pastedModulators", { count: pasted.length })
         );
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        // Keys typed into the amount or a select belong to it
+        if (isTyping(e.target)) {
+            return;
+        }
+        const hasSelection = selectedCount > 0;
+        if (e.key === "Delete") {
+            // Marked as handled even without a selection, so the element list does not delete
+            e.preventDefault();
+            if (hasSelection && !e.repeat) {
+                deleteSelected();
+            }
+            return;
+        }
+        // Cmd on macOS, and Caps Lock gives upper case letters
+        if (!(e.ctrlKey || e.metaKey)) {
+            return;
+        }
+        switch (e.key.toLowerCase()) {
+            case "a": {
+                e.preventDefault();
+                setSelectedIds(new Set(modulatorList.map((m) => m.id)));
+                break;
+            }
+
+            case "c": {
+                e.preventDefault();
+                if (hasSelection) {
+                    copySelected();
+                }
+                break;
+            }
+
+            case "x": {
+                e.preventDefault();
+                if (hasSelection && !e.repeat) {
+                    copySelected();
+                    deleteSelected();
+                }
+                break;
+            }
+
+            case "v": {
+                e.preventDefault();
+                if (contents.modulators > 0 && !e.repeat) {
+                    paste();
+                }
+                break;
+            }
+
+            case "d": {
+                // Nothing to duplicate here, but the element list must not either
+                e.preventDefault();
+            }
+        }
     };
 
     const handleSelect = (e: React.MouseEvent, id: number) => {
@@ -137,12 +214,23 @@ export function ModulatorList({
         }
         const edited = Modulator.copyFrom(original);
         change(edited);
+        // An edit that changes nothing (the same amount typed again) makes no undo step
+        if (Modulator.isIdentical(original, edited, true)) {
+            return;
+        }
         shareObjectId(original, edited);
-        setModulatorList(current.map((m) => (m === original ? edited : m)));
+        onModulatorListChange(
+            current.map((m) => (m === original ? edited : m))
+        );
     };
 
     return (
-        <div className={"modulator_list"}>
+        <div
+            className={"modulator_list"}
+            ref={rootRef}
+            tabIndex={-1}
+            onKeyDown={handleKeyDown}
+        >
             <ModulatorListActions
                 count={modulatorList.length}
                 canPaste={contents.modulators > 0}
@@ -151,23 +239,26 @@ export function ModulatorList({
                 onPaste={paste}
                 onCopy={copySelected}
                 onDelete={deleteSelected}
-            />
+            >
+                {extraActions}
+            </ModulatorListActions>
             <div className={"list_contents"}>
                 {modulatorList.map((mod, i) => {
                     const { id } = mod;
                     return (
-                        <ModulatorView
+                        <ModulatorCard
                             key={id}
+                            ref={(button) => {
+                                if (button) {
+                                    numberButtons.current.set(id, button);
+                                } else {
+                                    numberButtons.current.delete(id);
+                                }
+                            }}
                             modulatorNumber={i + 1}
                             mod={mod}
                             onChange={(change) => replaceModulator(id, change)}
-                            onDelete={() =>
-                                setModulatorList(
-                                    getModulators().filter(
-                                        (m) => getObjectId(m) !== id
-                                    )
-                                )
-                            }
+                            onDelete={() => deleteOne(id)}
                             openCurvePicker={
                                 openCurvePicker?.id === id
                                     ? openCurvePicker.slot
@@ -179,7 +270,7 @@ export function ModulatorList({
                             isSelected={selectedIds.has(id)}
                             onSelect={(e) => handleSelect(e, id)}
                             isOverridingDefault={defaultModulators.some((m) =>
-                                isSameModulator(m, mod)
+                                isSameModulator(m, mod, false)
                             )}
                         />
                     );

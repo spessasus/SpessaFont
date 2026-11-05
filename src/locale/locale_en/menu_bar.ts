@@ -21,6 +21,15 @@ export const MenuBarLocale = {
         warnBankNumbers:
             "Some drum kits set a bank MSB or LSB, or some presets set both. " +
             "{{format}} files cannot store them, so those presets will be saved with other bank numbers. Are you sure you want to continue?",
+        warnDLS:
+            "This sound bank has {{losses}}, which DLS files cannot store. " +
+            "Saving it as DLS will leave them out. Are you sure you want to continue?",
+        dlsLossStereoLinks: "linked stereo samples",
+        dlsLossUnusedInstruments: "instruments no preset uses",
+        dlsLossDefaultModulators: "edited default modulators",
+        warn24Bit:
+            "The file of this sound bank has 24-bit samples. SpessaFont keeps 16 bits of them, " +
+            "so the saved file loses the rest. Are you sure you want to continue?",
         fullscreen: "Fullscreen",
         about: "About"
     },
@@ -73,6 +82,5 @@ export const MenuBarLocale = {
         rewind: "Jump back a little"
     },
 
-    voices: "Voices:",
-    settings: "Settings"
+    voices: "Voices:"
 };

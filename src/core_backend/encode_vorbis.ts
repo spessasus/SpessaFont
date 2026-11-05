@@ -25,6 +25,14 @@ async function getEncoder() {
 }
 
 /**
+ * Loads and compiles the encoder, and throws when it cannot. An SF3 save calls it first, so a
+ * missing encoder fails the save before any sample changes.
+ */
+export async function loadVorbisEncoder() {
+    await getEncoder();
+}
+
+/**
  * Downloads the encoder so the service worker caches it and SF3 saves work offline.
  */
 export async function prefetchVorbisEncoder() {

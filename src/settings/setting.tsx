@@ -13,7 +13,7 @@ interface SettingProps {
  */
 export function Setting({ label, children }: SettingProps) {
     return (
-        <label className={"setting"}>
+        <label className={"settings_item"}>
             <span>{label}</span>
             {children}
         </label>

@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
+import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import type { BankSession } from "../core_backend/bank_session.ts";
 import { logError } from "../utils/core_utils.ts";
 import { useSampleView } from "./use_sample_view.ts";
@@ -15,8 +17,15 @@ interface LoadedAudio {
  * the old audio stays, so the wave view does not flash empty.
  */
 export function useSampleAudio(session: BankSession, sampleId: number) {
+    const { t } = useTranslation();
     const revision = useSampleView(session.store, sampleId)?.audioRevision;
     const [loaded, setLoaded] = useState<LoadedAudio>();
+    // Otherwise the wave view stays empty with no reason given
+    const showError = useEffectEvent((error: unknown) => {
+        toast.error(
+            t("sampleLocale.audioReadFailed", { message: String(error) })
+        );
+    });
 
     useEffect(() => {
         const sample = session.document.getSample(sampleId);
@@ -32,6 +41,9 @@ export function useSampleAudio(session: BankSession, sampleId: number) {
                 }
             } catch (error) {
                 logError("Failed to read the sample audio.", error);
+                if (isCurrent) {
+                    showError(error);
+                }
             }
         };
         void read();

@@ -36,7 +36,7 @@
     align-self: stretch;
 }
 
-.setting {
+.settings_item {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -48,12 +48,12 @@
     width: 100%;
 }
 
-.setting:hover {
+.settings_item:hover {
     filter: brightness(1.2);
 }
 
-.setting input,
-.setting select {
+.settings_item input,
+.settings_item select {
     font-size: 1rem;
     text-align: center;
 }

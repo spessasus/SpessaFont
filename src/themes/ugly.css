@@ -11,6 +11,12 @@
     --lighter-color-start: #ff9500;
     --lighter-color-end: #00bfff;
     --selection-color: #00e5ff;
+    /* selected generator cells, a tint of the focus color so it shows on both row stripes */
+    --cell-selection-color: color-mix(
+        in oklch,
+        var(--focus-color) 35%,
+        transparent
+    );
     --shadow-color: rgb(0 255 0 / 60%);
 
     /* text */
@@ -23,6 +29,7 @@
     --menu-border-color: #00e5ff;
     --primary-color: #ffee00;
     --border-color: #00e5ff;
+    --focus-color: #00e5ff;
     --light-primary-color: #00ff00;
     --track-color: #ff6a00;
     --track-border-color: #7fff00;
@@ -31,6 +38,9 @@
     --preset-item-color: #f00;
     --instrument-item-color: #00f;
     --sample-item-color: #ff0;
+
+    /* generator table, exclusive classes get a hue each at this lightness */
+    --exclusive-class-lightness: 28%;
 
     /* drawings */
     --wave-color: #00ff00;

@@ -4,7 +4,7 @@ import type { BasicInstrument, BasicPreset } from "spessasynth_core";
 import { InstrumentDisplay } from "../instrument_display/instrument_display.tsx";
 import { useLinkDropTarget } from "../../drag_and_drop/use_link_drop_target.ts";
 import { ExpandButton } from "../expand_button.tsx";
-import type { BankEditView } from "../../core_backend/bank_view.ts";
+import type { BankEditView, BankEntity } from "../../core_backend/bank_view.ts";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 import { usePresetView } from "../../hooks/use_preset_view.ts";
 import { useEntityLookup } from "../../hooks/use_entity_lookup.ts";
@@ -12,7 +12,11 @@ import { useTranslation } from "react-i18next";
 import { LinkIcon } from "../../utils/icons/edit_icons.tsx";
 import { getObjectId } from "../../utils/object_id.ts";
 
-function PatchNumber({ n }: { n: number }) {
+interface PatchNumberProps {
+    n: number;
+}
+
+function PatchNumber({ n }: PatchNumberProps) {
     return (
         <span className={`monospaced ${n === 0 ? "patch_number_zero" : ""}`}>
             {n.toString().padStart(3, "0")}
@@ -28,6 +32,10 @@ interface PresetDisplayProps {
     preset: BasicPreset;
     view: BankEditView;
     isSelected: boolean;
+    /**
+     * Whether the preset is the shown element.
+     */
+    isShown: boolean;
     isOpen: boolean;
     onToggle: () => void;
     /**
@@ -45,6 +53,10 @@ interface PresetDisplayProps {
      */
     onPointerDown?: (event: PointerEvent) => void;
     /**
+     * Opens the menu of a listed instrument of this preset, or of one of its samples.
+     */
+    onChildContextMenu: (entity: BankEntity, event: MouseEvent) => void;
+    /**
      * Shows the "link selected instruments" button when set.
      */
     onLink?: () => void;
@@ -54,6 +66,7 @@ export function PresetDisplay({
     preset,
     view,
     isSelected,
+    isShown,
     isOpen,
     onToggle,
     isInstrumentOpen,
@@ -61,6 +74,7 @@ export function PresetDisplay({
     onClick,
     onContextMenu,
     onPointerDown,
+    onChildContextMenu,
     onLink
 }: PresetDisplayProps) {
     const { t } = useTranslation();
@@ -88,21 +102,25 @@ export function PresetDisplay({
                 {...dropTarget}
                 title={presetView.name}
             >
-                <div className={"left_group"}>
-                    <ExpandButton isOpen={isOpen} onToggle={onToggle} />
-                    <span className={"monospaced midi_patch"}>
-                        {presetView.isGMGSDrum ? "DRUMS:" : null}
-                        {/* A drum kit shows its bank numbers only when it sets them */}
-                        {presetView.isGMGSDrum &&
-                        presetView.bankLSB === 0 &&
-                        presetView.bankMSB === 0 ? null : (
-                            <>
-                                <PatchNumber n={presetView.bankLSB} />:
-                                <PatchNumber n={presetView.bankMSB} />:
-                            </>
-                        )}
-                        <PatchNumber n={presetView.program} />
-                    </span>
+                <div className={"preset_item_left"}>
+                    {/* Clicking the patch expands the preset too */}
+                    <ExpandButton isOpen={isOpen} onToggle={onToggle}>
+                        <span className={"monospaced preset_item_patch"}>
+                            {presetView.isGMGSDrum
+                                ? t("presetList.drumsPrefix")
+                                : null}
+                            {/* A drum kit shows its bank numbers only when it sets them */}
+                            {presetView.isGMGSDrum &&
+                            presetView.bankLSB === 0 &&
+                            presetView.bankMSB === 0 ? null : (
+                                <>
+                                    <PatchNumber n={presetView.bankLSB} />:
+                                    <PatchNumber n={presetView.bankMSB} />:
+                                </>
+                            )}
+                            <PatchNumber n={presetView.program} />
+                        </span>
+                    </ExpandButton>
                     {onLink ? (
                         <button
                             type={"button"}
@@ -120,6 +138,13 @@ export function PresetDisplay({
                 <button
                     type={"button"}
                     className={"plain_button monospaced preset_item_name"}
+                    data-list-row={true}
+                    aria-current={isShown}
+                    aria-description={
+                        isSelected && !isShown
+                            ? t("presetList.selected")
+                            : undefined
+                    }
                     onClick={onClick}
                 >
                     {presetView.name}
@@ -134,6 +159,7 @@ export function PresetDisplay({
                                 instrumentId={zone.childId}
                                 view={view}
                                 isSelected={viewId === zone.childId}
+                                isShown={viewId === zone.childId}
                                 isOpen={isInstrumentOpen(zone.childId)}
                                 onToggle={() =>
                                     onToggleInstrument(zone.childId ?? -1)
@@ -141,6 +167,15 @@ export function PresetDisplay({
                                 onClick={() =>
                                     showInstrument(zone.childId ?? -1)
                                 }
+                                onContextMenu={(e) => {
+                                    const instrument = lookup.instrument(
+                                        zone.childId ?? -1
+                                    );
+                                    if (instrument) {
+                                        onChildContextMenu(instrument, e);
+                                    }
+                                }}
+                                onChildContextMenu={onChildContextMenu}
                             />
                         )
                     )}

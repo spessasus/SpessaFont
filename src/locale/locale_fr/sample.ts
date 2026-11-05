@@ -8,9 +8,6 @@ export const SampleLocale = {
     type: "Type",
     link: "Lien",
     unlinked: "Lien rompu",
-    waveZoom: "Zoomer sur le signal sonore",
-    length: "Longueur",
-    loop: "Boucle",
     types: {
         invalid: "Invalide",
         mono: "Mono",

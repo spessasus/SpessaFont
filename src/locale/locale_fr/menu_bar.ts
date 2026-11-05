@@ -34,6 +34,5 @@ export const MenuBarLocale = {
         rewind: "Reculer un peu"
     },
 
-    voices: "Voix :",
-    settings: "Paramètres"
+    voices: "Voix :"
 };

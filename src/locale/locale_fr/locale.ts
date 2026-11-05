@@ -16,7 +16,6 @@ import { ClipboardLocale } from "./clipboard.ts";
  * Translated by SamuelLouf <https://github.com/samuellouf>
  */
 export const localeFrench = {
-    localeName: "Français",
     // title message
     titleMessage: "SpessaFont: Un éditeur de SoundFont2/DLS en ligne",
     welcome: {
@@ -31,7 +30,6 @@ export const localeFrench = {
     firefox: "Firefox permet de charger des fichiers plus lourds.",
     getUserInput: "Appuyez n'importe où pour démmarrer l'application",
 
-    unsavedChanges: "Ce fichier a des modifications non enregistrées.",
     closeTab: "Fermer {{name}}",
     discard: "Ignorer",
     keep: "Garder",
@@ -60,7 +58,6 @@ export const localeFrench = {
 
         savingSoundBank: "En train d'enregistrer la banque sonore...",
         savedSuccessfully: "Enregistré avec succès!",
-        writingSamples: "En train d'écrire les échantillons...",
         writingFailed:
             "Il y a eu une erreur lors de l'écriture de la Banque de Son!"
     },
@@ -73,16 +70,13 @@ export const localeFrench = {
         debianPackage: "Paquet Debian"
     },
 
-    error: "Erreur",
     yes: "Oui",
     no: "Non",
-    none: "Aucun",
     githubPage: "Page GitHub du projet",
     discord: "Rejoindre le serveur Discord!",
     keyboard: "Clavier",
 
     // generic stuff
-    addNew: "Ajouter",
     copy: "Copier",
     paste: "Coller",
     delete: "Supprimer",

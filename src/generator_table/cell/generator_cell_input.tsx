@@ -1,5 +1,7 @@
 import type * as React from "react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import toast from "react-hot-toast";
 import { useWheelStep } from "../../hooks/use_wheel_step.ts";
 
 /**
@@ -16,125 +18,171 @@ export interface CellInputCommands {
     nudge: (direction: 1 | -1, steps: number) => void;
 }
 
-interface GeneratorCellInputProps extends Omit<
-    React.InputHTMLAttributes<HTMLInputElement>,
-    "value" | "onBlur"
-> {
+interface GeneratorCellInputProps {
+    /**
+     * The text the cell shows.
+     */
     value: string;
-    regex: RegExp;
+    placeholder: string;
+    label: string;
+    title: string | undefined;
     /**
-     * Commits the typed text and returns the text to show afterwards.
+     * The cell's key in the table's roving focus.
      */
-    onBlur: (text: string) => string;
+    gridKey: string;
+    /**
+     * Whether the cell is the table's Tab stop.
+     */
+    isActive: boolean;
+    className: string | undefined;
+    style: React.CSSProperties | undefined;
+    /**
+     * Commits the typed text. False when the cell cannot take it, which keeps the edit open.
+     */
+    onCommit: (text: string) => boolean;
+    onClick: (e: React.MouseEvent) => void;
     commands: CellInputCommands;
-    /**
-     * Part of a selection of several cells, which keys always act on as cells.
-     */
-    isMultiSelected?: boolean;
 }
 
 /**
- * Whether some, but not all, of the text is selected, which a copy should copy as text.
- */
-function isPartlySelected(input: HTMLInputElement) {
-    const { selectionStart, selectionEnd, value } = input;
-    return (
-        selectionStart !== null &&
-        selectionEnd !== null &&
-        selectionStart !== selectionEnd &&
-        selectionEnd - selectionStart < value.length
-    );
-}
-
-/**
- * A spreadsheet-like input: typing into a focused cell replaces its contents.
- * Until something is typed, copy, cut, paste and Delete act on the cell's value, and the wheel
- * steps it.
+ * A spreadsheet cell. Focused, it is read-only: the arrow keys move (the table handles them),
+ * copy, cut, paste and Delete act on the cell's value, and the wheel steps it. Typing a
+ * character starts an edit with that character, Enter, F2 or a double click starts one with
+ * the shown text. While editing, the keys edit the text, Enter commits, Escape drops the edit,
+ * and leaving the cell commits.
  */
 export function GeneratorCellInput({
-    onBlur,
     value,
-    regex,
-    commands,
-    isMultiSelected = false,
-    ...attributes
+    placeholder,
+    label,
+    title,
+    gridKey,
+    isActive,
+    className,
+    style,
+    onCommit,
+    onClick,
+    commands
 }: GeneratorCellInputProps) {
-    const [typedText, setTypedText] = useState(value);
-    const [clearOnType, setClearOnType] = useState(true);
-    // Undo, redo or the linked zone can change the value from outside
-    const [prevValue, setPrevValue] = useState(value);
-    if (value !== prevValue) {
-        setPrevValue(value);
-        setTypedText(value);
-        setClearOnType(true);
-    }
-    const isEditingText = !clearOnType && !isMultiSelected;
-    const wheelRef = useWheelStep<HTMLInputElement>(commands.nudge);
+    const { t } = useTranslation();
+    // The typed text, null when the cell is not being edited
+    const [draft, setDraft] = useState<string | null>(null);
+    const [isInvalid, setIsInvalid] = useState(false);
+    const isEditing = draft !== null;
+    const wheelRef = useWheelStep<HTMLInputElement>(
+        isEditing ? undefined : commands.nudge
+    );
+
+    const startEditing = (text: string) => {
+        setDraft(text);
+        setIsInvalid(false);
+    };
+    const stopEditing = () => {
+        setDraft(null);
+        setIsInvalid(false);
+    };
+
+    const handleCellKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter" || e.key === "F2") {
+            e.preventDefault();
+            // The caret goes after the text, ready to change its end
+            e.currentTarget.setSelectionRange(value.length, value.length);
+            startEditing(value);
+            return;
+        }
+        if (e.key === "Delete" || e.key === "Backspace") {
+            e.preventDefault();
+            commands.clear();
+            return;
+        }
+        if (e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey) {
+            return;
+        }
+
+        e.preventDefault();
+        startEditing(e.key);
+    };
+
+    const handleEditKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        // The keys edit the text, except Ctrl+S, which saves after the blur commits the edit
+        if (!((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s")) {
+            e.stopPropagation();
+        }
+        if (e.key === "Escape") {
+            e.preventDefault();
+            stopEditing();
+        } else if (draft !== null && e.key === "Enter") {
+            e.preventDefault();
+            if (onCommit(draft)) {
+                stopEditing();
+            } else {
+                setIsInvalid(true);
+            }
+        }
+    };
 
     return (
         <input
-            {...attributes}
             ref={wheelRef}
-            value={typedText}
-            onBlur={() => setTypedText(onBlur(typedText))}
-            onFocus={() => setClearOnType(true)}
+            type={"text"}
+            data-grid-key={gridKey}
+            tabIndex={isActive ? 0 : -1}
+            aria-label={label}
+            aria-invalid={isInvalid}
+            title={title}
+            className={className}
+            style={style}
+            placeholder={placeholder}
+            readOnly={!isEditing}
+            value={draft ?? value}
+            maxLength={32}
+            onClick={onClick}
+            onDoubleClick={() => {
+                if (!isEditing) {
+                    startEditing(value);
+                }
+            }}
+            onKeyDown={isEditing ? handleEditKey : handleCellKey}
+            onChange={(e) => {
+                if (!isEditing) {
+                    return;
+                }
+
+                setDraft(e.target.value);
+                setIsInvalid(false);
+            }}
+            onBlur={() => {
+                if (draft === null) {
+                    return;
+                }
+                // Leaving the cell cannot keep the edit open, so refused text is dropped
+                if (!onCommit(draft)) {
+                    toast.error(
+                        t("toolsLocale.cells.invalidText", { text: draft })
+                    );
+                }
+                stopEditing();
+            }}
             onCopy={(e) => {
-                if (isEditingText && isPartlySelected(e.currentTarget)) {
+                if (isEditing) {
                     return;
                 }
                 e.preventDefault();
                 e.clipboardData.setData("text/plain", commands.copy());
             }}
             onCut={(e) => {
-                if (isEditingText && isPartlySelected(e.currentTarget)) {
+                if (isEditing) {
                     return;
                 }
                 e.preventDefault();
                 e.clipboardData.setData("text/plain", commands.cut());
             }}
             onPaste={(e) => {
-                if (isEditingText) {
+                if (isEditing) {
                     return;
                 }
                 e.preventDefault();
                 commands.paste(e.clipboardData.getData("text/plain"));
-            }}
-            onKeyDown={(e) => {
-                // Arrow keys move between cells (handled by the table),
-                // other keys belong to the input and not to the global shortcuts
-                if (!e.key.startsWith("Arrow")) {
-                    e.stopPropagation();
-                }
-                switch (e.key) {
-                    default: {
-                        break;
-                    }
-                    case "Backspace":
-                    case "Delete": {
-                        if (!isEditingText) {
-                            e.preventDefault();
-                            commands.clear();
-                        }
-                        break;
-                    }
-
-                    case "Enter": {
-                        e.currentTarget.blur();
-                    }
-                }
-            }}
-            onChange={(e) => {
-                let text = e.target.value;
-                // The first key typed after focusing replaces the old text, like a spreadsheet cell
-                const inserted =
-                    e.nativeEvent instanceof InputEvent
-                        ? e.nativeEvent.data
-                        : null;
-                if (clearOnType && inserted) {
-                    text = inserted;
-                }
-                setClearOnType(false);
-                setTypedText(text.replace(regex, ""));
             }}
         />
     );

@@ -6,7 +6,6 @@ export const SoundBankLocale = {
     thisIsAStereoSamplePair: "Este es un par de muestras estéreo.",
 
     modifiedSamples: "Se modificaron {{count}} muestras.",
-    noSamplesWereChanged: "No se cambió ninguna muestra.",
     removedElements:
         "Se eliminaron {{instruments}} instrumentos y {{samples}} muestras.",
 

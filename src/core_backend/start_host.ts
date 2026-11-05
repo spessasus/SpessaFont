@@ -1,5 +1,5 @@
 import { SynthHost, type SynthHostOptions } from "../synth_host/synth_host.ts";
-import type { HostPort } from "../synth_host/protocol.ts";
+import type { HostEvent, HostPort } from "../synth_host/protocol.ts";
 import { logError, logInfo } from "../utils/core_utils.ts";
 
 /**
@@ -24,6 +24,17 @@ class DeferredPort implements HostPort {
         }
     }
 
+    /**
+     * Tells the client that the host may be gone, as the host would send it.
+     */
+    public fail(message: string) {
+        this.onmessage?.(
+            new MessageEvent("message", {
+                data: { type: "hostFailed", message } satisfies HostEvent
+            })
+        );
+    }
+
     public connect(target: HostPort) {
         this.target = target;
         target.onmessage = (event) => this.onmessage?.(event);
@@ -38,7 +49,10 @@ class DeferredPort implements HostPort {
  * starting, fires an error event instead. There is no timeout, as the dev server can take half a
  * minute to serve a busy machine the Worker's modules.
  */
-function startInWorker(options: SynthHostOptions) {
+function startInWorker(
+    options: SynthHostOptions,
+    onFailure: (message: string) => void
+) {
     return new Promise<MessagePort>((resolve, reject) => {
         const worker = new Worker(
             new URL("../synth_host/host_worker.ts", import.meta.url),
@@ -53,8 +67,10 @@ function startInWorker(options: SynthHostOptions) {
             );
         };
         worker.onmessage = () => {
+            // The host catches its own errors, so one that gets here may have stopped it
             worker.onerror = (event) => {
                 logError("The synthesizer Worker failed.", event.message);
+                onFailure(event.message || "The synthesizer Worker failed.");
             };
             resolve(channel.port1);
         };
@@ -76,7 +92,9 @@ export function startHost(options: SynthHostOptions) {
     const port = new DeferredPort();
     const start = async (): Promise<HostMode> => {
         try {
-            port.connect(await startInWorker(options));
+            port.connect(
+                await startInWorker(options, (message) => port.fail(message))
+            );
             logInfo("The synthesizer runs in a Worker.");
             return "worker";
         } catch (error) {

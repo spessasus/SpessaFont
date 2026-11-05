@@ -18,7 +18,6 @@ import { ClipboardLocale } from "./clipboard.ts";
  *
  */
 export const localeChinese = {
-    localeName: "简体中文",
     // title message
     titleMessage: "SpessaFont：在线SF2/DLS音色库编辑器",
     welcome: {
@@ -33,7 +32,6 @@ export const localeChinese = {
     firefox: "请使用火狐浏览器加载大文件。",
     getUserInput: "点击任意处启动应用。",
 
-    unsavedChanges: "该文件有未保存的更改。",
     closeTab: "关闭{{name}}",
     discard: "放弃更改",
     keep: "保留更改",
@@ -58,7 +56,6 @@ export const localeChinese = {
 
         savingSoundBank: "正在保存音色库……",
         savedSuccessfully: "保存完毕！",
-        writingSamples: "正在写入采样……",
         writingFailed: "保存音色库出错！"
     },
 
@@ -70,16 +67,13 @@ export const localeChinese = {
         debianPackage: "Debian软件包"
     },
 
-    error: "错误",
     yes: "是",
     no: "否",
-    none: "无",
     githubPage: "项目页面",
     discord: "加入Discord群组！",
     keyboard: "键盘",
 
     // generic stuff
-    addNew: "新增",
     copy: "复制",
     paste: "粘贴",
     delete: "删除",

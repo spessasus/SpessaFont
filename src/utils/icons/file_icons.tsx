@@ -69,7 +69,7 @@ export function SaveFileIcon({ format = "" }: SaveFileIconProps) {
             <text
                 x="8"
                 y="14"
-                style={{ fontSize: "5px" }}
+                fontSize={5}
                 textAnchor="middle"
                 fill="currentColor"
                 fontFamily="monospace"

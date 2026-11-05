@@ -1,18 +1,20 @@
-import {
-    type BasicSoundBank,
-    type BasicZone,
-    GeneratorTypes
-} from "spessasynth_core";
+import { type BasicSoundBank, GeneratorTypes } from "spessasynth_core";
 
 /**
  * Generators above `endOper` are SpessaSynth's own (61 to 88). Only SFE files store them, so
  * SF2, SF3 and DLS saves leave them out, together with the modulators that target them.
  */
-function isSFEGenerator(type: number) {
+export function isSFEGenerator(type: number) {
     return type > GeneratorTypes.endOper;
 }
 
-function hasZoneSFEData(zone: BasicZone) {
+/**
+ * Whether a zone, or its view, sets something only an SFE save keeps.
+ */
+export function hasZoneSFEData(zone: {
+    readonly generators: readonly { readonly type: number }[];
+    readonly modulators: readonly { readonly destination: number }[];
+}) {
     return (
         zone.generators.some((g) => isSFEGenerator(g.type)) ||
         zone.modulators.some((m) => isSFEGenerator(m.destination))

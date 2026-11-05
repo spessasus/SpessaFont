@@ -4,6 +4,7 @@ import {
     type BasicPreset,
     BasicPresetZone
 } from "spessasynth_core";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import "./header_cell.css";
 import { DeleteZoneAction } from "./delete_zone_action.ts";
@@ -23,27 +24,41 @@ import {
     createInstrumentLinkActions,
     createSampleLinkActions
 } from "../menu_list/link_actions.ts";
+import {
+    ADD_ZONE_KEY,
+    findGridItem,
+    focusNeighborColumn,
+    getZoneDeleteKey,
+    getZoneNameKey
+} from "./table_navigation.ts";
 
-interface GeneratorTableHeaderProps {
+interface TableHeaderProps {
     /**
      * The edited element, for the actions.
      */
     element: BasicInstrument | BasicPreset;
     name: string;
     columns: readonly ZoneColumn[];
+    /**
+     * The key of the table's Tab stop when it is in this row.
+     */
+    activeKey: string | undefined;
 }
 
-export function GeneratorTableHeader({
+export function TableHeader({
     element,
     name: elementName,
-    columns
-}: GeneratorTableHeaderProps) {
+    columns,
+    activeKey
+}: TableHeaderProps) {
     const { t } = useTranslation();
     const { session, apply, setView } = useBankEditor();
     const lookup = useEntityLookup(session.store);
     const { openMenu } = useContextMenu();
     const { pickElement } = useDialogs();
     const tools = useElementTools();
+    const rowRef = useRef<HTMLTableRowElement>(null);
+    const getTabIndex = (key: string) => (key === activeKey ? 0 : -1);
 
     // The zones of a column, found when an edit needs them
     const getZones = (column: ZoneColumn) => {
@@ -76,6 +91,15 @@ export function GeneratorTableHeader({
             !(zone instanceof BasicPresetZone)
         ) {
             return;
+        }
+        // The column's buttons go away with it, so the focus moves to the next column first
+        const columnHeader = findGridItem(
+            rowRef.current,
+            getZoneDeleteKey(column.zone.id)
+        )?.closest("th");
+        const focused = document.activeElement;
+        if (focused instanceof HTMLElement && columnHeader?.contains(focused)) {
+            focusNeighborColumn(focused);
         }
         const actions = [new DeleteZoneAction(element, zone)];
         if (
@@ -175,7 +199,7 @@ export function GeneratorTableHeader({
         }
     };
     return (
-        <tr className={"header_row"}>
+        <tr className={"generator_table_header_row"} ref={rowRef}>
             <th
                 scope={"col"}
                 className={
@@ -190,6 +214,8 @@ export function GeneratorTableHeader({
                     <button
                         type={"button"}
                         className={"plain_button add_zone"}
+                        data-grid-key={ADD_ZONE_KEY}
+                        tabIndex={getTabIndex(ADD_ZONE_KEY)}
                         aria-label={t("soundBankLocale.createNewZone")}
                         title={t("soundBankLocale.createNewZone")}
                         onClick={() => void addZone()}
@@ -262,6 +288,8 @@ export function GeneratorTableHeader({
                         <button
                             type={"button"}
                             className={"plain_button header_cell_name"}
+                            data-grid-key={getZoneNameKey(zone.id)}
+                            tabIndex={getTabIndex(getZoneNameKey(zone.id))}
                             title={
                                 isStereo
                                     ? t(
@@ -276,6 +304,8 @@ export function GeneratorTableHeader({
                         <button
                             type={"button"}
                             className={"plain_button delete_zone"}
+                            data-grid-key={getZoneDeleteKey(zone.id)}
+                            tabIndex={getTabIndex(getZoneDeleteKey(zone.id))}
                             aria-label={zoneLabel}
                             title={zoneLabel}
                             onClick={() => deleteColumn(column)}

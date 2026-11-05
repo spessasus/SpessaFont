@@ -8,9 +8,13 @@ export const SampleLocale = {
     type: "Type",
     link: "Link",
     unlinked: "Unlinked",
-    waveZoom: "Wave Zoom",
-    length: "Length",
-    loop: "Loop",
+    pickPartner: "Pick the other half of the stereo pair",
+    waveZoomPercent: "Wave Zoom: {{percent}}%",
+    audioReadFailed: "The sample's audio could not be read: {{message}}",
+    lengthFrames: "Length: {{frames}}",
+    loopFrames: "Loop: {{frames}}",
+    seconds: "{{seconds}} s",
+    milliseconds: "{{milliseconds}} ms",
     types: {
         invalid: "Invalid",
         mono: "Mono",
@@ -35,9 +39,12 @@ export const SampleLocale = {
         autoLoopTitle:
             "Find loop points in the sustain and crossfade the loop so it plays without a click",
         tooShortToLoop: "The sample is too short to loop.",
-        loading: "Loading...",
-        invalidAudioFile: "Invalid Audio File",
-        tooManyChannels: "Too Many Channels"
+        nothingToNormalize:
+            "The audio is silent, there is nothing to normalize.",
+        failed: "Could not process the sample audio.",
+        loading: "Loading…",
+        invalidAudioFile: "Invalid audio file",
+        tooManyChannels: "Too many channels"
     },
 
     equalizer: {
@@ -56,9 +63,13 @@ export const SampleLocale = {
     importedSamples_other: "Imported {{count}} files as samples.",
     makeInstrument: "Make an Instrument from Them",
     notNow: "Not now",
+    importedSamplesGone: "The imported samples are no longer in the bank.",
+    importingSamples: "Importing audio files ({{done}} of {{total}})…",
+    importFailed_one: "{{count}} file could not be imported: {{names}}",
+    importFailed_other: "{{count}} files could not be imported: {{names}}",
     newInstrumentFromSample: "New Instrument from This Sample",
     notLinkedToInstrument: "Not used by an Instrument yet.",
-    usedBy: "Used by",
+    usedBy: "Used by:",
     compressedSample: "Compressed Sample",
     deleteSample: "Delete Sample"
 };

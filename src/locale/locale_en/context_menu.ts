@@ -19,10 +19,10 @@ export const ContextMenuLocale = {
     batchSetZones: "Set in every zone",
     batchAdd: "Add to every zone's value",
     batchMultiply: "Multiply every zone's value",
-    batchNothingChanged: "Nothing changed.",
     drumMap: "Map to Consecutive Keys…",
     drumMapTitle: "Map to Consecutive Keys",
     drumMapLabel: "First key (each zone gets its own key, like a drum kit)",
+    drumMapSkipped: "Zones past key 127, left as they were: {{count}}",
     spreadSamples: "Spread Samples Across the Keyboard",
     open: "Open",
     replaceSample: "Replace Sample…",
@@ -39,6 +39,8 @@ export const ContextMenuLocale = {
     skippedShort: "Skipped samples too short to loop: {{count}}",
     rootKeysSet: "Original keys set: {{count}}",
     skippedNoNote: "Skipped samples with no note in the name: {{count}}",
+    rootKeysUnchanged:
+        "Every original key already matches the note in its name.",
 
     noMatches: "Nothing matches the search.",
     cancel: "Cancel",

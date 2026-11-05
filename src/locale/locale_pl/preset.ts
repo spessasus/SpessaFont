@@ -8,5 +8,5 @@ export const PresetLocale = {
     linkSelectedInstruments: "Połącz wybrane instrumenty",
     useFreePatch: "Użyj {{patch}}",
     keepPatch: "Zostaw",
-    presetWithTheParametersExists: "Preset z tymi parametrami już istnieje."
+    patchTaken: "Preset {{name}} ma już te parametry."
 };

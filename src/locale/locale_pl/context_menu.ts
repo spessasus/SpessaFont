@@ -19,11 +19,12 @@ export const ContextMenuLocale = {
     batchSetZones: "Ustaw w każdej strefie",
     batchAdd: "Dodaj do wartości każdej strefy",
     batchMultiply: "Pomnóż wartość każdej strefy",
-    batchNothingChanged: "Nic się nie zmieniło.",
     drumMap: "Rozłóż na kolejne klawisze…",
     drumMapTitle: "Rozłóż na kolejne klawisze",
     drumMapLabel:
         "Pierwszy klawisz (każda strefa dostaje swój klawisz, jak w zestawie perkusyjnym)",
+    drumMapSkipped:
+        "Strefy za klawiszem 127, pozostawione bez zmian: {{count}}",
     spreadSamples: "Rozłóż próbki na klawiaturze",
     open: "Otwórz",
     replaceSample: "Zastąp próbkę…",
@@ -40,6 +41,8 @@ export const ContextMenuLocale = {
     skippedShort: "Pominięte próbki, zbyt krótkie na pętlę: {{count}}",
     rootKeysSet: "Ustawione oryginalne klawisze: {{count}}",
     skippedNoNote: "Pominięte próbki bez nuty w nazwie: {{count}}",
+    rootKeysUnchanged:
+        "Wszystkie oryginalne klawisze już zgadzają się z nutami w nazwach.",
 
     noMatches: "Nic nie pasuje do wyszukiwania.",
     cancel: "Anuluj",

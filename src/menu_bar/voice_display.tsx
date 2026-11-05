@@ -39,7 +39,7 @@ function Oscilloscope() {
 
 export function VoiceDisplay() {
     return (
-        <div className={"flex_menu_bar voice_display"}>
+        <div className={"menu_bar_group voice_display"}>
             <VoiceCount />
             <Oscilloscope />
         </div>

@@ -1,4 +1,4 @@
-import type { HistoryLabel } from "../core_backend/history.ts";
+import type { HistoryLabel } from "../core_backend/history_label.ts";
 
 /**
  * The locale key that names each history label, spelled out so the keys stay greppable.

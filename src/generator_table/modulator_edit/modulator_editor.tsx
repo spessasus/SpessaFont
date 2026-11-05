@@ -1,4 +1,8 @@
-import type { BasicInstrument, BasicPreset, Modulator } from "spessasynth_core";
+import {
+    type BasicInstrument,
+    type BasicPreset,
+    Modulator
+} from "spessasynth_core";
 import { ModulatorList } from "../../modulator_editing/modulator_list/modulator_list.tsx";
 import "./modulator_edit.css";
 import { useTranslation } from "react-i18next";
@@ -29,11 +33,17 @@ export function ModulatorEditor({
     const { t } = useTranslation();
     const { apply } = useBankEditor();
 
-    // The stereo partner gets the same modulators
+    // A column has a stereo partner only while both zones have the same modulators (the
+    // table splits the pair otherwise), so the partner gets copies of the same list
     const setModulators = (mods: Modulator[]) =>
         apply(
             getColumnZones(element, column).map(
-                (zone) => new EditModulatorsAction(element, zone, mods)
+                ({ zone }, i) =>
+                    new EditModulatorsAction(
+                        element,
+                        zone,
+                        i === 0 ? mods : mods.map((m) => Modulator.copyFrom(m))
+                    )
             )
         );
 
@@ -46,6 +56,8 @@ export function ModulatorEditor({
             </h2>
             <button
                 type={"button"}
+                // The table and the button that opened the editor are gone
+                autoFocus
                 onClick={onClose}
                 className={"plain_button close"}
                 aria-label={t("modulatorLocale.closeEditor")}
@@ -58,7 +70,7 @@ export function ModulatorEditor({
                 getModulators={() =>
                     findZone(element, column.zone.id)?.modulators ?? []
                 }
-                setModulatorList={setModulators}
+                onModulatorListChange={setModulators}
                 defaultModulators={defaultModulators}
             />
         </div>

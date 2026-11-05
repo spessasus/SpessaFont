@@ -1,5 +1,6 @@
 export const PresetListLocale = {
-    search: "Szukaj...",
+    search: "Szukaj…",
+    searchLabel: "Szukaj elementów",
     clearSearch: "Wyczyść wyszukiwanie",
     unusedOnly: "Nieużywane",
     unusedOnlyTitle: "Pokaż tylko instrumenty i próbki, których nic nie używa",
@@ -7,16 +8,24 @@ export const PresetListLocale = {
     presets: "Presety",
     instruments: "Instrumenty",
     samples: "Próbki",
+    drumsPrefix: "PERKUSJA:",
+    selected: "W zaznaczeniu",
+    nothingUnused: "Wszystkie instrumenty i próbki są używane.",
+    importSamples: "Importuj pliki audio…",
+    newInstrumentHint: "Zaznacz próbki, aby utworzyć z nich instrument",
+    newPresetHint: "Zaznacz instrumenty, aby utworzyć z nich preset",
+    copyHint: "Zaznacz elementy, aby je skopiować",
+    pasteHint: "Skopiuj elementy tego rodzaju, aby je wkleić",
     deleteSkipped_one: "Pominięto {{count}} używany element.",
     deleteSkipped_few: "Pominięto {{count}} używane elementy.",
     deleteSkipped_many: "Pominięto {{count}} używanych elementów.",
     deleteSkipped_other: "Pominięto {{count}} używanego elementu.",
     cutKept_one:
-        "Skopiowano, ale {{count}} używany element został zamiast go wyciąć.",
+        "Skopiowano, ale zamiast wyciąć, zachowano {{count}} używany element.",
     cutKept_few:
-        "Skopiowano, ale {{count}} używane elementy zostały zamiast je wyciąć.",
+        "Skopiowano, ale zamiast wyciąć, zachowano {{count}} używane elementy.",
     cutKept_many:
-        "Skopiowano, ale {{count}} używanych elementów zostało zamiast je wyciąć.",
+        "Skopiowano, ale zamiast wyciąć, zachowano {{count}} używanych elementów.",
     cutKept_other:
-        "Skopiowano, ale {{count}} używanego elementu zostało zamiast je wyciąć."
+        "Skopiowano, ale zamiast wyciąć, zachowano {{count}} używanego elementu."
 };

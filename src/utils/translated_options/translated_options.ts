@@ -12,7 +12,8 @@ export interface SelectOption {
 /**
  * Modulator destinations in the order the picker lists them.
  * The SpessaSynth generators (61 and up) sit next to their SF2 relatives. The switches among
- * them (ignore note off and the LFO waveforms) are left out, like the looping mode.
+ * them (ignore note off and the LFO waveforms) are left out, like the looping mode, the root key,
+ * the exclusive class and the fixed key and velocity, which core reads before modulation.
  */
 const DESTINATION_ORDER = [
     GeneratorTypes.initialAttenuation,
@@ -20,6 +21,7 @@ const DESTINATION_ORDER = [
     GeneratorTypes.pan,
     GeneratorTypes.coarseTune,
     GeneratorTypes.fineTune,
+    GeneratorTypes.scaleTuning,
     GeneratorTypes.initialFilterFc,
     GeneratorTypes.initialFilterQ,
     GeneratorTypes.maxFilterFc,
@@ -75,15 +77,28 @@ const DESTINATION_ORDER = [
     GeneratorTypes.reverbEffectsSend,
     GeneratorTypes.delayVoice,
     GeneratorTypes.startAddrsOffset,
+    GeneratorTypes.startAddrsCoarseOffset,
     GeneratorTypes.endAddrOffset,
+    GeneratorTypes.endAddrsCoarseOffset,
     GeneratorTypes.startloopAddrsOffset,
-    GeneratorTypes.endloopAddrsOffset
+    GeneratorTypes.startloopAddrsCoarseOffset,
+    GeneratorTypes.endloopAddrsOffset,
+    GeneratorTypes.endloopAddrsCoarseOffset
 ];
 
 /**
  * Pads the CC number so the names line up in a monospaced select.
  */
 const CC_NUMBER_WIDTH = 5;
+
+/**
+ * Core names that differ from the locale's key for the same controller.
+ */
+const CONTROLLER_LOCALE_ALIASES: Partial<
+    Record<keyof typeof MIDIControllers, keyof typeof MIDIControllersLocale>
+> = {
+    expression: "expressionController"
+};
 
 function isControllerLocaleKey(
     name: string
@@ -96,7 +111,9 @@ function getControllerName(cc: number, t: TFunction) {
         Object.keys(MIDIControllers) as (keyof typeof MIDIControllers)[]
     ).find((key) => MIDIControllers[key] === cc);
     // The locale uses the controller names of spessasynth_core, and "notDefined" for the rest
-    const key = name && isControllerLocaleKey(name) ? name : "notDefined";
+    const alias = name && CONTROLLER_LOCALE_ALIASES[name];
+    const key =
+        alias ?? (name && isControllerLocaleKey(name) ? name : "notDefined");
     return t(`MIDIControllersLocale.${key}`);
 }
 

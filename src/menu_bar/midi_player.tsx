@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { BasicMIDI } from "spessasynth_core";
 import toast from "react-hot-toast";
-import { MenuBarDropdown, MenuBarIcon } from "./dropdown.tsx";
+import { MenuBarDropdown } from "./menu_bar_dropdown.tsx";
+import { MenuBarIcon } from "./menu_bar_icon.tsx";
 import {
     MIDINameIcon,
     PauseIcon,
@@ -69,10 +69,7 @@ export function MIDIPlayer() {
             return;
         }
         try {
-            const buffer = await file.arrayBuffer();
-            // Parsed here as well, so a broken file is reported before anything plays
-            BasicMIDI.fromArrayBuffer(buffer, file.name);
-            audioEngine.playMIDI(buffer, file.name);
+            await audioEngine.playMIDI(await file.arrayBuffer(), file.name);
         } catch (error) {
             logError(`Failed to load ${file.name}.`, error);
             toast.error(t("menuBarLocale.midi.loadError", { name: file.name }));
@@ -97,7 +94,7 @@ export function MIDIPlayer() {
             <MenuBarIcon
                 text={
                     name.length > MAX_NAME_LENGTH
-                        ? name.slice(0, MAX_NAME_LENGTH) + "..."
+                        ? name.slice(0, MAX_NAME_LENGTH) + "…"
                         : name
                 }
                 title={name}

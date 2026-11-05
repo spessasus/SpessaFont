@@ -9,7 +9,6 @@ export const SoundBankLocale = {
 
     modifiedSamples_one: "Modified {{count}} sample.",
     modifiedSamples_other: "Modified {{count}} samples.",
-    noSamplesWereChanged: "No samples were changed.",
     nothingToRemove:
         "Every instrument and sample is in use, nothing was removed.",
     removedElements:
@@ -48,6 +47,10 @@ export const SoundBankLocale = {
             suf: "cent/key",
             full: "Cents Per Key Number"
         },
+        tcentPerKey: {
+            suf: "tcent/key",
+            full: "Timecents Per Key Number"
+        },
         sec: {
             suf: "sec",
             full: "Seconds"
@@ -71,6 +74,11 @@ export const SoundBankLocale = {
         pan: {
             suf: "[-500; 500]",
             full: "-500 = Hard Left; 0 = Center; 500 = Hard Right"
+        },
+
+        presetPan: {
+            suf: "[-1000; 1000]",
+            full: "Added to the instrument's pan. -1000 = Hard Left; 0 = No Change; 1000 = Hard Right"
         },
 
         degree: {

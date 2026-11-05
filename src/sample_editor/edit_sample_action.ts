@@ -1,5 +1,6 @@
 import type { BasicSample } from "spessasynth_core";
-import type { HistoryAction, HistoryLabel } from "../core_backend/history.ts";
+import type { HistoryAction } from "../core_backend/history.ts";
+import type { HistoryLabel } from "../core_backend/history_label.ts";
 import type { BankDocument } from "../core_backend/bank_document.ts";
 import type { ChangeSet } from "../core_backend/change_set.ts";
 

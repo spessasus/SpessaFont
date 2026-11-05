@@ -21,6 +21,5 @@ export const BankInfoLocale = {
     count: "Nombre :",
     generatorCount: "Nombre de Generateurs :",
     modulatorCount: "Nombre de Modulateurs :",
-    defaultModulatorsFor: "Modulateurs par défaut pour ",
     defaultModulators: "Modulateurs par défaut :"
 };

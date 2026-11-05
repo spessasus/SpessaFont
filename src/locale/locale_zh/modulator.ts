@@ -31,8 +31,7 @@ export const ModulatorLocale = {
         polyPressure: "复音触后",
         channelPressure: "信道触后",
         pitchWheel: "弯音轮",
-        pitchWheelRange: "弯音轮范围",
-        midiController: "MIDI控制器"
+        pitchWheelRange: "弯音轮范围"
     },
     transforms: {
         noOperation: "无操作",

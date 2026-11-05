@@ -26,11 +26,11 @@
     border-color: var(--primary-color);
 }
 
-.controller_knob:active .knob_head {
+.controller_knob:active .controller_knob_head {
     border-color: var(--border-color);
 }
 
-.knob_head {
+.controller_knob_head {
     border-radius: 50%;
     height: calc(var(--controller-size) / 3);
     width: calc(var(--controller-size) / 3);

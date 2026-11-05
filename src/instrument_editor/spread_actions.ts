@@ -5,24 +5,26 @@ import {
     type GenericRange
 } from "spessasynth_core";
 import { SetRangeAction } from "../generator_table/cell/set_range_action.ts";
+import { getPlayedGenerator } from "../generator_table/played_value.ts";
 
 /**
- * The key a zone plays its sample at: its own root key, or the sample's original key.
+ * The keys closest to each zone's root key (its own, the global one or the sample's): the
+ * ranges split halfway between neighbouring root keys, and the lowest and highest zones reach
+ * the ends of the keyboard. Zones with the same root key (velocity layers, stereo halves)
+ * share a range.
  */
-function getZoneRootKey(zone: BasicInstrumentZone) {
-    const override = zone.getGenerator(GeneratorTypes.overridingRootKey, -1);
-    return override >= 0 ? override : zone.sample.originalKey;
-}
-
-/**
- * The keys closest to each zone's root key: the ranges split halfway between neighbouring
- * root keys, and the lowest and highest zones reach the ends of the keyboard.
- * Zones with the same root key (velocity layers, stereo halves) share a range.
- */
-export function getSpreadRanges(zones: readonly BasicInstrumentZone[]) {
-    const keys = [...new Set(zones.map((z) => getZoneRootKey(z)))].toSorted(
-        (a, b) => a - b
+export function getSpreadRanges(instrument: BasicInstrument) {
+    const rootKeys = new Map(
+        instrument.zones.map((zone) => [
+            zone,
+            getPlayedGenerator(
+                instrument,
+                zone,
+                GeneratorTypes.overridingRootKey
+            )
+        ])
     );
+    const keys = [...new Set(rootKeys.values())].toSorted((a, b) => a - b);
     const ranges = new Map(
         keys.map((key, i) => {
             const min = i === 0 ? 0 : Math.floor((keys[i - 1] + key) / 2) + 1;
@@ -34,10 +36,13 @@ export function getSpreadRanges(zones: readonly BasicInstrumentZone[]) {
         })
     );
     return new Map(
-        zones.flatMap((zone): [BasicInstrumentZone, GenericRange][] => {
-            const range = ranges.get(getZoneRootKey(zone));
-            return range ? [[zone, range]] : [];
-        })
+        instrument.zones.flatMap(
+            (zone): [BasicInstrumentZone, GenericRange][] => {
+                const key = rootKeys.get(zone);
+                const range = key === undefined ? undefined : ranges.get(key);
+                return range ? [[zone, range]] : [];
+            }
+        )
     );
 }
 
@@ -45,7 +50,7 @@ export function getSpreadRanges(zones: readonly BasicInstrumentZone[]) {
  * Gives each zone the keys closest to its root key, see `getSpreadRanges`.
  */
 export function createSpreadActions(instrument: BasicInstrument) {
-    const ranges = getSpreadRanges(instrument.zones);
+    const ranges = getSpreadRanges(instrument);
     return instrument.zones.flatMap((zone) => {
         const range = ranges.get(zone);
         if (

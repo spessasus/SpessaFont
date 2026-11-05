@@ -1,14 +1,11 @@
-import { type ModulatorCurveType, ModulatorCurveTypes } from "spessasynth_core";
+import { ModulatorCurveTypes } from "spessasynth_core";
 import "./curve_picker.css";
+import { type RefObject, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { ModulatorCurvePicture } from "./curve_picture.tsx";
+import { useEventListener } from "../../hooks/use_event_listener.ts";
+import { CurvePicture } from "./curve_picture.tsx";
 import { getCurveLabel } from "./curve_label.ts";
-
-export interface SpessaFontModulatorCurveType {
-    curveType: ModulatorCurveType;
-    bipolar: boolean;
-    positive: boolean;
-}
+import type { SpessaFontModulatorCurveType } from "./curve_shape.ts";
 
 const ALL_CURVE_TYPES = Object.values(ModulatorCurveTypes).flatMap(
     (curveType) => [
@@ -22,7 +19,64 @@ const ALL_CURVE_TYPES = Object.values(ModulatorCurveTypes).flatMap(
 const curveKey = (c: SpessaFontModulatorCurveType) =>
     `${c.curveType}-${c.bipolar}-${c.positive}`;
 
-interface ModulatorCurvePickerProps {
+interface CurveOptionsProps {
+    label: string;
+    currentKey: string;
+    /**
+     * The whole picker, toggle included. A press outside of it closes the options.
+     */
+    pickerRef: RefObject<HTMLDivElement | null>;
+    onPick: (c: SpessaFontModulatorCurveType) => void;
+    onClose: () => void;
+}
+
+/**
+ * Mounted only while the picker is open, so a closed picker does not listen to the document.
+ */
+function CurveOptions({
+    label,
+    currentKey,
+    pickerRef,
+    onPick,
+    onClose
+}: CurveOptionsProps) {
+    const { t } = useTranslation();
+    useEventListener(document, "pointerdown", (e) => {
+        if (
+            e.target instanceof Node &&
+            !pickerRef.current?.contains(e.target)
+        ) {
+            onClose();
+        }
+    });
+    return (
+        <div
+            className="modulator_curve_showcase pretty_outline"
+            role={"group"}
+            aria-label={label}
+        >
+            {ALL_CURVE_TYPES.map((c) => {
+                const key = curveKey(c);
+                const curveLabel = getCurveLabel(t, c);
+                return (
+                    <button
+                        type={"button"}
+                        key={key}
+                        aria-pressed={key === currentKey}
+                        aria-label={curveLabel}
+                        title={curveLabel}
+                        className={`plain_button modulator_curve_pick pretty_outline responsive_button ${key === currentKey ? "selected" : ""}`}
+                        onClick={() => onPick(c)}
+                    >
+                        <CurvePicture curve={c} />
+                    </button>
+                );
+            })}
+        </div>
+    );
+}
+
+interface CurvePickerProps {
     /**
      * Names the picker for screen readers, for example "Primary source curve".
      */
@@ -33,56 +87,67 @@ interface ModulatorCurvePickerProps {
     onOpenChange: (isOpen: boolean) => void;
 }
 
-export function ModulatorCurvePicker({
+/**
+ * A toggle that opens the curve options below it. Picking one or pressing Escape closes them
+ * and returns the focus to the toggle, as the focused option goes away.
+ */
+export function CurvePicker({
     label,
     curveType,
     onChange,
     isOpen,
     onOpenChange
-}: ModulatorCurvePickerProps) {
+}: CurvePickerProps) {
     const { t } = useTranslation();
+    const pickerRef = useRef<HTMLDivElement>(null);
+    const toggleRef = useRef<HTMLButtonElement>(null);
     const currentKey = curveKey(curveType);
     const buttonLabel = `${label}: ${getCurveLabel(t, curveType)}`;
+
+    const close = () => {
+        onOpenChange(false);
+        toggleRef.current?.focus();
+    };
+
     return (
-        <div className="modulator_curve_picker">
-            {isOpen ? (
-                <div
-                    className="modulator_curve_showcase pretty_outline"
-                    role={"group"}
-                    aria-label={label}
-                >
-                    {ALL_CURVE_TYPES.map((c) => {
-                        const key = curveKey(c);
-                        const curveLabel = getCurveLabel(t, c);
-                        return (
-                            <button
-                                type={"button"}
-                                key={key}
-                                aria-pressed={key === currentKey}
-                                aria-label={curveLabel}
-                                title={curveLabel}
-                                className={`plain_button modulator_curve_pick pretty_outline responsive_button ${key === currentKey ? "selected" : ""}`}
-                                onClick={() => {
-                                    onOpenChange(false);
-                                    onChange(c);
-                                }}
-                            >
-                                <ModulatorCurvePicture curve={c} />
-                            </button>
-                        );
-                    })}
-                </div>
-            ) : null}
+        <div
+            className="modulator_curve_picker"
+            ref={pickerRef}
+            onKeyDown={(e) => {
+                if (!isOpen || e.key !== "Escape") {
+                    return;
+                }
+                e.stopPropagation();
+                close();
+            }}
+        >
             <button
                 type={"button"}
+                ref={toggleRef}
                 className={`plain_button pretty_outline responsive_button ${isOpen ? "" : "hover_brightness"}`}
                 aria-expanded={isOpen}
                 aria-label={buttonLabel}
                 title={buttonLabel}
                 onClick={() => onOpenChange(!isOpen)}
             >
-                <ModulatorCurvePicture curve={curveType} />
+                <CurvePicture curve={curveType} />
             </button>
+            {isOpen ? (
+                <CurveOptions
+                    label={label}
+                    currentKey={currentKey}
+                    pickerRef={pickerRef}
+                    onPick={(c) => {
+                        close();
+                        // Picking the current curve only closes the options
+                        if (curveKey(c) !== currentKey) {
+                            onChange(c);
+                        }
+                    }}
+                    // A press outside keeps the focus where it went
+                    onClose={() => onOpenChange(false)}
+                />
+            ) : null}
         </div>
     );
 }

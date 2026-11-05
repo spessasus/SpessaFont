@@ -2,6 +2,7 @@ import type { BasicSample } from "spessasynth_core";
 import type { HistoryAction } from "../../core_backend/history.ts";
 import type { BankDocument } from "../../core_backend/bank_document.ts";
 import type { ChangeSet } from "../../core_backend/change_set.ts";
+import { neighborOrInfo } from "../../core_backend/neighbor_or_info.ts";
 
 export class CreateSampleAction implements HistoryAction {
     private readonly sample: BasicSample;
@@ -20,8 +21,8 @@ export class CreateSampleAction implements HistoryAction {
     }
 
     public undo(document: BankDocument, changes: ChangeSet) {
-        document.removeSample(this.sample);
+        const index = document.removeSample(this.sample);
         changes.touchList("samples");
-        changes.focusOn(document.samples[0] ?? "info");
+        changes.focusOn(neighborOrInfo(document.samples, index));
     }
 }

@@ -62,20 +62,19 @@ export function useSampleTools() {
         onBeforeChange?: () => void
     ) =>
         runAudioTool(async () => {
-            const { actions, silent } = await createRemoveSilenceActions(
-                session,
-                samples
-            );
+            const { actions, silent, isBlockedByLoop } =
+                await createRemoveSilenceActions(session, samples);
             if (actions.length > 0) {
                 onBeforeChange?.();
                 apply(actions);
+            } else if (isBlockedByLoop) {
+                toast(t("toolsLocale.trim.loopAtStart"));
             } else if (silent === 0) {
                 toast(t("toolsLocale.trim.noSilence"));
             }
+            // Skipped samples are not a failure, so these are plain messages
             if (silent > 0) {
-                toast.error(
-                    t("toolsLocale.trim.skippedSilent", { count: silent })
-                );
+                toast(t("toolsLocale.trim.skippedSilent", { count: silent }));
             }
         });
 
@@ -91,9 +90,7 @@ export function useSampleTools() {
                 apply(actions);
             }
             if (skipped > 0) {
-                toast.error(
-                    t("toolsLocale.trim.skippedNoLoop", { count: skipped })
-                );
+                toast(t("toolsLocale.trim.skippedNoLoop", { count: skipped }));
             }
             if (losesTail > 0) {
                 toast(t("toolsLocale.trim.losesTail", { count: losesTail }));

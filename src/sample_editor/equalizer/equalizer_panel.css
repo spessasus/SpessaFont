@@ -5,15 +5,18 @@
     display: flex;
     flex-direction: column;
     gap: var(--flex-gap);
-    flex: 1 1 23rem;
+    /* Room for ten bands and a gain label of a few letters more than "Gain" */
+    flex: 1 1 26rem;
     max-width: 32rem;
-    min-width: min(23rem, 100%);
+    min-width: min(26rem, 100%);
     /* Wide screens leave the space before it, so it stays at the right edge */
     margin-inline-start: auto;
 }
 
+/* The buttons wrap below the title when their labels are long (Polish) */
 .equalizer_header {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: var(--flex-gap);
 }
@@ -88,12 +91,13 @@
     stroke: none;
 }
 
+/* The gain slider is as wide as its label, which is longer in some languages */
 .equalizer_slider {
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 2.3rem;
+    min-width: 2.3rem;
 }
 
 .equalizer_bands .equalizer_slider {

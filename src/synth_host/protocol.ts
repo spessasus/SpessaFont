@@ -8,7 +8,7 @@ import type {
 import type { ViewDiff } from "../core_backend/view_diff.ts";
 import type { EngineStatus } from "../core_backend/engine_status.ts";
 import type { KeyboardChannelValues } from "../core_backend/keyboard_channel_store.ts";
-import type { WriteFormat } from "../core_backend/persistence.ts";
+import type { WriteFailure, WriteFormat } from "../core_backend/persistence.ts";
 import type { MirrorIds, MirrorTarget } from "./bank_mirror.ts";
 
 /*
@@ -76,7 +76,9 @@ export interface SampleState {
 }
 
 /**
- * What a conversion changed. The data before and after stays in the host, as two snapshots.
+ * What a conversion changed, for the editor to record. The host writes the converted bank, then
+ * puts the samples back as they were, so the mirror changes only through the editor's patches.
+ * The data before and after stays in the host, as two snapshots of the session.
  */
 export interface ConversionReport {
     readonly samples: readonly {
@@ -92,24 +94,41 @@ export interface ConversionReport {
 
 export interface WriteResult {
     /**
-     * Undefined when the conversion or the write failed, with the reason in `error`.
+     * Undefined when the conversion or the write failed, with the reason in `error`. Nothing
+     * changed in the mirror then.
      */
     readonly binary: ArrayBuffer | undefined;
     /**
-     * Undefined when the conversion changed nothing. A conversion that failed halfway reports
-     * what it changed already, so the editor can follow.
+     * Undefined when the conversion changed nothing or the save failed.
      */
     readonly conversion: ConversionReport | undefined;
     readonly error: string | undefined;
+    readonly failure: WriteFailure | undefined;
+    /**
+     * Whether the written bank has compressed samples, which a .sf2 file must not get.
+     */
+    readonly hasCompressedSamples: boolean;
 }
 
 /**
  * What each request is answered with.
  */
 export interface HostRequestResults {
+    /**
+     * A copy, which the editor may change.
+     */
     readAudio: Float32Array;
+    /**
+     * A copy of the sample's own bytes.
+     */
     readStoredData: SampleStoredData;
+    /**
+     * Answered once the mirror is loaded, or a failure when it could not be.
+     */
+    openBank: undefined;
+    readSampleLengths: number[];
     write: WriteResult;
+    loadSong: undefined;
 }
 
 /**
@@ -129,10 +148,36 @@ export type HostRequest =
           id: number;
       }
     | {
+          type: "openBank";
+          requestId: number;
+          sessionId: number;
+          file: ArrayBuffer;
+          ids: MirrorIds;
+      }
+    | {
+          /**
+           * The lengths of the mirror's samples, which decodes the ones the editor's bank cannot
+           * tell the length of.
+           */
+          type: "readSampleLengths";
+          requestId: number;
+          sessionId: number;
+          ids: number[];
+      }
+    | {
           type: "write";
           requestId: number;
           sessionId: number;
           options: WriteOptions;
+      }
+    | {
+          /**
+           * Parses the MIDI file and plays it, failing when the file is broken.
+           */
+          type: "loadSong";
+          requestId: number;
+          file: ArrayBuffer;
+          name: string;
       };
 
 export type HostCommand =
@@ -151,19 +196,20 @@ export type HostCommand =
     | { type: "stopAll"; force: boolean }
     | { type: "reset" }
     | { type: "settings"; settings: HostSettings }
-    | { type: "loadSong"; file: ArrayBuffer; name: string }
     | { type: "play" }
     | { type: "pause" }
     | { type: "toggle" }
     | { type: "seekBy"; seconds: number }
-    | {
-          type: "openBank";
-          sessionId: number;
-          file: ArrayBuffer;
-          ids: MirrorIds;
-      }
     | { type: "patch"; sessionId: number; patch: PatchMessage }
+    /**
+     * Waits for a write of the bank that is running, like every other message for it.
+     */
     | { type: "closeBank"; sessionId: number }
+    /**
+     * Drops removed samples that can never come back, as nothing in the editor refers to
+     * them any more.
+     */
+    | { type: "releaseSamples"; sessionId: number; ids: number[] }
     /**
      * Keeps a copy of the samples' data for pasting, so edits made after copying (or an undo
      * that removes them) do not reach the clipboard. Replaces what was kept before.
@@ -191,6 +237,15 @@ export type HostAnswer =
 
 export type HostEvent =
     | HostAnswer
+    /**
+     * A command failed in the host, which keeps running.
+     */
+    | { type: "hostError"; message: string }
+    /**
+     * The Worker failed outside the host's own error handling, so the answers to pending
+     * requests may never come. Sent by the port, not by the host.
+     */
+    | { type: "hostFailed"; message: string }
     | { type: "events"; events: ForwardedSynthEvent[] }
     | { type: "keyboardChannel"; values: KeyboardChannelValues }
     | { type: "status"; status: EngineStatus };

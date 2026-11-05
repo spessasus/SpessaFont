@@ -6,7 +6,6 @@ import {
     GeneratorTypes,
     SampleTypes
 } from "spessasynth_core";
-import { CreateZoneAction } from "../generator_table/create_zone_action.ts";
 import { addAndReorderStereoSamples } from "../utils/add_stereo_samples.ts";
 import { getStereoBaseName } from "../utils/stereo_regex.ts";
 import { CreateInstrumentAction } from "./create_actions/create_instrument_action.ts";
@@ -14,6 +13,8 @@ import { CreatePresetAction } from "./create_actions/create_preset_action.ts";
 import type { BankDocument } from "../core_backend/bank_document.ts";
 import { getSpreadRanges } from "../instrument_editor/spread_actions.ts";
 import { findFreePatch, getTakenPatches } from "../core_backend/free_patch.ts";
+import { CreateZonesAction } from "./create_actions/create_zones_action.ts";
+import { getFreeName } from "../utils/element_name.ts";
 
 /**
  * Stereo halves are panned fully to their side.
@@ -27,31 +28,35 @@ function setStereoPan(zone: BasicZone, sample: BasicSample) {
 }
 
 /**
- * Adds the samples (and the other halves of stereo pairs) to the instrument as new zones.
+ * Adds the samples (and the other halves of stereo pairs) to the instrument as new zones, in
+ * one action.
  */
 export function createSampleLinkActions(
     instrument: BasicInstrument,
     samples: Iterable<BasicSample>
 ) {
-    return addAndReorderStereoSamples(samples).map((sample) => {
-        const zone = new BasicZone();
-        setStereoPan(zone, sample);
-        return new CreateZoneAction(instrument, zone, sample);
+    const newZones = addAndReorderStereoSamples(samples).map((sample) => {
+        const template = new BasicZone();
+        setStereoPan(template, sample);
+        return { template, child: sample };
     });
+    return newZones.length > 0
+        ? [new CreateZonesAction(instrument, newZones)]
+        : [];
 }
 
 /**
- * Adds the instruments to the preset as new zones.
+ * Adds the instruments to the preset as new zones, in one action.
  */
 export function createInstrumentLinkActions(
     preset: BasicPreset,
     instruments: Iterable<BasicInstrument>
 ) {
-    return Array.from(
-        instruments,
-        (instrument) =>
-            new CreateZoneAction(preset, new BasicZone(), instrument)
-    );
+    const newZones = Array.from(instruments, (instrument) => ({
+        template: new BasicZone(),
+        child: instrument
+    }));
+    return newZones.length > 0 ? [new CreateZonesAction(preset, newZones)] : [];
 }
 
 /**
@@ -72,28 +77,39 @@ function hasRealLoop(sample: BasicSample) {
 }
 
 /**
- * A new instrument with a zone for each sample, named after the first one. It loops when every
- * sample has a loop of its own, and samples with different root keys are spread across the
- * keyboard, as playing them all on every key is rarely what a multisample wants.
+ * A new instrument with a zone for each sample, named after the first one (with a number when
+ * an instrument has that name). It loops when every sample has a loop of its own, and samples
+ * with different root keys are spread across the keyboard, as playing them all on every key is
+ * rarely what a multisample wants.
  */
-export function createInstrumentFromSamples(samples: Iterable<BasicSample>) {
+export function createInstrumentFromSamples(
+    document: BankDocument,
+    samples: Iterable<BasicSample>
+) {
     const ordered = addAndReorderStereoSamples(samples);
-    const instrument = new BasicInstrument();
     const [firstSample] = ordered;
-    instrument.name = firstSample.linkedSample
+    if (!firstSample) {
+        throw new Error("An instrument needs at least one sample.");
+    }
+    const instrument = new BasicInstrument();
+    const name = firstSample.linkedSample
         ? getStereoBaseName(firstSample.name, firstSample.linkedSample.name)
         : firstSample.name;
+    const taken = new Set(document.instruments.map((i) => i.name));
+    instrument.name = getFreeName(name, (n) => taken.has(n));
     if (ordered.every((s) => hasRealLoop(s))) {
         instrument.globalZone.setGenerator(GeneratorTypes.sampleModes, 1);
     }
     for (const sample of ordered) {
         setStereoPan(instrument.createZone(sample), sample);
     }
-    const ranges = getSpreadRanges(instrument.zones);
+    const ranges = getSpreadRanges(instrument);
     if (new Set(ranges.values()).size > 1) {
         for (const [zone, range] of ranges) {
             zone.keyRange = range;
         }
+        // Zones are always sorted by key range, the selection was in name order
+        document.sortZones(instrument);
     }
     return new CreateInstrumentAction(instrument);
 }

@@ -8,24 +8,43 @@ import type {
     BankViews,
     InstrumentView,
     PresetView,
+    RangeView,
     ZoneView
 } from "../core_backend/entity_views.ts";
 import { getObjectId } from "./object_id.ts";
 
-const FULL_KEY_RANGE: GenericRange = { min: 0, max: 127 };
+const FULL_RANGE: GenericRange = { min: 0, max: 127 };
 
 /**
- * The keys a zone plays, the way spessasynth_core picks them: the zone's own range, or the
- * global zone's when it has none. The global range never narrows a zone's own range.
- * A range that is not set means every key.
+ * The keys and velocities one zone (or a preset zone with one of its instrument's zones) plays.
  */
-function getZoneKeys(zone: ZoneView, globalZone: ZoneView): GenericRange {
-    const range = zone.keyRange ?? globalZone.keyRange;
-    return range ? { min: range.min, max: range.max } : FULL_KEY_RANGE;
+export interface KeySplit {
+    keys: GenericRange;
+    velocities: GenericRange;
 }
 
 /**
- * The keys both ranges cover, or undefined when they do not overlap.
+ * The way spessasynth_core picks a zone's range: the zone's own range, or the global zone's
+ * when it has none. The global range never narrows a zone's own range.
+ * A range that is not set means every key or velocity.
+ */
+function pickRange(
+    zoneRange: RangeView | undefined,
+    globalRange: RangeView | undefined
+) {
+    const range = zoneRange ?? globalRange;
+    return range ? { min: range.min, max: range.max } : FULL_RANGE;
+}
+
+function getZoneSplit(zone: ZoneView, globalZone: ZoneView) {
+    return {
+        keys: pickRange(zone.keyRange, globalZone.keyRange),
+        velocities: pickRange(zone.velocityRange, globalZone.velocityRange)
+    };
+}
+
+/**
+ * The values both ranges cover, or undefined when they do not overlap.
  */
 function intersectRanges(a: GenericRange, b: GenericRange) {
     const min = Math.max(a.min, b.min);
@@ -35,16 +54,16 @@ function intersectRanges(a: GenericRange, b: GenericRange) {
 
 function getInstrumentSplits(instrument: InstrumentView) {
     return instrument.zones.map((zone) =>
-        getZoneKeys(zone, instrument.globalZone)
+        getZoneSplit(zone, instrument.globalZone)
     );
 }
 
 /**
- * A preset zone and an instrument zone are matched separately, so a key plays where both
+ * A preset zone and an instrument zone are matched separately, so a note plays where both
  * of their ranges cover it.
  */
 function getPresetSplits(preset: PresetView, views: BankViews) {
-    const splits = new Array<GenericRange>();
+    const splits = new Array<KeySplit>();
     for (const zone of preset.zones) {
         const instrument =
             zone.childId === undefined
@@ -53,11 +72,18 @@ function getPresetSplits(preset: PresetView, views: BankViews) {
         if (!instrument) {
             continue;
         }
-        const presetKeys = getZoneKeys(zone, preset.globalZone);
-        for (const instrumentKeys of getInstrumentSplits(instrument)) {
-            const split = intersectRanges(presetKeys, instrumentKeys);
-            if (split) {
-                splits.push(split);
+        const presetSplit = getZoneSplit(zone, preset.globalZone);
+        for (const instrumentSplit of getInstrumentSplits(instrument)) {
+            const keys = intersectRanges(
+                presetSplit.keys,
+                instrumentSplit.keys
+            );
+            const velocities = intersectRanges(
+                presetSplit.velocities,
+                instrumentSplit.velocities
+            );
+            if (keys && velocities) {
+                splits.push({ keys, velocities });
             }
         }
     }
@@ -65,23 +91,25 @@ function getPresetSplits(preset: PresetView, views: BankViews) {
 }
 
 /**
- * The key ranges the keyboard highlights for the shown element.
+ * The ranges the keyboard highlights for the shown element. Undefined when the shown view has
+ * no ranges (the overview or a sample), so every key counts. An element with no zones has
+ * none, so no key plays.
  */
 export function getViewSplits(
     view: BankEditView,
     views: BankViews
-): GenericRange[] {
+): KeySplit[] | undefined {
     if (view === "info") {
-        return [];
+        return undefined;
     }
     const id = getObjectId(view);
     if (view instanceof BasicPreset) {
         const preset = views.presets.get(id);
-        return preset ? getPresetSplits(preset, views) : [];
+        return preset ? getPresetSplits(preset, views) : undefined;
     }
     if (view instanceof BasicInstrument) {
         const instrument = views.instruments.get(id);
-        return instrument ? getInstrumentSplits(instrument) : [];
+        return instrument ? getInstrumentSplits(instrument) : undefined;
     }
-    return [];
+    return undefined;
 }

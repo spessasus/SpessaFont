@@ -5,9 +5,9 @@ import { KEY_COUNT } from "./key_curve.ts";
 
 export interface CurveMarker {
     /**
-     * A stable key for the list, the zone's view id.
+     * A stable key for the list, from the key range it stands for.
      */
-    id: number;
+    id: string;
     key: number;
     /**
      * The curve's value there, from 0 to 1.
@@ -58,7 +58,8 @@ function getPoint(
 }
 
 /**
- * The curve over the 128 keys, with a dot on the key of each zone it sets.
+ * The curve over the 128 keys, with a dot on the key of each zone it sets. The dots are HTML
+ * over the stretched SVG, so they stay round.
  */
 export function KeyCurveGraph({
     values,
@@ -75,70 +76,76 @@ export function KeyCurveGraph({
     const path = values
         .map((v, key) => `${key === 0 ? "M" : "L"}${key} ${toY(v)}`)
         .join(" ");
+    const endDraw = () => {
+        lastPoint.current = null;
+    };
     return (
         <div className={"key_curve_graph"}>
             <div className={"key_curve_graph_labels"}>
                 <span>{maxLabel}</span>
                 <span>{minLabel}</span>
             </div>
-            <svg
-                viewBox={`0 0 ${KEY_COUNT - 1} ${HEIGHT}`}
-                preserveAspectRatio={"none"}
-                role={"img"}
-                aria-label={t("toolsLocale.keyCurve.graph")}
-                onClick={(e) => onPickKey?.(getPoint(e).key, false)}
-                onContextMenu={(e) => {
-                    if (!onPickKey) {
-                        return;
-                    }
+            <div className={"key_curve_plot"}>
+                <svg
+                    viewBox={`0 0 ${KEY_COUNT - 1} ${HEIGHT}`}
+                    preserveAspectRatio={"none"}
+                    role={"img"}
+                    aria-label={t("toolsLocale.keyCurve.graph")}
+                    onClick={(e) => onPickKey?.(getPoint(e).key, false)}
+                    onContextMenu={(e) => {
+                        if (!onPickKey) {
+                            return;
+                        }
 
-                    e.preventDefault();
-                    onPickKey(getPoint(e).key, true);
-                }}
-                onPointerDown={(e) => {
-                    if (!onDraw || e.button !== 0) {
-                        return;
-                    }
-                    e.currentTarget.setPointerCapture(e.pointerId);
-                    const point = getPoint(e);
-                    lastPoint.current = point;
-                    onDraw(point, point);
-                }}
-                onPointerMove={(e) => {
-                    const from = lastPoint.current;
-                    if (!onDraw || !from) {
-                        return;
-                    }
-                    const point = getPoint(e);
-                    lastPoint.current = point;
-                    onDraw(from, point);
-                }}
-                onPointerUp={() => {
-                    lastPoint.current = null;
-                }}
-            >
-                <line
-                    className={"key_curve_axis"}
-                    x1={0}
-                    x2={KEY_COUNT - 1}
-                    y1={HEIGHT / 2}
-                    y2={HEIGHT / 2}
-                />
-                <path className={"key_curve_line"} d={path} />
+                        e.preventDefault();
+                        onPickKey(getPoint(e).key, true);
+                    }}
+                    onPointerDown={(e) => {
+                        if (!onDraw || e.button !== 0) {
+                            return;
+                        }
+                        e.currentTarget.setPointerCapture(e.pointerId);
+                        const point = getPoint(e);
+                        lastPoint.current = point;
+                        onDraw(point, point);
+                    }}
+                    onPointerMove={(e) => {
+                        const from = lastPoint.current;
+                        if (!onDraw || !from) {
+                            return;
+                        }
+                        const point = getPoint(e);
+                        lastPoint.current = point;
+                        onDraw(from, point);
+                    }}
+                    onPointerUp={endDraw}
+                    onPointerCancel={endDraw}
+                    onLostPointerCapture={endDraw}
+                >
+                    <line
+                        className={"key_curve_axis"}
+                        x1={0}
+                        x2={KEY_COUNT - 1}
+                        y1={HEIGHT / 2}
+                        y2={HEIGHT / 2}
+                    />
+                    <path className={"key_curve_line"} d={path} />
+                </svg>
                 {markers.map((marker) => (
-                    <circle
+                    <span
                         key={marker.id}
                         className={
                             marker.isIncluded
                                 ? "key_curve_marker"
                                 : "key_curve_marker excluded"
                         }
-                        cx={marker.key}
-                        cy={toY(marker.value)}
-                        r={1.5}
+                        style={{
+                            "--marker-x": marker.key / (KEY_COUNT - 1),
+                            "--marker-y": 1 - marker.value
+                        }}
                     />
                 ))}
-            </svg>
+            </div>
             <div className={"key_curve_graph_keys"}>
                 <span>{0}</span>
                 <span>{KEY_COUNT - 1}</span>

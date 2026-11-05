@@ -1,4 +1,3 @@
-import { MenuBarDropdown } from "./dropdown.tsx";
 import { MIDIPlayer } from "./midi_player.tsx";
 import { VoiceDisplay } from "./voice_display.tsx";
 import "./menu_bar.css";
@@ -11,15 +10,15 @@ import { useEventListener } from "../hooks/use_event_listener.ts";
 import { useBankCommands } from "./use_bank_commands.ts";
 import { FileMenu } from "./file_menu.tsx";
 import { EditMenu } from "./edit_menu.tsx";
-import { isEditorShortcut } from "../utils/is_editor_shortcut.ts";
+import { isEditorShortcut, isTextField } from "../utils/is_editor_shortcut.ts";
 
 interface MenuBarProps {
     session: BankSession | undefined;
     /**
      * Selects an element in the active tab, used for the focus hints of undo and redo.
      */
-    setView: (view: BankEditView) => void;
-    showMidiPlayer: boolean;
+    onViewChange: (view: BankEditView) => void;
+    showMIDIPlayer: boolean;
     onToggleSettings: () => void;
     onToggleKeyboard: () => void;
     onOpenFile: () => void;
@@ -29,18 +28,20 @@ interface MenuBarProps {
      * Whether the settings cover the editor, which turns the editing shortcuts off.
      */
     isEditorCovered: boolean;
+    isKeyboardShown: boolean;
 }
 
 export function MenuBar({
     session,
-    setView,
-    showMidiPlayer,
+    onViewChange,
+    showMIDIPlayer,
     onToggleSettings,
     onToggleKeyboard,
     onOpenFile,
     onNewFile,
     onCloseFile,
-    isEditorCovered
+    isEditorCovered,
+    isKeyboardShown
 }: MenuBarProps) {
     const { t } = useTranslation();
     const {
@@ -50,19 +51,40 @@ export function MenuBar({
         removeUnusedElements,
         autoLinkSamples,
         mergeDuplicateSamples
-    } = useBankCommands(session, setView);
+    } = useBankCommands(session, onViewChange);
 
     useEventListener(document, "keydown", (e) => {
-        if (
-            isEditorCovered ||
-            !session ||
-            !(e.ctrlKey || e.metaKey) ||
-            !isEditorShortcut(e)
-        ) {
+        if (e.defaultPrevented || !(e.ctrlKey || e.metaKey)) {
             return;
         }
         // Shift or Caps Lock gives upper case letters, and Ctrl+Shift+Z is redo too
-        switch (e.key.toLowerCase()) {
+        const key = e.key.toLowerCase();
+        // Ctrl+S saves the bank from anywhere, the browser would save the web page instead.
+        // Only a dialog or a toast question keeps it: the save's own questions could not be
+        // answered behind a dialog, and a toast may be the save asking something already
+        if (key === "s") {
+            e.preventDefault();
+            // Holding the keys would start a save for every repeat
+            if (
+                !session ||
+                e.repeat ||
+                (e.target instanceof Element &&
+                    e.target.closest("dialog, [role=alertdialog]") !== null)
+            ) {
+                return;
+            }
+            // The field applies its draft when it loses the focus, so the save includes it
+            if (isTextField(e.target) && e.target instanceof HTMLElement) {
+                e.target.blur();
+                e.target.focus();
+            }
+            save("auto");
+            return;
+        }
+        if (isEditorCovered || !session || !isEditorShortcut(e)) {
+            return;
+        }
+        switch (key) {
             case "z": {
                 e.preventDefault();
                 if (e.shiftKey) {
@@ -77,14 +99,16 @@ export function MenuBar({
                 redo();
                 break;
             }
-            case "s": {
-                e.preventDefault();
-                // Holding the keys would start a save for every repeat
-                if (!e.repeat) save("auto");
-                break;
-            }
         }
     });
+
+    // The menus edit the active bank, so the settings make way to show what changed
+    const revealed = (command: () => void) => () => {
+        if (isEditorCovered) {
+            onToggleSettings();
+        }
+        command();
+    };
 
     return (
         <div className={"menu_bar_main"}>
@@ -98,14 +122,14 @@ export function MenuBar({
             {session ? (
                 <EditMenu
                     store={session.store}
-                    onUndo={undo}
-                    onRedo={redo}
-                    onRemoveUnusedElements={removeUnusedElements}
-                    onAutoLinkSamples={autoLinkSamples}
-                    onMergeDuplicateSamples={mergeDuplicateSamples}
+                    onUndo={revealed(undo)}
+                    onRedo={revealed(redo)}
+                    onRemoveUnusedElements={revealed(removeUnusedElements)}
+                    onAutoLinkSamples={revealed(autoLinkSamples)}
+                    onMergeDuplicateSamples={revealed(mergeDuplicateSamples)}
                 />
             ) : null}
-            {showMidiPlayer && <MIDIPlayer />}
+            {showMIDIPlayer && <MIDIPlayer />}
             <a
                 className={"menu_bar_button"}
                 href={"https://spessasus.github.io/SpessaSynth"}
@@ -114,7 +138,9 @@ export function MenuBar({
                 {"SpessaSynth"}
             </a>
             {IS_CHROME && !IS_ELECTRON && (
-                <MenuBarDropdown main={t("firefox")}></MenuBarDropdown>
+                <span className={"menu_bar_button menu_bar_note"}>
+                    {t("firefox")}
+                </span>
             )}
             <div className={"menu_bar_spacer"}></div>
             <a
@@ -138,6 +164,7 @@ export function MenuBar({
             <button
                 type={"button"}
                 className={"menu_bar_button"}
+                aria-pressed={isKeyboardShown}
                 onClick={onToggleKeyboard}
             >
                 {t("keyboard")}
@@ -145,7 +172,8 @@ export function MenuBar({
             <VoiceDisplay />
             <button
                 type={"button"}
-                className={"menu_bar_button settings_button"}
+                className={"menu_bar_button menu_bar_settings_button"}
+                aria-pressed={isEditorCovered}
                 onClick={onToggleSettings}
                 title={t("settingsLocale.settings")}
                 aria-label={t("settingsLocale.settings")}

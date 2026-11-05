@@ -5,6 +5,8 @@ export const BankInfoLocale = {
     product: "Produkt",
     copyright: "Prawa autorskie",
     subject: "Temat",
+    subjectHint:
+        "Pliki SF2, SF3 i SFE nie mają tematu, więc zapis w nich dopisuje go na końcu opisu. DLS go zachowuje.",
     description: "Opis",
 
     stats: "Informacje:",
@@ -21,8 +23,11 @@ export const BankInfoLocale = {
     count: "Liczba:",
     generatorCount: "Liczba generatorów:",
     modulatorCount: "Liczba modulatorów:",
-    defaultModulatorsFor: "Domyślne modulatory dla",
+    defaultModulatorsForBank: "Domyślne modulatory dla <bank>{{name}}</bank>:",
     defaultModulators: "Domyślne modulatory:",
+    defaultModulatorsNote:
+        "Używają ich tylko odtwarzacze oparte na SpessaSynth, inne używają domyślnych modulatorów SF2. Zapis DLS ich nie zachowuje.",
+    resetDefaultModulators: "Przywróć domyślne",
     checkButton: "Sprawdzenie banku:",
     check: {
         title: "Sprawdzenie banku: znaleziono {{count}}",
@@ -39,7 +44,20 @@ export const BankInfoLocale = {
             "Połączona z próbką, która nie jest połączona z powrotem:",
         stereoRate: "Para stereo o różnych częstotliwościach próbkowania:",
         stereoLength: "Para stereo o różnych długościach:",
-        longName: "Dłuższa niż {{length}} znaków, tyle zachowują SF2 i SF3:",
-        nonLatin1Name: "Ma znaki, których zapisane pliki nie zachowają:"
+        longName:
+            "Dłuższa niż {{length}} znaków. Odtwarzacze inne niż SpessaSynth pokazują w plikach SF2 i SF3 tylko pierwsze {{length}}:",
+        cutName:
+            "Dłuższa niż {{length}} znaków, zapis SF2, SF3 i SFE ją skraca (DLS zachowuje całą nazwę):",
+        nonLatin1Name: "Ma znaki, których zapisane pliki nie zachowają:",
+        nonLatin1Info:
+            "Informacje o banku mają znaki, których zapisane pliki nie zachowają.",
+        bankNumberLost: "Ma numery banku, które zapis SF2 lub SF3 zmieni:",
+        sfeOnlyData:
+            "Używa generatorów lub modulatorów SpessaSynth, które zachowuje tylko zapis SFE:",
+        sfeDefaultModulators:
+            "Domyślne modulatory sterują generatorami SpessaSynth, które zachowuje tylko zapis SFE.",
+        linkedModulator:
+            "Ma połączone modulatory, których SpessaSynth nie odtwarza, a zapis je psuje:",
+        showAll: "Pokaż wszystkie ({{count}})"
     }
 };

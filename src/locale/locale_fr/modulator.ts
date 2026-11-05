@@ -30,8 +30,7 @@ export const ModulatorLocale = {
         polyPressure: "After Pressure",
         channelPressure: "Canal Pressure",
         pitchWheel: "Pitch bend",
-        pitchWheelRange: "Étendue du Pitch Bend",
-        midiController: "Contrôleur MIDI"
+        pitchWheelRange: "Étendue du Pitch Bend"
     },
     transforms: {
         noOperation: "Pas d'operation",

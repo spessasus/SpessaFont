@@ -61,6 +61,58 @@ describe("loadSettings", () => {
     });
 });
 
+/**
+ * The page as a sample rate change reloads it, with the address it ends up showing.
+ */
+function openPage(search: string) {
+    const page = { url: new URL(`http://localhost:5173/${search}`) };
+    vi.stubGlobal("location", page.url);
+    vi.stubGlobal("history", {
+        state: null,
+        replaceState: (_state: unknown, _title: string, url: URL) => {
+            page.url = url;
+        }
+    });
+    return page;
+}
+
+describe("loadSettings with a sample rate in the address", () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+        localStorage.removeItem(SPESSAFONT_SETTINGS_KEY);
+    });
+
+    it("uses and saves the rate a reload asked for, over the saved one", () => {
+        localStorage.setItem(
+            SPESSAFONT_SETTINGS_KEY,
+            JSON.stringify({ ...DEFAULT_SETTINGS, sampleRate: 44_100 })
+        );
+        const page = openPage("?samplerate=96000&other=1");
+
+        expect(loadSettings().sampleRate).toBe(96_000);
+        vi.unstubAllGlobals();
+        expect(loadSettings().sampleRate).toBe(96_000);
+        // Taken out, so a later reload or a copied link does not apply it again
+        expect(page.url.search).toBe("?other=1");
+    });
+
+    it("ignores a rate out of range", () => {
+        openPage("?samplerate=5");
+
+        expect(loadSettings().sampleRate).toBe(DEFAULT_SETTINGS.sampleRate);
+    });
+
+    it("keeps the saved rate when the address has none", () => {
+        localStorage.setItem(
+            SPESSAFONT_SETTINGS_KEY,
+            JSON.stringify({ ...DEFAULT_SETTINGS, sampleRate: 44_100 })
+        );
+        openPage("");
+
+        expect(loadSettings().sampleRate).toBe(44_100);
+    });
+});
+
 describe("parseSettings", () => {
     it("returns the defaults for data that is not an object", () => {
         for (const data of [null, 5, "text", [1, 2]]) {
@@ -93,6 +145,17 @@ describe("parseSettings", () => {
         });
 
         expect(parsed).toEqual(DEFAULT_SETTINGS);
+    });
+
+    it("rounds a fractional sample rate, which no context runs at", () => {
+        expect(parseSettings({ sampleRate: 44_100.3 }).sampleRate).toBe(44_100);
+    });
+
+    it("keeps the MIDI input and drops one that is not text", () => {
+        expect(parseSettings({ midiInputId: "port-1" }).midiInputId).toBe(
+            "port-1"
+        );
+        expect(parseSettings({ midiInputId: 5 }).midiInputId).toBe("");
     });
 
     it("keeps valid values", () => {

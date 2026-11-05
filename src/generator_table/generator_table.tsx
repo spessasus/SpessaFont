@@ -6,22 +6,33 @@ import {
     GeneratorTypes
 } from "spessasynth_core";
 import type { GeneratorRowType } from "./generator_row_type.ts";
-import { GeneratorTableHeader } from "./table_header.tsx";
+import { TableHeader } from "./table_header.tsx";
 import { GeneratorRow } from "./generator_row.tsx";
 import "./generator_table.css";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { GeneratorTableModulatorRow } from "./modulator_row.tsx";
-import { ModulatorEditor } from "./modulator_edit/modulator_edit.tsx";
+import { ModulatorRow } from "./modulator_row.tsx";
+import { ModulatorEditor } from "./modulator_edit/modulator_editor.tsx";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
 import { getObjectId } from "../utils/object_id.ts";
 import {
+    getModulatorColumns,
     getZoneColumns,
     type ZoneChildren,
     type ZoneColumn
 } from "./zone_columns.ts";
-import { moveTableFocus } from "./table_navigation.ts";
+import {
+    ADD_ZONE_KEY,
+    findGridItem,
+    getCellKey,
+    getGridKey,
+    getModulatorKey,
+    getZoneDeleteKey,
+    getZoneNameKey,
+    handleTableKeyDown,
+    parseCellKey
+} from "./table_navigation.ts";
 import { useElementTools } from "./tools/use_element_tools.tsx";
 import { isCurveRow } from "./tools/key_curve_actions.ts";
 
@@ -32,6 +43,12 @@ interface CellSelection {
     generator: GeneratorType;
     zoneIds: ReadonlySet<number>;
     anchorId: number;
+}
+
+interface SelectionModifiers {
+    ctrlKey: boolean;
+    metaKey: boolean;
+    shiftKey: boolean;
 }
 
 const NO_CELLS = new Set<number>();
@@ -45,11 +62,12 @@ function getCellSelection(
     generator: GeneratorType,
     columns: readonly ZoneColumn[],
     zoneId: number,
-    { ctrlKey, metaKey, shiftKey }: React.MouseEvent
-): CellSelection | null {
+    { ctrlKey, metaKey, shiftKey }: SelectionModifiers
+) {
     const isSameRow = previous?.generator === generator;
-    if (shiftKey && isSameRow) {
-        const ids = columns.map((c) => c.zone.id);
+    const ids = columns.map((c) => c.zone.id);
+    // The anchor's zone may be gone after an undo, then Shift starts over
+    if (shiftKey && isSameRow && ids.includes(previous.anchorId)) {
         const from = ids.indexOf(previous.anchorId);
         const to = ids.indexOf(zoneId);
         const range = ids.slice(Math.min(from, to), Math.max(from, to) + 1);
@@ -77,6 +95,7 @@ interface GeneratorTableProps {
 
 /**
  * Rendered with a key per element, so the modulator editor closes when the element changes.
+ * The table is one Tab stop, see `table_navigation.ts`.
  */
 export function GeneratorTable({ element, rows }: GeneratorTableProps) {
     const { t } = useTranslation();
@@ -100,6 +119,10 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
     const [cellSelection, setCellSelection] = useState<CellSelection | null>(
         null
     );
+    // The last focused item of the table, which is its Tab stop
+    const [activeKey, setActiveKey] = useState<string | null>(null);
+    // Focused when the table comes back after the modulator editor
+    const focusOnMountRef = useRef<string | null>(null);
     // The pane closes when its element is removed, this only covers the render before
     if (!view) {
         return null;
@@ -114,7 +137,8 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
         colSpan: 1,
         isStereo: false,
         name: t("soundBankLocale.globalZone"),
-        sample: undefined
+        sample: undefined,
+        linkedSample: undefined
     };
     const zoneColumns = getZoneColumns(view.zones, children);
     const columns = [globalColumn, ...zoneColumns];
@@ -123,47 +147,155 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
         globalColumn,
         ...getZoneColumns(view.zones, children, true)
     ];
+    const getRowColumns = (generator: GeneratorType) =>
+        generator === GeneratorTypes.pan ? splitColumns : columns;
+    const modulatorColumns = getModulatorColumns(columns, splitColumns);
 
-    // The edited zone may be gone after an undo, which closes the editor
-    const editedColumn = columns.find((c) => c.zone.id === editedZoneId);
+    // The edited zone may be gone after an undo, which closes the editor. A zone of a split
+    // pair stays open on its own when an edit gives it the same modulators as its partner.
+    // Forgetting the gone zone keeps a redo from opening the editor again
+    const editedColumn =
+        modulatorColumns.find((c) => c.zone.id === editedZoneId) ??
+        splitColumns.find((c) => c.zone.id === editedZoneId);
+    if (editedZoneId !== null && !editedColumn) {
+        setEditedZoneId(null);
+    }
     if (editedColumn) {
         return (
             <ModulatorEditor
                 name={editedColumn.name}
                 column={editedColumn}
-                onClose={() => setEditedZoneId(null)}
+                onClose={() => {
+                    const key = getModulatorKey(editedColumn.zone.id);
+                    focusOnMountRef.current = key;
+                    setActiveKey(key);
+                    setEditedZoneId(null);
+                }}
                 element={element}
                 defaultModulators={isInstrument ? defaultModulators : []}
             />
         );
     }
 
+    // The Tab stop falls back to the first cell when its item is gone (a deleted zone)
+    const shownKeys = new Set<string>([ADD_ZONE_KEY]);
+    for (const { zone } of zoneColumns) {
+        shownKeys.add(getZoneNameKey(zone.id));
+        shownKeys.add(getZoneDeleteKey(zone.id));
+    }
+    for (const { zone } of modulatorColumns) {
+        shownKeys.add(getModulatorKey(zone.id));
+    }
+    for (const { generator } of rows) {
+        for (const { zone } of getRowColumns(generator)) {
+            shownKeys.add(getCellKey(generator, zone.id));
+        }
+    }
+    const firstKey =
+        rows.length > 0
+            ? getCellKey(rows[0].generator, view.globalZone.id)
+            : ADD_ZONE_KEY;
+    const tabKey =
+        activeKey !== null && shownKeys.has(activeKey) ? activeKey : firstKey;
+    const isHeaderKey =
+        tabKey === ADD_ZONE_KEY ||
+        tabKey.startsWith("name:") ||
+        tabKey.startsWith("delete:");
+
+    // Shift and Left or Right extends the selection, other moves drop it, like a spreadsheet
+    const handleMove = (
+        fromKey: string,
+        toKey: string,
+        isExtending: boolean
+    ) => {
+        const from = parseCellKey(fromKey);
+        const to = parseCellKey(toKey);
+        const generator = rows.find(
+            (r) => r.generator === to?.generator
+        )?.generator;
+        if (
+            !isExtending ||
+            !from ||
+            !to ||
+            generator === undefined ||
+            from.generator !== generator
+        ) {
+            setCellSelection(null);
+            return;
+        }
+        setCellSelection((previous) =>
+            getCellSelection(
+                previous?.generator === generator && previous.zoneIds.size > 0
+                    ? previous
+                    : {
+                          generator,
+                          zoneIds: new Set([from.zoneId]),
+                          anchorId: from.zoneId
+                      },
+                generator,
+                getRowColumns(generator),
+                to.zoneId,
+                { ctrlKey: false, metaKey: false, shiftKey: true }
+            )
+        );
+    };
+
     return (
         <div className={"zone_table_wrapper"}>
-            <table className={"zone_table"} onKeyDown={moveTableFocus}>
+            <table
+                ref={(table) => {
+                    const key = focusOnMountRef.current;
+                    if (!table || key === null) {
+                        return;
+                    }
+
+                    focusOnMountRef.current = null;
+                    findGridItem(table, key)?.focus();
+                }}
+                className={"zone_table"}
+                role={"grid"}
+                aria-multiselectable={true}
+                onKeyDown={(e) => handleTableKeyDown(e, handleMove)}
+                onFocus={(e: React.FocusEvent) => {
+                    const key = getGridKey(e.target);
+                    if (key !== undefined) {
+                        setActiveKey(key);
+                    }
+                }}
+            >
                 <thead>
-                    <GeneratorTableHeader
+                    <TableHeader
                         element={element}
                         name={view.name}
                         columns={zoneColumns}
+                        activeKey={isHeaderKey ? tabKey : undefined}
                     />
-                    <GeneratorTableModulatorRow
-                        columns={columns}
+                    <ModulatorRow
+                        columns={modulatorColumns}
+                        activeKey={
+                            tabKey.startsWith("modulators:")
+                                ? tabKey
+                                : undefined
+                        }
                         onEditModulators={setEditedZoneId}
                     />
                 </thead>
                 <tbody>
                     {rows.map((row) => {
-                        const rowColumns =
-                            row.generator === GeneratorTypes.pan
-                                ? splitColumns
-                                : columns;
+                        const rowColumns = getRowColumns(row.generator);
                         return (
                             <GeneratorRow
                                 key={row.generator}
                                 element={element}
                                 row={row}
                                 columns={rowColumns}
+                                globalZone={view.globalZone}
+                                activeKey={
+                                    parseCellKey(tabKey)?.generator ===
+                                    row.generator
+                                        ? tabKey
+                                        : undefined
+                                }
                                 selectedZoneIds={
                                     cellSelection?.generator === row.generator
                                         ? cellSelection.zoneIds

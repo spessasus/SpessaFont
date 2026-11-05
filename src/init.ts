@@ -9,10 +9,22 @@ import {
 import { applyTheme } from "./settings/apply_theme.ts";
 import { IS_ELECTRON } from "./utils/environment_detection.ts";
 import { logError, logInfo } from "./utils/core_utils.ts";
+import { syncElectronUnloadPrompt } from "./utils/electron_unload_prompt.ts";
 
 async function registerServiceWorker() {
     // Service workers are unsafe on Electron
     if (IS_ELECTRON || !("serviceWorker" in navigator)) {
+        return;
+    }
+    // A worker on the dev server would cache every module and answer with old ones
+    if (import.meta.env.DEV) {
+        try {
+            const registrations =
+                await navigator.serviceWorker.getRegistrations();
+            await Promise.all(registrations.map((r) => r.unregister()));
+        } catch (error) {
+            logError("Failed to remove the service worker.", error);
+        }
         return;
     }
     try {
@@ -32,12 +44,6 @@ async function registerServiceWorker() {
         urls: performance
             .getEntriesByType("resource")
             .map((entry) => entry.name)
-    });
-    // The encoder is only loaded for SF3 saves, so it is fetched (and cached) while idle,
-    // or SF3 saves would fail offline until one was made online
-    const whenIdle = globalThis.requestIdleCallback ?? setTimeout;
-    whenIdle(() => {
-        void prefetchEncoder();
     });
 }
 
@@ -61,16 +67,6 @@ async function getControllingWorker() {
     return controller;
 }
 
-async function prefetchEncoder() {
-    try {
-        const { prefetchVorbisEncoder } =
-            await import("./core_backend/encode_vorbis.ts");
-        await prefetchVorbisEncoder();
-    } catch (error) {
-        logError("Failed to prefetch the Vorbis encoder.", error);
-    }
-}
-
 /**
  * Prepares everything the first render needs: settings, theme, and translations.
  * Returns the loaded settings.
@@ -78,6 +74,10 @@ async function prefetchEncoder() {
 export async function init() {
     const settings = loadSettings();
     applyTheme(settings.theme);
+    // Screen readers, translation offers and CJK glyphs follow the page's language
+    i18next.on("languageChanged", (locale) => {
+        document.documentElement.lang = locale;
+    });
     await i18next.use(initReactI18next).init({
         resources: LocaleList,
         lng: resolveLocale(settings.lang),
@@ -85,6 +85,7 @@ export async function init() {
         // React escapes text itself, escaping here shows names like "Tom's Kit" as entities
         interpolation: { escapeValue: false }
     });
+    syncElectronUnloadPrompt();
     // The app works without it, so rendering does not wait for it
     void registerServiceWorker();
     return settings;

@@ -14,17 +14,26 @@ import { presetSorter } from "../utils/preset_sorter.ts";
 import { nameSorter } from "../utils/name_sorter.ts";
 import type { BankEntity } from "./bank_view.ts";
 import { getObjectId } from "../utils/object_id.ts";
+import { isXGDrumBank, refreshXGState } from "./xg_state.ts";
 
 /**
  * Inserts the item before the first item that sorts after it, and returns its index.
+ * The list is sorted (renames do not move elements, which only makes the spot less exact), so a
+ * binary search finds it. A paste of thousands of samples would be quadratic with a scan.
  */
 function insertSorted<T>(list: T[], item: T, compare: (a: T, b: T) => number) {
-    let index = list.findIndex((existing) => compare(existing, item) > 0);
-    if (index === -1) {
-        index = list.length;
+    let low = 0;
+    let high = list.length;
+    while (low < high) {
+        const middle = (low + high) >>> 1;
+        if (compare(list[middle], item) > 0) {
+            high = middle;
+        } else {
+            low = middle + 1;
+        }
     }
-    list.splice(index, 0, item);
-    return index;
+    list.splice(low, 0, item);
+    return low;
 }
 
 function removeFrom<T extends { name: string }>(list: T[], item: T) {
@@ -70,6 +79,24 @@ export class BankDocument {
     public constructor(bank: BasicSoundBank) {
         this.bank = bank;
         this.sortElements();
+    }
+
+    /**
+     * Refreshes the XG state after the preset was added or removed, and re-sorts the presets
+     * when it changed, as drums sort last. Only a preset on an XG drum bank can change it.
+     * Returns true when it re-sorted.
+     */
+    private updateXGState(preset: BasicPreset) {
+        if (!isXGDrumBank(preset.bankMSB)) {
+            return false;
+        }
+        const wasXG = this.bank.isXGBank;
+        refreshXGState(this.bank);
+        if (this.bank.isXGBank === wasXG) {
+            return false;
+        }
+        this.presets.sort(presetSorter);
+        return true;
     }
 
     public get presets() {
@@ -131,10 +158,10 @@ export class BankDocument {
     }
 
     /**
-     * Re-sorts the presets after a MIDI patch change and refreshes the bank's preset lookup.
+     * Re-sorts the presets after a MIDI patch change, which can also change the bank's XG state.
      */
     public sortPresets() {
-        this.bank.flush();
+        refreshXGState(this.bank);
         this.presets.sort(presetSorter);
     }
 
@@ -151,7 +178,8 @@ export class BankDocument {
             throw new Error("The preset order does not match the bank.");
         }
         this.presets.splice(0, this.presets.length, ...presets);
-        this.bank.flush();
+        // The patch that undo put back can change the XG state too
+        refreshXGState(this.bank);
     }
 
     public sortZones(element: BasicPreset | BasicInstrument) {
@@ -209,12 +237,17 @@ export class BankDocument {
     }
 
     /**
-     * Adds a new preset and re-sorts the presets.
+     * Adds a new preset in patch order.
      * Its zones linked their instruments when they were created.
      */
     public addPreset(preset: BasicPreset) {
+        // The XG state decides where it goes, and it is computed with the preset in the bank
         this.presets.push(preset);
-        this.sortPresets();
+        if (this.updateXGState(preset)) {
+            return;
+        }
+        this.presets.pop();
+        insertSorted(this.presets, preset, presetSorter);
     }
 
     /**
@@ -224,6 +257,7 @@ export class BankDocument {
     public restorePreset(preset: BasicPreset, index: number) {
         preset.restore();
         this.presets.splice(index, 0, preset);
+        this.updateXGState(preset);
     }
 
     /**
@@ -232,7 +266,7 @@ export class BankDocument {
     public removePreset(preset: BasicPreset) {
         const index = this.presets.indexOf(preset);
         this.bank.deletePreset(preset);
-        this.sortPresets();
+        this.updateXGState(preset);
         return index;
     }
 

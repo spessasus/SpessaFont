@@ -92,6 +92,71 @@ describe("createBatchGeneratorActions", () => {
         );
     });
 
+    it("adds to the root key a zone plays, the sample's key when it sets none", () => {
+        const session = createTestSession();
+        const [instrument] = session.document.instruments;
+        instrument.globalZone.setGenerator(
+            GeneratorTypes.overridingRootKey,
+            null
+        );
+        for (const zone of instrument.zones) {
+            zone.setGenerator(GeneratorTypes.overridingRootKey, null);
+        }
+        publishSetUp(session);
+
+        expectRoundTrip(
+            session,
+            createBatchGeneratorActions(
+                [instrument],
+                getRow(GeneratorTypes.overridingRootKey),
+                { kind: "add", value: 12 },
+                "zones"
+            )
+        );
+
+        for (const zone of instrument.zones) {
+            expect(
+                zone.getGenerator(GeneratorTypes.overridingRootKey, null)
+            ).toBe(zone.sample.originalKey + 12);
+        }
+    });
+
+    it("adds to the value the zones inherit from the global zone", () => {
+        const session = createTestSession();
+        const [instrument] = session.document.instruments;
+        instrument.globalZone.setGenerator(GeneratorTypes.pan, 100);
+        for (const zone of instrument.zones) {
+            zone.setGenerator(GeneratorTypes.pan, null);
+        }
+        publishSetUp(session);
+
+        session.history.do(
+            createBatchGeneratorActions(
+                [instrument],
+                getRow(GeneratorTypes.pan),
+                { kind: "add", value: 50 },
+                "zones"
+            )
+        );
+
+        for (const zone of instrument.zones) {
+            expect(zone.getGenerator(GeneratorTypes.pan, null)).toBe(150);
+        }
+    });
+
+    it("leaves a fixed key that is off alone for an add", () => {
+        const session = createTestSession();
+        const [instrument] = session.document.instruments;
+        expect(
+            createBatchGeneratorActions(
+                [instrument],
+                getRow(GeneratorTypes.keyNum),
+                { kind: "add", value: 12 },
+                "zones"
+            )
+        ).toEqual([]);
+    });
+
     it("leaves out ranges and sample offsets", () => {
         expect(isBatchEditableRow(getRow(GeneratorTypes.keyRange))).toBe(false);
         expect(isBatchEditableRow(getRow(GeneratorTypes.pan))).toBe(true);

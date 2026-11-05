@@ -4,7 +4,8 @@ import type { ZoneView } from "../core_backend/entity_views.ts";
 import { EditIcon } from "../utils/icons/edit_icons.tsx";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
-import { checkBank } from "./bank_check/check_bank.ts";
+import { InfoIcon } from "../utils/icons/file_icons.tsx";
+import type { InfoPanel } from "./info_panel.ts";
 
 /**
  * Counts the generators and modulators of all zones, including the global ones.
@@ -41,14 +42,27 @@ function Stat({ label, value, className = "" }: StatProps) {
     );
 }
 
+function getPercent(part: number, total: number) {
+    if (total === 0) {
+        return 0;
+    }
+    const percent = Math.round((part / total) * 100);
+    // A few out of many still show above 0%, and all but a few below 100%
+    return part > 0 && part < total
+        ? Math.min(Math.max(percent, 1), 99)
+        : percent;
+}
+
 interface BankInfoStatsProps {
-    onToggleDefaultModulators: () => void;
-    onToggleBankCheck: () => void;
+    issueCount: number;
+    panel: InfoPanel;
+    onTogglePanel: (panel: InfoPanel) => void;
 }
 
 export function BankInfoStats({
-    onToggleDefaultModulators,
-    onToggleBankCheck
+    issueCount,
+    panel,
+    onTogglePanel
 }: BankInfoStatsProps) {
     const { t } = useTranslation();
     const { session } = useBankEditor();
@@ -64,9 +78,7 @@ export function BankInfoStats({
         }
     }
     const sampleCount = views.sampleOrder.length;
-    const issueCount = checkBank(views).length;
-    const compressedPercent =
-        sampleCount > 0 ? Math.round((compressed / sampleCount) * 100) : 0;
+    const compressedPercent = getPercent(compressed, sampleCount);
     const { version, soundEngine, software = "" } = info;
     const versionString = `${version.major}.${version.minor.toString().padStart(2, "0")}`;
 
@@ -91,8 +103,9 @@ export function BankInfoStats({
 
             <button
                 type={"button"}
-                onClick={onToggleDefaultModulators}
-                className={"default_modulators_button single_stat"}
+                aria-pressed={panel === "modulators"}
+                onClick={() => onTogglePanel("modulators")}
+                className={"stats_panel_button single_stat"}
             >
                 <Stat
                     label={t("bankInfo.defaultModulators")}
@@ -103,11 +116,12 @@ export function BankInfoStats({
 
             <button
                 type={"button"}
-                onClick={onToggleBankCheck}
-                className={"default_modulators_button single_stat"}
+                aria-pressed={panel === "check"}
+                onClick={() => onTogglePanel("check")}
+                className={"stats_panel_button single_stat"}
             >
                 <Stat label={t("bankInfo.checkButton")} value={issueCount} />
-                <EditIcon />
+                <InfoIcon />
             </button>
 
             <div className={"stat_group single_stat"}>

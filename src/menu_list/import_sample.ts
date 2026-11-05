@@ -2,7 +2,7 @@ import { type BasicSample, EmptySample, SampleTypes } from "spessasynth_core";
 import { CreateSampleAction } from "./create_actions/create_sample_action.ts";
 import { getRootKeyFromName } from "../utils/root_key_from_name.ts";
 import { logError } from "../utils/core_utils.ts";
-import { readWavLoop } from "./wav_loop.ts";
+import { readWavLoop, readWavRootKey } from "./wav_loop.ts";
 import {
     type AudioDecoder,
     decodeAudioFile
@@ -14,6 +14,7 @@ import {
     shiftLoop
 } from "../sample_editor/trim_audio.ts";
 import type { SavedSettingsType } from "../settings/save_load/settings_typedef.ts";
+import { getFreeName } from "../utils/element_name.ts";
 
 /**
  * Sample names leave room for the "L" or "R" of a stereo pair.
@@ -80,26 +81,19 @@ export function prepareImportedAudio(
 }
 
 /**
- * Decodes an audio file into a sample, or a stereo pair for a stereo file, named after the
- * file. A note in the name ("Piano C4") becomes the root key, and the loop of a WAV file is
- * kept. Throws when the file cannot be decoded.
+ * Decodes an audio file, keeps the loop of a WAV file and applies the import options.
+ * Only the first two channels are kept, `channelCount` tells how many the file has.
+ * Throws when the file cannot be decoded.
  */
-async function decodeSampleFile(
+export async function decodeImportedAudio(
     context: AudioDecoder,
-    file: File,
+    buffer: ArrayBuffer,
     options: ImportOptions
 ) {
-    const buffer = await file.arrayBuffer();
     // Read first, decoding takes the buffer
     const wavLoop = readWavLoop(buffer);
     const audioBuffer = await decodeAudioFile(context, buffer);
-    const dotIndex = file.name.lastIndexOf(".");
-    const baseName = (
-        dotIndex === -1 ? file.name : file.name.slice(0, dotIndex)
-    ).slice(0, MAX_BASE_NAME_LENGTH);
-    const isStereo = audioBuffer.numberOfChannels > 1;
-    const { sampleRate } = audioBuffer;
-    const rootKey = getRootKeyFromName(baseName);
+    const { sampleRate, numberOfChannels } = audioBuffer;
 
     // The browser decodes at its own rate, so the file's loop is scaled to it
     const ratio = wavLoop ? sampleRate / wavLoop.sampleRate : 1;
@@ -115,8 +109,9 @@ async function decodeSampleFile(
               )
           }
         : undefined;
-    const decoded = Array.from({ length: isStereo ? 2 : 1 }, (_, i) =>
-        audioBuffer.getChannelData(i)
+    const decoded = Array.from(
+        { length: Math.min(numberOfChannels, 2) },
+        (_, i) => audioBuffer.getChannelData(i)
     );
     const { channels, loop } = prepareImportedAudio(
         decoded,
@@ -124,6 +119,38 @@ async function decodeSampleFile(
         fileLoop,
         options
     );
+    return { channels, loop, sampleRate, channelCount: numberOfChannels };
+}
+
+/**
+ * Decodes an audio file into a sample, or a stereo pair for a stereo file, named after the
+ * file (with a number when the name is taken). A note in the name ("Piano C4") becomes the root
+ * key, or else the unity note of a WAV file, and the loop of a WAV file is kept. Throws when the
+ * file cannot be decoded.
+ */
+async function decodeSampleFile(
+    context: AudioDecoder,
+    file: File,
+    options: ImportOptions,
+    isTaken: (name: string) => boolean
+) {
+    const buffer = await file.arrayBuffer();
+    // Read first, decoding takes the buffer
+    const wavKey = readWavRootKey(buffer);
+    const { channels, loop, sampleRate } = await decodeImportedAudio(
+        context,
+        buffer,
+        options
+    );
+    const dotIndex = file.name.lastIndexOf(".");
+    const fileName = (
+        dotIndex === -1 ? file.name : file.name.slice(0, dotIndex)
+    ).slice(0, MAX_BASE_NAME_LENGTH);
+    const isStereo = channels.length > 1;
+    const baseName = getFreeName(fileName, (name) =>
+        isStereo ? isTaken(name + "L") || isTaken(name + "R") : isTaken(name)
+    );
+    const nameKey = getRootKeyFromName(fileName);
 
     const createSample = (name: string, data: Float32Array) => {
         const sample = new EmptySample();
@@ -131,7 +158,12 @@ async function decodeSampleFile(
         sample.setAudioData(data, sampleRate);
         sample.loopStart = loop.loopStart;
         sample.loopEnd = loop.loopEnd;
-        if (rootKey !== undefined) sample.originalKey = rootKey;
+        if (nameKey !== undefined) {
+            sample.originalKey = nameKey;
+        } else if (wavKey) {
+            sample.originalKey = wavKey.key;
+            sample.pitchCorrection = wavKey.pitchCorrection;
+        }
         return sample;
     };
     const sample = createSample(baseName + (isStereo ? "L" : ""), channels[0]);
@@ -145,19 +177,45 @@ async function decodeSampleFile(
 }
 
 /**
+ * How to import files, all optional.
+ */
+interface ImportRequest {
+    options?: ImportOptions;
+    /**
+     * The names of the samples in the bank. New samples get other names.
+     */
+    takenNames?: Iterable<string>;
+    /**
+     * Called before each file with how many files are done.
+     */
+    onProgress?: (done: number, total: number) => void;
+}
+
+/**
  * Decodes several audio files into the actions that add them, for one undo step.
  * `samples` are the new samples and `failed` the names of the files that could not be decoded.
  */
 export async function createSamplesImportActions(
     context: AudioDecoder,
     files: readonly File[],
-    options = PLAIN_IMPORT
+    { options = PLAIN_IMPORT, takenNames = [], onProgress }: ImportRequest = {}
 ) {
     const samples = new Array<BasicSample>();
     const failed = new Array<string>();
-    for (const file of files) {
+    const taken = new Set(takenNames);
+    for (const [i, file] of files.entries()) {
+        onProgress?.(i, files.length);
         try {
-            samples.push(...(await decodeSampleFile(context, file, options)));
+            const decoded = await decodeSampleFile(
+                context,
+                file,
+                options,
+                (n) => taken.has(n)
+            );
+            for (const sample of decoded) {
+                taken.add(sample.name);
+            }
+            samples.push(...decoded);
         } catch (error) {
             logError(`Failed to import ${file.name}.`, error);
             failed.push(file.name);

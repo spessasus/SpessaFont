@@ -7,16 +7,19 @@ interface DropdownHeaderProps {
     isOpen: boolean;
     onToggle: () => void;
     /**
-     * Shows the add button when set.
+     * What the add button does, the list's own words ("Import Audio Files…").
+     */
+    addLabel: string;
+    /**
+     * Why the add button is disabled, shown on it instead of the label.
+     */
+    addHint?: string;
+    /**
+     * The add button is disabled when this is not set. The buttons stay in place, so the header
+     * does not change its layout with the selection.
      */
     onAdd?: () => void;
-    /**
-     * Shows the copy button when set.
-     */
     onCopy?: () => void;
-    /**
-     * Shows the paste button when set.
-     */
     onPaste?: () => void;
 }
 
@@ -24,6 +27,8 @@ export function DropdownHeader({
     text,
     isOpen,
     onToggle,
+    addLabel,
+    addHint = addLabel,
     onAdd,
     onCopy,
     onPaste
@@ -42,41 +47,38 @@ export function DropdownHeader({
                 </button>
             </h2>
             <div className={"left_buttons"}>
-                {onAdd ? (
-                    <button
-                        type={"button"}
-                        className={"plain_button"}
-                        title={t("addNew")}
-                        aria-label={t("addNew")}
-                        onClick={onAdd}
-                    >
-                        +
-                    </button>
-                ) : null}
-                {onCopy ? (
-                    <button
-                        type={"button"}
-                        className={"plain_button svg_wrapper copy"}
-                        title={t("copy")}
-                        aria-label={t("copy")}
-                        onClick={onCopy}
-                    >
-                        <CopyIcon />
-                    </button>
-                ) : null}
+                <button
+                    type={"button"}
+                    className={"plain_button"}
+                    title={onAdd ? addLabel : addHint}
+                    aria-label={addLabel}
+                    disabled={!onAdd}
+                    onClick={onAdd}
+                >
+                    +
+                </button>
+                <button
+                    type={"button"}
+                    className={"plain_button svg_wrapper copy"}
+                    title={onCopy ? t("copy") : t("presetList.copyHint")}
+                    aria-label={t("copy")}
+                    disabled={!onCopy}
+                    onClick={onCopy}
+                >
+                    <CopyIcon />
+                </button>
             </div>
             <div className={"right_buttons"}>
-                {onPaste ? (
-                    <button
-                        type={"button"}
-                        className={"plain_button svg_wrapper"}
-                        title={t("paste")}
-                        aria-label={t("paste")}
-                        onClick={onPaste}
-                    >
-                        <PasteIcon />
-                    </button>
-                ) : null}
+                <button
+                    type={"button"}
+                    className={"plain_button svg_wrapper"}
+                    title={onPaste ? t("paste") : t("presetList.pasteHint")}
+                    aria-label={t("paste")}
+                    disabled={!onPaste}
+                    onClick={onPaste}
+                >
+                    <PasteIcon />
+                </button>
                 <button
                     type={"button"}
                     className={"plain_button dropdown_triangle"}

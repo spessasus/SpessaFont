@@ -4,10 +4,15 @@ import type {
     BasicSample,
     SoundBankInfoData
 } from "spessasynth_core";
-import { type BankViews, updateBankViews } from "./entity_views.ts";
+import {
+    type BankViews,
+    createIndex,
+    updateBankViews
+} from "./entity_views.ts";
 import type { BankDocument } from "./bank_document.ts";
-import type { ChangeSet, RestoredAudio } from "./change_set.ts";
-import type { HistoryLabel } from "./history.ts";
+import type { ChangeSet, ElementList, RestoredAudio } from "./change_set.ts";
+import type { HistoryLabel } from "./history_label.ts";
+import type { BankEntity } from "./bank_view.ts";
 
 export interface HistoryState {
     readonly canUndo: boolean;
@@ -18,6 +23,31 @@ export interface HistoryState {
      */
     readonly undoLabel: HistoryLabel | undefined;
     readonly redoLabel: HistoryLabel | undefined;
+}
+
+/**
+ * Finds the core object of an element by its view id, for the identity a handler or the
+ * selection needs.
+ */
+export interface EntityLookup {
+    readonly preset: (id: number) => BasicPreset | undefined;
+    readonly instrument: (id: number) => BasicInstrument | undefined;
+    readonly sample: (id: number) => BasicSample | undefined;
+}
+
+function createLookup<E extends BankEntity>(elements: readonly E[]) {
+    const getIndex = createIndex(elements);
+    return (id: number) => getIndex().get(id);
+}
+
+/**
+ * The same elements in the same order, compared one by one, so a list stays the same object.
+ */
+function isSameList<E>(previous: readonly E[], current: readonly E[]) {
+    return (
+        previous.length === current.length &&
+        previous.every((element, i) => element === current[i])
+    );
 }
 
 /**
@@ -37,6 +67,11 @@ export interface BankSnapshot {
     readonly presets: readonly BasicPreset[];
     readonly instruments: readonly BasicInstrument[];
     readonly samples: readonly BasicSample[];
+    /**
+     * Finds elements of the lists above by id. Its maps are built once per list on first use,
+     * and shared by every component that reads them.
+     */
+    readonly lookup: EntityLookup;
     /**
      * A copy of the bank info.
      */
@@ -79,11 +114,19 @@ export class BankStore {
     public constructor(document: BankDocument) {
         this.document = document;
         const bank = document.bank;
+        const presets = [...bank.presets];
+        const instruments = [...bank.instruments];
+        const samples = [...bank.samples];
         this.snapshot = {
             revision: 0,
-            presets: [...bank.presets],
-            instruments: [...bank.instruments],
-            samples: [...bank.samples],
+            presets,
+            instruments,
+            samples,
+            lookup: {
+                preset: createLookup(presets),
+                instrument: createLookup(instruments),
+                sample: createLookup(samples)
+            },
             info: { ...bank.soundBankInfo },
             history: {
                 canUndo: false,
@@ -136,17 +179,50 @@ export class BankStore {
             previous.history.undoLabel !== history.undoLabel ||
             previous.history.redoLabel !== history.redoLabel;
 
+        // A rename touches its list, but only an added, removed or moved element changes it
+        const changedLists = new Set<ElementList>();
+        const updateList = <E extends BankEntity>(
+            list: ElementList,
+            previousList: readonly E[],
+            current: readonly E[]
+        ) => {
+            if (!changes.lists.has(list) || isSameList(previousList, current)) {
+                return previousList;
+            }
+            changedLists.add(list);
+            return [...current];
+        };
+        const presets = updateList("presets", previous.presets, bank.presets);
+        const instruments = updateList(
+            "instruments",
+            previous.instruments,
+            bank.instruments
+        );
+        const samples = updateList("samples", previous.samples, bank.samples);
+        const lookup =
+            changedLists.size === 0
+                ? previous.lookup
+                : {
+                      preset:
+                          presets === previous.presets
+                              ? previous.lookup.preset
+                              : createLookup(presets),
+                      instrument:
+                          instruments === previous.instruments
+                              ? previous.lookup.instrument
+                              : createLookup(instruments),
+                      sample:
+                          samples === previous.samples
+                              ? previous.lookup.sample
+                              : createLookup(samples)
+                  };
+
         this.snapshot = {
             revision,
-            presets: changes.lists.has("presets")
-                ? [...bank.presets]
-                : previous.presets,
-            instruments: changes.lists.has("instruments")
-                ? [...bank.instruments]
-                : previous.instruments,
-            samples: changes.lists.has("samples")
-                ? [...bank.samples]
-                : previous.samples,
+            presets,
+            instruments,
+            samples,
+            lookup,
             info: changes.hasBankInfoChanged
                 ? { ...bank.soundBankInfo }
                 : previous.info,
@@ -155,7 +231,11 @@ export class BankStore {
                 bank,
                 this.getAudioRevision,
                 previous.views,
-                changes
+                {
+                    entities: changes.entities,
+                    lists: changedLists,
+                    hasBankInfoChanged: changes.hasBankInfoChanged
+                }
             )
         };
         for (const listener of this.listeners) {

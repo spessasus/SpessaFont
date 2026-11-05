@@ -107,6 +107,76 @@ describe("createRemoveSilenceActions", () => {
         expect(await readLength(session, right)).toBe(2500);
         expect(result.silent).toBe(1);
     });
+
+    it("keeps a zone's start offset on the same sound", async () => {
+        const session = createTestSession();
+        const [instrument] = session.document.instruments;
+        const sample = addSample(session, "Sine", silenceThenSine(1000, 5000));
+        sample.loopStart = 2000;
+        sample.loopEnd = 4000;
+        const zone = instrument.createZone(sample);
+        // The zone skipped the silence and 500 frames of the sound
+        zone.setGenerator(GeneratorTypes.startAddrsOffset, 1500);
+        // This one starts in the silence, so it starts at the sound now
+        const early = instrument.createZone(sample);
+        early.setGenerator(GeneratorTypes.startAddrsOffset, 200);
+        publishSetUp(session);
+        const before = await readAudio(session, sample);
+        const heardBefore = before[1500];
+
+        const { actions } = await createRemoveSilenceActions(session, [sample]);
+        expectRoundTrip(session, actions);
+
+        const offset = zone.getGenerator(GeneratorTypes.startAddrsOffset, 0);
+        expect(offset).toBe(500);
+        const after = await readAudio(session, sample);
+        expect(after[offset]).toBeCloseTo(heardBefore);
+        expect(early.getGenerator(GeneratorTypes.startAddrsOffset, 0)).toBe(0);
+        session.history.undo();
+        expect(zone.getGenerator(GeneratorTypes.startAddrsOffset, 0)).toBe(
+            1500
+        );
+    });
+
+    it("gives a zone its own start offset when the global zone sets one", async () => {
+        const session = createTestSession();
+        const [instrument] = session.document.instruments;
+        const sample = addSample(session, "Sine", silenceThenSine(1000, 5000));
+        const zone = instrument.createZone(sample);
+        instrument.globalZone.setGenerator(
+            GeneratorTypes.startAddrsOffset,
+            1200
+        );
+        publishSetUp(session);
+
+        const { actions } = await createRemoveSilenceActions(session, [sample]);
+        session.history.do(actions);
+
+        expect(zone.getGenerator(GeneratorTypes.startAddrsOffset, null)).toBe(
+            200
+        );
+        expect(
+            instrument.globalZone.getGenerator(
+                GeneratorTypes.startAddrsOffset,
+                0
+            )
+        ).toBe(1200);
+    });
+
+    it("tells when a loop at the start keeps the silence in", async () => {
+        const session = createTestSession();
+        const sample = addSample(session, "Sine", silenceThenSine(1000, 5000));
+        sample.loopStart = 0;
+        sample.loopEnd = 3000;
+        const plain = addSample(session, "Plain", silenceThenSine(0, 5000));
+        publishSetUp(session);
+
+        const blocked = await createRemoveSilenceActions(session, [sample]);
+        expect(blocked.actions).toEqual([]);
+        expect(blocked.isBlockedByLoop).toBe(true);
+        const none = await createRemoveSilenceActions(session, [plain]);
+        expect(none.isBlockedByLoop).toBe(false);
+    });
 });
 
 describe("createTrimAfterLoopActions", () => {
@@ -149,6 +219,63 @@ describe("createTrimAfterLoopActions", () => {
         const { losesTail } = await createTrimAfterLoopActions(session, [
             sample
         ]);
+        expect(losesTail).toBe(1);
+    });
+
+    it("counts zones in every mode that plays past the loop", async () => {
+        const session = createTestSession();
+        const [instrument] = session.document.instruments;
+        const released = addSample(session, "Release", new Float32Array(1000));
+        const looped = addSample(session, "Looped", new Float32Array(1000));
+        for (const sample of [released, looped]) {
+            sample.loopStart = 100;
+            sample.loopEnd = 500;
+        }
+        // Mode 2 plays the sample on release, without its loop
+        instrument
+            .createZone(released)
+            .setGenerator(GeneratorTypes.sampleModes, 2);
+        instrument
+            .createZone(looped)
+            .setGenerator(GeneratorTypes.sampleModes, 1);
+        publishSetUp(session);
+
+        const { losesTail } = await createTrimAfterLoopActions(session, [
+            released,
+            looped
+        ]);
+        expect(losesTail).toBe(1);
+    });
+
+    it("keeps the end of a zone that ends before the cut", async () => {
+        const session = createTestSession();
+        const [instrument] = session.document.instruments;
+        const sample = addSample(session, "Loop", new Float32Array(50_000));
+        sample.loopStart = 1000;
+        sample.loopEnd = 10_000;
+        // Plays to frame 8000, before the loop end
+        const short = instrument.createZone(sample);
+        short.setGenerator(GeneratorTypes.endAddrOffset, -9232);
+        short.setGenerator(GeneratorTypes.endAddrsCoarseOffset, -1);
+        // Plays to frame 30000 without a loop, past the new end
+        const long = instrument.createZone(sample);
+        long.setGenerator(GeneratorTypes.sampleModes, 0);
+        long.setGenerator(GeneratorTypes.endAddrOffset, -20_000);
+        publishSetUp(session);
+
+        const { actions, losesTail } = await createTrimAfterLoopActions(
+            session,
+            [sample]
+        );
+        expectRoundTrip(session, actions);
+
+        const length = await readLength(session, sample);
+        const endOf = (zone: typeof short) =>
+            length +
+            zone.getGenerator(GeneratorTypes.endAddrOffset, 0) +
+            zone.getGenerator(GeneratorTypes.endAddrsCoarseOffset, 0) * 32_768;
+        expect(endOf(short)).toBe(8000);
+        expect(endOf(long)).toBe(length);
         expect(losesTail).toBe(1);
     });
 });

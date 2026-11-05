@@ -7,6 +7,7 @@ import {
     EQ_MAX_GAIN,
     type EqualizerState,
     FLAT_EQUALIZER,
+    getBandGains,
     isFlat
 } from "./equalizer.ts";
 
@@ -83,6 +84,12 @@ export function EqualizerPanel({
     const { t } = useTranslation();
     const { settings, isPreviewing } = state;
     const isSettingsFlat = isFlat(settings);
+    // Bands at or above this sample's Nyquist frequency change nothing, so Apply would only
+    // make an undo step (and decompress a compressed sample)
+    const isEffectFlat = isFlat({
+        gain: settings.gain,
+        bands: getBandGains(settings, sampleRate)
+    });
     const setBand = (index: number, gain: number) =>
         onStateChange({
             ...state,
@@ -123,7 +130,7 @@ export function EqualizerPanel({
                 <button
                     type={"button"}
                     className={buttonClass}
-                    disabled={isSettingsFlat || isDisabled}
+                    disabled={isEffectFlat || isDisabled}
                     onClick={onApply}
                 >
                     {t("sampleLocale.equalizer.apply")}

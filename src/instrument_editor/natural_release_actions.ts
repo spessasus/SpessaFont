@@ -1,6 +1,7 @@
 import {
     type BasicInstrument,
     type BasicInstrumentZone,
+    GeneratorLimits,
     type GeneratorType,
     GeneratorTypes
 } from "spessasynth_core";
@@ -10,6 +11,10 @@ import {
     getGeneratorRange
 } from "../generator_table/generator_range.ts";
 import { s2tc } from "../utils/conversion_helpers.ts";
+import {
+    getPlayedGenerator,
+    getPlayedRange
+} from "../generator_table/played_value.ts";
 
 /**
  * The key the release time is given for.
@@ -44,13 +49,6 @@ const MOD_ENVELOPE = [
     GeneratorTypes.modEnvToPitch
 ] as const;
 
-/**
- * Whether the detune would overwrite the zone's own modulation envelope.
- */
-export function hasModEnvelope(zone: BasicInstrumentZone) {
-    return MOD_ENVELOPE.some((g) => zone.getGenerator(g, null) !== null);
-}
-
 const minimum = (generator: GeneratorType) =>
     getGeneratorRange(generator, true).min;
 
@@ -79,6 +77,24 @@ function getEarlierDetune(zone: BasicInstrumentZone) {
 }
 
 /**
+ * Whether a detune would replace a modulation envelope the zone plays, its own or the global
+ * zone's. The envelope of an earlier run does not count, a new run replaces it anyway.
+ */
+export function isEnvelopeReplaced(
+    instrument: BasicInstrument,
+    zone: BasicInstrumentZone
+) {
+    return (
+        getEarlierDetune(zone) === 0 &&
+        MOD_ENVELOPE.some(
+            (g) =>
+                getPlayedGenerator(instrument, zone, g) !==
+                GeneratorLimits[g].def
+        )
+    );
+}
+
+/**
  * The release in timecents at a key, clamped to what the generator takes.
  */
 export function getReleaseTimecents(key: number, release: NaturalRelease) {
@@ -92,11 +108,11 @@ export function getReleaseTimecents(key: number, release: NaturalRelease) {
 
 /**
  * Gives every zone of the instruments a release that shortens with pitch (with a factor below
- * 1), from the center of its key range. With a detune, the modulation envelope stays full while
- * the key is held and falls with the release, and the tuning is raised by the same amount it
- * takes away, so the pitch is right while held and glides by the detune on release.
- * `clamped` counts the zones whose release had to be clamped, `overwritten` the zones whose own
- * modulation envelope the detune replaced.
+ * 1), from the center of the keys it plays. With a detune, the modulation envelope stays full
+ * while the key is held and falls with the release, and the tuning is raised by the same amount
+ * it takes away, so the pitch is right while held and glides by the detune on release. A detune
+ * of 0 removes the one an earlier run left. `clamped` counts the zones whose release had to be
+ * clamped, `overwritten` the zones whose modulation envelope the detune replaced.
  */
 export function createNaturalReleaseActions(
     instruments: Iterable<BasicInstrument>,
@@ -109,7 +125,7 @@ export function createNaturalReleaseActions(
         const set = (
             zone: BasicInstrumentZone,
             generator: GeneratorType,
-            value: number
+            value: number | null
         ) => {
             const own = zone.getGenerator(generator, null);
             if (own !== value) {
@@ -124,17 +140,20 @@ export function createNaturalReleaseActions(
                 );
             }
         };
-        const getPlayed = (
+        const setClamped = (
             zone: BasicInstrumentZone,
-            generator: GeneratorType
-        ) =>
-            zone.getGenerator(
-                generator,
-                instrument.globalZone.getGenerator(generator, 0)
-            );
+            generator: GeneratorType,
+            value: number
+        ) => {
+            const { min, max } = getGeneratorRange(generator, true);
+            set(zone, generator, clamp(value, min, max));
+        };
         for (const zone of instrument.zones) {
-            const { min, max } =
-                zone.keyRange.min === -1 ? { min: 0, max: 127 } : zone.keyRange;
+            const { min, max } = getPlayedRange(
+                instrument,
+                zone,
+                GeneratorTypes.keyRange
+            );
             const { value, isClamped } = getReleaseTimecents(
                 Math.floor((min + max) / 2),
                 release
@@ -143,26 +162,37 @@ export function createNaturalReleaseActions(
                 clamped++;
             }
             set(zone, GeneratorTypes.releaseVolEnv, value);
-            if (release.detune === 0) {
+            const earlier = getEarlierDetune(zone);
+            if (earlier === 0 && release.detune === 0) {
                 continue;
             }
-            const earlier = getEarlierDetune(zone);
-            if (earlier === 0 && hasModEnvelope(zone)) {
+            if (release.detune !== 0 && isEnvelopeReplaced(instrument, zone)) {
                 overwritten++;
             }
             const tuning =
-                getPlayed(zone, GeneratorTypes.coarseTune) * 100 +
-                getPlayed(zone, GeneratorTypes.fineTune) -
+                getPlayedGenerator(
+                    instrument,
+                    zone,
+                    GeneratorTypes.coarseTune
+                ) *
+                    100 +
+                getPlayedGenerator(instrument, zone, GeneratorTypes.fineTune) -
                 earlier +
                 release.detune;
-            for (const [generator, held] of HELD_ENVELOPE) {
-                set(zone, generator, held);
+            if (release.detune === 0) {
+                for (const generator of MOD_ENVELOPE) {
+                    set(zone, generator, null);
+                }
+            } else {
+                for (const [generator, held] of HELD_ENVELOPE) {
+                    set(zone, generator, held);
+                }
+                set(zone, GeneratorTypes.releaseModEnv, value);
+                set(zone, GeneratorTypes.modEnvToPitch, -release.detune);
             }
-            set(zone, GeneratorTypes.releaseModEnv, value);
-            set(zone, GeneratorTypes.modEnvToPitch, -release.detune);
             const coarse = Math.trunc(tuning / 100);
-            set(zone, GeneratorTypes.coarseTune, coarse);
-            set(zone, GeneratorTypes.fineTune, tuning - coarse * 100);
+            setClamped(zone, GeneratorTypes.coarseTune, coarse);
+            setClamped(zone, GeneratorTypes.fineTune, tuning - coarse * 100);
         }
     }
     return { actions, clamped, overwritten };

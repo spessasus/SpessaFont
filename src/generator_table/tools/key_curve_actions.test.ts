@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
     type BasicInstrument,
     type GeneratorType,
-    GeneratorTypes
+    GeneratorTypes,
+    SampleTypes
 } from "spessasynth_core";
 import {
     createTestSession,
@@ -10,7 +11,7 @@ import {
     publishSetUp
 } from "../../test_utils/bank_fixture.ts";
 import { INSTRUMENT_ROWS } from "../../instrument_editor/instrument_rows.ts";
-import { ac2hz } from "../../utils/conversion_helpers.ts";
+import { ac2hz, tc2s } from "../../utils/conversion_helpers.ts";
 import {
     createKeyCurveActions,
     isCurveRow,
@@ -45,6 +46,8 @@ function shape(overrides: Partial<CurveShape>): CurveShape {
         ...overrides
     };
 }
+
+const LINEAR_UP = getCurveValues(shape({}));
 
 /**
  * Gives the instrument three single-key zones, at 0, 64 and 127.
@@ -109,7 +112,7 @@ describe("createKeyCurveActions", () => {
             operation: "replace",
             min: 1000,
             max: 9000,
-            values: getCurveValues(shape({})),
+            values: LINEAR_UP,
             velocity: undefined
         };
 
@@ -193,6 +196,148 @@ describe("createKeyCurveActions", () => {
                 new Set([20])
             );
         }
+    });
+
+    it("takes the keys a zone plays from the global zone when it has no range", () => {
+        const session = createTestSession();
+        const [instrument] = session.document.instruments;
+        const [inheriting, own] = instrument.zones;
+        instrument.globalZone.keyRange = { min: 100, max: 127 };
+        inheriting.keyRange = { min: -1, max: 127 };
+        own.keyRange = { min: 100, max: 127 };
+        publishSetUp(session);
+
+        session.history.do(
+            createKeyCurveActions([instrument], {
+                row: getRow(GeneratorTypes.pan),
+                operation: "replace",
+                min: 0,
+                max: 100,
+                values: LINEAR_UP,
+                velocity: undefined
+            })
+        );
+
+        const [a, b] = getValues(instrument, GeneratorTypes.pan);
+        expect(a).toBe(b);
+        expect(inheriting.keyRange.min).toBe(-1);
+    });
+
+    it("adds to the value a zone inherits from the global zone", () => {
+        const session = createTestSession();
+        const instrument = setUpKeys(session);
+        instrument.globalZone.setGenerator(GeneratorTypes.pan, 100);
+        for (const zone of instrument.zones) {
+            zone.setGenerator(GeneratorTypes.pan, null);
+        }
+        publishSetUp(session);
+
+        session.history.do(
+            createKeyCurveActions([instrument], {
+                row: getRow(GeneratorTypes.pan),
+                operation: "add",
+                min: 5,
+                max: 5,
+                values: FLAT,
+                velocity: undefined
+            })
+        );
+
+        expect(getValues(instrument, GeneratorTypes.pan)).toEqual([
+            105, 105, 105
+        ]);
+    });
+
+    it("keeps the minimum when an add goes below zero on a seconds row", () => {
+        const session = createTestSession();
+        const instrument = setUpKeys(session);
+        instrument.globalZone.setGenerator(GeneratorTypes.releaseVolEnv, null);
+        for (const zone of instrument.zones) {
+            // About 0.5 s
+            zone.setGenerator(GeneratorTypes.releaseVolEnv, -1200);
+        }
+        publishSetUp(session);
+
+        session.history.do(
+            createKeyCurveActions([instrument], {
+                row: getRow(GeneratorTypes.releaseVolEnv),
+                operation: "add",
+                min: -10,
+                max: 10,
+                values: LINEAR_UP,
+                velocity: undefined
+            })
+        );
+
+        const seconds = getValues(instrument, GeneratorTypes.releaseVolEnv).map(
+            (v) => tc2s(v ?? 0)
+        );
+        expect(seconds[0]).toBeCloseTo(0.001, 3);
+        expect(seconds[2]).toBeCloseTo(10.5, 1);
+    });
+
+    it("changes nothing when every zone already plays the curve's value", () => {
+        const session = createTestSession();
+        const instrument = setUpKeys(session);
+        instrument.globalZone.setGenerator(GeneratorTypes.pan, null);
+        for (const zone of instrument.zones) {
+            zone.setGenerator(GeneratorTypes.pan, null);
+        }
+        publishSetUp(session);
+
+        expect(
+            createKeyCurveActions([instrument], {
+                row: getRow(GeneratorTypes.pan),
+                operation: "replace",
+                min: 0,
+                max: 0,
+                values: LINEAR_UP,
+                velocity: undefined
+            })
+        ).toEqual([]);
+    });
+
+    it("keeps a stereo pair apart when it replaces the pan", () => {
+        const session = createTestSession();
+        const [instrument] = session.document.instruments;
+        const [left, right] = session.document.samples;
+        left.setLinkedSample(right, SampleTypes.leftSample);
+        while (instrument.zones.length > 0) {
+            session.document.removeZone(instrument, instrument.zones[0]);
+        }
+        const leftZone = instrument.createZone(left);
+        const rightZone = instrument.createZone(right);
+        leftZone.setGenerator(GeneratorTypes.pan, -200);
+        rightZone.setGenerator(GeneratorTypes.pan, 200);
+        publishSetUp(session);
+
+        session.history.do(
+            createKeyCurveActions([instrument], {
+                row: getRow(GeneratorTypes.pan),
+                operation: "replace",
+                min: 10,
+                max: 10,
+                values: FLAT,
+                velocity: undefined
+            })
+        );
+
+        expect(getValues(instrument, GeneratorTypes.pan)).toEqual([-190, 210]);
+    });
+
+    it("skips a fixed key that is off for an add", () => {
+        const session = createTestSession();
+        const instrument = setUpKeys(session);
+        expect(
+            createKeyCurveActions([instrument], {
+                row: getRow(GeneratorTypes.keyNum),
+                operation: "add",
+                min: 12,
+                max: 12,
+                values: FLAT,
+                velocity: undefined
+            })
+        ).toEqual([]);
     });
 
     it("offers only plain number rows", () => {

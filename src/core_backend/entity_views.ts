@@ -18,6 +18,7 @@ import type {
 import { getObjectId } from "../utils/object_id.ts";
 import type { BankEntity } from "./bank_view.ts";
 import type { ElementList } from "./change_set.ts";
+import { isRecord } from "../utils/is_record.ts";
 
 /*
  * Bank views are frozen plain copies of the bank's elements for rendering. A view is replaced
@@ -137,6 +138,10 @@ export interface BankViews {
     readonly instruments: ReadonlyMap<number, InstrumentView>;
     readonly samples: ReadonlyMap<number, SampleView>;
     readonly defaultModulators: readonly ModulatorView[];
+    /**
+     * Whether the presets on the XG drum banks are drums, which every preset's `isDrum` follows.
+     */
+    readonly isXGBank: boolean;
 }
 
 /**
@@ -169,7 +174,7 @@ function buildRange(range: { min: number; max: number }, isSet: boolean) {
     return isSet ? { min: range.min, max: range.max } : undefined;
 }
 
-function buildSource(source: ModulatorSource): ModulatorSourceView {
+function buildSource(source: ModulatorSource) {
     return {
         index: source.index,
         isCC: source.isCC,
@@ -190,7 +195,7 @@ export function buildModulatorView(modulator: Modulator): ModulatorView {
     };
 }
 
-function buildZoneView(zone: BasicZone, child?: object): ZoneView {
+function buildZoneView(zone: BasicZone, child?: object) {
     return {
         id: getObjectId(zone),
         keyRange: buildRange(zone.keyRange, zone.hasKeyRange),
@@ -260,10 +265,6 @@ export function buildSampleView(
         usedBy: sample.linkedTo.map((i) => getObjectId(i)),
         audioRevision: audio.revision
     };
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function getId(value: unknown) {
@@ -351,7 +352,7 @@ function getChildIds(view: PresetView | InstrumentView | undefined) {
 /**
  * Maps the ids of a list to its elements, built on first use.
  */
-function createIndex<E extends BankEntity>(elements: readonly E[]) {
+export function createIndex<E extends BankEntity>(elements: readonly E[]) {
     let index: Map<number, E> | undefined;
     return () => {
         index ??= new Map(elements.map((e) => [getObjectId(e), e]));
@@ -457,6 +458,12 @@ export function updateBankViews(
 ): BankViews {
     const lists = changes?.lists ?? new Set<ElementList>();
     const touched = new Set(changes?.entities);
+    // The flag is the bank's, so a preset that did not change can still become a drum kit
+    if (previous && previous.isXGBank !== bank.isXGBank) {
+        for (const preset of bank.presets) {
+            touched.add(preset);
+        }
+    }
     const getPresetIndex = createIndex(bank.presets);
     const getInstrumentIndex = createIndex(bank.instruments);
     const getSampleIndex = createIndex(bank.samples);
@@ -553,7 +560,8 @@ export function updateBankViews(
         presets: presets.views,
         instruments: instruments.views,
         samples: samples.views,
-        defaultModulators
+        defaultModulators,
+        isXGBank: bank.isXGBank
     };
     if (
         previous &&

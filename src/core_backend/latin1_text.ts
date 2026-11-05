@@ -1,8 +1,8 @@
-import type { BasicSoundBank } from "spessasynth_core";
+import type { BasicSoundBank, SoundBankInfoData } from "spessasynth_core";
 
 const LATIN_1_MAX = 0xff;
 
-function isOutsideLatin1(text: string | undefined) {
+export function isOutsideLatin1(text: string | undefined) {
     if (text === undefined) {
         return false;
     }
@@ -16,11 +16,9 @@ function isOutsideLatin1(text: string | undefined) {
 }
 
 /**
- * Whether a name or an info text uses characters outside Latin-1 (Polish letters, CJK).
- * spessasynth_core writes every text as one byte per character, so these come back wrong
- * in SF2, SF3, SFE and DLS files. A UTF-8 option in core would remove the need to warn.
+ * Whether one of the bank info texts uses characters outside Latin-1.
  */
-export function hasTextOutsideLatin1(bank: BasicSoundBank) {
+export function hasInfoTextOutsideLatin1(info: Readonly<SoundBankInfoData>) {
     const {
         name,
         soundEngine,
@@ -30,8 +28,8 @@ export function hasTextOutsideLatin1(bank: BasicSoundBank) {
         comment,
         subject,
         romInfo
-    } = bank.soundBankInfo;
-    const texts = [
+    } = info;
+    return [
         name,
         soundEngine,
         engineer,
@@ -39,10 +37,23 @@ export function hasTextOutsideLatin1(bank: BasicSoundBank) {
         copyright,
         comment,
         subject,
-        romInfo,
+        romInfo
+    ].some((text) => isOutsideLatin1(text));
+}
+
+/**
+ * Whether a name or an info text uses characters outside Latin-1 (Polish letters, CJK).
+ * spessasynth_core writes every text as one byte per character, so these come back wrong
+ * in SF2, SF3, SFE and DLS files. A UTF-8 option in core would remove the need to warn.
+ */
+export function hasTextOutsideLatin1(bank: BasicSoundBank) {
+    const names = [
         ...bank.presets.map((p) => p.name),
         ...bank.instruments.map((i) => i.name),
         ...bank.samples.map((s) => s.name)
     ];
-    return texts.some((text) => isOutsideLatin1(text));
+    return (
+        hasInfoTextOutsideLatin1(bank.soundBankInfo) ||
+        names.some((text) => isOutsideLatin1(text))
+    );
 }

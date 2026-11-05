@@ -74,6 +74,10 @@ export function encodeVorbis() {
     );
 }
 
+export function loadVorbisEncoder() {
+    return Promise.resolve();
+}
+
 export function prefetchVorbisEncoder() {
     return Promise.resolve();
 }

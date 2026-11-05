@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useEffectEvent, useMemo, useState } from "react";
 import { AudioEngine } from "../core_backend/audio_engine.ts";
 import { IS_ELECTRON } from "../utils/environment_detection.ts";
 import { AudioEngineContext } from "../core_backend/audio_engine_context.ts";
@@ -8,6 +8,7 @@ import "./get_user_input.css";
 import { useSettings } from "../settings/settings_context.ts";
 import toast from "react-hot-toast";
 import { logError } from "../utils/core_utils.ts";
+import { useHostErrorToasts } from "../hooks/use_host_error_toasts.ts";
 
 interface AudioEngineProviderProps {
     children?: ReactNode;
@@ -15,10 +16,10 @@ interface AudioEngineProviderProps {
 
 export function AudioEngineProvider({ children }: AudioEngineProviderProps) {
     const { t } = useTranslation();
-    const { settings } = useSettings();
+    const { settings, updateSettings } = useSettings();
     const [ready, setReady] = useState(false);
     // A saved rate this browser does not support would otherwise stop the app on every start
-    const [{ audioEngine, isRateRejected }] = useState(() => {
+    const [{ audioEngine, rejectedRate }] = useState(() => {
         try {
             const context = new AudioContext({
                 sampleRate: settings.sampleRate,
@@ -26,7 +27,7 @@ export function AudioEngineProvider({ children }: AudioEngineProviderProps) {
             });
             return {
                 audioEngine: new AudioEngine(context, settings),
-                isRateRejected: false
+                rejectedRate: undefined
             };
         } catch (error) {
             logError(
@@ -36,32 +37,49 @@ export function AudioEngineProvider({ children }: AudioEngineProviderProps) {
             const context = new AudioContext({ latencyHint: "interactive" });
             return {
                 audioEngine: new AudioEngine(context, settings),
-                isRateRejected: true
+                rejectedRate: settings.sampleRate
             };
         }
     });
 
+    // Effect events, so a language change does not show the start-up errors again
+    const handleRateRejected = useEffectEvent((rate: number) => {
+        const fallback = audioEngine.context.sampleRate;
+        // Saved, so the next start does not try the rejected rate again
+        updateSettings({ sampleRate: fallback });
+        toast.error(
+            t("settingsLocale.audioEngine.sampleRateRejected", {
+                rate,
+                fallback
+            }),
+            { id: "sampleRateRejected" }
+        );
+    });
+    const handleMainThreadHost = useEffectEvent(() => {
+        toast.error(t("settingsLocale.audioEngine.workerFailed"), {
+            id: "workerFailed"
+        });
+    });
+
     useEffect(() => {
-        if (isRateRejected) {
-            toast.error(
-                t("settingsLocale.audioEngine.sampleRateRejected", {
-                    rate: settings.sampleRate
-                })
-            );
+        if (rejectedRate !== undefined) {
+            handleRateRejected(rejectedRate);
         }
-    }, [isRateRejected, settings.sampleRate, t]);
+    }, [rejectedRate]);
+
+    useHostErrorToasts(audioEngine);
 
     useEffect(() => {
         let isIgnored = false;
         void audioEngine.hostMode.then((mode) => {
             if (!isIgnored && mode === "main thread") {
-                toast.error(t("settingsLocale.audioEngine.workerFailed"));
+                handleMainThreadHost();
             }
         });
         return () => {
             isIgnored = true;
         };
-    }, [audioEngine, t]);
+    }, [audioEngine]);
 
     useEffect(() => {
         let isIgnored = false;

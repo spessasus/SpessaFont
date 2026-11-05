@@ -29,7 +29,7 @@ export function useElectronFileOpen(
             }
         };
         const unsubscribe = api.onFileOpened((path) => void openPath(path));
-        // The main process only handles the first signal, so a repeat under StrictMode is harmless
+        // The main process sends the waiting files once, so a repeat under StrictMode is harmless
         api.appReady();
         logInfo("Connected to Electron file handlers");
         return unsubscribe;

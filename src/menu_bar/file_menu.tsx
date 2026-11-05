@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { MenuBarDropdown, MenuBarIcon } from "./dropdown.tsx";
+import { MenuBarDropdown } from "./menu_bar_dropdown.tsx";
+import { MenuBarIcon } from "./menu_bar_icon.tsx";
 import {
     CloseFileIcon,
     FullscreenIcon,
@@ -43,6 +44,7 @@ export function FileMenu({
 
     const handleAbout = () => {
         showToastDialog({
+            id: "about",
             content: (
                 <>
                     <span>

@@ -67,10 +67,14 @@
 }
 
 .element_picker .element_picker_item:hover,
-.element_picker .element_picker_item:focus-visible,
-.element_picker .element_picker_item[data-highlighted="true"] {
+.element_picker .element_picker_item[aria-selected="true"] {
     background: var(--selection-color);
     outline: none;
+}
+
+/* Long names are cut with an ellipsis, so the list never scrolls sideways */
+.element_picker .menu_list_scrollable {
+    overflow-x: hidden;
 }
 
 .element_picker_empty {
@@ -119,8 +123,8 @@
     text-align: end;
 }
 
-.tool_dialog_field input:disabled {
-    opacity: 0.5;
+.tool_dialog_field input[aria-invalid="true"] {
+    border-color: var(--warning-color);
 }
 
 .tool_dialog_check {

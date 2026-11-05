@@ -2,6 +2,7 @@ import { ModulatorControllerSources } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import type { ChangeEvent } from "react";
 import "./source_picker.css";
+import { isLinkSource } from "../linked_modulator.ts";
 import { OptionList } from "../../utils/translated_options/option_list.tsx";
 import { useTranslatedOptions } from "../../utils/translated_options/translated_options_context.ts";
 import {
@@ -30,17 +31,13 @@ const NON_CC_SOURCE_LABELS = {
         "modulatorLocale.sources.pitchWheelRange"
 } as const;
 
-interface ModulatorSourcePickerProps {
+interface SourcePickerProps {
     label: string;
     source: SpessaFontModulatorSource;
     onChange: (s: SpessaFontModulatorSource) => void;
 }
 
-export function ModulatorSourcePicker({
-    label,
-    source,
-    onChange
-}: ModulatorSourcePickerProps) {
+export function SourcePicker({ label, source, onChange }: SourcePickerProps) {
     const { t } = useTranslation();
     const { controllers } = useTranslatedOptions();
     const selectValue = toSourceOptionValue(source);
@@ -54,7 +51,7 @@ export function ModulatorSourcePicker({
             ? t("modulatorLocale.sources.otherController", {
                   number: source.sourceIndex
               })
-            : source.sourceIndex === ModulatorControllerSources.link
+            : isLinkSource({ isCC: false, index: source.sourceIndex })
               ? t("modulatorLocale.sources.link")
               : t("modulatorLocale.sources.otherSource", {
                     number: source.sourceIndex

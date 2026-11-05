@@ -78,7 +78,7 @@ export function ControllerKnob({
                     transform: `rotate(${normalizedValue * (MAX_DEG - MIN_DEG) + MIN_DEG}deg)`
                 }}
             >
-                <div className={"knob_head"}></div>
+                <div className={"controller_knob_head"}></div>
             </div>
             <span className={"monospaced"}>{value}</span>
         </div>

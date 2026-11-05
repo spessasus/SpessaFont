@@ -1,6 +1,6 @@
 import "./instrument_display.css";
 import type { MouseEvent, PointerEvent } from "react";
-import type { BankEditView } from "../../core_backend/bank_view.ts";
+import type { BankEditView, BankEntity } from "../../core_backend/bank_view.ts";
 import { SampleDisplay } from "../sample_display/sample_display.tsx";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 import { useInstrumentView } from "../../hooks/use_instrument_view.ts";
@@ -18,6 +18,10 @@ interface InstrumentDisplayProps {
     instrumentId: number;
     view: BankEditView;
     isSelected: boolean;
+    /**
+     * Whether the instrument is the shown element.
+     */
+    isShown: boolean;
     isOpen: boolean;
     onToggle: () => void;
     onClick: (event: MouseEvent) => void;
@@ -30,6 +34,10 @@ interface InstrumentDisplayProps {
      */
     onPointerDown?: (event: PointerEvent) => void;
     /**
+     * Opens the menu of a listed sample of this instrument.
+     */
+    onChildContextMenu: (entity: BankEntity, event: MouseEvent) => void;
+    /**
      * Shows the "link selected samples" button when set.
      */
     onLink?: () => void;
@@ -39,11 +47,13 @@ export function InstrumentDisplay({
     instrumentId,
     view,
     isSelected,
+    isShown,
     isOpen,
     onToggle,
     onClick,
     onContextMenu,
     onPointerDown,
+    onChildContextMenu,
     onLink
 }: InstrumentDisplayProps) {
     const { t } = useTranslation();
@@ -90,6 +100,13 @@ export function InstrumentDisplay({
                 <button
                     type={"button"}
                     className={"plain_button monospaced instrument_item_name"}
+                    data-list-row={true}
+                    aria-current={isShown}
+                    aria-description={
+                        isSelected && !isShown
+                            ? t("presetList.selected")
+                            : undefined
+                    }
                     onClick={onClick}
                 >
                     {instrument.name}
@@ -102,8 +119,17 @@ export function InstrumentDisplay({
                             <SampleDisplay
                                 key={zone.id}
                                 isSelected={viewId === zone.childId}
+                                isShown={viewId === zone.childId}
                                 sampleId={zone.childId}
                                 onClick={() => showSample(zone.childId ?? -1)}
+                                onContextMenu={(e) => {
+                                    const sample = lookup.sample(
+                                        zone.childId ?? -1
+                                    );
+                                    if (sample) {
+                                        onChildContextMenu(sample, e);
+                                    }
+                                }}
                             />
                         )
                     )}

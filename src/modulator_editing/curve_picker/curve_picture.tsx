@@ -1,14 +1,14 @@
-import type { SpessaFontModulatorCurveType } from "./curve_picker.tsx";
+import type { SpessaFontModulatorCurveType } from "./curve_shape.ts";
 import { CURVE_VIEW_SIZE, getAxisPath, getCurvePoints } from "./curve_shape.ts";
 
-interface ModulatorCurvePictureProps {
+interface CurvePictureProps {
     curve: SpessaFontModulatorCurveType;
 }
 
 /**
  * Decorative: the button around it names the curve.
  */
-export function ModulatorCurvePicture({ curve }: ModulatorCurvePictureProps) {
+export function CurvePicture({ curve }: CurvePictureProps) {
     return (
         <svg
             className="modulator_curve"

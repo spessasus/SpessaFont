@@ -35,6 +35,5 @@ export const MenuBarLocale = {
         rewind: "稍微后退"
     },
 
-    voices: "复音数：",
-    settings: "设置"
+    voices: "复音数："
 };

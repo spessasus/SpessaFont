@@ -5,15 +5,17 @@ import {
     type ContextMenuEntry
 } from "./context_menu_context.ts";
 import { ContextMenu } from "./context_menu.tsx";
+import { rememberFocus } from "../utils/focus_return.ts";
 
 interface OpenMenu {
     x: number;
     y: number;
     entries: readonly ContextMenuEntry[];
     /**
-     * Gets the focus back when the menu closes.
+     * Gives the focus back to the opener when the menu closes, or to the list around it when
+     * the chosen entry removed it.
      */
-    opener: HTMLElement | null;
+    restoreFocus: () => void;
 }
 
 interface ContextMenuProviderProps {
@@ -45,16 +47,19 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
                     x = rect.left;
                     y = rect.bottom;
                 }
-                setMenu({ x, y, entries, opener });
+                setMenu({
+                    x,
+                    y,
+                    entries,
+                    restoreFocus: rememberFocus(opener)
+                });
             }
         }),
         []
     );
 
     const close = () => {
-        if (menu?.opener?.isConnected) {
-            menu.opener.focus();
-        }
+        menu?.restoreFocus();
         setMenu(null);
     };
 

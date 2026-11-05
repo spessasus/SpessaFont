@@ -6,7 +6,10 @@ import {
     publishSetUp
 } from "../test_utils/bank_fixture.ts";
 import { tc2s } from "../utils/conversion_helpers.ts";
-import { createNaturalReleaseActions } from "./natural_release_actions.ts";
+import {
+    createNaturalReleaseActions,
+    isEnvelopeReplaced
+} from "./natural_release_actions.ts";
 
 function setUpKeys(session: ReturnType<typeof createTestSession>) {
     const [instrument] = session.document.instruments;
@@ -70,6 +73,86 @@ describe("createNaturalReleaseActions", () => {
         expect(
             createNaturalReleaseActions([instrument], release).actions
         ).toEqual([]);
+    });
+
+    it("counts a modulation envelope the zones play from the global zone", () => {
+        const session = createTestSession();
+        const instrument = setUpKeys(session);
+        instrument.globalZone.setGenerator(GeneratorTypes.decayModEnv, 5169);
+        instrument.globalZone.setGenerator(GeneratorTypes.sustainModEnv, 1000);
+        publishSetUp(session);
+        const release = { seconds: 1, factorPerOctave: 1, detune: 10 };
+
+        expect(
+            instrument.zones.filter((z) => isEnvelopeReplaced(instrument, z))
+        ).toHaveLength(3);
+        const { actions, overwritten } = createNaturalReleaseActions(
+            [instrument],
+            release
+        );
+        expect(overwritten).toBe(3);
+        expectRoundTrip(session, actions);
+        // A second run replaces only its own envelope, so nothing is warned about
+        expect(
+            instrument.zones.filter((z) => isEnvelopeReplaced(instrument, z))
+        ).toHaveLength(0);
+    });
+
+    it("removes an earlier detune when run with none", () => {
+        const session = createTestSession();
+        const instrument = setUpKeys(session);
+        const [zone] = instrument.zones;
+        zone.setGenerator(GeneratorTypes.fineTune, 10);
+        publishSetUp(session);
+        session.history.do(
+            createNaturalReleaseActions([instrument], {
+                seconds: 1,
+                factorPerOctave: 1,
+                detune: 50
+            }).actions
+        );
+
+        const { actions } = createNaturalReleaseActions([instrument], {
+            seconds: 4,
+            factorPerOctave: 1,
+            detune: 0
+        });
+        // Not a full round trip: unsetting and setting again moves generators to the end
+        session.history.do(actions);
+
+        expect(zone.getGenerator(GeneratorTypes.modEnvToPitch, null)).toBe(
+            null
+        );
+        expect(zone.getGenerator(GeneratorTypes.releaseModEnv, null)).toBe(
+            null
+        );
+        expect(
+            zone.getGenerator(GeneratorTypes.coarseTune, 0) * 100 +
+                zone.getGenerator(GeneratorTypes.fineTune, 0)
+        ).toBe(10);
+        session.history.undo();
+        expect(zone.getGenerator(GeneratorTypes.modEnvToPitch, null)).toBe(-50);
+    });
+
+    it("gives a zone without a range the release of the global zone's keys", () => {
+        const session = createTestSession();
+        const instrument = setUpKeys(session);
+        const [zone] = instrument.zones;
+        instrument.globalZone.keyRange = { min: 48, max: 48 };
+        zone.keyRange = { min: -1, max: 127 };
+        publishSetUp(session);
+
+        session.history.do(
+            createNaturalReleaseActions([instrument], {
+                seconds: 2,
+                factorPerOctave: 0.5,
+                detune: 0
+            }).actions
+        );
+
+        expect(
+            tc2s(zone.getGenerator(GeneratorTypes.releaseVolEnv, 0))
+        ).toBeCloseTo(1, 2);
     });
 
     it("counts clamped releases", () => {

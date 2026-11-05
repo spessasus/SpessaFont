@@ -46,7 +46,9 @@
     outline: none;
 }
 
-.context_menu .context_menu_item:disabled {
+/* The label sets its color itself (.context_menu *), so it is muted directly */
+.context_menu .context_menu_item:disabled,
+.context_menu .context_menu_item:disabled * {
     cursor: default;
     color: var(--muted-font-color);
 }

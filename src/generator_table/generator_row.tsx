@@ -1,89 +1,22 @@
 import "./cell/generator_cell.css";
 import type * as React from "react";
-import type { BasicInstrument, BasicPreset } from "spessasynth_core";
+import { BasicInstrument, type BasicPreset } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import { generatorLocaleMap } from "../utils/translated_options/generator_to_locale_map.ts";
-import { NumberGeneratorCell } from "./cell/generator_cell.tsx";
-import { RangeGeneratorCell } from "./cell/range_cell.tsx";
-import { OffsetGeneratorCell } from "./cell/offset_cell.tsx";
+import { GeneratorCell } from "./cell/generator_cell.tsx";
+import { SelectCell } from "./cell/select_cell.tsx";
 import type { GeneratorRowType } from "./generator_row_type.ts";
 import type { ZoneColumn } from "./zone_columns.ts";
+import type { ZoneView } from "../core_backend/entity_views.ts";
 import { GENERATOR_UNITS } from "./generator_unit.ts";
-import { isRangeGenerator } from "./cell/range_generator.ts";
-import { isOffsetGenerator } from "./cell/offset_generator.ts";
 import { useCellCommands } from "./cell/use_cell_commands.ts";
-import type { CellInputCommands } from "./cell/generator_cell_input.tsx";
+import { getGeneratorOptions } from "./generator_options.ts";
+import type { CellContext } from "./cell/cell_values.ts";
+import { getCellKey } from "./table_navigation.ts";
 import {
     type ContextMenuEntry,
     useContextMenu
 } from "../context_menu/context_menu_context.ts";
-
-interface GeneratorCellProps {
-    element: BasicPreset | BasicInstrument;
-    row: GeneratorRowType;
-    column: ZoneColumn;
-    label: string;
-    selectedColumns: readonly ZoneColumn[];
-    onSelect: (event: React.MouseEvent) => void;
-    commands: CellInputCommands;
-    onSelectKeyDown: (e: React.KeyboardEvent<HTMLSelectElement>) => void;
-    onContextMenu: (e: React.MouseEvent) => void;
-}
-
-function GeneratorCell({
-    element,
-    row,
-    column,
-    label,
-    selectedColumns,
-    onSelect,
-    commands,
-    onSelectKeyDown,
-    onContextMenu
-}: GeneratorCellProps) {
-    const { generator } = row;
-    if (isRangeGenerator(generator)) {
-        return (
-            <RangeGeneratorCell
-                element={element}
-                column={column}
-                row={row}
-                label={label}
-                commands={commands}
-                onContextMenu={onContextMenu}
-                isSelected={selectedColumns.includes(column)}
-                selectedColumns={selectedColumns}
-                onSelect={onSelect}
-            />
-        );
-    }
-    if (isOffsetGenerator(generator)) {
-        return (
-            <OffsetGeneratorCell
-                element={element}
-                column={column}
-                row={row}
-                label={label}
-                commands={commands}
-                onContextMenu={onContextMenu}
-            />
-        );
-    }
-    return (
-        <NumberGeneratorCell
-            element={element}
-            column={column}
-            row={row}
-            label={label}
-            isSelected={selectedColumns.includes(column)}
-            selectedColumns={selectedColumns}
-            onSelect={onSelect}
-            commands={commands}
-            onSelectKeyDown={onSelectKeyDown}
-            onContextMenu={onContextMenu}
-        />
-    );
-}
 
 interface GeneratorRowProps {
     element: BasicPreset | BasicInstrument;
@@ -93,9 +26,17 @@ interface GeneratorRowProps {
      */
     columns: readonly ZoneColumn[];
     /**
+     * The element's global zone, which unset zone cells inherit from.
+     */
+    globalZone: ZoneView;
+    /**
      * The view ids of the selected zones in this row.
      */
     selectedZoneIds: ReadonlySet<number>;
+    /**
+     * The key of the table's Tab stop when it is in this row.
+     */
+    activeKey: string | undefined;
     onSelectCell: (zoneId: number, event: React.MouseEvent) => void;
     /**
      * The entries of the row header's right-click menu, if it has one.
@@ -107,14 +48,23 @@ export function GeneratorRow({
     element,
     row,
     columns,
+    globalZone,
     selectedZoneIds,
+    activeKey,
     onSelectCell,
     headerMenu
 }: GeneratorRowProps) {
     const { t } = useTranslation();
     const { openMenu } = useContextMenu();
-    const name = t(generatorLocaleMap[row.generator]);
+    const { generator } = row;
+    const name = t(generatorLocaleMap[generator]);
     const unit = row.unit ? GENERATOR_UNITS[row.unit] : undefined;
+    const options = getGeneratorOptions(generator);
+    const context: CellContext = {
+        element,
+        row,
+        isInstrument: element instanceof BasicInstrument
+    };
     const selectedColumns = columns.filter((c) =>
         selectedZoneIds.has(c.zone.id)
     );
@@ -137,27 +87,55 @@ export function GeneratorRow({
                     {unit ? <i title={t(unit.full)}>{t(unit.suffix)}</i> : null}
                 </div>
             </th>
-            {columns.map((column) => (
-                <GeneratorCell
-                    key={column.zone.id}
-                    element={element}
-                    row={row}
-                    column={column}
-                    label={t("soundBankLocale.cellLabel", {
-                        generator: name,
-                        zone: column.name
-                    })}
-                    selectedColumns={selectedColumns}
-                    onSelect={(e) => onSelectCell(column.zone.id, e)}
-                    commands={commands.getInputCommands(column)}
-                    onSelectKeyDown={(e) =>
-                        commands.handleSelectKeyDown(e, column)
-                    }
-                    onContextMenu={(e) =>
-                        openMenu(e, commands.getMenuEntries(column))
-                    }
-                />
-            ))}
+            {columns.map((column) => {
+                const gridKey = getCellKey(generator, column.zone.id);
+                const isSelected = selectedZoneIds.has(column.zone.id);
+                const label = t("soundBankLocale.cellLabel", {
+                    generator: name,
+                    zone: column.name
+                });
+                const onSelect = (e: React.MouseEvent) =>
+                    onSelectCell(column.zone.id, e);
+                const onContextMenu = (e: React.MouseEvent) =>
+                    openMenu(e, commands.getMenuEntries(column));
+                if (options) {
+                    return (
+                        <SelectCell
+                            key={column.zone.id}
+                            column={column}
+                            generator={generator}
+                            options={options}
+                            label={label}
+                            isSelected={isSelected}
+                            gridKey={gridKey}
+                            isActive={activeKey === gridKey}
+                            onPick={(v) => commands.pick(column, v)}
+                            onNudge={commands.getInputCommands(column).nudge}
+                            onCellKeyDown={(e) =>
+                                commands.handleSelectKeyDown(e, column)
+                            }
+                            onClick={onSelect}
+                            onContextMenu={onContextMenu}
+                        />
+                    );
+                }
+                return (
+                    <GeneratorCell
+                        key={column.zone.id}
+                        context={context}
+                        column={column}
+                        globalZone={globalZone}
+                        label={label}
+                        gridKey={gridKey}
+                        isActive={activeKey === gridKey}
+                        isSelected={isSelected}
+                        selectedColumns={selectedColumns}
+                        onSelect={onSelect}
+                        commands={commands.getInputCommands(column)}
+                        onContextMenu={onContextMenu}
+                    />
+                );
+            })}
         </tr>
     );
 }

@@ -10,12 +10,11 @@ import {
 import { LocaleList } from "../../locale/locale_list.ts";
 import { logWarn } from "../../utils/core_utils.ts";
 import { isTheme } from "../../themes/theme_list.ts";
+import { takeSampleRateParam } from "../../utils/sample_rate_param.ts";
+import { saveSettings } from "./save.ts";
+import { isRecord } from "../../utils/is_record.ts";
 
 const INTERPOLATIONS = new Set<unknown>(Object.values(InterpolationTypes));
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 function isInRange(value: unknown, key: keyof typeof SETTING_LIMITS) {
     const { min, max } = SETTING_LIMITS[key];
@@ -38,7 +37,7 @@ export function parseSettings(data: unknown): SavedSettingsType {
         return settings;
     }
 
-    const { lang, theme, interpolation } = data;
+    const { lang, theme, interpolation, midiInputId } = data;
     if (
         typeof lang === "string" &&
         (lang === UNSET_LANGUAGE || Object.hasOwn(LocaleList, lang))
@@ -47,6 +46,9 @@ export function parseSettings(data: unknown): SavedSettingsType {
     }
     if (isTheme(theme)) {
         settings.theme = theme;
+    }
+    if (typeof midiInputId === "string") {
+        settings.midiInputId = midiInputId;
     }
     if (INTERPOLATIONS.has(interpolation)) {
         settings.interpolation = interpolation as InterpolationType;
@@ -65,10 +67,12 @@ export function parseSettings(data: unknown): SavedSettingsType {
             settings[key] = value as number;
         }
     }
+    // The context runs at a whole rate, a fraction would never match it
+    settings.sampleRate = Math.round(settings.sampleRate);
     return settings;
 }
 
-export function loadSettings(): SavedSettingsType {
+function loadSavedSettings() {
     const data = localStorage.getItem(SPESSAFONT_SETTINGS_KEY);
     if (data === null) {
         return { ...DEFAULT_SETTINGS };
@@ -79,4 +83,18 @@ export function loadSettings(): SavedSettingsType {
         logWarn("Saved settings are corrupt, using the defaults.", error);
         return { ...DEFAULT_SETTINGS };
     }
+}
+
+/**
+ * The saved settings, with the sample rate that a sample rate change reloaded the page with.
+ * That rate is saved now that the page runs at it.
+ */
+export function loadSettings() {
+    const settings = loadSavedSettings();
+    const requestedRate = takeSampleRateParam();
+    if (requestedRate !== undefined && requestedRate !== settings.sampleRate) {
+        settings.sampleRate = requestedRate;
+        saveSettings(settings);
+    }
+    return settings;
 }

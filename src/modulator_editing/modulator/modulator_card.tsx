@@ -1,24 +1,27 @@
 import type { Modulator } from "spessasynth_core";
 import type { ModulatorView as ModulatorData } from "../../core_backend/entity_views.ts";
 import type * as React from "react";
+import type { Ref } from "react";
 import "./modulator.css";
 import { useTranslation } from "react-i18next";
 import {
-    ModulatorSourcePicker,
+    SourcePicker,
     type SpessaFontModulatorSource
 } from "../source_picker/source_picker.tsx";
-import {
-    ModulatorCurvePicker,
-    type SpessaFontModulatorCurveType
-} from "../curve_picker/curve_picker.tsx";
-import { ModulatorDiagram } from "../diagram.tsx";
+import { CurvePicker } from "../curve_picker/curve_picker.tsx";
+import type { SpessaFontModulatorCurveType } from "../curve_picker/curve_shape.ts";
+import { ModulatorDiagram } from "../modulator_diagram.tsx";
 import { DestinationPicker } from "../destination_picker.tsx";
 import { ModulatorHeader } from "./modulator_header.tsx";
 import { ModulatorTransform } from "./modulator_transform.tsx";
 
 export type ModulatorSourceSlot = "primary" | "secondary";
 
-interface ModulatorViewProps {
+interface ModulatorCardProps {
+    /**
+     * The number button of the modulator, which the list focuses after a delete.
+     */
+    ref?: Ref<HTMLButtonElement>;
     mod: ModulatorData;
     modulatorNumber: number;
     isSelected: boolean;
@@ -37,7 +40,8 @@ interface ModulatorViewProps {
     onSelect: (e: React.MouseEvent) => void;
 }
 
-export function ModulatorView({
+export function ModulatorCard({
+    ref,
     mod,
     modulatorNumber,
     isSelected,
@@ -47,7 +51,7 @@ export function ModulatorView({
     onChange,
     onDelete,
     onSelect
-}: ModulatorViewProps) {
+}: ModulatorCardProps) {
     const { t } = useTranslation();
 
     const update = onChange;
@@ -102,6 +106,7 @@ export function ModulatorView({
             title={isOverridingDefault ? t("modulatorLocale.overriding") : ""}
         >
             <ModulatorHeader
+                ref={ref}
                 modulatorNumber={modulatorNumber}
                 isSelected={isSelected}
                 isOverridingDefault={isOverridingDefault}
@@ -110,7 +115,7 @@ export function ModulatorView({
             />
             <div className={"source_pair"}>
                 {sources.map(({ slot, source, sourceLabel }) => (
-                    <ModulatorSourcePicker
+                    <SourcePicker
                         key={slot}
                         label={sourceLabel}
                         onChange={getSourceSetter(slot)}
@@ -123,7 +128,7 @@ export function ModulatorView({
             </div>
             <div className={"source_pair"}>
                 {sources.map(({ slot, source, curveLabel }) => (
-                    <ModulatorCurvePicker
+                    <CurvePicker
                         key={slot}
                         label={curveLabel}
                         isOpen={openCurvePicker === slot}

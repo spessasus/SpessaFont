@@ -58,6 +58,29 @@ describe("SetGeneratorAction", () => {
         ]);
         expect(zone.getGenerator(GeneratorTypes.pan, null)).toBeNull();
     });
+
+    it("puts a cleared generator back where it was on undo", () => {
+        const session = createTestSession();
+        const instrument = session.document.instruments[0];
+        const zone = instrument.zones[0];
+        zone.setGenerator(GeneratorTypes.pan, 100);
+        zone.setGenerator(GeneratorTypes.initialAttenuation, 50);
+        publishSetUp(session);
+        const before = snapshotBank(session.document.bank);
+
+        session.history.do([
+            new SetGeneratorAction(
+                instrument,
+                zone,
+                GeneratorTypes.pan,
+                100,
+                null
+            )
+        ]);
+        session.history.undo();
+
+        expect(snapshotBank(session.document.bank)).toEqual(before);
+    });
 });
 
 describe("SetRangeAction", () => {
@@ -292,5 +315,14 @@ describe("ReplaceZoneChildAction", () => {
         session.history.undo();
         expect(leftZone.sample).toBe(left);
         expect(rightZone.sample).toBe(right);
+    });
+
+    it("records nothing for a zone that has the picked sample already", () => {
+        const session = createTestSession();
+        const [instrument] = session.document.instruments;
+        const [zone] = instrument.zones;
+        expect(
+            createReplaceSampleActions(instrument, zone, undefined, zone.sample)
+        ).toEqual([]);
     });
 });

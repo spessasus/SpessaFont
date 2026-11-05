@@ -42,6 +42,27 @@
     outline: solid 1px var(--piano-gap-color);
 }
 
+/* Narrower than the 128 keys at their smallest, so swiping sideways scrolls the keyboard
+   instead of playing (a swipe cancels its note) */
+@media (max-width: 77rem) {
+    .keyboard,
+    .keyboard .key {
+        touch-action: pan-x;
+    }
+}
+
+.keyboard:focus-visible {
+    outline: none;
+}
+
+/* Two tones, so the ring shows on white, black, highlighted and pressed keys alike */
+.keyboard:focus-visible .key.focused {
+    outline: 2px solid var(--border-color);
+    outline-offset: -2px;
+    box-shadow: inset 0 0 0 4px var(--light-primary-color);
+    z-index: 2;
+}
+
 .keyboard .sharp_key.zone_highlight {
     background: var(--border-color);
     filter: brightness(0.5);
@@ -56,7 +77,7 @@
     filter: none !important;
 }
 
-.keyboard .key.disabled {
+.keyboard .key.key_disabled {
     background: var(--piano-disabled-key);
 }
 
@@ -90,6 +111,7 @@
     right: 0;
     text-align: center;
     font-size: 0.6rem;
+    white-space: nowrap;
     color: var(--piano-label-color);
     pointer-events: none;
 }

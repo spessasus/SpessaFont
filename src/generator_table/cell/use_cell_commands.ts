@@ -8,13 +8,13 @@ import type { ContextMenuEntry } from "../../context_menu/context_menu_context.t
 import { logWarn } from "../../utils/core_utils.ts";
 import type { GeneratorRowType } from "../generator_row_type.ts";
 import type { ZoneColumn } from "../zone_columns.ts";
-import { planPaste, splitClipboardText } from "./cell_clipboard.ts";
+import { planCellPaste } from "./cell_clipboard.ts";
 import {
     type CellContext,
+    createCellEditActions,
     createSetCellActions,
     formatCell,
     nudgeCellValue,
-    parseCellPart,
     readColumnCell
 } from "./cell_values.ts";
 import type { CellInputCommands } from "./generator_cell_input.tsx";
@@ -42,7 +42,9 @@ async function readSystemText() {
 
 /**
  * Copy, cut, paste, clearing and wheel steps for the cells of one generator row. A command on a
- * cell of a multi-selection acts on all selected cells.
+ * cell of a multi-selection acts on all selected cells. A copy of a stereo column takes its
+ * first zone, while a paste, a clear and a wheel step change both zones, the relative ones
+ * each from its own value.
  * @param element the edited element
  * @param row the row
  * @param columns the row's columns, in table order
@@ -76,7 +78,12 @@ export function useCellCommands(
             readColumnCell(element, c, generator)
         );
         const text = values.map((v) => formatCell(row, v)).join("\t");
-        clipboard.copyCells({ generator, values, text });
+        clipboard.copyCells({
+            generator,
+            isInstrument: context.isInstrument,
+            values,
+            text
+        });
         return text;
     };
 
@@ -95,63 +102,42 @@ export function useCellCommands(
         return text;
     };
 
-    /**
-     * Pastes the cells copied in the app, or the text when it is something else (copied in
-     * another program, or after the cell copy).
-     */
     const paste = (column: ZoneColumn, text: string | undefined) => {
-        const targets = getTargets(column).map((c) => columns.indexOf(c));
-        const cells = clipboard.cells;
-        let actions;
-        if (cells && (text === undefined || text === cells.text)) {
-            if (cells.generator !== generator) {
-                toast.error(t("toolsLocale.cells.otherGenerator"));
-                return;
+        const plan = planCellPaste(
+            context,
+            columns,
+            getTargets(column).map((c) => columns.indexOf(c)),
+            text,
+            clipboard.cells
+        );
+        switch (plan.kind) {
+            case "otherTable": {
+                toast.error(t("toolsLocale.cells.otherTable"));
+                break;
             }
-            actions = planPaste(
-                cells.values.length,
-                targets,
-                columns.length
-            ).flatMap(([c, v]) =>
-                createSetCellActions(context, columns[c], cells.values[v])
-            );
-        } else if (text === undefined) {
-            return;
-        } else {
-            const parts = splitClipboardText(text);
-            actions = planPaste(parts.length, targets, columns.length).flatMap(
-                ([c, v]) => {
-                    const target = columns[c];
-                    const value = parseCellPart(
-                        context,
-                        readColumnCell(element, target, generator),
-                        parts[v]
-                    );
-                    return value === undefined
-                        ? []
-                        : createSetCellActions(context, target, value);
+
+            case "invalid": {
+                toast.error(
+                    t("toolsLocale.cells.invalidText", { text: plan.text })
+                );
+                break;
+            }
+
+            case "actions": {
+                if (plan.actions.length > 0) {
+                    apply(plan.actions);
                 }
-            );
-        }
-        if (actions.length > 0) {
-            apply(actions);
+            }
         }
     };
 
     const nudge = (column: ZoneColumn, direction: 1 | -1, steps: number) => {
         const targets = getTargets(column);
-        const actions = targets.flatMap((c) =>
-            createSetCellActions(
-                context,
-                c,
-                nudgeCellValue(
-                    context,
-                    c,
-                    readColumnCell(element, c, generator),
-                    direction,
-                    steps
-                )
-            )
+        const actions = targets.flatMap(
+            (c) =>
+                createCellEditActions(context, c, (current, base) =>
+                    nudgeCellValue(context, current, base, direction, steps)
+                ) ?? []
         );
         if (actions.length === 0) {
             return;
@@ -159,6 +145,18 @@ export function useCellCommands(
         // Notches in a row on the same cells are one undo step
         const ids = targets.map((c) => c.zone.id).join(" ");
         apply(actions, `nudge ${generator} ${ids}`);
+    };
+
+    /**
+     * Sets the picked value of a select cell in it, or in all selected cells.
+     */
+    const pick = (column: ZoneColumn, value: number | null) => {
+        const actions = getTargets(column).flatMap((c) =>
+            createSetCellActions(context, c, value)
+        );
+        if (actions.length > 0) {
+            apply(actions);
+        }
     };
 
     /**
@@ -227,5 +225,5 @@ export function useCellCommands(
         }
     };
 
-    return { getInputCommands, getMenuEntries, handleSelectKeyDown };
+    return { getInputCommands, getMenuEntries, handleSelectKeyDown, pick };
 }

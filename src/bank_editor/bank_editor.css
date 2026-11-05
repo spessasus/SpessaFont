@@ -1,4 +1,4 @@
-.main_content {
+.bank_editor_content {
     width: 100%;
     display: flex;
     min-height: 0;
@@ -13,7 +13,7 @@
     isolation: isolate;
 }
 
-.main_content_window {
+.bank_editor_window {
     min-height: 0;
     /*seems nice?*/
     min-width: 64vh;

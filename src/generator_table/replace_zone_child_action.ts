@@ -61,7 +61,8 @@ export class ReplaceZoneChildAction implements HistoryAction {
 
 /**
  * Replaces the sample of a column. A stereo column picked a stereo sample gets both halves,
- * each in the zone of the same side. Otherwise only the column's own zone changes.
+ * each in the zone of the same side. Otherwise only the column's own zone changes. A zone that
+ * has the sample already gets no action, so the undo history gets no empty step.
  */
 export function createReplaceSampleActions(
     instrument: BasicInstrument,
@@ -70,15 +71,21 @@ export function createReplaceSampleActions(
     picked: BasicSample
 ) {
     const partner = picked.linkedSample;
-    if (!linkedZone || !partner) {
-        return [new ReplaceZoneChildAction(instrument, zone, picked)];
-    }
-    const [forZone, forLinked] =
-        picked.sampleType === zone.sample.sampleType
-            ? [picked, partner]
-            : [partner, picked];
-    return [
-        new ReplaceZoneChildAction(instrument, zone, forZone),
-        new ReplaceZoneChildAction(instrument, linkedZone, forLinked)
-    ];
+    const pairs: [BasicInstrumentZone, BasicSample][] =
+        linkedZone && partner
+            ? picked.sampleType === zone.sample.sampleType
+                ? [
+                      [zone, picked],
+                      [linkedZone, partner]
+                  ]
+                : [
+                      [zone, partner],
+                      [linkedZone, picked]
+                  ]
+            : [[zone, picked]];
+    return pairs
+        .filter(([z, sample]) => z.sample !== sample)
+        .map(
+            ([z, sample]) => new ReplaceZoneChildAction(instrument, z, sample)
+        );
 }

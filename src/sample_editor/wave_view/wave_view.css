@@ -23,7 +23,7 @@
     overflow-x: auto;
 }
 
-.fake_scroll {
+.wave_view_scroll {
     position: absolute;
     height: 100%;
     width: calc(var(--wave-zoom) * 100%);
@@ -31,10 +31,18 @@
     z-index: 100;
 }
 
+/* Until the audio is read, a click would set a loop point at 0 */
+.wave_view[data-loading="true"] {
+    cursor: progress;
+}
+
+/* An outline, not a border: a border would make the canvases narrower than the view, and the
+   pointer and the scroll range are measured on the view */
 .wave_view canvas {
     position: absolute;
     border-radius: var(--primary-border-radius);
-    border: solid 1px var(--track-border-color);
+    outline: solid 1px var(--track-border-color);
+    outline-offset: -1px;
     left: 0;
     top: 0;
     width: 100%;

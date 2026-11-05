@@ -4,7 +4,7 @@ import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx
 import {
     clampSetting,
     type SavedSettingsType,
-    type SETTING_LIMITS
+    SETTING_LIMITS
 } from "../save_load/settings_typedef.ts";
 import { Setting } from "../setting.tsx";
 
@@ -28,6 +28,11 @@ interface NumberSettingProps extends GroupSettingsProps {
      * Applied to the typed value before it is clamped.
      */
     normalize?: (value: number) => number;
+    /**
+     * A value outside the range is taken as a typo and keeps the old value, instead of being
+     * clamped. For settings where the limit is as bad as a wrong value.
+     */
+    isRangeStrict?: boolean;
 }
 
 function NumberSetting({
@@ -38,18 +43,28 @@ function NumberSetting({
     isPercent = false,
     suffix,
     maxLength = 5,
-    normalize
+    normalize,
+    isRangeStrict = false
 }: NumberSettingProps) {
     const scale = isPercent ? 100 : 1;
     return (
         <Setting label={label}>
             <WaitingInput
-                setValue={(typed) => {
+                onCommit={(typed) => {
+                    const current = settings[name] * scale;
+                    if (!Number.isFinite(typed)) {
+                        return current;
+                    }
                     const scaled = typed / scale;
-                    const value = clampSetting(
-                        name,
-                        normalize ? normalize(scaled) : scaled
-                    );
+                    const normalized = normalize ? normalize(scaled) : scaled;
+                    const { min, max } = SETTING_LIMITS[name];
+                    if (
+                        isRangeStrict &&
+                        (normalized < min || normalized > max)
+                    ) {
+                        return current;
+                    }
+                    const value = clampSetting(name, normalized);
                     onChange({ [name]: value });
                     return value * scale;
                 }}
@@ -84,6 +99,7 @@ export function AudioEngineSettings({
                 suffix={"Hz"}
                 maxLength={8}
                 normalize={Math.round}
+                isRangeStrict={true}
             />
             <NumberSetting
                 {...shared}

@@ -21,8 +21,11 @@ export function NumberDialog({ options, onAnswer }: NumberDialogProps) {
             className={"number_dialog"}
             onCancel={() => onAnswer(undefined)}
         >
+            {/* The value is checked in JS, the browser's step check would refuse valid values
+                that are off the spinner's step */}
             <form
                 method={"dialog"}
+                noValidate={true}
                 onSubmit={(e) => {
                     e.preventDefault();
                     if (isValid) {

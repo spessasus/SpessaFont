@@ -1,33 +1,49 @@
 import type { TextareaHTMLAttributes } from "react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
-type WaitingTextAreaProps = Omit<
+interface WaitingTextAreaProps extends Omit<
     TextareaHTMLAttributes<HTMLTextAreaElement>,
     "value" | "onChange"
-> & {
+> {
     value: string;
-    setValue: (v: string) => void;
-};
+    onCommit: (v: string) => void;
+}
 
 /**
  * The text area version of `WaitingInput`: it applies its value when it loses focus,
- * so a whole edit is one undo step instead of one per key.
+ * so a whole edit is one undo step instead of one per key. Escape drops the draft.
  */
 export function WaitingTextArea({
     value,
-    setValue,
+    onCommit,
     ...attributes
 }: WaitingTextAreaProps) {
     const [draft, setDraft] = useState<string | null>(null);
+    // Set by Escape, so the blur that follows does not apply the draft
+    const cancelRef = useRef(false);
     return (
         <textarea
             {...attributes}
             value={draft ?? value}
             onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+                if (e.key !== "Escape") {
+                    return;
+                }
+                // Only cancels the edit, not a dialog or menu around it
+                e.preventDefault();
+                e.stopPropagation();
+                cancelRef.current = true;
+                e.currentTarget.blur();
+            }}
             onBlur={(e) => {
                 setDraft(null);
+                if (cancelRef.current) {
+                    cancelRef.current = false;
+                    return;
+                }
                 if (e.target.value !== value) {
-                    setValue(e.target.value);
+                    onCommit(e.target.value);
                 }
             }}
         />

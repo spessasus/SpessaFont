@@ -1,15 +1,19 @@
 /*
  * The playback worklet: it plays the chunks the synthesizer host renders, from a queue. The
- * host's end of a channel arrives as the first message. The worklet reports its queue length
- * after every block, which is what makes the host render, and counts the blocks it had nothing
- * to play for (underruns).
+ * host's end of a channel arrives as the first message. The worklet reports how many chunks it
+ * has played after every block, which is what makes the host render, and counts the blocks it
+ * had nothing to play for (underruns).
  */
 
 /**
  * What the worklet tells the host after each block.
  */
 export interface PlaybackReport {
-    queued: number;
+    /**
+     * Chunks played since the host connected. A count, unlike the queue length, stays right
+     * when reports wait while the host is busy.
+     */
+    played: number;
     underruns: number;
 }
 
@@ -17,7 +21,7 @@ class PlaybackProcessor extends AudioWorkletProcessor {
     private readonly queue = new Array<Float32Array>();
     private host: MessagePort | undefined;
     private underruns = 0;
-    private hasPlayed = false;
+    private played = 0;
 
     public constructor() {
         super();
@@ -34,7 +38,7 @@ class PlaybackProcessor extends AudioWorkletProcessor {
 
     private report() {
         const report: PlaybackReport = {
-            queued: this.queue.length,
+            played: this.played,
             underruns: this.underruns
         };
         this.host?.postMessage(report);
@@ -44,10 +48,10 @@ class PlaybackProcessor extends AudioWorkletProcessor {
         const [left, right] = outputs[0];
         const chunk = this.queue.shift();
         if (chunk) {
-            this.hasPlayed = true;
+            this.played++;
             left.set(chunk.subarray(0, left.length));
             right.set(chunk.subarray(left.length, left.length * 2));
-        } else if (this.hasPlayed) {
+        } else if (this.played > 0) {
             // Before the first chunk the host is still starting, which is not a dropout
             this.underruns++;
         }

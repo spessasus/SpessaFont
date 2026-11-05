@@ -7,6 +7,10 @@ import type { BankEntity } from "../core_backend/bank_view.ts";
 export interface DragPayload {
     readonly session: BankSession;
     readonly entities: readonly BankEntity[];
+    /**
+     * What the label that follows the pointer says, made by the source from the views.
+     */
+    readonly label: string;
 }
 
 export interface DropTarget {
@@ -30,6 +34,17 @@ export interface DragState {
 const DRAG_THRESHOLD = 6;
 export const DROP_TARGET_ATTRIBUTE = "data-drop-target";
 const DROP_TARGET_SELECTOR = "[data-drop-target]";
+/**
+ * Lists that scroll while a drag is near their top or bottom edge carry this attribute.
+ */
+export const DRAG_SCROLL_ATTRIBUTE = "data-drag-scroll";
+const DRAG_SCROLL_SELECTOR = "[data-drag-scroll]";
+/**
+ * How close to a list's edge the pointer starts scrolling it, and the fastest scroll, in pixels
+ * (per frame).
+ */
+const SCROLL_EDGE = 40;
+const MAX_SCROLL_STEP = 16;
 
 /**
  * Releasing a drag also clicks the element under the pointer, which must not count.
@@ -37,6 +52,28 @@ const DROP_TARGET_SELECTOR = "[data-drop-target]";
 function swallowClick(event: MouseEvent) {
     event.stopPropagation();
     event.preventDefault();
+}
+
+/**
+ * The list under the pointer and how far to scroll it, when the pointer is near its top or
+ * bottom edge.
+ */
+function getEdgeScroll(x: number, y: number) {
+    const list = document.elementFromPoint(x, y)?.closest(DRAG_SCROLL_SELECTOR);
+    if (!list) {
+        return undefined;
+    }
+    const { top, bottom } = list.getBoundingClientRect();
+    const edge = Math.min(SCROLL_EDGE, (bottom - top) / 4);
+    const depth =
+        y < top + edge
+            ? y - top - edge
+            : y > bottom - edge
+              ? y - bottom + edge
+              : 0;
+    return depth === 0 || edge <= 0
+        ? undefined
+        : { list, step: Math.round((depth / edge) * MAX_SCROLL_STEP) };
 }
 
 interface PendingDrag {
@@ -57,6 +94,7 @@ export class DragController {
     private readonly listeners = new Set<() => void>();
     private pending: PendingDrag | undefined;
     private state: DragState | null = null;
+    private scrollFrame: number | undefined;
 
     public readonly subscribe = (listener: () => void) => {
         this.listeners.add(listener);
@@ -69,9 +107,70 @@ export class DragController {
 
     private setState(state: DragState | null) {
         this.state = state;
+        if (!state && this.scrollFrame !== undefined) {
+            cancelAnimationFrame(this.scrollFrame);
+            this.scrollFrame = undefined;
+        }
         for (const listener of this.listeners) {
             listener();
         }
+    }
+
+    /**
+     * Scrolls the list under the pointer every frame while the pointer stays near its edge,
+     * so a drag reaches rows out of view without the mouse wheel.
+     */
+    private scrollNearEdge() {
+        if (this.scrollFrame !== undefined) {
+            return;
+        }
+        const step = () => {
+            this.scrollFrame = undefined;
+            const { state } = this;
+            const scroll = state ? getEdgeScroll(state.x, state.y) : undefined;
+            if (!state || !scroll) {
+                return;
+            }
+            scroll.list.scrollTop += scroll.step;
+            // Other rows are under the pointer now
+            this.setState({
+                ...state,
+                overId: this.findTarget(state.x, state.y, state.payload)
+            });
+            this.scrollFrame = requestAnimationFrame(step);
+        };
+        this.scrollFrame = requestAnimationFrame(step);
+    }
+
+    /**
+     * Swallows the click that ends the press of a cancelled drag. Escape cancels while the
+     * button is held, and its release clicks what is under it. After a blur or a
+     * pointercancel the release happens elsewhere, so the next press ends the swallowing
+     * instead, and its own click counts.
+     */
+    private swallowClickOfPress() {
+        const stop = () => {
+            document.removeEventListener("click", swallowClick, {
+                capture: true
+            });
+            document.removeEventListener("pointerup", stopAfterClick, {
+                capture: true
+            });
+            document.removeEventListener("pointerdown", stop, {
+                capture: true
+            });
+        };
+        // The click comes right after the release, in the same task
+        const stopAfterClick = () => requestAnimationFrame(stop);
+        document.addEventListener("click", swallowClick, { capture: true });
+        document.addEventListener("pointerup", stopAfterClick, {
+            capture: true,
+            once: true
+        });
+        document.addEventListener("pointerdown", stop, {
+            capture: true,
+            once: true
+        });
     }
 
     private findTarget(x: number, y: number, payload: DragPayload) {
@@ -127,6 +226,7 @@ export class DragController {
                     state.payload
                 )
             });
+            this.scrollNearEdge();
             return;
         }
         if (pending?.pointerId !== event.pointerId) {
@@ -150,6 +250,7 @@ export class DragController {
                 pending.payload
             )
         });
+        this.scrollNearEdge();
     }
 
     public release() {
@@ -177,17 +278,6 @@ export class DragController {
             return;
         }
         this.setState(null);
-        // Escape cancels while the button is still held, its release would click what is under it
-        document.addEventListener("click", swallowClick, { capture: true });
-        document.addEventListener(
-            "pointerup",
-            () =>
-                requestAnimationFrame(() =>
-                    document.removeEventListener("click", swallowClick, {
-                        capture: true
-                    })
-                ),
-            { capture: true, once: true }
-        );
+        this.swallowClickOfPress();
     }
 }

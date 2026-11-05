@@ -70,7 +70,13 @@
     padding: 0.2rem;
 }
 
-.menu_bar_icon span {
+.menu_bar_icon_graphic {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.menu_bar_icon_text {
     padding: 0.2rem;
     white-space: break-spaces;
     border-left: solid 1px var(--menu-border-color);
@@ -78,24 +84,35 @@
     height: 100%;
 }
 
-.menu_bar:hover .menu_bar_contents,
-.menu_bar:focus-within .menu_bar_contents {
+/* A used menu stays hidden until the pointer leaves it, see dropdown.tsx */
+.menu_bar:hover:not([data-state="used"]) .menu_bar_contents,
+.menu_bar[data-state="open"] .menu_bar_contents {
     opacity: 1;
     visibility: visible;
+}
+
+/* An opened menu and its items are visible at once, so the keyboard can focus the first item
+   in the next frame. The items inherit the visibility, and every element of the app
+   transitions it, which kept them hidden for that frame. Closing still fades */
+.menu_bar[data-state="open"] .menu_bar_contents,
+.menu_bar[data-state="open"] .menu_bar_contents * {
+    transition:
+        all 0.2s ease,
+        visibility 0s;
 }
 
 .menu_bar_contents .menu_bar_icon:last-child {
     border-radius: 0 0 0.2rem 0.2rem;
 }
 
-.flex_menu_bar {
+.menu_bar_group {
     transition: all 0.2s ease;
     display: flex;
     height: var(--menu-bar-height);
     align-items: center;
 }
 
-.flex_menu_bar div {
+.menu_bar_group div {
     background: var(--menu-bar-color);
     cursor: pointer;
     padding: 0 0.5rem;
@@ -120,19 +137,19 @@
 }
 
 .menu_bar_icon:hover:not(:disabled),
-.flex_menu_bar div:hover {
+.menu_bar_group div:hover {
     filter: brightness(1.2);
 }
 
-.settings_button {
+.menu_bar_settings_button {
     color: var(--font-color);
 }
 
-.settings_button svg {
+.menu_bar_settings_button svg {
     transition: all 0.2s ease;
 }
 
-.settings_button:hover svg {
+.menu_bar_settings_button:hover svg {
     transform: rotate(90deg);
 }
 
@@ -208,4 +225,8 @@ button.menu_bar_icon:disabled {
 
 button.menu_bar_icon:disabled > * {
     opacity: 0.5;
+}
+
+.menu_bar_note {
+    cursor: default;
 }

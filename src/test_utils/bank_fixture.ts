@@ -247,6 +247,7 @@ function zoneSnapshot(zone: BasicZone) {
 export function snapshotBank(bank: BasicSoundBank) {
     return {
         info: { ...bank.soundBankInfo },
+        isXGBank: bank.isXGBank,
         defaultModulators: bank.defaultModulators.map((m) =>
             modulatorSnapshot(m)
         ),

@@ -10,17 +10,26 @@ export const MenuBarLocale = {
         saveSF3: "Zapisz SF3",
         saveSFE: "Zapisz SFE",
         warnSF2:
-            "Ten bank dźwiękowy zawiera skompresowane próbki. " +
+            "Ten bank dźwięków zawiera skompresowane próbki. " +
             "Zapisanie go w formacie SF2 bezpowrotnie pogorszy ich jakość. Czy na pewno chcesz kontynuować?",
         warnText:
             "Niektóre nazwy lub informacje o banku zawierają znaki spoza Latin-1 (np. ą, ż lub 日). " +
-            "Pliki banków dźwiękowych nie mogą ich przechować, więc zostaną zapisane błędnie. Czy na pewno chcesz kontynuować?",
+            "Pliki banków dźwięków nie mogą ich przechować, więc zostaną zapisane błędnie. Czy na pewno chcesz kontynuować?",
         warnSFEData:
-            "Ten bank dźwiękowy używa generatorów lub modulatorów SpessaSynth, które zapisują tylko pliki SFE. " +
+            "Ten bank dźwięków używa generatorów lub modulatorów SpessaSynth, które zapisują tylko pliki SFE. " +
             "Zapis w formacie {{format}} je pominie. Czy na pewno chcesz kontynuować?",
         warnBankNumbers:
             "Niektóre zestawy perkusyjne ustawiają bank MSB lub LSB, albo niektóre presety ustawiają oba. " +
             "Pliki {{format}} nie mogą ich przechować, więc te presety zostaną zapisane z innymi numerami banku. Czy na pewno chcesz kontynuować?",
+        warnDLS:
+            "Ten bank dźwięków zawiera {{losses}}, których pliki DLS nie mogą przechować. " +
+            "Zapis w formacie DLS je pominie. Czy na pewno chcesz kontynuować?",
+        dlsLossStereoLinks: "połączone próbki stereo",
+        dlsLossUnusedInstruments: "instrumenty nieużywane przez żaden preset",
+        dlsLossDefaultModulators: "zmienione domyślne modulatory",
+        warn24Bit:
+            "Plik tego banku dźwięków zawiera 24-bitowe próbki. SpessaFont zachowuje z nich 16 bitów, " +
+            "więc zapisany plik straci resztę. Czy na pewno chcesz kontynuować?",
         fullscreen: "Pełny ekran",
         about: "O programie"
     },
@@ -73,6 +82,5 @@ export const MenuBarLocale = {
         rewind: "Cofnij odrobinę"
     },
 
-    voices: "Głosy:",
-    settings: "Ustawienia"
+    voices: "Głosy:"
 };

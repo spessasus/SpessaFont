@@ -2,34 +2,8 @@ import { logInfo } from "../utils/core_utils.ts";
 import type { BankDocument } from "./bank_document.ts";
 import type { BankStore, HistoryState } from "./bank_store.ts";
 import { ChangeSet } from "./change_set.ts";
-
-/**
- * What an edit does, as the Edit menu names it ("Undo Rename Preset").
- */
-export type HistoryLabel =
-    | "addInstrument"
-    | "addPreset"
-    | "addSample"
-    | "addZone"
-    | "changeAudio"
-    | "changePatch"
-    | "changeSampleType"
-    | "convertSamples"
-    | "deleteInstrument"
-    | "deletePreset"
-    | "deleteSample"
-    | "deleteZone"
-    | "editBankInfo"
-    | "editDefaultModulators"
-    | "editGenerator"
-    | "editModulators"
-    | "editRange"
-    | "editSample"
-    | "renameInstrument"
-    | "renamePreset"
-    | "renameSample"
-    | "replaceZoneChild"
-    | "splitZones";
+import type { BankEditView } from "./bank_view.ts";
+import type { HistoryLabel } from "./history_label.ts";
 
 /**
  * One undoable edit. Actions mutate the document and record what they touched in the change set.
@@ -99,7 +73,38 @@ export class HistoryManager {
 
     private commit(changes: ChangeSet) {
         this.store.commit(changes, this.state);
-        return changes.focus;
+    }
+
+    /**
+     * Picks what the UI should show after a group ran: the last focus hint still in the bank,
+     * or the first one for an undo (the hint of the action the group is named after). Undo and
+     * redo with no hint show what they changed, as it may not be the shown element.
+     */
+    private findFocus(changes: ChangeSet, step: "do" | "undo" | "redo") {
+        let elements: Set<BankEditView> | undefined;
+        const isInBank = (view: BankEditView) => {
+            const { presets, instruments, samples } = this.document;
+            elements ??= new Set<BankEditView>([
+                ...presets,
+                ...instruments,
+                ...samples
+            ]);
+            return view === "info" || elements.has(view);
+        };
+        const hints =
+            step === "undo"
+                ? changes.focusHints
+                : changes.focusHints.toReversed();
+        const hint = hints.find((view) => isInBank(view));
+        if (hint !== undefined || step === "do") {
+            return hint;
+        }
+        for (const entity of changes.entities) {
+            if (isInBank(entity)) {
+                return entity;
+            }
+        }
+        return changes.hasBankInfoChanged ? "info" : undefined;
     }
 
     public get canUndo() {
@@ -150,7 +155,8 @@ export class HistoryManager {
             mergeKey === undefined ? undefined : { key: mergeKey, time: now };
         if (canMerge) {
             last.push(...group);
-            return this.commit(changes);
+            this.commit(changes);
+            return this.findFocus(changes, "do");
         }
         if (
             this.savedPosition !== undefined &&
@@ -160,12 +166,14 @@ export class HistoryManager {
         }
         this.done.push(group);
         this.undone.length = 0;
-        return this.commit(changes);
+        this.commit(changes);
+        return this.findFocus(changes, "do");
     }
 
     /**
-     * Undoes the last group. If an action throws, the part already undone is done again and the
-     * group stays in the history, so the bank is not left half undone and nothing is lost.
+     * Undoes the last group and returns what the UI should show. If an action throws, the part
+     * already undone is done again and the group stays in the history, so the bank is not left
+     * half undone and nothing is lost.
      */
     public undo() {
         this.lastMerge = undefined;
@@ -190,26 +198,28 @@ export class HistoryManager {
         }
         this.undone.push(group);
         logInfo(`Undid. Remaining history: ${this.done.length}`);
-        return this.commit(changes);
+        this.commit(changes);
+        return this.findFocus(changes, "undo");
     }
 
+    /**
+     * Redoes the last undone group and returns what the UI should show.
+     */
     public redo() {
         this.lastMerge = undefined;
-        const group = this.undone.pop();
+        const group = this.undone.at(-1);
         if (!group) {
             return;
         }
         const changes = new ChangeSet();
-        try {
-            this.run(group, changes);
-        } catch (error) {
-            // run already rolled the group back, so it can be redone again later
-            this.undone.push(group);
-            throw error;
-        }
+        // The group stays on the redo stack while it runs, so if it throws, the state that run
+        // publishes with its rollback still offers to redo it
+        this.run(group, changes);
+        this.undone.pop();
         this.done.push(group);
         logInfo(`Redid. Remaining undo history: ${this.undone.length}`);
-        return this.commit(changes);
+        this.commit(changes);
+        return this.findFocus(changes, "redo");
     }
 
     /**

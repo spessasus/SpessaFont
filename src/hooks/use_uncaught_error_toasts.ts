@@ -11,9 +11,11 @@ export function useUncaughtErrorToasts() {
     const { t } = useTranslation();
     const show = (error: unknown) => {
         logError("Uncaught error.", error);
-        // The details first, so the summary ends up below them
-        toast.error(String(error));
-        toast.error(t("errorBoundary.actionFailed"));
+        const details = String(error);
+        // The newest toast is drawn on top, so the summary goes first to end up below the
+        // details. The ids merge an error thrown again and again (a held key) into one pair
+        toast.error(t("errorBoundary.actionFailed"), { id: "uncaught-error" });
+        toast.error(details, { id: `uncaught-error-${details}` });
     };
     useEventListener(globalThis, "error", (e) => {
         // Error events without an error (like the ResizeObserver loop notice) are harmless

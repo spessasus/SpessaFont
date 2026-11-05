@@ -12,3 +12,8 @@ export interface GeneratorRowType {
     unit?: GeneratorUnit;
     precision?: number;
 }
+
+/**
+ * The conversion of a row that shows the stored value as it is.
+ */
+export const identity = (v: number) => v;

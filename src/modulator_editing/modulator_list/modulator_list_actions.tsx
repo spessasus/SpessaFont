@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 const BUTTON_CLASS = "modulator_main modulator_list_button hover_brightness";
@@ -10,6 +11,7 @@ interface ModulatorListActionsProps {
     onPaste: () => void;
     onCopy: () => void;
     onDelete: () => void;
+    children?: ReactNode;
 }
 
 export function ModulatorListActions({
@@ -19,16 +21,17 @@ export function ModulatorListActions({
     onAdd,
     onPaste,
     onCopy,
-    onDelete
+    onDelete,
+    children
 }: ModulatorListActionsProps) {
     const { t } = useTranslation();
     return (
         <div className={"action_buttons"}>
             <span className={"modulator_main modulator_list_button"}>
-                {t("modulatorLocale.modulators")}: {count}
+                {t("modulatorLocale.modulatorCount", { count })}
             </span>
             <button type={"button"} onClick={onAdd} className={BUTTON_CLASS}>
-                {t("menuBarLocale.file.new")}
+                {t("modulatorLocale.newModulator")}
             </button>
             {canPaste ? (
                 <button
@@ -57,6 +60,7 @@ export function ModulatorListActions({
                     </button>
                 </>
             ) : null}
+            {children}
         </div>
     );
 }

@@ -1,5 +1,10 @@
-import { ModulatorCurveTypes } from "spessasynth_core";
-import type { SpessaFontModulatorCurveType } from "./curve_picker.tsx";
+import { type ModulatorCurveType, ModulatorCurveTypes } from "spessasynth_core";
+
+export interface SpessaFontModulatorCurveType {
+    curveType: ModulatorCurveType;
+    bipolar: boolean;
+    positive: boolean;
+}
 
 /**
  * The picture is drawn in a 100 by 100 view box.

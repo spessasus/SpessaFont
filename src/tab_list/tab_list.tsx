@@ -36,35 +36,44 @@ function Tab({ session, isActive, onSelect, onClose }: TabProps) {
     const dropTarget = useDropTarget({
         accepts: (payload) => payload.session !== session,
         onDrop: ({ entities, session: source }) => {
+            // An undo or a delete during the drag may have removed some
+            const dropped = entities.filter((e) => source.document.contains(e));
+            if (dropped.length === 0) {
+                return;
+            }
+            const presets = dropped.filter(isPreset);
+            // Counted before the copy, after it the copies take the patches
+            const moved = clipboard.countMovedPresets(
+                session.document,
+                presets
+            );
             session.history.do(
                 clipboard.cloneElements(
                     session,
                     {
-                        presets: entities.filter(isPreset),
-                        instruments: entities.filter(isInstrument),
-                        samples: entities.filter(isSample)
+                        presets,
+                        instruments: dropped.filter(isInstrument),
+                        samples: dropped.filter(isSample)
                     },
                     source
                 )
             );
             toast.success(
                 t("clipboardLocale.copiedToBank", {
-                    count: entities.length,
+                    count: dropped.length,
                     name: displayName
                 })
             );
+            if (moved > 0) {
+                toast(t("clipboardLocale.movedPresets", { count: moved }));
+            }
         }
     });
     return (
-        <div
-            className={`tab ${isActive ? "active" : ""}`}
-            role={"presentation"}
-            {...dropTarget}
-        >
+        <div className={`tab ${isActive ? "active" : ""}`} {...dropTarget}>
             <button
                 type={"button"}
-                role={"tab"}
-                aria-selected={isActive}
+                aria-current={isActive}
                 className={"tab_select"}
                 onClick={() => onSelect(session.id)}
             >
@@ -74,6 +83,7 @@ function Tab({ session, isActive, onSelect, onClose }: TabProps) {
                 type={"button"}
                 className={"tab_close"}
                 aria-label={t("closeTab", { name: displayName })}
+                title={t("closeTab", { name: displayName })}
                 onClick={() => onClose(session)}
             >
                 ×
@@ -82,9 +92,14 @@ function Tab({ session, isActive, onSelect, onClose }: TabProps) {
     );
 }
 
+/**
+ * The open banks. A plain group of buttons, not the ARIA tabs pattern, as each bank also has a
+ * close button, which a tab list cannot hold.
+ */
 export function TabList({ tabs, activeId, onSelect, onClose }: TabListProps) {
+    const { t } = useTranslation();
     return (
-        <div className="tab_list" role={"tablist"}>
+        <div className="tab_list" role={"group"} aria-label={t("openBanks")}>
             {tabs.map((session) => (
                 <Tab
                     key={session.id}

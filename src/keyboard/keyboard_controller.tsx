@@ -38,7 +38,7 @@ function ControllerKnobs() {
                     key={i}
                     number={i + 1}
                     cc={cc}
-                    setCC={(newCC) =>
+                    onCCChange={(newCC) =>
                         setControllers((prev) => prev.with(i, newCC))
                     }
                 />

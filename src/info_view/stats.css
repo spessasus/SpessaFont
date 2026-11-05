@@ -40,7 +40,7 @@
     filter: brightness(1.2);
 }
 
-.sound_bank_info .default_modulators_button {
+.sound_bank_info .stats_panel_button {
     display: flex;
     align-items: center;
     padding: 0;
@@ -48,19 +48,19 @@
     color: inherit;
 }
 
-.sound_bank_info .default_modulators_button,
-.sound_bank_info .default_modulators_button * {
+.sound_bank_info .stats_panel_button,
+.sound_bank_info .stats_panel_button * {
     cursor: pointer;
 }
 
-.sound_bank_info .default_modulators_button .stat_span {
+.sound_bank_info .stats_panel_button .stat_span {
     flex-grow: 1;
     border-right: solid 1px var(--track-border-color);
     height: 100%;
     padding: 0.3rem;
 }
 
-.sound_bank_info .default_modulators_button svg {
+.sound_bank_info .stats_panel_button svg {
     margin-right: 0.5rem;
     height: 60%;
     width: auto;

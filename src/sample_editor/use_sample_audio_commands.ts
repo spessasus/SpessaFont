@@ -15,14 +15,20 @@ import {
     getExportChannels
 } from "./sample_audio.ts";
 import type { EqualizerSettings } from "./equalizer/equalizer.ts";
-import { decodeAudioFile } from "../utils/decode_audio_file.ts";
+import {
+    decodeImportedAudio,
+    getImportOptions
+} from "../menu_list/import_sample.ts";
+import { useSettings } from "../settings/settings_context.ts";
+import { runAudioTool } from "./run_audio_tool.ts";
 import { useSampleTools } from "./use_sample_tools.tsx";
 
 /**
  * Normalizing, equalizing, auto looping, trimming, replacing and exporting the sample's audio,
  * all but the export undoable. All but replacing also change the other half of a stereo pair.
  * Playback stops first, because the playing buffer is the old audio. The tools read the audio
- * first, so they are async and disabled while one runs.
+ * first, so they are async and disabled while one runs. Replacing reads a WAV file's loop and
+ * applies the Sample Import settings, as importing does.
  * @param sample the edited sample
  * @param onBeforeChange called before the audio changes
  */
@@ -32,22 +38,19 @@ export function useSampleAudioCommands(
 ) {
     const { t } = useTranslation();
     const { audioEngine } = useAudioEngine();
+    const { settings } = useSettings();
     const { session, apply } = useBankEditor();
     const [isLoading, setIsLoading] = useState(false);
     const sampleTools = useSampleTools();
 
     const run = async (task: () => Promise<void>) => {
         setIsLoading(true);
-        // No finally, the React Compiler cannot compile it yet. The catch takes every error
-        try {
-            await task();
-        } catch (error) {
-            logError("Failed to process the sample audio.", error);
-            toast.error(String(error));
-        }
+        // No finally, the React Compiler cannot compile it yet. runAudioTool takes every error
+        await runAudioTool(task);
         setIsLoading(false);
     };
 
+    // Like an import: the loop of a WAV file stays and the Sample Import settings apply
     const replaceAudio = async () => {
         const file = await pickFile("audio/*");
         if (!file) {
@@ -57,25 +60,26 @@ export function useSampleAudioCommands(
         await run(async () => {
             let decoded;
             try {
-                decoded = await decodeAudioFile(
+                decoded = await decodeImportedAudio(
                     audioEngine.context,
-                    await file.arrayBuffer()
+                    await file.arrayBuffer(),
+                    getImportOptions(settings)
                 );
             } catch (error) {
                 logError("Failed to decode the audio file.", error);
                 toast.error(t("sampleLocale.tools.invalidAudioFile"));
                 return;
             }
-            const channels = Array.from(
-                { length: decoded.numberOfChannels },
-                (_, i) => decoded.getChannelData(i)
-            );
-            const actions = await createReplaceAudioActions(
-                session,
-                sample,
-                channels,
-                decoded.sampleRate
-            );
+            const actions =
+                decoded.channelCount > 2
+                    ? undefined
+                    : await createReplaceAudioActions(
+                          session,
+                          sample,
+                          decoded.channels,
+                          decoded.sampleRate,
+                          decoded.loop
+                      );
             if (actions) {
                 apply(actions);
             } else {
@@ -88,6 +92,7 @@ export function useSampleAudioCommands(
         run(async () => {
             const actions = await createNormalizeActions(session, [sample]);
             if (actions.length === 0) {
+                toast(t("sampleLocale.tools.nothingToNormalize"));
                 return;
             }
             onBeforeChange();
@@ -128,10 +133,23 @@ export function useSampleAudioCommands(
     // The original audio and rate, not the playback buffer, which may be resampled
     const exportWav = (isLoopOnly: boolean) =>
         run(async () => {
+            const { loopStart, loopEnd, sampleRate } = sample;
+            // In seconds, which core floors to frames, so half a frame keeps each point on its
+            // frame. The loop export is all loop
+            const toSeconds = (frame: number) => (frame + 0.5) / sampleRate;
+            const loop =
+                loopEnd <= loopStart
+                    ? undefined
+                    : {
+                          start: toSeconds(isLoopOnly ? 0 : loopStart),
+                          end: toSeconds(
+                              isLoopOnly ? loopEnd - loopStart : loopEnd
+                          )
+                      };
             const wav = audioToWav(
                 await getExportChannels(session, sample, isLoopOnly),
-                sample.sampleRate,
-                { normalizeAudio: false }
+                sampleRate,
+                { normalizeAudio: false, loop }
             );
             const name = isLoopOnly ? `${sample.name}_loop` : sample.name;
             downloadBlob(new Blob([wav], { type: "audio/wav" }), `${name}.wav`);

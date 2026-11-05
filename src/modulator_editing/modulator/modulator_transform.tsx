@@ -1,6 +1,10 @@
 import { useTranslation } from "react-i18next";
 import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
 
+/**
+ * The amount is a signed 16-bit number in SF2.
+ */
+const MIN_AMOUNT = -32_768;
 const MAX_AMOUNT = 32_767;
 
 interface ModulatorTransformProps {
@@ -25,13 +29,13 @@ export function ModulatorTransform({
             <span aria-hidden={true}>×</span>
             <WaitingInput
                 type={"text"}
-                className={"amount_input monospaced"}
+                className={"modulator_amount_input monospaced"}
                 aria-label={t("modulatorLocale.amount")}
                 placeholder={t("modulatorLocale.amount")}
-                min={-MAX_AMOUNT}
+                min={MIN_AMOUNT}
                 max={MAX_AMOUNT}
                 value={amount}
-                setValue={(value) => {
+                onCommit={(value) => {
                     const newAmount = Math.trunc(value);
                     onAmountChange(newAmount);
                     return newAmount;

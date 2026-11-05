@@ -23,7 +23,7 @@ export function ControllerSwitch({
                 }
                 onClick={() => onChange(!value)}
             >
-                <span className="switch_slider"></span>
+                <span className="controller_switch_slider"></span>
             </button>
         </div>
     );

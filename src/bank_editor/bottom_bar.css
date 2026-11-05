@@ -1,6 +1,9 @@
+/* Wraps on narrow windows and long translations instead of hiding the last items */
 .bottom_bar {
-    overflow-x: auto;
     display: flex;
+    flex-wrap: wrap;
+    max-height: 30vh;
+    overflow-y: auto;
     border-top: solid 1px var(--track-border-color);
     width: 100%;
     margin-top: auto;
@@ -10,14 +13,20 @@
 .bottom_bar > label,
 .bottom_bar > button {
     user-select: none;
-    cursor: pointer;
     padding: 0.3rem 1rem;
     text-align: center;
     white-space: nowrap;
     border-right: solid 1px var(--track-border-color);
 }
 
-.bottom_bar > *:hover {
+/* Only what can be used reacts to the pointer, not the plain text */
+.bottom_bar > label,
+.bottom_bar > button {
+    cursor: pointer;
+}
+
+.bottom_bar > label:hover,
+.bottom_bar > button:hover {
     background: var(--lighter-color);
 }
 
@@ -30,4 +39,5 @@
 
 .bottom_bar input[type="text"] {
     width: 30ch;
+    max-width: 100%;
 }

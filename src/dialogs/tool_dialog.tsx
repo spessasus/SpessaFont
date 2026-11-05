@@ -34,8 +34,11 @@ export function ToolDialog({
             className={"tool_dialog"}
             onCancel={onCancel}
         >
+            {/* The fields are read and checked in JS, and the browser's step check would refuse
+                valid values that are off the spinner's step */}
             <form
                 method={"dialog"}
+                noValidate={true}
                 onSubmit={(e) => {
                     e.preventDefault();
                     if (canApply) {

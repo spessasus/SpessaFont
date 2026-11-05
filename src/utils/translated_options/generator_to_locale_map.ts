@@ -87,8 +87,16 @@ export const generatorLocaleMap: Record<number, GeneratorLocaleKey> = {
     [GeneratorTypes.reverbEffectsSend]: "generatorLocale.reverbLevel",
 
     [GeneratorTypes.startAddrsOffset]: "generatorLocale.sampleStartOffset",
+    [GeneratorTypes.startAddrsCoarseOffset]:
+        "generatorLocale.sampleStartCoarseOffset",
     [GeneratorTypes.endAddrOffset]: "generatorLocale.sampleEndOffset",
+    [GeneratorTypes.endAddrsCoarseOffset]:
+        "generatorLocale.sampleEndCoarseOffset",
 
     [GeneratorTypes.startloopAddrsOffset]: "generatorLocale.loopStartOffset",
-    [GeneratorTypes.endloopAddrsOffset]: "generatorLocale.loopEndOffset"
+    [GeneratorTypes.startloopAddrsCoarseOffset]:
+        "generatorLocale.loopStartCoarseOffset",
+    [GeneratorTypes.endloopAddrsOffset]: "generatorLocale.loopEndOffset",
+    [GeneratorTypes.endloopAddrsCoarseOffset]:
+        "generatorLocale.loopEndCoarseOffset"
 };

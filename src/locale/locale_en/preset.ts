@@ -5,9 +5,8 @@ export const PresetLocale = {
     bankLSB: "Bank LSB",
     drums: "Drums",
     programNumber: "Program Number",
-    linkSelectedInstruments: "Link selected Instruments",
+    linkSelectedInstruments: "Link selected instruments",
     useFreePatch: "Use {{patch}} instead",
     keepPatch: "Keep",
-    presetWithTheParametersExists:
-        "Preset with these parameters already exists."
+    patchTaken: "Preset {{name}} already has these parameters."
 };

@@ -10,7 +10,8 @@ import {
 
 interface NaturalReleaseDialogProps {
     /**
-     * How many zones set their own modulation envelope, which a detune overwrites.
+     * How many zones play a modulation envelope (their own or the global one), which a
+     * detune replaces.
      */
     modEnvelopeZones: number;
     onAnswer: (release: NaturalRelease | undefined) => void;

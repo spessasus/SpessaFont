@@ -1,13 +1,14 @@
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import type { BankSession } from "../core_backend/bank_session.ts";
-import type { SaveFormat } from "../core_backend/persistence.ts";
+import { SaveError, type SaveFormat } from "../core_backend/persistence.ts";
 import { showToastDialog } from "../toasts/show_toast_dialog.tsx";
 import { yieldToPaint } from "../utils/yield_to_paint.ts";
 import { logError } from "../utils/core_utils.ts";
 import { hasSFEOnlyData } from "../core_backend/sfe_data.ts";
 import { hasBankNumbersLostInSF2 } from "../core_backend/sf2_bank_numbers.ts";
 import { hasTextOutsideLatin1 } from "../core_backend/latin1_text.ts";
+import { getDLSLosses } from "../core_backend/dls_data.ts";
 
 const FORMAT_NAMES = {
     sf2: "SF2",
@@ -16,8 +17,20 @@ const FORMAT_NAMES = {
     sf4: "SFE"
 } as const;
 
+const FAILURE_KEYS = {
+    encoderUnavailable: "loadingAndSaving.encoderUnavailable",
+    dlsTooLarge: "loadingAndSaving.dlsTooLarge"
+} as const;
+
+const DLS_LOSS_KEYS = {
+    stereoLinks: "menuBarLocale.file.dlsLossStereoLinks",
+    unusedInstruments: "menuBarLocale.file.dlsLossUnusedInstruments",
+    defaultModulators: "menuBarLocale.file.dlsLossDefaultModulators"
+} as const;
+
 /**
- * How a save ended. "canceled" means a warning was declined or the file picker closed.
+ * How a save ended. "canceled" means a warning was declined, the file picker closed, the bank
+ * closed, or another save of it was running.
  */
 export type SaveResult = "saved" | "canceled" | "failed";
 
@@ -37,21 +50,23 @@ export function useSaveBank() {
         try {
             await session.save(format, t("bankInfo.unnamed"), (progress) => {
                 toast.loading(
-                    `${t("loadingAndSaving.writingSamples")} (${
-                        Math.floor(progress * 10_000) / 100 + "%"
-                    })`,
+                    t("loadingAndSaving.writingSamplesProgress", {
+                        percent: Math.floor(progress * 10_000) / 100
+                    }),
                     { id }
                 );
             });
         } catch (error) {
             if (error instanceof DOMException && error.name === "AbortError") {
-                // the user closed the file picker
+                // The user closed the file picker, or the bank
                 toast.dismiss(id);
                 return "canceled";
             }
             logError("Failed to save the sound bank.", error);
+            const failure =
+                error instanceof SaveError ? error.failure : undefined;
             // The details first, so the summary ends up below them
-            toast.error(String(error));
+            toast.error(failure ? t(FAILURE_KEYS[failure]) : String(error));
             toast.error(t("loadingAndSaving.writingFailed"), { id });
             return "failed";
         }
@@ -60,7 +75,8 @@ export function useSaveBank() {
     };
 
     /**
-     * Asks about each warning in turn, and saves once all of them are confirmed.
+     * Asks about each warning in turn, and saves once all of them are confirmed. The questions
+     * go away when the bank closes.
      */
     const confirmAndSave = (
         session: BankSession,
@@ -72,26 +88,49 @@ export function useSaveBank() {
             return performSave(session, format);
         }
         return new Promise((resolve) => {
-            showToastDialog({
+            const { closeSignal } = session;
+            if (closeSignal.aborted) {
+                resolve("canceled");
+                return;
+            }
+            const answered = new AbortController();
+            const toastId = showToastDialog({
                 content: warning,
                 buttons: [
                     {
                         label: t("yes"),
-                        onClick: () =>
+                        onClick: () => {
+                            answered.abort();
                             void confirmAndSave(session, format, rest).then(
                                 resolve
-                            )
+                            );
+                        }
                     },
-                    { label: t("no"), onClick: () => resolve("canceled") }
+                    {
+                        label: t("no"),
+                        onClick: () => {
+                            answered.abort();
+                            resolve("canceled");
+                        }
+                    }
                 ]
             });
+            closeSignal.addEventListener(
+                "abort",
+                () => {
+                    toast.dismiss(toastId);
+                    resolve("canceled");
+                },
+                { once: true, signal: answered.signal }
+            );
         });
     };
 
-    return (session: BankSession, format: SaveFormat) => {
+    const getWarnings = (session: BankSession, format: SaveFormat) => {
         const target = session.getWriteFormat(format);
+        const { bank } = session.document;
         const warnings = new Array<string>();
-        if (target !== "sf4" && hasSFEOnlyData(session.document.bank)) {
+        if (target !== "sf4" && hasSFEOnlyData(bank)) {
             warnings.push(
                 t("menuBarLocale.file.warnSFEData", {
                     format: FORMAT_NAMES[target]
@@ -100,7 +139,7 @@ export function useSaveBank() {
         }
         if (
             (target === "sf2" || target === "sf3") &&
-            hasBankNumbersLostInSF2(session.document.bank)
+            hasBankNumbersLostInSF2(bank)
         ) {
             warnings.push(
                 t("menuBarLocale.file.warnBankNumbers", {
@@ -108,15 +147,43 @@ export function useSaveBank() {
                 })
             );
         }
-        if (
-            format === "sf2" &&
-            session.document.samples.some((s) => s.isCompressed)
-        ) {
+        if (target === "dls") {
+            const losses = getDLSLosses(bank);
+            if (losses.length > 0) {
+                warnings.push(
+                    t("menuBarLocale.file.warnDLS", {
+                        losses: losses
+                            .map((loss) => t(DLS_LOSS_KEYS[loss]))
+                            .join(", ")
+                    })
+                );
+            }
+        }
+        if (format === "sf2" && session.hasCompressedSamples()) {
             warnings.push(t("menuBarLocale.file.warnSF2"));
         }
-        if (hasTextOutsideLatin1(session.document.bank)) {
+        if (session.has24BitSamples) {
+            warnings.push(t("menuBarLocale.file.warn24Bit"));
+        }
+        if (hasTextOutsideLatin1(bank)) {
             warnings.push(t("menuBarLocale.file.warnText"));
         }
-        return confirmAndSave(session, format, warnings);
+        return warnings;
+    };
+
+    return async (
+        session: BankSession,
+        format: SaveFormat
+    ): Promise<SaveResult> => {
+        const warnings = getWarnings(session, format);
+        // One save of a bank at a time, a second click would stack its questions
+        const release = session.reserveSave();
+        if (!release) {
+            toast(t("loadingAndSaving.saveRunning"));
+            return "canceled";
+        }
+        const result = await confirmAndSave(session, format, warnings);
+        release();
+        return result;
     };
 }

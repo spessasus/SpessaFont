@@ -27,11 +27,6 @@ export function DragProvider({ children }: DragProviderProps) {
         }
     });
 
-    let label = "";
-    if (state) {
-        const [first, ...rest] = state.payload.entities;
-        label = rest.length > 0 ? `${first.name} +${rest.length}` : first.name;
-    }
     return (
         <DragContext value={controller}>
             {children}
@@ -44,7 +39,7 @@ export function DragProvider({ children }: DragProviderProps) {
                     }}
                     aria-hidden={true}
                 >
-                    {label}
+                    {state.payload.label}
                 </div>
             ) : null}
         </DragContext>

@@ -1,5 +1,6 @@
 import { MIDIPatchTools } from "spessasynth_core";
 import type { BankViews, PresetView } from "../core_backend/entity_views.ts";
+import { findUnusedIds } from "../core_backend/bank_maintenance.ts";
 
 /**
  * The ids of the listed elements of each kind, in bank order.
@@ -70,17 +71,14 @@ export function filterElements(views: BankViews, query: string): FilteredIds {
 }
 
 /**
- * Only the instruments and samples nothing uses, for finding what "remove unused" would remove.
+ * Only the instruments and samples that "remove unused" would remove.
  * Presets are never used by anything, so none are kept.
  */
 export function keepUnused(views: BankViews, ids: FilteredIds): FilteredIds {
+    const unused = findUnusedIds(views);
     return {
         presets: [],
-        instruments: ids.instruments.filter(
-            (id) => views.instruments.get(id)?.usedBy.length === 0
-        ),
-        samples: ids.samples.filter(
-            (id) => views.samples.get(id)?.usedBy.length === 0
-        )
+        instruments: ids.instruments.filter((id) => unused.instruments.has(id)),
+        samples: ids.samples.filter((id) => unused.samples.has(id))
     };
 }

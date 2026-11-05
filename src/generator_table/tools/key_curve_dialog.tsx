@@ -1,29 +1,21 @@
 import "./key_curve_dialog.css";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { GenericRange } from "spessasynth_core";
 import { ToolDialog } from "../../dialogs/tool_dialog.tsx";
 import { DialogNumberField } from "../../dialogs/dialog_number_field.tsx";
 import { DialogSelectField } from "../../dialogs/dialog_select_field.tsx";
-import { readNumberField } from "../../dialogs/read_number_field.ts";
 import { generatorLocaleMap } from "../../utils/translated_options/generator_to_locale_map.ts";
 import type { GeneratorRowType } from "../generator_row_type.ts";
-import {
-    createRandomCurve,
-    type CurvePattern,
-    drawCurve,
-    getCurveValues,
-    getRangeMean,
-    KEY_COUNT
-} from "./key_curve.ts";
-import type { CurveOperation, KeyCurveSettings } from "./key_curve_actions.ts";
-import { KeyCurveGraph } from "./key_curve_graph.tsx";
+import { getRangeMean } from "./key_curve.ts";
+import type { KeyCurveSettings } from "./key_curve_actions.ts";
+import { type CurveMarker, KeyCurveGraph } from "./key_curve_graph.tsx";
+import { KeyCurvePatternFields } from "./key_curve_pattern_fields.tsx";
+import { type PlayedRanges, useKeyCurveForm } from "./use_key_curve_form.ts";
 
 /**
- * A zone the curve may set, as plain ranges (played ranges, never unset).
+ * A zone the curve may set, as the ranges it plays (never unset).
  */
 export interface CurveZone {
-    id: number;
     keyRange: GenericRange;
     velRange: GenericRange;
 }
@@ -32,39 +24,40 @@ interface KeyCurveDialogProps {
     rows: readonly GeneratorRowType[];
     initialRow: GeneratorRowType;
     zones: readonly CurveZone[];
-    /**
-     * What an unset generator shows, for the default range of a replace.
-     */
-    getShownDefault: (row: GeneratorRowType) => number;
+    playedRanges: PlayedRanges;
     initialSeed: number;
     onAnswer: (settings: KeyCurveSettings | undefined) => void;
 }
 
-const MAX_FACTOR = 100;
-const DISPLAY_LIMIT = 1_000_000;
-
 /**
- * The default curve range of an operation, as field texts.
+ * One marker per key range (and whether the velocity filter takes it), so a large selection
+ * draws a few dots instead of one per zone.
  */
-function getDefaultRange(
-    operation: CurveOperation,
-    row: GeneratorRowType,
-    getShownDefault: (row: GeneratorRowType) => number
+function getMarkers(
+    zones: readonly CurveZone[],
+    values: readonly number[],
+    velocity: GenericRange | undefined
 ) {
-    switch (operation) {
-        case "replace": {
-            const shown = getShownDefault(row).toFixed(row.precision ?? 0);
-            return [shown, shown];
+    const seen = new Set<string>();
+    const markers = new Array<CurveMarker>();
+    for (const { keyRange, velRange } of zones) {
+        const isIncluded =
+            !velocity ||
+            (velRange.min <= velocity.max && velRange.max >= velocity.min);
+        const id = `${keyRange.min}-${keyRange.max}-${isIncluded}`;
+        if (seen.has(id)) {
+            continue;
         }
 
-        case "add": {
-            return ["-10", "10"];
-        }
-
-        case "multiply": {
-            return ["0.5", "2"];
-        }
+        seen.add(id);
+        markers.push({
+            id,
+            key: (keyRange.min + keyRange.max) / 2,
+            value: getRangeMean(values, keyRange.min, keyRange.max),
+            isIncluded
+        });
     }
+    return markers;
 }
 
 /**
@@ -74,84 +67,17 @@ export function KeyCurveDialog({
     rows,
     initialRow,
     zones,
-    getShownDefault,
+    playedRanges,
     initialSeed,
     onAnswer
 }: KeyCurveDialogProps) {
     const { t } = useTranslation();
-    const [row, setRow] = useState(initialRow);
-    const [operation, setOperation] = useState<CurveOperation>("replace");
-    const [pattern, setPattern] = useState<CurvePattern>("linearUp");
-    const [range, setRange] = useState(() =>
-        getDefaultRange("replace", initialRow, getShownDefault)
-    );
-    const [steepnessText, setSteepnessText] = useState("3");
-    const [spreadText, setSpreadText] = useState("1");
-    const [fromText, setFromText] = useState("0");
-    const [toText, setToText] = useState("127");
-    const [isVelocityFiltered, setIsVelocityFiltered] = useState(false);
-    const [velocityText, setVelocityText] = useState(["0", "127"]);
-    const [seed, setSeed] = useState(initialSeed);
-    const [drawn, setDrawn] = useState(() =>
-        new Array<number>(KEY_COUNT).fill(0.5)
-    );
-
-    const limit = operation === "multiply" ? MAX_FACTOR : DISPLAY_LIMIT;
-    const lowLimit = operation === "multiply" ? 0 : -DISPLAY_LIMIT;
-    const min = readNumberField(range[0], lowLimit, limit);
-    const max = readNumberField(range[1], lowLimit, limit);
-    const steepness = readNumberField(steepnessText, 1, 10) ?? 3;
-    const spread = readNumberField(spreadText, 1, 10) ?? 1;
-    const fromKey = Math.round(readNumberField(fromText, 0, 127) ?? 0);
-    const toKey = Math.round(readNumberField(toText, 0, 127) ?? 127);
-    const velocityMin = readNumberField(velocityText[0], 0, 127);
-    const velocityMax = readNumberField(velocityText[1], 0, 127);
-    const velocity: GenericRange | undefined =
-        isVelocityFiltered &&
-        velocityMin !== undefined &&
-        velocityMax !== undefined
-            ? {
-                  min: Math.min(velocityMin, velocityMax),
-                  max: Math.max(velocityMin, velocityMax)
-              }
-            : undefined;
-
-    const values = getCurveValues({
-        pattern,
-        fromKey,
-        toKey,
-        steepness,
-        random: createRandomCurve(seed, spread),
-        drawn
-    });
-    const markers = zones.map((zone) => ({
-        id: zone.id,
-        key: (zone.keyRange.min + zone.keyRange.max) / 2,
-        value: getRangeMean(values, zone.keyRange.min, zone.keyRange.max),
-        isIncluded:
-            !velocity ||
-            (zone.velRange.min <= velocity.max &&
-                zone.velRange.max >= velocity.min)
-    }));
+    const form = useKeyCurveForm(initialRow, playedRanges, initialSeed);
+    const { pattern, isRanged, settings } = form;
+    // Equal ends give every key the same value, whatever the pattern
+    const values = form.isFlat ? form.values.map(() => 0.5) : form.values;
+    const markers = getMarkers(zones, values, form.velocity);
     const hasZones = markers.some((m) => m.isIncluded);
-    const isVelocityValid = !isVelocityFiltered || velocity !== undefined;
-    const canApply =
-        hasZones && isVelocityValid && min !== undefined && max !== undefined;
-    const isRanged = pattern !== "random" && pattern !== "drawn";
-    const unitNote =
-        operation === "multiply"
-            ? t("toolsLocale.keyCurve.factor")
-            : t("toolsLocale.keyCurve.shownUnits");
-
-    const pickRow = (generator: string) => {
-        const picked = rows.find((r) => String(r.generator) === generator);
-        if (!picked) {
-            return;
-        }
-
-        setRow(picked);
-        setRange(getDefaultRange(operation, picked, getShownDefault));
-    };
 
     const operations = [
         { value: "replace", label: t("toolsLocale.keyCurve.replace") },
@@ -172,169 +98,111 @@ export function KeyCurveDialog({
         { value: "random", label: t("toolsLocale.keyCurve.random") },
         { value: "drawn", label: t("toolsLocale.keyCurve.drawn") }
     ] as const;
+    const step = form.operation === "multiply" ? 0.1 : 1;
 
     return (
         <ToolDialog
             title={t("toolsLocale.keyCurve.title")}
-            canApply={canApply}
+            canApply={hasZones && settings !== undefined}
             onCancel={() => onAnswer(undefined)}
             onApply={() => {
-                if (min !== undefined && max !== undefined) {
-                    onAnswer({ row, operation, min, max, values, velocity });
+                if (settings) {
+                    onAnswer(settings);
                 }
             }}
         >
             <DialogSelectField
                 label={t("toolsLocale.keyCurve.generator")}
-                value={String(row.generator)}
+                value={String(form.row.generator)}
                 options={rows.map((r) => ({
                     value: String(r.generator),
                     label: t(generatorLocaleMap[r.generator])
                 }))}
-                onChange={pickRow}
+                onChange={(generator) => {
+                    const picked = rows.find(
+                        (r) => String(r.generator) === generator
+                    );
+                    if (picked) {
+                        form.pickRow(picked);
+                    }
+                }}
             />
             <DialogSelectField
                 label={t("toolsLocale.keyCurve.operation")}
-                value={operation}
+                value={form.operation}
                 options={operations}
-                onChange={(picked) => {
-                    setOperation(picked);
-                    setRange(getDefaultRange(picked, row, getShownDefault));
-                }}
+                onChange={form.pickOperation}
             />
             <DialogSelectField
                 label={t("toolsLocale.keyCurve.pattern")}
                 value={pattern}
                 options={patterns}
-                onChange={setPattern}
+                onChange={form.setPattern}
             />
             <DialogNumberField
                 label={t("toolsLocale.keyCurve.minimum")}
-                value={range[0]}
-                min={lowLimit}
-                max={limit}
-                step={operation === "multiply" ? 0.1 : 1}
-                onChange={(text) => setRange([text, range[1]])}
+                value={form.range[0]}
+                min={form.limits.min}
+                max={form.limits.max}
+                step={step}
+                onChange={form.setMinText}
             />
             <DialogNumberField
                 label={t("toolsLocale.keyCurve.maximum")}
-                value={range[1]}
-                min={lowLimit}
-                max={limit}
-                step={operation === "multiply" ? 0.1 : 1}
-                onChange={(text) => setRange([range[0], text])}
+                value={form.range[1]}
+                min={form.limits.min}
+                max={form.limits.max}
+                step={step}
+                onChange={form.setMaxText}
             />
-            <p className={"tool_dialog_note"}>{unitNote}</p>
-            {isRanged ? (
-                <>
-                    <DialogNumberField
-                        label={t("toolsLocale.keyCurve.fromKey")}
-                        value={fromText}
-                        min={0}
-                        max={127}
-                        step={1}
-                        onChange={setFromText}
-                    />
-                    <DialogNumberField
-                        label={t("toolsLocale.keyCurve.toKey")}
-                        value={toText}
-                        min={0}
-                        max={127}
-                        step={1}
-                        onChange={setToText}
-                    />
-                </>
-            ) : null}
-            {pattern === "exponentialUp" || pattern === "exponentialDown" ? (
-                <DialogNumberField
-                    label={t("toolsLocale.keyCurve.steepness")}
-                    value={steepnessText}
-                    min={1}
-                    max={10}
-                    step={1}
-                    onChange={setSteepnessText}
-                />
-            ) : null}
-            {pattern === "random" ? (
-                <div className={"tool_dialog_field"}>
-                    <DialogNumberField
-                        label={t("toolsLocale.keyCurve.spread")}
-                        value={spreadText}
-                        min={1}
-                        max={10}
-                        step={1}
-                        onChange={setSpreadText}
-                    />
-                    <button
-                        type={"button"}
-                        className={"pretty_button hover_brightness"}
-                        onClick={() =>
-                            setSeed(Math.floor(Math.random() * 4_294_967_296))
-                        }
-                    >
-                        {t("toolsLocale.keyCurve.reroll")}
-                    </button>
-                </div>
-            ) : null}
+            <p className={"tool_dialog_note"}>
+                {form.operation === "multiply"
+                    ? t("toolsLocale.keyCurve.factor")
+                    : t("toolsLocale.keyCurve.shownUnits")}
+            </p>
+            <KeyCurvePatternFields form={form} />
             <label className={"tool_dialog_check"}>
                 <input
                     type={"checkbox"}
-                    checked={isVelocityFiltered}
-                    onChange={(e) => setIsVelocityFiltered(e.target.checked)}
+                    checked={form.isVelocityFiltered}
+                    onChange={(e) =>
+                        form.setIsVelocityFiltered(e.target.checked)
+                    }
                 />
                 <span>{t("toolsLocale.keyCurve.velocityFilter")}</span>
             </label>
-            {isVelocityFiltered ? (
+            {form.isVelocityFiltered ? (
                 <>
                     <DialogNumberField
                         label={t("toolsLocale.keyCurve.velocityMin")}
-                        value={velocityText[0]}
+                        value={form.velocityText[0]}
                         min={0}
                         max={127}
                         step={1}
-                        onChange={(text) =>
-                            setVelocityText([text, velocityText[1]])
-                        }
+                        onChange={form.setVelocityMinText}
                     />
                     <DialogNumberField
                         label={t("toolsLocale.keyCurve.velocityMax")}
-                        value={velocityText[1]}
+                        value={form.velocityText[1]}
                         min={0}
                         max={127}
                         step={1}
-                        onChange={(text) =>
-                            setVelocityText([velocityText[0], text])
-                        }
+                        onChange={form.setVelocityMaxText}
                     />
                 </>
+            ) : null}
+            {form.isFlat ? (
+                <p className={"tool_dialog_note"}>
+                    {t("toolsLocale.keyCurve.flat")}
+                </p>
             ) : null}
             <KeyCurveGraph
                 values={values}
                 markers={markers}
-                minLabel={range[0]}
-                maxLabel={range[1]}
-                onPickKey={
-                    isRanged
-                        ? (key, isEnd) => {
-                              const isNearerEnd =
-                                  Math.abs(key - toKey) <
-                                  Math.abs(key - fromKey);
-                              if (isEnd || isNearerEnd) {
-                                  setToText(String(key));
-                              } else {
-                                  setFromText(String(key));
-                              }
-                          }
-                        : undefined
-                }
-                onDraw={
-                    pattern === "drawn"
-                        ? (from, to) =>
-                              setDrawn((previous) =>
-                                  drawCurve(previous, from, to)
-                              )
-                        : undefined
-                }
+                minLabel={form.range[0]}
+                maxLabel={form.range[1]}
+                onPickKey={isRanged ? form.pickKey : undefined}
+                onDraw={pattern === "drawn" ? form.draw : undefined}
             />
             <p className={"tool_dialog_note"}>
                 {isRanged

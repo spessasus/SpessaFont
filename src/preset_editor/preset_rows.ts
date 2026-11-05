@@ -28,7 +28,7 @@ export const PRESET_ROWS: GeneratorRowType[] = [
     },
     {
         generator: GeneratorTypes.pan,
-        unit: "pan"
+        unit: "presetPan"
     },
     {
         generator: GeneratorTypes.coarseTune,
@@ -41,11 +41,11 @@ export const PRESET_ROWS: GeneratorRowType[] = [
     {
         generator: GeneratorTypes.scaleTuning,
         highlight: true,
-        unit: "cent"
+        unit: "centPerKey"
     },
     {
         generator: GeneratorTypes.initialFilterFc,
-        unit: "acent"
+        unit: "cent"
     },
     {
         generator: GeneratorTypes.initialFilterQ,
@@ -56,7 +56,7 @@ export const PRESET_ROWS: GeneratorRowType[] = [
     },
     {
         generator: GeneratorTypes.maxFilterFc,
-        unit: "acent"
+        unit: "cent"
     },
     {
         generator: GeneratorTypes.delayVolEnv,
@@ -107,12 +107,12 @@ export const PRESET_ROWS: GeneratorRowType[] = [
     {
         generator: GeneratorTypes.keyNumToVolEnvHold,
         highlight: true,
-        unit: "cent"
+        unit: "tcentPerKey"
     },
     {
         generator: GeneratorTypes.keyNumToVolEnvDecay,
         highlight: true,
-        unit: "cent"
+        unit: "tcentPerKey"
     },
     {
         generator: GeneratorTypes.delayModEnv,
@@ -151,11 +151,11 @@ export const PRESET_ROWS: GeneratorRowType[] = [
     },
     {
         generator: GeneratorTypes.keyNumToModEnvHold,
-        unit: "cent"
+        unit: "tcentPerKey"
     },
     {
         generator: GeneratorTypes.keyNumToModEnvDecay,
-        unit: "cent"
+        unit: "tcentPerKey"
     },
     {
         generator: GeneratorTypes.delayModEnv2,
@@ -194,11 +194,11 @@ export const PRESET_ROWS: GeneratorRowType[] = [
     },
     {
         generator: GeneratorTypes.keyNumToModEnv2Hold,
-        unit: "cent"
+        unit: "tcentPerKey"
     },
     {
         generator: GeneratorTypes.keyNumToModEnv2Decay,
-        unit: "cent"
+        unit: "tcentPerKey"
     },
     {
         generator: GeneratorTypes.delayModLFO,
@@ -213,7 +213,7 @@ export const PRESET_ROWS: GeneratorRowType[] = [
     {
         generator: GeneratorTypes.freqModLFO,
         highlight: true,
-        unit: "acent"
+        unit: "cent"
     },
     {
         generator: GeneratorTypes.modLfoRate,
@@ -264,7 +264,7 @@ export const PRESET_ROWS: GeneratorRowType[] = [
     },
     {
         generator: GeneratorTypes.freqVibLFO,
-        unit: "acent"
+        unit: "cent"
     },
     {
         generator: GeneratorTypes.vibLfoRate,

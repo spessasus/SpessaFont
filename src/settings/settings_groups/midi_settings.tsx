@@ -2,7 +2,7 @@ import { useMIDIAccess } from "../midi_context/midi_context.ts";
 import { Setting } from "../setting.tsx";
 import { useTranslation } from "react-i18next";
 
-export function MidiSettings() {
+export function MIDISettings() {
     const {
         devices,
         accessStatus,

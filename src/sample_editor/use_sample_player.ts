@@ -4,6 +4,14 @@ import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
 
 export type SamplePlayerState = "stopped" | "playing" | "playing_loop";
 
+/**
+ * What the player reads from the sample's view.
+ */
+export type PlayedSample = Pick<
+    SampleView,
+    "sampleRate" | "loopStart" | "loopEnd" | "pitchCorrection"
+>;
+
 const SAMPLE_GAIN = 0.4;
 /**
  * AudioBuffer only accepts some sample rates, others are resampled to this one for playback.
@@ -44,7 +52,7 @@ function createPlaybackBuffer(
  * when the audio changes or `playRequest` changes.
  */
 export function useSamplePlayer(
-    sample: SampleView,
+    sample: PlayedSample,
     data: Float32Array | undefined,
     state: SamplePlayerState,
     playRequest: number,
@@ -63,16 +71,27 @@ export function useSamplePlayer(
     const onEnded = useEffectEvent(() => onStateChange("stopped"));
 
     const { sampleRate, loopStart, loopEnd, pitchCorrection } = sample;
-    // A dependency of the playback effect, so it must keep its identity between renders
+    const isPlaying = state !== "stopped";
+    // A dependency of the playback effect, so it must keep its identity between renders.
+    // Only built while playing, the audio context would keep a second copy of every sample shown
     const buffer = useMemo(
         () =>
-            data ? createPlaybackBuffer(context, data, sampleRate) : undefined,
-        [context, data, sampleRate]
+            data && isPlaying
+                ? createPlaybackBuffer(context, data, sampleRate)
+                : undefined,
+        [context, data, isPlaying, sampleRate]
     );
+    // Each new buffer starts a new source from the beginning (new audio after an undo, a rate
+    // change, the first read), so the play head starts over with it
+    const [startedBuffer, setStartedBuffer] = useState(buffer);
+    if (startedBuffer !== buffer) {
+        setStartedBuffer(buffer);
+        setStartTime(context.currentTime);
+    }
 
     useEffect(() => {
         // Plays once the audio is read
-        if (state === "stopped" || !buffer) {
+        if (!isPlaying || !buffer) {
             return;
         }
         const player = context.createBufferSource();
@@ -91,7 +110,7 @@ export function useSamplePlayer(
             gain.disconnect();
             playerRef.current = null;
         };
-    }, [buffer, context, inputNode, state, startTime]);
+    }, [buffer, context, inputNode, isPlaying, state, startTime]);
 
     // Loop points and tuning apply to the playing sample without restarting it. The effect
     // also runs for each new player (new audio after an undo, a restart), which starts without them

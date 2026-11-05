@@ -28,12 +28,29 @@ const RELATIVE_KINDS = new Map<string, "add" | "multiply">([
     ["x", "multiply"]
 ]);
 
+/**
+ * A plain decimal number, with no exponent, hex or other text Number() would also take.
+ */
+const DECIMAL_NUMBER = /^[+-]?(\d+\.?\d*|\.\d+)$/;
+
+/**
+ * Reads a typed number. A decimal comma counts as the point, since Polish (and many other
+ * languages) write decimals that way. Undefined for anything else, so the cell can refuse it
+ * instead of storing a number the user did not type.
+ */
+export function parseNumberText(text: string) {
+    const normalized = text.trim().replace(",", ".");
+    return DECIMAL_NUMBER.test(normalized) ? Number(normalized) : undefined;
+}
+
 export function parseCellText(text: string): CellEdit | undefined {
     const trimmed = text.trim();
-    const kind = RELATIVE_KINDS.get(trimmed[0] ?? "");
-    const number = kind ? trimmed.slice(1) : trimmed;
-    const value = Number(number);
-    return number === "" || Number.isNaN(value)
+    // Caps Lock or habit gives "X2"
+    const kind = RELATIVE_KINDS.get(trimmed.charAt(0).toLowerCase());
+    const value = parseNumberText(kind ? trimmed.slice(1) : trimmed);
+    // "+-3" subtracts, but "-+3" and "++3" mean nothing
+    const isDoubled = kind !== undefined && /^[+*x]/i.test(trimmed.slice(1));
+    return value === undefined || isDoubled
         ? undefined
         : { kind: kind ?? "set", value };
 }

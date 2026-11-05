@@ -2,6 +2,10 @@ import { useTranslation } from "react-i18next";
 
 interface SampleToolsProps {
     isLoading: boolean;
+    /**
+     * The loop export has nothing to write without a loop.
+     */
+    hasLoop: boolean;
     onExportWav: (isLoopOnly: boolean) => Promise<void>;
     onNormalize: () => Promise<void>;
     onAutoLoop: () => Promise<void>;
@@ -16,6 +20,7 @@ interface SampleToolsProps {
  */
 export function SampleTools({
     isLoading,
+    hasLoop,
     onExportWav,
     onNormalize,
     onAutoLoop,
@@ -27,7 +32,9 @@ export function SampleTools({
 
     const buttonClass = `pretty_button ${isLoading ? "" : "responsive_button hover_brightness"}`;
     return (
-        <div className={`sample_tools ${isLoading ? "disabled" : ""}`}>
+        <div
+            className={`sample_tools ${isLoading ? "sample_tools_loading" : ""}`}
+        >
             <button
                 type={"button"}
                 className={buttonClass}
@@ -39,7 +46,7 @@ export function SampleTools({
             <button
                 type={"button"}
                 className={buttonClass}
-                disabled={isLoading}
+                disabled={isLoading || !hasLoop}
                 onClick={() => void onExportWav(true)}
             >
                 {t("sampleLocale.tools.wavExportLoop")}

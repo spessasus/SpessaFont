@@ -4,7 +4,7 @@ export const GeneratorLocale = {
 
     attenuation: "Wyciszenie",
     amplitude: "Amplituda",
-    pan: "Stereo",
+    pan: "Panorama",
     loopingMode: "Tryb pętli", // not modulated
     overridingRootKey: "Klawisz próbki", // not modulated
 
@@ -60,29 +60,33 @@ export const GeneratorLocale = {
     modLfoToVolume: "LFO modulacji -> Głośność",
     modLfoToAmplitude: "LFO modulacji -> Amplituda",
 
-    vibLfoDelay: "Opóźnienie LFO wibracji",
-    vibLfoFade: "Narastanie LFO wibracji",
-    vibLfoFrequency: "Częstotliwość LFO wibracji",
-    vibLfoRateOffset: "Zmiana częstotliwości LFO wibracji",
-    vibLfoWaveform: "Kształt fali LFO wibracji", // not modulated
-    vibLfoStartPhase: "Faza początkowa LFO wibracji",
-    vibLfoToPitch: "LFO wibracji -> Wysokość dźwięku",
-    vibLfoToFilter: "LFO wibracji -> Filtr",
-    vibLfoToVolume: "LFO wibracji -> Głośność",
-    vibLfoToAmplitude: "LFO wibracji -> Amplituda",
+    vibLfoDelay: "Opóźnienie LFO wibrata",
+    vibLfoFade: "Narastanie LFO wibrata",
+    vibLfoFrequency: "Częstotliwość LFO wibrata",
+    vibLfoRateOffset: "Zmiana częstotliwości LFO wibrata",
+    vibLfoWaveform: "Kształt fali LFO wibrata", // not modulated
+    vibLfoStartPhase: "Faza początkowa LFO wibrata",
+    vibLfoToPitch: "LFO wibrata -> Wysokość dźwięku",
+    vibLfoToFilter: "LFO wibrata -> Filtr",
+    vibLfoToVolume: "LFO wibrata -> Głośność",
+    vibLfoToAmplitude: "LFO wibrata -> Amplituda",
 
-    exclusiveClass: "Klasa wykluczona", // not modulated
+    exclusiveClass: "Klasa wyłączności", // not modulated
     ignoreNoteOff: "Ignoruj puszczenie klawisza", // not modulated
     voiceDelay: "Opóźnienie głosu",
     chorusLevel: "Poziom chóru",
     reverbLevel: "Poziom pogłosu",
 
-    fixedKey: "Numer klawisza", // not modulated
-    fixedVelocity: "Siła nacisku", // not modulated
+    fixedKey: "Stały klawisz", // not modulated
+    fixedVelocity: "Stała siła nacisku", // not modulated
 
     sampleStartOffset: "Przesunięcie początku próbki",
+    sampleStartCoarseOffset: "Zgrubne przesunięcie początku próbki",
     sampleEndOffset: "Przesunięcie końca próbki",
+    sampleEndCoarseOffset: "Zgrubne przesunięcie końca próbki",
 
     loopStartOffset: "Przesunięcie początku pętli",
-    loopEndOffset: "Przesunięcie końca pętli"
+    loopStartCoarseOffset: "Zgrubne przesunięcie początku pętli",
+    loopEndOffset: "Przesunięcie końca pętli",
+    loopEndCoarseOffset: "Zgrubne przesunięcie końca pętli"
 };

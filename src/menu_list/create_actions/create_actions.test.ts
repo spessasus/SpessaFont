@@ -9,7 +9,7 @@ import { CreateInstrumentAction } from "./create_instrument_action.ts";
 import { CreatePresetAction } from "./create_preset_action.ts";
 
 describe("CreateSampleAction", () => {
-    it("inserts a sample in name order and focuses it, then focuses the first sample on undo", () => {
+    it("inserts a sample in name order and focuses it, then its neighbor on undo", () => {
         const session = createTestSession();
         const sample = new EmptySample();
         sample.name = "A New Sample";
@@ -41,7 +41,7 @@ describe("CreateInstrumentAction", () => {
         expect(after.instruments.at(-1)?.name).toBe("Z New Instrument");
         expect(sample.linkedTo).toContain(instrument);
         expect(doFocus).toBe(instrument);
-        expect(undoFocus).toBe(session.document.instruments[0]);
+        expect(undoFocus).toBe(session.document.instruments.at(-2));
 
         session.history.undo();
         expect(sample.linkedTo).not.toContain(instrument);
@@ -56,7 +56,7 @@ describe("CreatePresetAction", () => {
         preset.name = "New Preset";
         preset.program = 5;
 
-        const { after, doFocus } = expectRoundTrip(session, () => {
+        const { after, doFocus, undoFocus } = expectRoundTrip(session, () => {
             preset.createZone(instrument);
             return [new CreatePresetAction(preset)];
         });
@@ -64,6 +64,9 @@ describe("CreatePresetAction", () => {
             after.presets.map((p) => p.program).toSorted((a, b) => a - b)
         );
         expect(doFocus).toBe(preset);
+        // The preset before it, not the first one of the bank
+        const index = session.document.presets.indexOf(preset);
+        expect(undoFocus).toBe(session.document.presets[index - 1]);
 
         session.history.undo();
         expect(instrument.linkedTo).not.toContain(preset);

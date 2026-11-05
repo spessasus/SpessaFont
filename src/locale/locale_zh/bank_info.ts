@@ -23,6 +23,5 @@ export const BankInfoLocale = {
     count: "总数：",
     generatorCount: "参数总数：",
     modulatorCount: "调制器总数：",
-    defaultModulatorsFor: "默认调制器 在音色库",
     defaultModulators: "默认调制器总数："
 };

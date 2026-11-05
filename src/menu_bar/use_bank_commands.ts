@@ -9,9 +9,10 @@ import {
 } from "../core_backend/bank_maintenance.ts";
 import { useSaveBank } from "../hooks/use_save_bank.ts";
 import { HISTORY_LABEL_KEYS } from "./history_label_keys.ts";
-
-const HISTORY_TOAST = "history";
 import { mergeDuplicateSamples } from "../sample_editor/merge_duplicates_command.ts";
+
+// One toast that each undo and redo replaces, holding Ctrl+Z would stack them otherwise
+const HISTORY_TOAST = "history";
 
 /**
  * The menu bar commands for the active bank, with their toasts.
@@ -30,11 +31,12 @@ export function useBankCommands(
         if (!session) return;
         const { undoLabel } = session.history.state;
         if (!undoLabel) {
-            toast(t("menuBarLocale.edit.nothingToUndo"));
+            toast(t("menuBarLocale.edit.nothingToUndo"), {
+                id: HISTORY_TOAST
+            });
             return;
         }
         const focus = session.history.undo();
-        // One toast that each undo replaces, holding Ctrl+Z would stack them otherwise
         toast(
             t("menuBarLocale.edit.undone", {
                 what: t(HISTORY_LABEL_KEYS[undoLabel])
@@ -48,7 +50,9 @@ export function useBankCommands(
         if (!session) return;
         const { redoLabel } = session.history.state;
         if (!redoLabel) {
-            toast(t("menuBarLocale.edit.nothingToRedo"));
+            toast(t("menuBarLocale.edit.nothingToRedo"), {
+                id: HISTORY_TOAST
+            });
             return;
         }
         const focus = session.history.redo();
@@ -87,13 +91,14 @@ export function useBankCommands(
         if (!session) return;
         const actions = createAutoLinkActions(session.document.samples);
         if (actions.length === 0) {
-            toast(t("soundBankLocale.noSamplesWereChanged"));
+            toast(t("toolsLocale.nothingChanged"));
             return;
         }
         session.history.do(actions);
         toast.success(
             t("soundBankLocale.modifiedSamples", {
-                count: actions.length
+                // Each action links a pair, which changes two samples
+                count: actions.length * 2
             })
         );
     };

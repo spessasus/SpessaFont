@@ -1,4 +1,5 @@
-import { useEffect, useReducer, useRef } from "react";
+import { useEffect, useReducer } from "react";
+import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { BasicInstrument, BasicPreset } from "spessasynth_core";
 import type { BankSession } from "../core_backend/bank_session.ts";
@@ -8,6 +9,16 @@ import { useEventListener } from "../hooks/use_event_listener.ts";
 import { showToastDialog } from "../toasts/show_toast_dialog.tsx";
 import { useSaveBank } from "../hooks/use_save_bank.ts";
 import { createTabsState, tabsReducer } from "./tabs_reducer.ts";
+import { catchLostFocus } from "../utils/focus_return.ts";
+
+/**
+ * The selected tab's button, or the welcome screen's first button when no tab is left.
+ */
+function findActiveTab() {
+    return document.querySelector<HTMLElement>(
+        ".tab_select[aria-current=true], [data-focus-fallback]"
+    );
+}
 
 /**
  * The open banks, the active one, and the selected element of each.
@@ -39,16 +50,22 @@ export function useBankTabs() {
         }
     });
 
-    // Tabs with an open "unsaved changes" question
-    const closePrompts = useRef(new Set<number>());
-
     const openSession = (session: BankSession) => {
         dispatch({ type: "open", tab: session });
+        // Opened from the welcome screen, whose button went away with it
+        catchLostFocus(findActiveTab);
     };
 
+    // One question per tab, a second click on close shows the same one again
+    const getPromptId = (session: BankSession) => `close-${session.id}`;
+
     const closeSession = (session: BankSession) => {
+        // A question left open would save or close a tab that is gone
+        toast.dismiss(getPromptId(session));
         session.close();
         dispatch({ type: "close", id: session.id });
+        // The close button (or the question's button) went away with the tab
+        catchLostFocus(findActiveTab);
     };
 
     /**
@@ -59,22 +76,16 @@ export function useBankTabs() {
             closeSession(session);
             return;
         }
-        // One question per tab, a second click on close would stack another
-        if (closePrompts.current.has(session.id)) {
-            return;
-        }
-        closePrompts.current.add(session.id);
-        const forgetPrompt = () => {
-            closePrompts.current.delete(session.id);
-        };
+        const { name } = session.store.getSnapshot().info;
         showToastDialog({
-            content: t("unsavedChanges"),
-            isError: true,
+            id: getPromptId(session),
+            content: t("bankHasUnsavedChanges", {
+                name: name.length > 0 ? name : t("bankInfo.unnamed")
+            }),
             buttons: [
                 {
                     label: t("saveAndClose"),
                     onClick: () => {
-                        forgetPrompt();
                         void saveBank(session, "auto").then((result) => {
                             // An edit made while it was writing is not in the file
                             if (
@@ -88,12 +99,9 @@ export function useBankTabs() {
                 },
                 {
                     label: t("discard"),
-                    onClick: () => {
-                        forgetPrompt();
-                        closeSession(session);
-                    }
+                    onClick: () => closeSession(session)
                 },
-                { label: t("keep"), onClick: forgetPrompt }
+                { label: t("keep") }
             ]
         });
     };
@@ -106,6 +114,14 @@ export function useBankTabs() {
         if (activeId !== undefined) {
             dispatch({ type: "setView", id: activeId, view });
         }
+    };
+
+    /**
+     * Shows the element in the tab of the session, which need not be the active one in this
+     * render (a tab opened by the same handler).
+     */
+    const setSessionView = (id: number, view: BankEditView) => {
+        dispatch({ type: "setView", id, view });
     };
 
     /**
@@ -138,6 +154,7 @@ export function useBankTabs() {
         openSession,
         requestClose,
         activate,
-        setActiveView
+        setActiveView,
+        setSessionView
     };
 }

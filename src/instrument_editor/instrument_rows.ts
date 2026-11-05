@@ -54,7 +54,7 @@ export const INSTRUMENT_ROWS: GeneratorRowType[] = [
     {
         generator: GeneratorTypes.scaleTuning,
         highlight: true,
-        unit: "cent"
+        unit: "centPerKey"
     },
     {
         generator: GeneratorTypes.initialFilterFc,
@@ -142,12 +142,12 @@ export const INSTRUMENT_ROWS: GeneratorRowType[] = [
     {
         generator: GeneratorTypes.keyNumToVolEnvHold,
         highlight: true,
-        unit: "cent"
+        unit: "tcentPerKey"
     },
     {
         generator: GeneratorTypes.keyNumToVolEnvDecay,
         highlight: true,
-        unit: "cent"
+        unit: "tcentPerKey"
     },
     {
         generator: GeneratorTypes.delayModEnv,
@@ -201,11 +201,11 @@ export const INSTRUMENT_ROWS: GeneratorRowType[] = [
     },
     {
         generator: GeneratorTypes.keyNumToModEnvHold,
-        unit: "cent"
+        unit: "tcentPerKey"
     },
     {
         generator: GeneratorTypes.keyNumToModEnvDecay,
-        unit: "cent"
+        unit: "tcentPerKey"
     },
     {
         generator: GeneratorTypes.delayModEnv2,
@@ -259,11 +259,11 @@ export const INSTRUMENT_ROWS: GeneratorRowType[] = [
     },
     {
         generator: GeneratorTypes.keyNumToModEnv2Hold,
-        unit: "cent"
+        unit: "tcentPerKey"
     },
     {
         generator: GeneratorTypes.keyNumToModEnv2Decay,
-        unit: "cent"
+        unit: "tcentPerKey"
     },
     {
         generator: GeneratorTypes.delayModLFO,

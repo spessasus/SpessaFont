@@ -10,9 +10,13 @@ import { InstrumentList } from "./instrument_list.tsx";
 import { PresetList } from "./preset_list.tsx";
 import { filterElements, keepUnused } from "./filter_elements.ts";
 import { useEventListener } from "../hooks/use_event_listener.ts";
-import { isEditorShortcut } from "../utils/is_editor_shortcut.ts";
+import {
+    ELEMENT_LIST_SCOPE,
+    isListShortcut
+} from "../utils/is_editor_shortcut.ts";
 import {
     getClickResult,
+    getListKeyResult,
     getSelection,
     isInstrument,
     isPreset,
@@ -25,11 +29,8 @@ import { useListMenu } from "./use_list_menu.ts";
 import { useContextMenu } from "../context_menu/context_menu_context.ts";
 import { useDragSource } from "../drag_and_drop/drag_context.ts";
 import { getObjectId } from "../utils/object_id.ts";
-
-const ARROW_STEPS = new Map([
-    ["ArrowUp", -1],
-    ["ArrowDown", 1]
-]);
+import type { FocusRequest } from "./virtual_item_list.tsx";
+import { ListSearchBar } from "./list_search_bar.tsx";
 
 interface MenuListProps {
     view: BankEditView;
@@ -45,7 +46,6 @@ export function MenuList({ view, isCovered }: MenuListProps) {
     const samples = useBankSnapshot(session.store, (s) => s.samples);
     const instruments = useBankSnapshot(session.store, (s) => s.instruments);
     const presets = useBankSnapshot(session.store, (s) => s.presets);
-    const views = useBankSnapshot(session.store, (s) => s.views);
     const [isOpen, setIsOpen] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [isUnusedOnly, setIsUnusedOnly] = useState(false);
@@ -53,10 +53,26 @@ export function MenuList({ view, isCovered }: MenuListProps) {
     const [multiSelection, setMultiSelection] = useState<MultiSelection | null>(
         null
     );
+    const [focusRequest, setFocusRequest] = useState<FocusRequest | null>(null);
+    // A multi selection belongs to the view it was made for, so it is dropped when another
+    // element is shown, and does not come back with its anchor later
+    const [selectionView, setSelectionView] = useState(view);
+    if (view !== selectionView) {
+        setSelectionView(view);
+        setMultiSelection(null);
+    }
 
     // Filtering thousands of elements must not delay typing
     const deferredQuery = useDeferredValue(searchQuery);
+    const isFiltering = deferredQuery !== "" || isUnusedOnly;
+    // Every edit makes new views, so the lists only follow them while they filter
+    const views = useBankSnapshot(session.store, (s) =>
+        isFiltering ? s.views : null
+    );
     const filtered = (() => {
+        if (!views) {
+            return { presets, instruments, samples };
+        }
         const found = filterElements(views, deferredQuery);
         const ids = isUnusedOnly ? keepUnused(views, found) : found;
         // The lists keep the core objects as identities, which the selection and handlers use
@@ -76,17 +92,38 @@ export function MenuList({ view, isCovered }: MenuListProps) {
             samples: keep(samples, ids.samples)
         };
     })();
+    const listOf = (entity: BankEntity): readonly BankEntity[] =>
+        isPreset(entity)
+            ? filtered.presets
+            : isInstrument(entity)
+              ? filtered.instruments
+              : filtered.samples;
 
-    const listed = new Set<BankEntity>([
-        ...filtered.presets,
-        ...filtered.instruments,
-        ...filtered.samples
-    ]);
-    const selection = getSelection(view, multiSelection, (e) => listed.has(e));
+    // Only a multi selection needs to know what is listed
+    const listed = multiSelection
+        ? new Set<BankEntity>(listOf(multiSelection.anchor))
+        : undefined;
+    const selection = getSelection(
+        view,
+        multiSelection,
+        (e) => listed?.has(e) ?? false
+    );
     const selectedPresets = selectionOf(selection, isPreset);
     const selectedInstruments = selectionOf(selection, isInstrument);
     const selectedSamples = selectionOf(selection, isSample);
+    const cursor =
+        view === "info"
+            ? undefined
+            : multiSelection?.anchor === view
+              ? (multiSelection.cursor ?? view)
+              : view;
     useMenuShortcuts(selection, isCovered);
+
+    const show = (entity: BankEntity) => {
+        setMultiSelection(null);
+        setView(entity);
+    };
+
     useEventListener(document, "keydown", (e) => {
         if (isCovered) {
             return;
@@ -102,32 +139,31 @@ export function MenuList({ view, isCovered }: MenuListProps) {
             searchRef.current.select();
             return;
         }
-        // The arrow keys show the next or previous element of the shown one's list
-        const step = ARROW_STEPS.get(e.key);
-        if (
-            step === undefined ||
-            view === "info" ||
-            e.ctrlKey ||
-            e.metaKey ||
-            e.altKey ||
-            e.shiftKey ||
-            !isEditorShortcut(e)
-        ) {
+        // The list keys act when the focus is in the element list or on nothing, the editors
+        // handle their own keys
+        if (view === "info" || e.altKey || !isListShortcut(e)) {
             return;
         }
-        const list: readonly BankEntity[] = isPreset(view)
-            ? filtered.presets
-            : isInstrument(view)
-              ? filtered.instruments
-              : filtered.samples;
-        const index = list.indexOf(view);
-        const next = index === -1 ? undefined : list[index + step];
-        if (!next) {
+        const result = getListKeyResult(
+            listOf(view),
+            view,
+            multiSelection,
+            e.key,
+            e
+        );
+        if (!result) {
             return;
         }
         e.preventDefault();
-        setMultiSelection(null);
-        setView(next);
+        if (result.type === "show") {
+            show(result.entity);
+            setFocusRequest({ item: result.entity });
+        } else if (result.type === "select") {
+            setMultiSelection(result.selection);
+            setFocusRequest({ item: result.selection.cursor ?? view });
+        } else {
+            setMultiSelection(null);
+        }
     });
     const getMenuEntries = useListMenu();
     const { openMenu } = useContextMenu();
@@ -141,8 +177,7 @@ export function MenuList({ view, isCovered }: MenuListProps) {
     ) {
         const result = getClickResult(items, item, view, selected, event);
         if (result.type === "show") {
-            setMultiSelection(null);
-            setView(result.entity);
+            show(result.entity);
         } else {
             setMultiSelection(result.selection);
         }
@@ -160,27 +195,63 @@ export function MenuList({ view, isCovered }: MenuListProps) {
             </button>
         );
     }
+    // ArrowDown in the search goes to the results, the shown element or the first one listed
+    const focusResults = () => {
+        const shown = cursor && listOf(cursor).includes(cursor) ? cursor : null;
+        const first =
+            shown ??
+            filtered.samples[0] ??
+            filtered.instruments[0] ??
+            filtered.presets[0];
+        if (!first) {
+            return;
+        }
+        if (first !== cursor) {
+            show(first);
+        }
+        setFocusRequest({ item: first });
+    };
+
     // Like a file manager, the menu acts on the selection when the item is in it,
     // and otherwise shows the item first and acts on it alone
     const handleItemContextMenu = (item: BankEntity, event: MouseEvent) => {
         let target = selection;
         if (!selection.has(item)) {
             target = new Set([item]);
-            setMultiSelection(null);
-            setView(item);
+            show(item);
         }
         openMenu(event, getMenuEntries(target));
     };
 
     // Dragging an item of the selection drags the whole selection
-    const handleItemPointerDown = (item: BankEntity, event: PointerEvent) =>
+    const handleItemPointerDown = (item: BankEntity, event: PointerEvent) => {
+        const entities = selection.has(item) ? [...selection] : [item];
+        // The label is the name when the drag starts, read from the views like in render
+        const [first] = entities;
+        const current = session.store.getSnapshot().views;
+        const name =
+            (isPreset(first)
+                ? current.presets
+                : isInstrument(first)
+                  ? current.instruments
+                  : current.samples
+            ).get(getObjectId(first))?.name ?? "";
         startDrag(event, {
             session,
-            entities: selection.has(item) ? [...selection] : [item]
+            entities,
+            label:
+                entities.length > 1 ? `${name} +${entities.length - 1}` : name
         });
+    };
 
+    const isEmpty =
+        filtered.presets.length +
+            filtered.instruments.length +
+            filtered.samples.length ===
+        0;
     return (
-        <div className={`menu_list_main`}>
+        // Focusable, so the focus has somewhere to go when the focused row is deleted
+        <div className={`menu_list_main`} {...ELEMENT_LIST_SCOPE} tabIndex={-1}>
             <div
                 className={`item_group_header hover_brightness ${view === "info" ? "opened" : ""}`}
             >
@@ -210,6 +281,8 @@ export function MenuList({ view, isCovered }: MenuListProps) {
                 samples={filtered.samples}
                 view={view}
                 selected={selectedSamples}
+                cursor={cursor}
+                focusRequest={focusRequest}
                 onItemClick={(sample, e) =>
                     handleItemClick(
                         filtered.samples,
@@ -227,6 +300,8 @@ export function MenuList({ view, isCovered }: MenuListProps) {
                 view={view}
                 selected={selectedInstruments}
                 selectedSamples={selectedSamples}
+                cursor={cursor}
+                focusRequest={focusRequest}
                 onItemClick={(instrument, e) =>
                     handleItemClick(
                         filtered.instruments,
@@ -244,6 +319,8 @@ export function MenuList({ view, isCovered }: MenuListProps) {
                 view={view}
                 selected={selectedPresets}
                 selectedInstruments={selectedInstruments}
+                cursor={cursor}
+                focusRequest={focusRequest}
                 onItemClick={(preset, e) =>
                     handleItemClick(
                         filtered.presets,
@@ -255,45 +332,21 @@ export function MenuList({ view, isCovered }: MenuListProps) {
                 onItemContextMenu={handleItemContextMenu}
                 onItemPointerDown={handleItemPointerDown}
             />
-            <div className={"search_bar"}>
-                <input
-                    ref={searchRef}
-                    className={"pretty_input"}
-                    placeholder={t("presetList.search")}
-                    aria-label={t("presetList.search")}
-                    type={"text"}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === "Escape") {
-                            setSearchQuery("");
-                        }
-                    }}
-                />
-                {searchQuery === "" ? null : (
-                    <button
-                        type={"button"}
-                        className={"pretty_button"}
-                        aria-label={t("presetList.clearSearch")}
-                        title={t("presetList.clearSearch")}
-                        onClick={() => {
-                            setSearchQuery("");
-                            searchRef.current?.focus();
-                        }}
-                    >
-                        &times;
-                    </button>
-                )}
-                <button
-                    type={"button"}
-                    className={"pretty_button"}
-                    aria-pressed={isUnusedOnly}
-                    title={t("presetList.unusedOnlyTitle")}
-                    onClick={() => setIsUnusedOnly((only) => !only)}
-                >
-                    {t("presetList.unusedOnly")}
-                </button>
-            </div>
+            {isFiltering && isEmpty ? (
+                <p className={"menu_list_empty"} role={"status"}>
+                    {deferredQuery === ""
+                        ? t("presetList.nothingUnused")
+                        : t("contextMenu.noMatches")}
+                </p>
+            ) : null}
+            <ListSearchBar
+                inputRef={searchRef}
+                query={searchQuery}
+                onQueryChange={setSearchQuery}
+                isUnusedOnly={isUnusedOnly}
+                onToggleUnusedOnly={() => setIsUnusedOnly((only) => !only)}
+                onFocusResults={focusResults}
+            />
         </div>
     );
 }

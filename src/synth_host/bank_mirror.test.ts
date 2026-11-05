@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-    type BasicSoundBank,
+    BasicSoundBank,
     GeneratorTypes,
     SoundBankLoader,
     SpessaSynthProcessor
 } from "spessasynth_core";
 import {
+    createTestHost,
     createTestSession,
     expectMirrorUpToDate,
     expectRoundTrip,
@@ -21,6 +22,8 @@ import { EditSampleAction } from "../sample_editor/edit_sample_action.ts";
 import { ReplaceSampleAudioAction } from "../sample_editor/replace_sample_audio_action.ts";
 import { DeleteSampleAction } from "../sample_editor/linked_instruments/delete_sample_action.ts";
 import { DeletePresetAction } from "../preset_editor/bottom_bar/delete_preset_action.ts";
+import { BankSession } from "../core_backend/bank_session.ts";
+import { loadSoundBank } from "../core_backend/load_sound_bank.ts";
 
 type TestSession = ReturnType<typeof createTestSession>;
 
@@ -90,6 +93,31 @@ function render(bank: BasicSoundBank) {
 describe("BankMirror", () => {
     it("matches the editor's bank once loaded, which the editor sorted", () => {
         expectMirrorUpToDate(createTestSession());
+    });
+
+    it("has the editor's zone order once loaded, for a file with zones out of order", () => {
+        const bank = SoundBankLoader.fromArrayBuffer(
+            BasicSoundBank.getSampleSoundBankFile()
+        );
+        const [instrument] = bank.instruments;
+        const [sample] = bank.samples;
+        const [low] = instrument.zones;
+        low.keyRange = { min: 0, max: 59 };
+        const high = instrument.createZone(sample);
+        high.keyRange = { min: 60, max: 127 };
+        // Highest key first, the editor sorts them the other way on load
+        instrument.zones.reverse();
+        const testHost = createTestHost();
+
+        const session = new BankSession(
+            testHost.client,
+            loadSoundBank(bank.writeSF2())
+        );
+
+        const mirrored = testHost.host.getMirrorOf(session.id).bank;
+        expect(normalizeForMirror(snapshotBank(mirrored))).toEqual(
+            normalizeForMirror(snapshotBank(session.document.bank))
+        );
     });
 
     it("plays the same as a fresh load of the file it writes, after edits", async () => {

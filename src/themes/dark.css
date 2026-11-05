@@ -12,6 +12,12 @@
     --lighter-color-start: oklch(16% 0 0);
     --lighter-color-end: oklch(20.5% 0 0);
     --selection-color: oklch(20.5% 0 0);
+    /* selected generator cells, a tint of the focus color so it shows on both row stripes */
+    --cell-selection-color: color-mix(
+        in oklch,
+        var(--focus-color) 35%,
+        transparent
+    );
     --shadow-color: oklch(0% 0 0 / 20%);
 
     /* text */
@@ -24,14 +30,19 @@
     --menu-border-color: #4c037a;
     --primary-color: #320056ff;
     --border-color: #4c037a;
+    /* focused fields, 3:1 or more on the panels */
+    --focus-color: #d3a3ff;
     --light-primary-color: #d3a3ff;
     --track-color: #333;
     --track-border-color: oklch(30% 0 0);
 
     /* element kinds */
-    --preset-item-color: darkred;
+    --preset-item-color: #d42a2a;
     --instrument-item-color: dodgerblue;
     --sample-item-color: gold;
+
+    /* generator table, exclusive classes get a hue each at this lightness */
+    --exclusive-class-lightness: 70%;
 
     /* drawings */
     --wave-color: #320056ff;

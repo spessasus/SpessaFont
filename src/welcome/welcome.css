@@ -11,7 +11,7 @@
     padding: 1rem;
 }
 
-.welcome .grouped {
+.welcome .welcome_group {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -22,7 +22,7 @@
     gap: 1rem;
 }
 
-.welcome .flex {
+.welcome .welcome_actions {
     display: flex;
     flex-wrap: wrap;
     width: 100%;
@@ -30,7 +30,7 @@
     gap: 1rem;
 }
 
-.action_button {
+.welcome_action {
     border: var(--track-border-color) 1px solid;
     background: var(--lighter-color-end);
     border-radius: var(--primary-border-radius);
@@ -44,20 +44,20 @@
     color: var(--font-color);
 }
 
-.action_button:focus-visible {
+.welcome_action:focus-visible {
     outline: 2px solid var(--light-primary-color);
 }
 
-.action_button:hover {
+.welcome_action:hover {
     filter: brightness(1.2);
 }
 
-.action_button span {
+.welcome_action span {
     font-size: 1.5rem;
     padding: 0.5rem;
 }
 
-.action_button svg {
+.welcome_action svg {
     font-size: 1.5rem;
     margin-left: 0.5rem;
     padding-right: 0.5rem;

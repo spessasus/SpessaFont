@@ -1,6 +1,10 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DragController, DROP_TARGET_ATTRIBUTE } from "./drag_controller.ts";
+import {
+    DRAG_SCROLL_ATTRIBUTE,
+    DragController,
+    DROP_TARGET_ATTRIBUTE
+} from "./drag_controller.ts";
 import { createTestSession } from "../test_utils/bank_fixture.ts";
 
 function pointer(type: string, x: number, y: number, pointerType = "mouse") {
@@ -19,7 +23,8 @@ function setUp(canDrop = true) {
     controller.register("t", { accepts: () => canDrop, drop });
     const payload = {
         session: createTestSession(),
-        entities: []
+        entities: [],
+        label: "Saw"
     };
     return { controller, drop, payload };
 }
@@ -69,5 +74,55 @@ describe("DragController", () => {
         controller.cancel();
         controller.release();
         expect(drop).not.toHaveBeenCalled();
+    });
+
+    it("lets the next press click after a drag cancelled without a release", () => {
+        const { controller, payload } = setUp();
+        controller.press(pointer("pointerdown", 10, 10), payload);
+        controller.move(pointer("pointermove", 40, 10));
+        // A blur (Alt+Tab): the button is released outside the page
+        controller.cancel();
+
+        document.dispatchEvent(pointer("pointerdown", 10, 10));
+        const click = new MouseEvent("click", { cancelable: true });
+        document.dispatchEvent(click);
+        expect(click.defaultPrevented).toBe(false);
+    });
+
+    it("swallows the click that ends a press cancelled with Escape", () => {
+        const { controller, payload } = setUp();
+        controller.press(pointer("pointerdown", 10, 10), payload);
+        controller.move(pointer("pointermove", 40, 10));
+        controller.cancel();
+
+        document.dispatchEvent(pointer("pointerup", 40, 10));
+        const click = new MouseEvent("click", { cancelable: true });
+        document.dispatchEvent(click);
+        expect(click.defaultPrevented).toBe(true);
+    });
+
+    it("scrolls the list under the pointer near its bottom edge", () => {
+        vi.useFakeTimers({ toFake: ["requestAnimationFrame"] });
+        const list = document.createElement("div");
+        list.setAttribute(DRAG_SCROLL_ATTRIBUTE, "true");
+        list.append(target);
+        // jsdom has no layout, its scrollTop stays 0
+        Object.defineProperty(list, "scrollTop", { value: 0, writable: true });
+        vi.spyOn(list, "getBoundingClientRect").mockReturnValue(
+            DOMRect.fromRect({ x: 0, y: 0, width: 100, height: 400 })
+        );
+        const { controller, payload } = setUp();
+        controller.press(pointer("pointerdown", 10, 10), payload);
+        controller.move(pointer("pointermove", 10, 395));
+        vi.advanceTimersToNextFrame();
+        vi.advanceTimersToNextFrame();
+        expect(list.scrollTop).toBeGreaterThan(0);
+
+        controller.release();
+        const scrolled = list.scrollTop;
+        vi.advanceTimersToNextFrame();
+        expect(list.scrollTop).toBe(scrolled);
+        vi.useRealTimers();
+        list.remove();
     });
 });

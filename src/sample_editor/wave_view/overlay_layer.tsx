@@ -1,7 +1,9 @@
+import { useRef } from "react";
 import type { SamplePlayerState } from "../use_sample_player.ts";
 import { useAudioEngine } from "../../core_backend/audio_engine_context.ts";
 import { getCanvasColor, useCanvas } from "../../hooks/use_canvas.ts";
-import { drawOverlay } from "./wave_drawing.ts";
+import { useSettings } from "../../settings/settings_context.ts";
+import { drawOverlay, type OverlayColors } from "./wave_drawing.ts";
 import {
     getPlayheadSample,
     sampleToX,
@@ -9,7 +11,7 @@ import {
 } from "./wave_geometry.ts";
 
 interface OverlayLayerProps {
-    sampleCount: number;
+    data: Float32Array;
     loopStart: number;
     loopEnd: number;
     zoom: number;
@@ -26,7 +28,7 @@ interface OverlayLayerProps {
 }
 
 export function OverlayLayer({
-    sampleCount,
+    data,
     loopStart,
     loopEnd,
     zoom,
@@ -41,7 +43,13 @@ export function OverlayLayer({
     const {
         audioEngine: { context }
     } = useAudioEngine();
+    const {
+        settings: { theme }
+    } = useSettings();
+    // Read once per theme, not in every frame of the play head
+    const colorsRef = useRef<{ theme: string; colors: OverlayColors }>(null);
     const isPlaying = playerState !== "stopped";
+    const sampleCount = data.length;
     const canvasRef = useCanvas(
         (ctx, size) => {
             const view: WaveViewport = {
@@ -69,16 +77,23 @@ export function OverlayLayer({
                     onPlayheadHidden(x + scrollX);
                 }
             }
+            if (colorsRef.current?.theme !== theme) {
+                colorsRef.current = {
+                    theme,
+                    colors: {
+                        loopStart: getCanvasColor(ctx, "--loop-start-color"),
+                        loopEnd: getCanvasColor(ctx, "--loop-end-color"),
+                        cursor: getCanvasColor(ctx, "--font-color")
+                    }
+                };
+            }
             drawOverlay(
                 ctx,
                 size,
                 view,
+                data,
                 { loopStart, loopEnd, hoveredSample, playheadSample },
-                {
-                    loopStart: getCanvasColor(ctx, "--loop-start-color"),
-                    loopEnd: getCanvasColor(ctx, "--loop-end-color"),
-                    cursor: getCanvasColor(ctx, "--font-color")
-                }
+                colorsRef.current.colors
             );
         },
         { isAnimated: isPlaying }

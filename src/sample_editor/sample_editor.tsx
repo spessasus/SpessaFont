@@ -26,10 +26,6 @@ import { type EqualizerState, FLAT_EQUALIZER } from "./equalizer/equalizer.ts";
 import { useSampleAudio } from "../hooks/use_sample_audio.ts";
 
 const MAX_NAME_LENGTH = 40;
-/**
- * Shown until the audio is read.
- */
-const NO_AUDIO = new Float32Array(0);
 
 interface SampleEditorProps {
     sample: BasicSample;
@@ -64,25 +60,14 @@ export function SampleEditor({
     const { session } = useBankEditor();
     const sampleId = getObjectId(sample);
     const view = useSampleView(session.store, sampleId);
-    const sampleViews = useBankSnapshot(session.store, (s) => s.views.samples);
-    const sampleOrder = useBankSnapshot(
-        session.store,
-        (s) => s.views.sampleOrder
-    );
     if (!view) {
         // The pane is closed when its sample is removed, this only covers the render before
         return null;
     }
-    // In bank order, for the stereo link list
-    const samples = sampleOrder.flatMap((id) => {
-        const v = sampleViews.get(id);
-        return v ? [v] : [];
-    });
     return (
         <SampleEditorPane
             sample={sample}
             view={view}
-            samples={samples}
             playerState={playerState}
             playRequest={playRequest}
             onPlayerStateChange={onPlayerStateChange}
@@ -94,13 +79,31 @@ export function SampleEditor({
 
 interface SampleEditorPaneProps extends SampleEditorProps {
     view: SampleView;
-    samples: readonly SampleView[];
+}
+
+/**
+ * Whether a sample other than the sample's partner is free to pair with it.
+ */
+function hasFreeSample(
+    samples: ReadonlyMap<number, SampleView>,
+    view: SampleView
+) {
+    for (const other of samples.values()) {
+        if (
+            other.id !== view.id &&
+            other.id !== view.linkedSampleId &&
+            (other.linkedSampleId === undefined ||
+                other.linkedSampleId === view.id)
+        ) {
+            return true;
+        }
+    }
+    return false;
 }
 
 function SampleEditorPane({
     sample,
     view,
-    samples,
     playerState,
     playRequest,
     onPlayerStateChange,
@@ -110,6 +113,15 @@ function SampleEditorPane({
     const { t } = useTranslation();
     const { session } = useBankEditor();
     const edits = useSampleEdits(sample, view);
+    // Primitives, so other samples' edits only re-render the pane when these change
+    const partnerName = useBankSnapshot(session.store, (s) =>
+        view.linkedSampleId === undefined
+            ? undefined
+            : s.views.samples.get(view.linkedSampleId)?.name
+    );
+    const canLink = useBankSnapshot(session.store, (s) =>
+        hasFreeSample(s.views.samples, view)
+    );
     const data = useSampleAudio(session, view.id);
     const player = useSamplePlayer(
         view,
@@ -131,7 +143,7 @@ function SampleEditorPane({
                 zoom={zoom}
                 onLoopStartChange={edits.setLoopStart}
                 onLoopEndChange={edits.setLoopEnd}
-                data={data ?? NO_AUDIO}
+                data={data}
                 loopStart={view.loopStart}
                 loopEnd={view.loopEnd}
                 sampleRate={view.sampleRate}
@@ -142,10 +154,10 @@ function SampleEditorPane({
             <div className={"sample_editor_toolbar"}>
                 <div className={"sample_editor_title"}>
                     <WaitingInput
-                        setValue={edits.setName}
+                        onCommit={edits.setName}
                         value={view.name}
                         maxLength={MAX_NAME_LENGTH}
-                        className={"pretty_input sample_name monospaced"}
+                        className={"pretty_input sample_editor_name monospaced"}
                         placeholder={t("sampleLocale.sampleName")}
                         aria-label={t("sampleLocale.sampleName")}
                     />
@@ -164,11 +176,13 @@ function SampleEditorPane({
             <div className={"sample_editor_panels"}>
                 <SampleProperties
                     sample={view}
-                    samples={samples}
+                    partnerName={partnerName}
+                    canLink={canLink}
                     edits={edits}
                 />
                 <SampleTools
                     isLoading={audio.isLoading}
+                    hasLoop={view.loopEnd > view.loopStart}
                     onExportWav={audio.exportWav}
                     onNormalize={audio.normalize}
                     onAutoLoop={audio.autoLoop}

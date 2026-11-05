@@ -9,6 +9,26 @@ export type SaveFormat = "auto" | "sf2" | "dls" | "sf3" | "sf4";
 export type WriteFormat = Exclude<SaveFormat, "auto">;
 
 /**
+ * Why the host could not write a bank, when the reason is one the user can act on: the Vorbis
+ * encoder did not load (offline before it was cached), or a preset flattens to more DLS regions
+ * than core can write.
+ */
+export type WriteFailure = "encoderUnavailable" | "dlsTooLarge";
+
+/**
+ * A save the host could not write.
+ */
+export class SaveError extends Error {
+    public readonly failure: WriteFailure | undefined;
+
+    public constructor(message: string, failure: WriteFailure | undefined) {
+        super(message);
+        this.name = "SaveError";
+        this.failure = failure;
+    }
+}
+
+/**
  * Browsers fail to create a single Blob part larger than this.
  */
 const MAX_BLOB_PART = 2_147_483_648;

@@ -23,33 +23,22 @@ export function MenuBarIcon({
     return (
         <button
             type={"button"}
+            role={"menuitem"}
+            // The arrow keys move between the items, Tab leaves the menu
+            tabIndex={-1}
             onClick={onClick}
             title={title}
             disabled={isDisabled}
             className={"menu_bar_icon"}
         >
-            {children}
-            <span>{text}</span>
+            {/* The icon is decoration, the text names the item */}
+            <span className={"menu_bar_icon_graphic"} aria-hidden={true}>
+                {children}
+            </span>
+            <span className={"menu_bar_icon_text"}>{text}</span>
             {shortcut ? (
                 <kbd className={"menu_bar_shortcut"}>{shortcut}</kbd>
             ) : null}
         </button>
-    );
-}
-
-interface MenuBarDropdownProps {
-    main: string;
-    children?: ReactNode;
-}
-
-export function MenuBarDropdown({ main, children }: MenuBarDropdownProps) {
-    return (
-        <div className={"menu_bar"}>
-            {/* Focusing the button opens the menu (CSS focus-within) for keyboard users */}
-            <button type={"button"} className={"menu_bar_button"}>
-                {main}
-            </button>
-            <div className={"menu_bar_contents"}>{children}</div>
-        </div>
     );
 }

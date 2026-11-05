@@ -12,9 +12,13 @@ import {
 interface SamplePropertiesProps {
     sample: SampleView;
     /**
-     * Every sample of the bank, for the stereo link.
+     * The name of the other half of a stereo pair, if any.
      */
-    samples: readonly SampleView[];
+    partnerName: string | undefined;
+    /**
+     * Whether another sample is free to pair with this one.
+     */
+    canLink: boolean;
     edits: ReturnType<typeof useSampleEdits>;
 }
 
@@ -23,17 +27,20 @@ interface SamplePropertiesProps {
  */
 export function SampleProperties({
     sample,
-    samples,
+    partnerName,
+    canLink,
     edits
 }: SamplePropertiesProps) {
     const { t } = useTranslation();
     const { loopStart, loopEnd, originalKey, length } = sample;
+    // With the octave, C4 being middle C (60) as on the keyboard
+    const noteName = `${midiNoteToPitchClass(originalKey)}${Math.floor(originalKey / 12) - 1}`;
     return (
         <div className={"sample_properties"}>
-            <div className={"info_field"}>
+            <div className={"sample_editor_field"}>
                 <span>{t("sampleLocale.sampleRate")}</span>
                 <WaitingInput
-                    setValue={edits.setSampleRate}
+                    onCommit={edits.setSampleRate}
                     value={sample.sampleRate}
                     className={"pretty_input monospaced"}
                     type={"number"}
@@ -43,10 +50,10 @@ export function SampleProperties({
                 />
             </div>
 
-            <div className={"info_field"}>
+            <div className={"sample_editor_field"}>
                 <span>{t("sampleLocale.loopStart")}</span>
                 <WaitingInput
-                    setValue={edits.setLoopStart}
+                    onCommit={edits.setLoopStart}
                     value={loopStart}
                     className={"pretty_input monospaced"}
                     type={"number"}
@@ -56,10 +63,10 @@ export function SampleProperties({
                 />
             </div>
 
-            <div className={"info_field"}>
+            <div className={"sample_editor_field"}>
                 <span>{t("sampleLocale.loopEnd")}</span>
                 <WaitingInput
-                    setValue={edits.setLoopEnd}
+                    onCommit={edits.setLoopEnd}
                     value={loopEnd}
                     className={"pretty_input monospaced"}
                     type={"number"}
@@ -69,22 +76,24 @@ export function SampleProperties({
                 />
             </div>
 
-            <div className={"info_field"}>
-                <span>{t("sampleLocale.originalKey")}</span>
+            <div className={"sample_editor_field"}>
+                {/* The note goes in the label, in the field it would count toward the digits */}
+                <span>{`${t("sampleLocale.originalKey")} (${noteName})`}</span>
                 <WaitingInput
-                    setValue={edits.setOriginalKey}
+                    onCommit={edits.setOriginalKey}
                     value={originalKey}
                     className={"pretty_input monospaced"}
-                    maxLength={7}
-                    suffix={` (${midiNoteToPitchClass(originalKey)})`}
+                    type={"number"}
+                    min={0}
+                    max={127}
                     aria-label={t("sampleLocale.originalKey")}
                 />
             </div>
 
-            <div className={"info_field"}>
+            <div className={"sample_editor_field"}>
                 <span>{t("sampleLocale.centCorrection")}</span>
                 <WaitingInput
-                    setValue={edits.setCentCorrection}
+                    onCommit={edits.setCentCorrection}
                     value={sample.pitchCorrection}
                     className={"pretty_input monospaced"}
                     type={"number"}
@@ -96,8 +105,10 @@ export function SampleProperties({
 
             <TypeSelector
                 sample={sample}
-                samples={samples}
-                onChange={edits.setLinkedSample}
+                partnerName={partnerName}
+                canLink={canLink}
+                onTypeChange={edits.setType}
+                onPickPartner={edits.pickLinkedSample}
             />
         </div>
     );

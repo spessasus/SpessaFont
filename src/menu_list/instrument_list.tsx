@@ -1,15 +1,15 @@
 import { BasicInstrument, type BasicSample } from "spessasynth_core";
 import type { MouseEvent, PointerEvent } from "react";
 import { useTranslation } from "react-i18next";
-import toast from "react-hot-toast";
-import type { BankEditView } from "../core_backend/bank_view.ts";
+import type { BankEditView, BankEntity } from "../core_backend/bank_view.ts";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useClipboard } from "../clipboard/clipboard_context.ts";
 import { DropdownHeader } from "./dropdown_header/dropdown_header.tsx";
 import { InstrumentDisplay } from "./instrument_display/instrument_display.tsx";
 import { getObjectId } from "../utils/object_id.ts";
-import { VirtualItemList } from "./virtual_item_list.tsx";
+import { type FocusRequest, VirtualItemList } from "./virtual_item_list.tsx";
 import { useExpandedItems, useSectionOpen } from "./use_list_state.ts";
+import { useSelectionCommands } from "./use_selection_commands.ts";
 import {
     createInstrumentFromSamples,
     createSampleLinkActions
@@ -20,8 +20,13 @@ interface InstrumentListProps {
     view: BankEditView;
     selected: ReadonlySet<BasicInstrument>;
     selectedSamples: ReadonlySet<BasicSample>;
+    /**
+     * The element the keyboard is on, kept in view.
+     */
+    cursor: BankEntity | undefined;
+    focusRequest: FocusRequest | null;
     onItemClick: (instrument: BasicInstrument, event: MouseEvent) => void;
-    onItemContextMenu: (instrument: BasicInstrument, event: MouseEvent) => void;
+    onItemContextMenu: (entity: BankEntity, event: MouseEvent) => void;
     onItemPointerDown: (
         instrument: BasicInstrument,
         event: PointerEvent
@@ -33,13 +38,16 @@ export function InstrumentList({
     view,
     selected,
     selectedSamples,
+    cursor,
+    focusRequest,
     onItemClick,
     onItemContextMenu,
     onItemPointerDown
 }: InstrumentListProps) {
     const { t } = useTranslation();
     const { session, apply } = useBankEditor();
-    const { clipboard, contents } = useClipboard();
+    const { contents } = useClipboard();
+    const commands = useSelectionCommands();
     const [isOpen, setIsOpen] = useSectionOpen(
         view,
         view instanceof BasicInstrument
@@ -52,46 +60,34 @@ export function InstrumentList({
             <DropdownHeader
                 text={t("presetList.instruments")}
                 isOpen={isOpen}
-                onToggle={() => setIsOpen(!isOpen)}
+                onToggle={() => setIsOpen((open) => !open)}
+                addLabel={t("contextMenu.newInstrument")}
+                addHint={t("presetList.newInstrumentHint")}
                 onAdd={
                     canLink
                         ? () =>
                               apply([
-                                  createInstrumentFromSamples(selectedSamples)
+                                  createInstrumentFromSamples(
+                                      session.document,
+                                      selectedSamples
+                                  )
                               ])
                         : undefined
                 }
                 onCopy={
                     selected.size > 0
-                        ? () => {
-                              clipboard.copyInstruments(selected, session);
-                              toast.success(
-                                  t("clipboardLocale.copiedInstruments", {
-                                      count: selected.size
-                                  })
-                              );
-                          }
+                        ? () => commands.copy(selected)
                         : undefined
                 }
-                onPaste={
-                    contents.instruments > 0
-                        ? () => {
-                              apply(clipboard.pasteInstruments(session));
-                              toast.success(
-                                  t("clipboardLocale.pastedInstruments", {
-                                      count: clipboard.instrumentCount
-                                  })
-                              );
-                          }
-                        : undefined
-                }
+                onPaste={contents.instruments > 0 ? commands.paste : undefined}
             />
             {isOpen ? (
                 <VirtualItemList
                     items={instruments}
                     focusedItem={
-                        view instanceof BasicInstrument ? view : undefined
+                        cursor instanceof BasicInstrument ? cursor : undefined
                     }
+                    focusRequest={focusRequest}
                     renderItem={(instrument) => {
                         const key = String(getObjectId(instrument));
                         return (
@@ -99,12 +95,14 @@ export function InstrumentList({
                                 instrumentId={getObjectId(instrument)}
                                 view={view}
                                 isSelected={selected.has(instrument)}
+                                isShown={view === instrument}
                                 isOpen={isExpanded(key)}
                                 onToggle={() => toggle(key)}
                                 onClick={(e) => onItemClick(instrument, e)}
                                 onContextMenu={(e) =>
                                     onItemContextMenu(instrument, e)
                                 }
+                                onChildContextMenu={onItemContextMenu}
                                 onPointerDown={(e) =>
                                     onItemPointerDown(instrument, e)
                                 }

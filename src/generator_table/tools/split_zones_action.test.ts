@@ -24,7 +24,7 @@ describe("getSplitRanges", () => {
             { min: 12, max: 13 },
             { min: 14, max: 14 }
         ]);
-        expect(getSplitRanges({ min: -1, max: 127 }, 1)).toHaveLength(128);
+        expect(getSplitRanges({ min: 0, max: 127 }, 1)).toHaveLength(128);
     });
 });
 
@@ -103,6 +103,48 @@ describe("SplitZonesAction", () => {
             { min: 64, max: 95 },
             { min: 96, max: 127 }
         ]);
+    });
+
+    it("splits the keys a zone inherits from the global zone", () => {
+        const session = createTestSession();
+        const [instrument] = session.document.instruments;
+        const [inheriting, other] = instrument.zones;
+        instrument.globalZone.keyRange = { min: 36, max: 59 };
+        inheriting.keyRange = { min: -1, max: 127 };
+        other.keyRange = { min: 60, max: 72 };
+        publishSetUp(session);
+
+        expectRoundTrip(session, [
+            new SplitZonesAction(
+                instrument,
+                { mode: "key", step: 12 },
+                new Set([inheriting])
+            )
+        ]);
+
+        expect(
+            instrument.zones.map((z) => `${z.keyRange.min}-${z.keyRange.max}`)
+        ).toEqual(["36-47", "48-59", "60-72"]);
+    });
+
+    it("keeps velocity layers split by key in key order", () => {
+        const session = createTestSession();
+        const [instrument] = session.document.instruments;
+        const [soft, loud] = instrument.zones;
+        soft.keyRange = { min: 0, max: 23 };
+        soft.velRange = { min: 0, max: 63 };
+        loud.keyRange = { min: 0, max: 23 };
+        loud.velRange = { min: 64, max: 127 };
+        session.document.sortZones(instrument);
+        publishSetUp(session);
+
+        expectRoundTrip(session, [
+            new SplitZonesAction(instrument, { mode: "key", step: 12 })
+        ]);
+
+        expect(
+            instrument.zones.map((z) => `${z.keyRange.min}/${z.velRange.min}`)
+        ).toEqual(["0/0", "0/64", "12/0", "12/64"]);
     });
 
     it("has nothing to split in single key zones", () => {

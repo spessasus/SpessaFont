@@ -6,12 +6,13 @@ import {
 } from "spessasynth_core";
 import { SetGeneratorAction } from "../cell/set_generator_action.ts";
 import { clamp, getGeneratorRange } from "../generator_range.ts";
+import { getPlayedGenerator } from "../played_value.ts";
 
 const ATTENUATION = GeneratorTypes.initialAttenuation;
 
 /**
  * The lowest and highest attenuation the zones of the elements play with, in centibels as
- * stored. Undefined when the elements have no zones.
+ * stored, and the range of the generator.
  */
 export interface AttenuationStats {
     lowest: number;
@@ -21,40 +22,30 @@ export interface AttenuationStats {
 }
 
 /**
- * The attenuation each zone plays with: its own, else the global zone's, else 0 (the default
- * for instruments, and no offset for presets). The global zone counts too when it sets one.
+ * Undefined when the elements have no zones.
  */
-function getPlayedAttenuations(element: BasicPreset | BasicInstrument) {
-    const global = element.globalZone.getGenerator(ATTENUATION, null);
-    const values = element.zones.map(
-        (zone) => zone.getGenerator(ATTENUATION, null) ?? global ?? 0
-    );
-    if (global !== null) {
-        values.push(global);
-    }
-    return values;
-}
-
 export function getAttenuationStats(
     elements: readonly (BasicPreset | BasicInstrument)[]
 ): AttenuationStats | undefined {
-    const values = elements.flatMap((e) =>
-        e.zones.length > 0 ? getPlayedAttenuations(e) : []
-    );
     const [first] = elements;
-    if (!first || values.length === 0) {
+    let lowest = Infinity;
+    let highest = -Infinity;
+    // A loop, as spreading a large selection into Math.min overflows the stack
+    for (const element of elements) {
+        for (const zone of element.zones) {
+            const played = getPlayedGenerator(element, zone, ATTENUATION);
+            lowest = Math.min(lowest, played);
+            highest = Math.max(highest, played);
+        }
+    }
+    if (!first || lowest === Infinity) {
         return undefined;
     }
     const { min, max } = getGeneratorRange(
         ATTENUATION,
         first instanceof BasicInstrument
     );
-    return {
-        lowest: Math.min(...values),
-        highest: Math.max(...values),
-        min,
-        max
-    };
+    return { lowest, highest, min, max };
 }
 
 /**
@@ -72,7 +63,9 @@ export function limitAttenuationOffset(
 
 /**
  * Shifts the attenuation of every zone of the elements by one offset, where the value lives:
- * a global value and the zones that override it, or each zone when nothing sets it.
+ * a global value and the zones that override it, or each zone when nothing sets it. The offset
+ * comes from what the zones play, so a global value that every zone overrides is kept in the
+ * range on its own.
  */
 export function createAttenuationActions(
     elements: readonly (BasicPreset | BasicInstrument)[],
@@ -98,7 +91,14 @@ export function createAttenuationActions(
         }
         const global = element.globalZone.getGenerator(ATTENUATION, null);
         if (global !== null) {
-            set(element, element.globalZone, global, global + offset);
+            const { min, max } = getGeneratorRange(
+                ATTENUATION,
+                element instanceof BasicInstrument
+            );
+            const shifted = clamp(global + offset, min, max);
+            if (shifted !== global) {
+                set(element, element.globalZone, global, shifted);
+            }
         }
         for (const zone of element.zones) {
             const own = zone.getGenerator(ATTENUATION, null);

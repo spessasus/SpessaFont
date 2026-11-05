@@ -26,7 +26,8 @@ function PlaybackButton({
         <button
             type={"button"}
             className={"pretty_button responsive_button hover_brightness"}
-            aria-pressed={isActive}
+            // Not aria-pressed, the label already says "Stop" while it plays
+            data-active={isActive}
             onClick={onClick}
         >
             {isActive ? <StopIcon /> : icon}

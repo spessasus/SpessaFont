@@ -75,6 +75,31 @@ describe("attenuation offset", () => {
         expect(getAttenuations(instrument)).toEqual([13 * DB, null]);
     });
 
+    it("counts only what the zones play, not a global value they all override", () => {
+        const session = createTestSession();
+        const [instrument] = session.document.instruments;
+        instrument.globalZone.setGenerator(ATTENUATION, 0);
+        instrument.zones[0].setGenerator(ATTENUATION, 4 * DB);
+        instrument.zones[1].setGenerator(ATTENUATION, 8 * DB);
+        publishSetUp(session);
+
+        const stats = getAttenuationStats([instrument]);
+        expect(stats).toMatchObject({ lowest: 4 * DB, highest: 8 * DB });
+        if (!stats) {
+            throw new Error("No stats.");
+        }
+        const offset = limitAttenuationOffset(stats, -stats.lowest);
+        expect(offset).toBe(-4 * DB);
+        expectRoundTrip(
+            session,
+            createAttenuationActions([instrument], offset)
+        );
+
+        // The unused global value stays in the range
+        expect(instrument.globalZone.getGenerator(ATTENUATION, null)).toBe(0);
+        expect(getAttenuations(instrument)).toEqual([0, 4 * DB]);
+    });
+
     it("has no stats without zones and no actions for no offset", () => {
         const session = createTestSession();
         const [instrument] = session.document.instruments;

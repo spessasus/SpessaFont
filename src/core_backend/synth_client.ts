@@ -43,6 +43,10 @@ export class SynthClient {
      * The keyboard channel's controllers, pitch wheel and pressure.
      */
     public readonly keyboardChannel = new KeyboardChannelStore();
+    /**
+     * Failures in the host, with their message. The UI shows them.
+     */
+    public readonly hostErrors = new ListenerSet<string>();
 
     public constructor(port: HostPort) {
         this.port = port;
@@ -90,13 +94,29 @@ export class SynthClient {
                     .get(event.requestId)
                     ?.reject(new Error(event.message));
                 this.pending.delete(event.requestId);
+                return;
+            }
+
+            case "hostError": {
+                this.hostErrors.emit(event.message);
+                return;
+            }
+
+            case "hostFailed": {
+                // Nothing may answer them any more, so a save or a read does not wait forever
+                for (const request of this.pending.values()) {
+                    request.reject(new Error(event.message));
+                }
+                this.pending.clear();
+                this.hostErrors.emit(event.message);
             }
         }
     }
 
     private request<R extends HostRequest>(
         request: R,
-        onProgress?: (value: number) => void
+        onProgress?: (value: number) => void,
+        transfer: Transferable[] = []
     ) {
         return new Promise<HostRequestResults[R["type"]]>((resolve, reject) => {
             this.pending.set(request.requestId, {
@@ -106,7 +126,7 @@ export class SynthClient {
                 reject,
                 onProgress
             });
-            this.send(request);
+            this.send(request, transfer);
         });
     }
 
@@ -124,10 +144,21 @@ export class SynthClient {
 
     /**
      * Gives the host the bank's file, which it loads with the sample data. The buffer moves to
-     * the host, the editor's bank does not use it after loading.
+     * the host, the editor's bank does not use it after loading. Resolves once the host has
+     * loaded it, and rejects when it could not.
      */
     public openBank(sessionId: number, file: ArrayBuffer, ids: MirrorIds) {
-        this.send({ type: "openBank", sessionId, file, ids }, [file]);
+        return this.request(
+            {
+                type: "openBank",
+                requestId: this.nextRequest++,
+                sessionId,
+                file,
+                ids
+            },
+            undefined,
+            [file]
+        );
     }
 
     public patchBank(sessionId: number, patch: PatchMessage) {
@@ -176,6 +207,31 @@ export class SynthClient {
             requestId: this.nextRequest++,
             sessionId,
             id
+        });
+    }
+
+    /**
+     * Plays a MIDI file, resolving once the host parsed it. The buffer moves to the host.
+     */
+    public loadSong(file: ArrayBuffer, name: string) {
+        return this.request(
+            {
+                type: "loadSong",
+                requestId: this.nextRequest++,
+                file,
+                name
+            },
+            undefined,
+            [file]
+        );
+    }
+
+    public readSampleLengths(sessionId: number, ids: number[]) {
+        return this.request({
+            type: "readSampleLengths",
+            requestId: this.nextRequest++,
+            sessionId,
+            ids
         });
     }
 

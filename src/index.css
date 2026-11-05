@@ -90,9 +90,14 @@ input[type="number"] {
     padding: 0.3rem;
 }
 
+.pretty_input::placeholder {
+    color: var(--muted-font-color);
+    opacity: 1;
+}
+
 .pretty_input:focus {
-    border-color: var(--border-color);
-    outline: none;
+    border-color: var(--focus-color);
+    outline: 1px solid var(--focus-color);
 }
 
 .pretty_button {
@@ -139,10 +144,6 @@ input[type="number"] {
     padding: 0.2rem;
 }
 
-.disabled {
-    filter: grayscale(10);
-}
-
 .warning {
     color: var(--warning-color) !important;
 }
@@ -150,7 +151,7 @@ input[type="number"] {
 input:focus,
 select:focus {
     transition: none;
-    outline: ridge var(--border-color) 0.2rem;
+    outline: ridge var(--focus-color) 0.2rem;
 }
 
 /* Commented for now because native scrollbars seem nice */

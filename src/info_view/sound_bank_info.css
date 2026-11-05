@@ -11,12 +11,14 @@
     align-items: start;
     flex-grow: 2;
     gap: var(--flex-gap);
+    min-width: 0;
 }
 
 .sound_bank_info .fields {
     width: 100%;
     display: grid;
-    grid-template-columns: max-content 1fr;
+    /* The inputs are sized by their length limit, which must not widen the column */
+    grid-template-columns: max-content minmax(0, 1fr);
     gap: var(--flex-gap);
     align-items: center;
 }
@@ -31,6 +33,14 @@
 
 .sound_bank_info span input {
     font-size: 1rem;
+    min-width: 0;
+}
+
+.sound_bank_info .info_field_hint {
+    grid-column: 2;
+    margin: 0;
+    font-size: 0.9rem;
+    opacity: 0.8;
 }
 
 .sound_bank_info span label {

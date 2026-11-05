@@ -3,7 +3,7 @@ import type { TFunction } from "i18next";
 import type { BasicSample } from "spessasynth_core";
 import type { BankSession } from "../core_backend/bank_session.ts";
 import type { HistoryActionGroup } from "../core_backend/history.ts";
-import { createMergeDuplicateActions } from "../core_backend/merge_duplicates.ts";
+import { findDuplicateSamples } from "../core_backend/merge_duplicates.ts";
 import { yieldToPaint } from "../utils/yield_to_paint.ts";
 import { runAudioTool } from "./run_audio_tool.ts";
 
@@ -26,12 +26,8 @@ export function mergeDuplicateSamples(
         // Comparing a large bank takes a while, so let the toast show first
         await yieldToPaint();
         try {
-            const { actions, removedCount } = await createMergeDuplicateActions(
-                session,
-                session.document.samples,
-                scope,
-                (sample) => session.getSampleLength(sample)
-            );
+            const duplicates = await findDuplicateSamples(session, scope);
+            const { actions, removedCount } = duplicates.createActions();
             if (removedCount === 0) {
                 toast(t("toolsLocale.merge.none"), { id });
                 return;

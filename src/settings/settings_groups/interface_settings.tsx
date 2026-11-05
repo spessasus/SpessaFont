@@ -8,6 +8,7 @@ import {
 } from "../../themes/theme_list.ts";
 import { useTranslation } from "react-i18next";
 import { resolveLocale } from "../save_load/get_user_locale.ts";
+import { UNSET_LANGUAGE } from "../save_load/settings_typedef.ts";
 
 const THEME_ENTRIES = Object.entries(THEME_LIST);
 
@@ -26,8 +27,13 @@ export function InterfaceSettings({ settings, onChange }: GroupSettingsProps) {
                 <select
                     onChange={(e) => onChange({ lang: e.target.value })}
                     className={"pretty_input monospaced"}
-                    value={resolveLocale(settings.lang)}
+                    value={settings.lang}
                 >
+                    <option value={UNSET_LANGUAGE}>
+                        {t("settingsLocale.interface.browserLanguage", {
+                            name: LocaleList[resolveLocale(UNSET_LANGUAGE)].name
+                        })}
+                    </option>
                     {Object.entries(LocaleList).map(([code, locale]) => (
                         <option key={code} value={code}>
                             {locale.name}

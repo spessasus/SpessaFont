@@ -1,4 +1,4 @@
-import { useDeferredValue, useState } from "react";
+import { useDeferredValue, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ModalDialog } from "./modal_dialog.tsx";
 import { VirtualItemList } from "../menu_list/virtual_item_list.tsx";
@@ -16,7 +16,8 @@ interface ElementPickerProps {
 
 /**
  * A searchable list of elements. The arrow keys move the highlight, which starts on the first
- * match, and Enter picks it.
+ * match, and Enter picks it. The search field stays focused, so the highlight is the only
+ * cursor, and it tells screen readers which option is highlighted (a combobox).
  */
 export function ElementPicker({
     title,
@@ -24,6 +25,7 @@ export function ElementPicker({
     onAnswer
 }: ElementPickerProps) {
     const { t } = useTranslation();
+    const listId = useId();
     const [query, setQuery] = useState("");
     const deferredQuery = useDeferredValue(query.toLowerCase());
     const matches =
@@ -36,6 +38,8 @@ export function ElementPicker({
     // Typing can filter the highlighted option out, then the first match is highlighted
     const current =
         highlighted && matches.includes(highlighted) ? highlighted : matches[0];
+
+    const getOptionId = (option: PickerOption) => `${listId}-${option.index}`;
 
     const moveHighlight = (step: number) => {
         const index = current ? matches.indexOf(current) : -1;
@@ -52,6 +56,13 @@ export function ElementPicker({
             <input
                 className={"pretty_input"}
                 type={"search"}
+                role={"combobox"}
+                aria-expanded={true}
+                aria-controls={listId}
+                aria-autocomplete={"list"}
+                aria-activedescendant={
+                    current ? getOptionId(current) : undefined
+                }
                 autoFocus={true}
                 placeholder={t("presetList.search")}
                 aria-label={t("presetList.search")}
@@ -88,23 +99,34 @@ export function ElementPicker({
                     }
                 }}
             />
-            <div className={"element_picker_list"}>
+            <div
+                id={listId}
+                className={"element_picker_list"}
+                role={"listbox"}
+                aria-label={title}
+            >
                 {matches.length === 0 ? (
                     <p className={"element_picker_empty"}>
                         {t("contextMenu.noMatches")}
                     </p>
                 ) : (
                     <VirtualItemList
+                        // A new search starts at the top, where the first match is
+                        key={deferredQuery}
                         items={matches}
                         focusedItem={current}
                         renderItem={(option) => (
                             <button
                                 type={"button"}
+                                id={getOptionId(option)}
+                                role={"option"}
+                                aria-selected={option === current}
+                                // Out of the Tab order, a focused row would be a second cursor
+                                tabIndex={-1}
                                 className={
                                     "plain_button monospaced element_picker_item"
                                 }
                                 title={option.label}
-                                data-highlighted={option === current}
                                 onClick={() => onAnswer(option.index)}
                             >
                                 {option.label}

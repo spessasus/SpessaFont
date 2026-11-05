@@ -16,7 +16,7 @@
     height: var(--track-height);
 }
 
-.switch_slider {
+.controller_switch_slider {
     position: absolute;
     cursor: pointer;
     top: 50%;
@@ -30,7 +30,7 @@
     transform: translateY(-50%);
 }
 
-.switch_slider::before {
+.controller_switch_slider::before {
     position: absolute;
     content: "";
     height: var(--thumb-size);
@@ -47,31 +47,31 @@
     box-shadow: 0 0 0.125rem var(--shadow-color);
 }
 
-.switch_slider:hover::before {
+.controller_switch_slider:hover::before {
     border: solid var(--border-color) 1px;
     filter: brightness(1.2);
 }
 
-.controller_switch.active .switch_slider {
+.controller_switch.active .controller_switch_slider {
     background-color: var(--primary-color);
     border: var(--border-color) 1px solid;
 }
 
-.controller_switch.active .switch_slider::before {
+.controller_switch.active .controller_switch_slider::before {
     transform: translate(
         calc(var(--track-width) - var(--thumb-size) * 0.66),
         -50%
     );
 }
 
-.controller_switch:active .switch_slider::before {
+.controller_switch:active .controller_switch_slider::before {
     transform: translate(
         calc(var(--track-width) - var(--thumb-size) * 1.2),
         -50%
     );
 }
 
-.controller_switch:active input:checked + .switch_slider::before {
+.controller_switch:active input:checked + .controller_switch_slider::before {
     transform: translate(
         calc(var(--track-width) - var(--thumb-size) * 0.95),
         -50%

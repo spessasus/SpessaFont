@@ -1,14 +1,13 @@
 import { type BasicInstrument, BasicPreset } from "spessasynth_core";
 import type { MouseEvent, PointerEvent } from "react";
 import { useTranslation } from "react-i18next";
-import toast from "react-hot-toast";
-import type { BankEditView } from "../core_backend/bank_view.ts";
+import type { BankEditView, BankEntity } from "../core_backend/bank_view.ts";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useClipboard } from "../clipboard/clipboard_context.ts";
 import { DropdownHeader } from "./dropdown_header/dropdown_header.tsx";
 import { PresetDisplay } from "./preset_display/preset_display.tsx";
 import { getObjectId } from "../utils/object_id.ts";
-import { VirtualItemList } from "./virtual_item_list.tsx";
+import { type FocusRequest, VirtualItemList } from "./virtual_item_list.tsx";
 import { useSelectionCommands } from "./use_selection_commands.ts";
 import { useExpandedItems, useSectionOpen } from "./use_list_state.ts";
 import {
@@ -21,8 +20,13 @@ interface PresetListProps {
     view: BankEditView;
     selected: ReadonlySet<BasicPreset>;
     selectedInstruments: ReadonlySet<BasicInstrument>;
+    /**
+     * The element the keyboard is on, kept in view.
+     */
+    cursor: BankEntity | undefined;
+    focusRequest: FocusRequest | null;
     onItemClick: (preset: BasicPreset, event: MouseEvent) => void;
-    onItemContextMenu: (preset: BasicPreset, event: MouseEvent) => void;
+    onItemContextMenu: (entity: BankEntity, event: MouseEvent) => void;
     onItemPointerDown: (preset: BasicPreset, event: PointerEvent) => void;
 }
 
@@ -31,13 +35,15 @@ export function PresetList({
     view,
     selected,
     selectedInstruments,
+    cursor,
+    focusRequest,
     onItemClick,
     onItemContextMenu,
     onItemPointerDown
 }: PresetListProps) {
     const { t } = useTranslation();
     const { session, apply } = useBankEditor();
-    const { clipboard, contents } = useClipboard();
+    const { contents } = useClipboard();
     const commands = useSelectionCommands();
     const [isOpen, setIsOpen] = useSectionOpen(
         view,
@@ -51,7 +57,9 @@ export function PresetList({
             <DropdownHeader
                 text={t("presetList.presets")}
                 isOpen={isOpen}
-                onToggle={() => setIsOpen(!isOpen)}
+                onToggle={() => setIsOpen((open) => !open)}
+                addLabel={t("contextMenu.newPreset")}
+                addHint={t("presetList.newPresetHint")}
                 onAdd={
                     canLink
                         ? () =>
@@ -65,24 +73,18 @@ export function PresetList({
                 }
                 onCopy={
                     selected.size > 0
-                        ? () => {
-                              clipboard.copyPresets(selected, session);
-                              toast.success(
-                                  t("clipboardLocale.copiedPresets", {
-                                      count: selected.size
-                                  })
-                              );
-                          }
+                        ? () => commands.copy(selected)
                         : undefined
                 }
-                onPaste={
-                    contents.presets > 0 ? commands.pastePresets : undefined
-                }
+                onPaste={contents.presets > 0 ? commands.paste : undefined}
             />
             {isOpen ? (
                 <VirtualItemList
                     items={presets}
-                    focusedItem={view instanceof BasicPreset ? view : undefined}
+                    focusedItem={
+                        cursor instanceof BasicPreset ? cursor : undefined
+                    }
+                    focusRequest={focusRequest}
                     renderItem={(preset) => {
                         const key = String(getObjectId(preset));
                         const instrumentKey = (instrumentId: number) =>
@@ -92,6 +94,7 @@ export function PresetList({
                                 preset={preset}
                                 view={view}
                                 isSelected={selected.has(preset)}
+                                isShown={view === preset}
                                 isOpen={isExpanded(key)}
                                 onToggle={() => toggle(key)}
                                 isInstrumentOpen={(id) =>
@@ -104,6 +107,7 @@ export function PresetList({
                                 onContextMenu={(e) =>
                                     onItemContextMenu(preset, e)
                                 }
+                                onChildContextMenu={onItemContextMenu}
                                 onPointerDown={(e) =>
                                     onItemPointerDown(preset, e)
                                 }

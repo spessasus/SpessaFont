@@ -23,7 +23,7 @@
     min-width: 0;
 }
 
-.sample_name {
+.sample_editor_name {
     font-size: 1.5rem;
     flex: 1 1 12rem;
     min-width: 0;
@@ -62,7 +62,7 @@
     visibility: hidden;
 }
 
-.sample_playback button[aria-pressed="true"] {
+.sample_playback button[data-active="true"] {
     border-color: var(--border-color);
     background: var(--primary-color);
 }
@@ -94,24 +94,41 @@
     min-width: 0;
 }
 
-.info_field {
+/* A label too long for its column (Polish) wraps, and the fields of a row stay level at the
+   bottom */
+.sample_editor_field {
     display: flex;
     flex-direction: column;
+    justify-content: end;
     align-items: stretch;
     gap: 0.2rem;
+    min-width: 0;
 }
 
-.info_field span {
+.sample_editor_field span {
     text-align: start;
-    white-space: nowrap;
+    overflow-wrap: break-word;
     font-size: 0.85rem;
     color: var(--muted-font-color);
 }
 
-.info_field input,
-.info_field select {
+.sample_editor_field input,
+.sample_editor_field select,
+.sample_editor_field button {
     text-align: end;
     width: 100%;
+}
+
+/* Long sample names end in an ellipsis, the title shows the whole name */
+.sample_link_button {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.sample_link_button:disabled {
+    cursor: default;
 }
 
 .sample_tools {
@@ -119,4 +136,16 @@
     flex-direction: column;
     gap: var(--flex-gap);
     flex: 0 0 auto;
+}
+
+/* A single tool with nothing to do, while loading the whole column is grayed out instead */
+.sample_tools_loading {
+    filter: grayscale(10);
+}
+
+.sample_tools:not(.sample_tools_loading) button:disabled {
+    cursor: default;
+    opacity: 0.5;
+    transform: none;
+    filter: none;
 }

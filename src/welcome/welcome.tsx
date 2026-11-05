@@ -14,12 +14,12 @@ import {
 } from "./desktop_downloads.ts";
 import { logError } from "../utils/core_utils.ts";
 
-const DOWNLOAD_LABELS = {
-    windowsInstaller: "downloadDesktop.windowsInstaller",
-    windowsPortable: "downloadDesktop.windowsPortable",
-    linuxAppImage: "downloadDesktop.linuxAppImage",
-    debianPackage: "downloadDesktop.debianPackage"
-} as const satisfies Record<keyof DesktopDownloads, string>;
+const DOWNLOADS = [
+    { key: "windowsInstaller", label: "downloadDesktop.windowsInstaller" },
+    { key: "windowsPortable", label: "downloadDesktop.windowsPortable" },
+    { key: "linuxAppImage", label: "downloadDesktop.linuxAppImage" },
+    { key: "debianPackage", label: "downloadDesktop.debianPackage" }
+] as const satisfies readonly { key: keyof DesktopDownloads; label: string }[];
 
 interface WelcomeProps {
     onOpenFile: () => void;
@@ -40,17 +40,18 @@ export function Welcome({ onOpenFile, onNewFile }: WelcomeProps) {
             window.open(DEFAULT_RELEASE_URL);
             return;
         }
-        const links = Object.entries(DOWNLOAD_LABELS).map(([key, label]) => (
+        const links = DOWNLOADS.map(({ key, label }) => (
             <a
                 key={key}
                 className={"pretty_outline"}
                 target={"_blank"}
-                href={downloads[key as keyof DesktopDownloads]}
+                href={downloads[key]}
             >
                 {t(label)}
             </a>
         ));
         showToastDialog({
+            id: "downloads",
             content: (
                 <>
                     <span>
@@ -65,20 +66,22 @@ export function Welcome({ onOpenFile, onNewFile }: WelcomeProps) {
 
     return (
         <div className="welcome">
-            <div className={"grouped"}>
+            <div className={"welcome_group"}>
                 <h1>{t("welcome.main")}</h1>
-                <div className={"flex"}>
+                <div className={"welcome_actions"}>
                     <button
                         type={"button"}
-                        className={"action_button"}
+                        className={"welcome_action"}
                         onClick={onOpenFile}
+                        // Takes the focus when the last tab closes from the keyboard
+                        data-focus-fallback={true}
                     >
                         <OpenFileIcon />
                         <span>{t("welcome.openPrompt")}</span>
                     </button>
                     <button
                         type={"button"}
-                        className={"action_button"}
+                        className={"welcome_action"}
                         onClick={onNewFile}
                     >
                         <NewFileIcon />
@@ -88,7 +91,7 @@ export function Welcome({ onOpenFile, onNewFile }: WelcomeProps) {
                 {IS_ELECTRON ? null : (
                     <button
                         type={"button"}
-                        className={"action_button"}
+                        className={"welcome_action"}
                         onClick={() => void handleDownload()}
                     >
                         <DownloadIcon />
@@ -96,7 +99,7 @@ export function Welcome({ onOpenFile, onNewFile }: WelcomeProps) {
                     </button>
                 )}
             </div>
-            <div className={"welcome_copyright grouped"}>
+            <div className={"welcome_copyright welcome_group"}>
                 <span>{t("welcome.copyright")}</span>
                 <span>
                     <i>{t("welcome.copyrightTwo")}</i>

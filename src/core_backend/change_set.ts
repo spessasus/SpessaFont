@@ -25,7 +25,7 @@ export class ChangeSet {
     private readonly touchedAudio = new Set<BasicSample>();
     private readonly restored = new Map<BasicSample, RestoredAudio>();
     private isBankInfoTouched = false;
-    private focusTarget: BankEditView | undefined;
+    private readonly hints = new Array<BankEditView>();
 
     /**
      * Entities whose own data changed.
@@ -35,7 +35,8 @@ export class ChangeSet {
     }
 
     /**
-     * Element lists whose membership, order or displayed names changed.
+     * Element lists whose membership or order may have changed. The store checks whether they
+     * did, so touching a list that stayed the same costs only that check.
      */
     public get lists(): ReadonlySet<ElementList> {
         return this.touchedLists;
@@ -63,10 +64,11 @@ export class ChangeSet {
     }
 
     /**
-     * The element the UI should select after this change, if any.
+     * The elements the actions asked the UI to select, in the order they asked.
+     * The history picks one of them.
      */
-    public get focus() {
-        return this.focusTarget;
+    public get focusHints(): readonly BankEditView[] {
+        return this.hints;
     }
 
     public get isEmpty() {
@@ -106,9 +108,10 @@ export class ChangeSet {
     }
 
     /**
-     * Sets the focus hint. The last action in a group wins.
+     * Adds a focus hint. The last one of a group wins, or the first one when it is undone, as
+     * undo runs the group backward. Hints to elements gone by the end of the group are skipped.
      */
     public focusOn(view: BankEditView) {
-        this.focusTarget = view;
+        this.hints.push(view);
     }
 }

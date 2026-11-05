@@ -21,6 +21,8 @@ export const ModulatorLocale = {
     editModulators: "Edit modulators for {{name}}",
     closeEditor: "Close the modulator editor",
     modulators: "Modulators", // plural
+    modulatorCount: "Modulators: {{count}}",
+    newModulator: "New",
     editingModulators: "Editing Modulators for {{name}}",
     overriding: "Overriding Default Modulator",
     sources: {
@@ -31,12 +33,12 @@ export const ModulatorLocale = {
         channelPressure: "Channel Pressure",
         pitchWheel: "Pitch Wheel",
         pitchWheelRange: "Pitch Wheel Range",
-        midiController: "MIDI Controller",
-        link: "Linked Modulator",
+        link: "Linked Modulator (not supported)",
         otherSource: "Source {{number}}",
         otherController: "CC#{{number}}"
     },
     otherDestination: "Generator {{number}}",
+    linkDestination: "Linked or invalid (not supported)",
     transforms: {
         noOperation: "No Operation",
         absoluteValue: "Absolute Value"

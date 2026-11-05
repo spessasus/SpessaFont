@@ -9,11 +9,9 @@ import { getObjectId } from "../../utils/object_id.ts";
 import { useInstrumentView } from "../../hooks/use_instrument_view.ts";
 import { useBankSnapshot } from "../../hooks/use_bank_snapshot.ts";
 import { useEntityLookup } from "../../hooks/use_entity_lookup.ts";
-import { createSpreadActions } from "../spread_actions.ts";
 import { createPresetFromInstruments } from "../../menu_list/link_actions.ts";
 import { useElementTools } from "../../generator_table/tools/use_element_tools.tsx";
-
-const MAX_NAME_LENGTH = 40;
+import { MAX_NAME_LENGTH } from "../../utils/element_name.ts";
 
 interface LinkedPresetsProps {
     /**
@@ -50,7 +48,7 @@ export function LinkedPresets({ instrument }: LinkedPresetsProps) {
                     type={"text"}
                     value={view.name}
                     aria-label={t("instrumentLocale.instrumentName")}
-                    setValue={(name) => {
+                    onCommit={(name) => {
                         apply([
                             new EditInstrumentNameAction(
                                 instrument,
@@ -67,7 +65,7 @@ export function LinkedPresets({ instrument }: LinkedPresetsProps) {
                 <button
                     type={"button"}
                     className={"plain_button"}
-                    onClick={() => apply(createSpreadActions(instrument))}
+                    onClick={() => tools.spread([instrument])}
                 >
                     {t("contextMenu.spreadSamples")}
                 </button>
@@ -127,7 +125,7 @@ export function LinkedPresets({ instrument }: LinkedPresetsProps) {
                 </>
             ) : (
                 <>
-                    <div>{t("instrumentLocale.usedBy")}:</div>
+                    <div>{t("instrumentLocale.usedBy")}</div>
                     {Array.from(linked, (id) => (
                         <button
                             type={"button"}

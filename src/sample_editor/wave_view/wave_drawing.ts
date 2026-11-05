@@ -1,5 +1,6 @@
 import type { CanvasSize } from "../../hooks/use_canvas.ts";
 import { sampleToX, type WaveViewport } from "./wave_geometry.ts";
+import { addPeak, type PeakLevel } from "./wave_peaks.ts";
 
 const SCALE_LINES_COUNT = 8;
 /**
@@ -24,8 +25,6 @@ export interface LoopPoints {
 export interface WaveformColors {
     grid: string;
     wave: string;
-    loopStart: string;
-    loopEnd: string;
 }
 
 export interface OverlayColors {
@@ -76,21 +75,30 @@ function drawGrid(
     }
 }
 
-function drawWave(
-    ctx: CanvasRenderingContext2D,
-    { width, height }: CanvasSize,
-    view: WaveViewport,
-    data: Float32Array
-) {
-    const halfHeight = height / 2;
-    const samplesPerPixel = data.length / (width * view.zoom);
-    ctx.lineWidth = Math.min(
+/**
+ * Thicker lines as the samples spread apart.
+ */
+function getWaveThickness({ sampleCount, width, zoom }: WaveViewport) {
+    const samplesPerPixel = sampleCount / (width * zoom);
+    return Math.min(
         Math.max(
             MIN_WAVE_THICKNESS,
             WAVE_THICKNESS_PER_PIXEL / samplesPerPixel
         ),
         MAX_WAVE_THICKNESS
     );
+}
+
+function drawWave(
+    ctx: CanvasRenderingContext2D,
+    { width, height }: CanvasSize,
+    view: WaveViewport,
+    data: Float32Array,
+    peaks: readonly PeakLevel[]
+) {
+    const halfHeight = height / 2;
+    const samplesPerPixel = view.sampleCount / (width * view.zoom);
+    ctx.lineWidth = getWaveThickness(view);
     ctx.beginPath();
     if (samplesPerPixel >= MIN_MAX_THRESHOLD) {
         for (let x = 0; x < width; x++) {
@@ -102,14 +110,10 @@ function drawWave(
             if (start >= end) {
                 break;
             }
-            let min = 1;
-            let max = -1;
-            for (let i = start; i < end; i++) {
-                min = Math.min(min, data[i]);
-                max = Math.max(max, data[i]);
-            }
-            ctx.lineTo(x, halfHeight - min * halfHeight);
-            ctx.lineTo(x, halfHeight - max * halfHeight);
+            const peak = { min: 1, max: -1 };
+            addPeak(data, peaks, start, end, peak);
+            ctx.lineTo(x, halfHeight - peak.min * halfHeight);
+            ctx.lineTo(x, halfHeight - peak.max * halfHeight);
         }
     } else {
         for (let x = 0; x < width; x++) {
@@ -151,15 +155,15 @@ function drawLoopPreview(
 }
 
 /**
- * The static layer: scale lines, the wave, and dashed previews of how the wave continues
- * across the loop (the end of the loop drawn before its start and the start after its end).
+ * The static layer: scale lines and the wave.
+ * @param peaks the audio's peaks from `buildPeaks`
  */
 export function drawWaveform(
     ctx: CanvasRenderingContext2D,
     size: CanvasSize,
     view: WaveViewport,
     data: Float32Array,
-    { loopStart, loopEnd }: LoopPoints,
+    peaks: readonly PeakLevel[],
     colors: WaveformColors
 ) {
     if (data.length === 0) {
@@ -167,30 +171,7 @@ export function drawWaveform(
     }
     drawGrid(ctx, size, view, colors.grid);
     ctx.strokeStyle = colors.wave;
-    drawWave(ctx, size, view, data);
-
-    const loopLength = loopEnd - loopStart;
-    ctx.setLineDash(DASH);
-    ctx.strokeStyle = colors.loopStart;
-    drawLoopPreview(
-        ctx,
-        size.height,
-        view,
-        data,
-        loopEnd - LOOP_PREVIEW_POINTS,
-        loopEnd + LOOP_PREVIEW_POINTS,
-        -loopLength
-    );
-    ctx.strokeStyle = colors.loopEnd;
-    drawLoopPreview(
-        ctx,
-        size.height,
-        view,
-        data,
-        loopStart - LOOP_PREVIEW_POINTS,
-        loopStart + LOOP_PREVIEW_POINTS,
-        loopLength
-    );
+    drawWave(ctx, size, view, data, peaks);
 }
 
 export interface OverlayMarkers extends LoopPoints {
@@ -205,15 +186,45 @@ export interface OverlayMarkers extends LoopPoints {
 }
 
 /**
- * The live layer: loop points, the play head and the hover cursor.
+ * The live layer: loop points with dashed previews of how the wave continues across the loop
+ * (the end of the loop drawn before its start and the start after its end), the play head and
+ * the hover cursor. The previews are here, so a loop edit does not redraw the whole wave.
  */
 export function drawOverlay(
     ctx: CanvasRenderingContext2D,
     { height }: CanvasSize,
     view: WaveViewport,
+    data: Float32Array,
     { loopStart, loopEnd, hoveredSample, playheadSample }: OverlayMarkers,
     colors: OverlayColors
 ) {
+    if (data.length > 0) {
+        const loopLength = loopEnd - loopStart;
+        ctx.lineWidth = getWaveThickness(view);
+        ctx.setLineDash(DASH);
+        ctx.strokeStyle = colors.loopStart;
+        drawLoopPreview(
+            ctx,
+            height,
+            view,
+            data,
+            loopEnd - LOOP_PREVIEW_POINTS,
+            loopEnd + LOOP_PREVIEW_POINTS,
+            -loopLength
+        );
+        ctx.strokeStyle = colors.loopEnd;
+        drawLoopPreview(
+            ctx,
+            height,
+            view,
+            data,
+            loopStart - LOOP_PREVIEW_POINTS,
+            loopStart + LOOP_PREVIEW_POINTS,
+            loopLength
+        );
+        ctx.setLineDash([]);
+    }
+
     ctx.lineWidth = 3;
     ctx.strokeStyle = colors.loopStart;
     drawVerticalLine(ctx, sampleToX(view, loopStart), height);

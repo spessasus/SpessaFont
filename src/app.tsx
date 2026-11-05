@@ -1,6 +1,6 @@
 import { MenuBar } from "./menu_bar/menu_bar.tsx";
 import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { Settings } from "./settings/settings.tsx";
 import { TabList } from "./tab_list/tab_list.tsx";
 import { KeyboardController } from "./keyboard/keyboard_controller.tsx";
@@ -12,20 +12,33 @@ import "./app.css";
 import { Welcome } from "./welcome/welcome.tsx";
 import { logError, logInfo } from "./utils/core_utils.ts";
 import { useAudioEngine } from "./core_backend/audio_engine_context.ts";
-import { useMIDIAccess } from "./settings/midi_context/midi_context.ts";
+import { useMIDIInput } from "./keyboard/use_midi_input.ts";
 import { useBankTabs } from "./tab_list/use_bank_tabs.ts";
 import { useBankFileOpener } from "./hooks/use_bank_file_opener.ts";
 import { useLaunchQueue } from "./hooks/use_launch_queue.ts";
 import { useElectronFileOpen } from "./hooks/use_electron_file_open.ts";
 import { useEventListener } from "./hooks/use_event_listener.ts";
-import { isEditorShortcut } from "./utils/is_editor_shortcut.ts";
+import {
+    isEditorShortcut,
+    isInModal,
+    isTextField
+} from "./utils/is_editor_shortcut.ts";
 import { useUncaughtErrorToasts } from "./hooks/use_uncaught_error_toasts.ts";
 import { pickFile } from "./utils/pick_file.ts";
 import { getFileName } from "./utils/file_path.ts";
 import { useFileDrop } from "./hooks/use_file_drop.ts";
 import { useSampleImport } from "./menu_list/use_sample_import.ts";
+import { ErrorBoundary } from "./error_boundary/error_boundary.tsx";
+import { PartErrorFallback } from "./error_boundary/part_error_fallback.tsx";
+import { IS_MAC } from "./utils/environment_detection.ts";
+import { rememberFocus } from "./utils/focus_return.ts";
 
 const SOUND_BANK_EXTENSIONS = ACCEPTED_SOUNDBANK_FORMATS.split(",");
+
+// A failing tab, keyboard or settings page keeps the other tabs and their unsaved edits
+function renderPartError(error: unknown, reset: () => void) {
+    return <PartErrorFallback error={error} onRetry={reset} />;
+}
 
 function isSoundBankFile(file: File) {
     const name = file.name.toLowerCase();
@@ -35,8 +48,8 @@ function isSoundBankFile(file: File) {
 export function App() {
     const { t } = useTranslation();
     const { audioEngine } = useAudioEngine();
-    const { selectedDevice } = useMIDIAccess();
     useUncaughtErrorToasts();
+    useMIDIInput();
     const {
         tabs,
         activeSession,
@@ -45,13 +58,36 @@ export function App() {
         requestClose,
         activate,
         setActiveView,
+        setSessionView,
         goBack,
         goForward
     } = useBankTabs();
-    const openBankFile = useBankFileOpener(openSession);
     const importSamples = useSampleImport();
     const [isKeyboardShown, setIsKeyboardShown] = useState(false);
     const [areSettingsShown, setAreSettingsShown] = useState(false);
+    // Gives the focus back to where it was when the settings opened
+    const restoreSettingsFocus = useRef<(() => void) | null>(null);
+
+    const closeSettings = () => {
+        setAreSettingsShown(false);
+        restoreSettingsFocus.current?.();
+        restoreSettingsFocus.current = null;
+    };
+    const toggleSettings = () => {
+        if (areSettingsShown) {
+            closeSettings();
+            return;
+        }
+        restoreSettingsFocus.current = rememberFocus();
+        setAreSettingsShown(true);
+    };
+
+    // A bank opened while the settings are shown would stay hidden behind them
+    const openBankFile = useBankFileOpener((session) => {
+        setAreSettingsShown(false);
+        restoreSettingsFocus.current = null;
+        openSession(session);
+    });
 
     // Files opened by the OS arrive without a user gesture on the page
     const openFileFromOS = async (file: File) => {
@@ -69,44 +105,33 @@ export function App() {
         );
     });
 
-    // Sound banks open in new tabs, anything else is tried as audio for the open bank
-    // All the audio files are one undo step
+    // Sound banks open in new tabs, anything else is tried as audio for the open bank, or for
+    // the last bank dropped with it. All the audio files are one undo step
     const handleDroppedFiles = async (files: File[]) => {
         const audioFiles = files.filter((file) => !isSoundBankFile(file));
+        let target = activeSession;
         for (const file of files) {
             if (isSoundBankFile(file)) {
-                await openBankFile(file);
+                target = (await openBankFile(file)) ?? target;
             }
         }
         if (audioFiles.length === 0) {
             return;
         }
-        if (!activeSession) {
+        if (!target) {
             toast.error(t("loadingAndSaving.openBankForSamples"));
             return;
         }
-        const session = activeSession;
-        await importSamples(audioFiles, (actions) => {
+        setAreSettingsShown(false);
+        const session = target;
+        await importSamples(audioFiles, session.document, (actions) => {
             const focus = session.history.do(actions);
             if (focus) {
-                setActiveView(focus);
+                setSessionView(session.id, focus);
             }
         });
     };
     useFileDrop((files) => void handleDroppedFiles(files));
-
-    useEventListener(selectedDevice, "midimessage", (e) => {
-        if (e.data) {
-            audioEngine.processRealTime(e.data);
-        }
-    });
-    // Note offs of keys held on the previous device never arrive, so its notes are released
-    useEffect(() => {
-        if (!selectedDevice) {
-            return;
-        }
-        return () => audioEngine.releaseAllNotes();
-    }, [audioEngine, selectedDevice]);
 
     const handleOpenFile = async () => {
         const file = await pickFile(ACCEPTED_SOUNDBANK_FORMATS);
@@ -118,87 +143,139 @@ export function App() {
     const isEditorShown = activeSession !== undefined && !areSettingsShown;
 
     // Alt+Left and Right, and the mouse's side buttons, go back and forward between elements.
-    // The page has no history of its own, so the browser would leave it instead
+    // The page has no history of its own, so the browser would leave it instead, even where
+    // the keys do nothing in the app (a field, a dialog, the settings)
     useEventListener(document, "keydown", (e) => {
-        if (!isEditorShown || !e.altKey || !isEditorShortcut(e)) {
+        if (
+            e.defaultPrevented ||
+            !e.altKey ||
+            (e.key !== "ArrowLeft" && e.key !== "ArrowRight")
+        ) {
+            return;
+        }
+        // On macOS Option and an arrow move the cursor by a word
+        if (IS_MAC && isTextField(e.target)) {
+            return;
+        }
+        e.preventDefault();
+        if (!isEditorShown || !isEditorShortcut(e)) {
             return;
         }
         if (e.key === "ArrowLeft") {
-            e.preventDefault();
             goBack();
-        } else if (e.key === "ArrowRight") {
-            e.preventDefault();
+        } else {
             goForward();
         }
     });
     useEventListener(document, "mousedown", (e) => {
-        if (isEditorShown && (e.button === 3 || e.button === 4)) {
+        if (e.button === 3 || e.button === 4) {
             e.preventDefault();
         }
     });
     useEventListener(document, "mouseup", (e) => {
-        if (!isEditorShown) {
+        if (e.button !== 3 && e.button !== 4) {
+            return;
+        }
+        e.preventDefault();
+        // Nothing changes behind a dialog
+        if (!isEditorShown || isInModal(e.target)) {
             return;
         }
         if (e.button === 3) {
-            e.preventDefault();
             goBack();
-        } else if (e.button === 4) {
-            e.preventDefault();
+        } else {
             goForward();
         }
+    });
+
+    useEventListener(document, "keydown", (e) => {
+        if (
+            !areSettingsShown ||
+            e.defaultPrevented ||
+            e.key !== "Escape" ||
+            isInModal(e.target)
+        ) {
+            return;
+        }
+        e.preventDefault();
+        closeSettings();
     });
 
     return (
         <div className={`spessafont_main`}>
             <Toaster toastOptions={{ className: "toasts" }} />
             <MenuBar
-                showMidiPlayer={tabs.length > 0}
-                onToggleSettings={() => setAreSettingsShown((shown) => !shown)}
+                showMIDIPlayer={tabs.length > 0}
+                onToggleSettings={toggleSettings}
                 onOpenFile={() => void handleOpenFile()}
                 onNewFile={() => void openBankFile()}
                 onCloseFile={() => {
-                    if (activeSession) requestClose(activeSession);
+                    if (!activeSession) return;
+                    // The tab that closes should be the one on screen
+                    setAreSettingsShown(false);
+                    requestClose(activeSession);
                 }}
                 session={activeSession}
-                setView={setActiveView}
+                onViewChange={setActiveView}
                 onToggleKeyboard={() => setIsKeyboardShown((shown) => !shown)}
                 isEditorCovered={areSettingsShown}
+                isKeyboardShown={isKeyboardShown}
             />
             <div className={"app_body"}>
-                <TabList
-                    activeId={activeSession?.id}
-                    onSelect={activate}
-                    onClose={requestClose}
-                    tabs={tabs}
-                />
-                {activeSession && (
-                    <BankEditor
-                        key={activeSession.id}
-                        session={activeSession}
-                        view={activeView}
-                        setView={setActiveView}
-                        isCovered={areSettingsShown}
+                {/* Covered by the settings, nothing in here takes the focus or a click */}
+                <div className={"app_covered"} inert={areSettingsShown}>
+                    <TabList
+                        activeId={activeSession?.id}
+                        onSelect={activate}
+                        onClose={requestClose}
+                        tabs={tabs}
                     />
-                )}
-                {tabs.length === 0 && (
-                    <Welcome
-                        onOpenFile={() => void handleOpenFile()}
-                        onNewFile={() => void openBankFile()}
-                    />
-                )}
+                    {activeSession && (
+                        <ErrorBoundary
+                            key={activeSession.id}
+                            fallback={renderPartError}
+                        >
+                            <BankEditor
+                                session={activeSession}
+                                view={activeView}
+                                onViewChange={setActiveView}
+                                isCovered={areSettingsShown}
+                            />
+                        </ErrorBoundary>
+                    )}
+                    {tabs.length === 0 && (
+                        <Welcome
+                            onOpenFile={() => void handleOpenFile()}
+                            onNewFile={() => void openBankFile()}
+                        />
+                    )}
+                </div>
                 {areSettingsShown && (
                     <div className={"app_settings_layer"}>
-                        <Settings />
+                        <button
+                            type={"button"}
+                            className={"pretty_button app_settings_close"}
+                            autoFocus={true}
+                            onClick={closeSettings}
+                            title={t("settingsLocale.closeSettings")}
+                            aria-label={t("settingsLocale.closeSettings")}
+                        >
+                            &times;
+                        </button>
+                        <ErrorBoundary fallback={renderPartError}>
+                            <Settings openSessions={tabs} />
+                        </ErrorBoundary>
                     </div>
                 )}
             </div>
 
             {isKeyboardShown && (
-                <KeyboardController
-                    session={isEditorShown ? activeSession : undefined}
-                    view={activeView}
-                />
+                <ErrorBoundary fallback={renderPartError}>
+                    <KeyboardController
+                        session={isEditorShown ? activeSession : undefined}
+                        view={activeView}
+                    />
+                </ErrorBoundary>
             )}
         </div>
     );

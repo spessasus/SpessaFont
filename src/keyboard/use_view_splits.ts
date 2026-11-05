@@ -12,7 +12,8 @@ function subscribeToNothing() {
 }
 
 /**
- * The key ranges to highlight for the shown element, from the bank's views.
+ * The ranges to highlight for the shown element, from the bank's views. Undefined when no
+ * element with ranges is shown.
  */
 export function useViewSplits(
     session: BankSession | undefined,
@@ -22,5 +23,5 @@ export function useViewSplits(
         session?.store.subscribe ?? subscribeToNothing,
         () => session?.store.getSnapshot().views
     );
-    return views ? getViewSplits(view, views) : [];
+    return views ? getViewSplits(view, views) : undefined;
 }

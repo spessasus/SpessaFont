@@ -1,6 +1,6 @@
 /**
  * The loop of a WAV file, in frames at the file's sample rate: the first loop of its `smpl`
- * chunk, or else a `cue ` chunk with two points.
+ * chunk, or else a `cue ` chunk with two unnamed points.
  */
 export interface WavLoop {
     start: number;
@@ -11,6 +11,8 @@ export interface WavLoop {
     sampleRate: number;
 }
 
+const SMPL_UNITY_NOTE = 12;
+const SMPL_PITCH_FRACTION = 16;
 const SMPL_LOOP_COUNT = 28;
 const SMPL_LOOPS = 36;
 const LOOP_START = 8;
@@ -25,6 +27,22 @@ function readTag(view: DataView, offset: number) {
         view.getUint8(offset + 2),
         view.getUint8(offset + 3)
     );
+}
+
+/**
+ * Whether the four bytes could be a chunk tag (printable ASCII).
+ */
+function isTag(view: DataView, offset: number) {
+    if (offset + 4 > view.byteLength) {
+        return false;
+    }
+    for (let i = 0; i < 4; i++) {
+        const byte = view.getUint8(offset + i);
+        if (byte < 0x20 || byte > 0x7e) {
+            return false;
+        }
+    }
+    return true;
 }
 
 function isWavFile(view: DataView) {
@@ -54,8 +72,10 @@ function forEachWavChunk(
             break;
         }
         onChunk(tag, body, size);
-        // Chunks are padded to an even size
-        offset = body + size + (size % 2);
+        // Chunks are padded to an even size with a zero byte. Some writers leave it out, then
+        // the next tag starts where the pad byte would be
+        const end = body + size;
+        offset = size % 2 === 1 && !isTag(view, end) ? end + 1 : end;
     }
 }
 
@@ -80,6 +100,8 @@ export function readWavSampleRate(file: ArrayBuffer) {
 export function readWavLoop(file: ArrayBuffer): WavLoop | undefined {
     const view = new DataView(file);
     let loop: { start: number; end: number } | undefined;
+    let cueLoop: { start: number; end: number } | undefined;
+    let hasCueLabels = false;
     forEachWavChunk(view, (tag, body, size) => {
         if (
             tag === "smpl" &&
@@ -87,13 +109,12 @@ export function readWavLoop(file: ArrayBuffer): WavLoop | undefined {
             view.getUint32(body + SMPL_LOOP_COUNT, true) > 0
         ) {
             const first = body + SMPL_LOOPS;
-            loop = {
+            loop ??= {
                 start: view.getUint32(first + LOOP_START, true),
                 end: view.getUint32(first + LOOP_END, true) + 1
             };
         } else if (
             tag === "cue " &&
-            !loop &&
             size >= 4 + 2 * CUE_POINT_SIZE &&
             view.getUint32(body, true) === 2
         ) {
@@ -103,11 +124,47 @@ export function readWavLoop(file: ArrayBuffer): WavLoop | undefined {
                     body + 4 + i * CUE_POINT_SIZE + CUE_OFFSET,
                     true
                 );
-            loop = { start: point(0), end: point(1) };
+            cueLoop = { start: point(0), end: point(1) };
+        } else if (
+            tag === "LIST" &&
+            size >= 4 &&
+            readTag(view, body) === "adtl"
+        ) {
+            hasCueLabels = true;
         }
     });
+    // Audio editors save markers as cue points too, and name them in an "adtl" list.
+    // spessasynth_core writes its loop without names.
+    loop ??= hasCueLabels ? undefined : cueLoop;
     const sampleRate = readWavSampleRate(file);
     return !loop || !sampleRate || loop.end <= loop.start
         ? undefined
         : { ...loop, sampleRate };
+}
+
+/**
+ * The key a WAV file says its audio plays at, from its `smpl` chunk: the MIDI unity note, and
+ * the pitch fraction above it as the cents to correct. Undefined without a `smpl` chunk.
+ */
+export function readWavRootKey(file: ArrayBuffer) {
+    const view = new DataView(file);
+    let rootKey: { key: number; pitchCorrection: number } | undefined;
+    forEachWavChunk(view, (tag, body, size) => {
+        if (rootKey || tag !== "smpl" || size < SMPL_LOOP_COUNT) {
+            return;
+        }
+        const note = view.getUint32(body + SMPL_UNITY_NOTE, true);
+        // The fraction of a semitone the audio is above the note, 0x80000000 is 50 cents
+        const fraction = view.getUint32(body + SMPL_PITCH_FRACTION, true);
+        const cents = Math.round((fraction / 2 ** 32) * 100);
+        // More than half a semitone sharp is closer to the next note, tuned down
+        const key = cents > 50 ? note + 1 : note;
+        if (key <= 127) {
+            rootKey = {
+                key,
+                pitchCorrection: cents > 50 ? 100 - cents : -cents
+            };
+        }
+    });
+    return rootKey;
 }

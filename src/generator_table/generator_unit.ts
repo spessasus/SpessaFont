@@ -19,6 +19,10 @@ export const GENERATOR_UNITS = {
         suffix: "soundBankLocale.units.centPerKey.suf",
         full: "soundBankLocale.units.centPerKey.full"
     },
+    tcentPerKey: {
+        suffix: "soundBankLocale.units.tcentPerKey.suf",
+        full: "soundBankLocale.units.tcentPerKey.full"
+    },
     sec: {
         suffix: "soundBankLocale.units.sec.suf",
         full: "soundBankLocale.units.sec.full"
@@ -38,6 +42,10 @@ export const GENERATOR_UNITS = {
     pan: {
         suffix: "soundBankLocale.units.pan.suf",
         full: "soundBankLocale.units.pan.full"
+    },
+    presetPan: {
+        suffix: "soundBankLocale.units.presetPan.suf",
+        full: "soundBankLocale.units.presetPan.full"
     },
     degree: {
         suffix: "soundBankLocale.units.degree.suf",

@@ -10,31 +10,29 @@ import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx
 import { EditPresetAction } from "./edit_preset_action.ts";
 import { ControllerSwitch } from "../../fancy_inputs/controller_switch/controller_switch.tsx";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
-import { useBankSnapshot } from "../../hooks/use_bank_snapshot.ts";
 import { usePresetView } from "../../hooks/use_preset_view.ts";
 import { getObjectId } from "../../utils/object_id.ts";
-import { showToastDialog } from "../../toasts/show_toast_dialog.tsx";
+import { useScopedToastDialog } from "../../hooks/use_scoped_toast_dialog.ts";
 import {
     findFreePatch,
     getTakenPatches
 } from "../../core_backend/free_patch.ts";
 import { useElementTools } from "../../generator_table/tools/use_element_tools.tsx";
+import { MAX_NAME_LENGTH } from "../../utils/element_name.ts";
 
-const MAX_NAME_LENGTH = 40;
-
-interface BottomPresetBarProps {
+interface BottomBarProps {
     /**
      * The edited preset, for the actions. What the bar shows comes from its view.
      */
     preset: BasicPreset;
 }
 
-export function BottomPresetBar({ preset }: BottomPresetBarProps) {
+export function BottomBar({ preset }: BottomBarProps) {
     const { t } = useTranslation();
     const { session, apply } = useBankEditor();
-    const presets = useBankSnapshot(session.store, (s) => s.presets);
     const view = usePresetView(session.store, getObjectId(preset));
     const tools = useElementTools();
+    const showScopedToastDialog = useScopedToastDialog();
     // The pane closes when its preset is removed, this only covers the render before
     if (!view) {
         return null;
@@ -58,8 +56,13 @@ export function BottomPresetBar({ preset }: BottomPresetBarProps) {
     /**
      * Applies a patch change unless another preset already uses the resulting patch.
      * Then it offers the next free patch instead, and returns the preset that blocked it.
+     * The offer checks again when taken, as the bank may have changed in the meantime.
      */
     const changePatch = (changes: Partial<MIDIPatch>) => {
+        const { presets } = session.document;
+        if (!presets.includes(preset)) {
+            return undefined;
+        }
         const patch: MIDIPatch = {
             program: preset.program,
             bankMSB: preset.bankMSB,
@@ -72,11 +75,12 @@ export function BottomPresetBar({ preset }: BottomPresetBarProps) {
             applyPatch(patch);
             return undefined;
         }
-        const message = `${t("presetLocale.presetWithTheParametersExists")} (${duplicate.name})`;
         // Its own patch counts as taken, "Keep" already offers that
         const free = findFreePatch(patch, getTakenPatches(presets));
-        showToastDialog({
-            content: message,
+        showScopedToastDialog({
+            content: t("presetLocale.patchTaken", {
+                name: duplicate.name
+            }),
             isError: true,
             buttons: free
                 ? [
@@ -84,7 +88,9 @@ export function BottomPresetBar({ preset }: BottomPresetBarProps) {
                           label: t("presetLocale.useFreePatch", {
                               patch: MIDIPatchTools.toMIDIString(free)
                           }),
-                          onClick: () => applyPatch(free)
+                          onClick: () => {
+                              changePatch(free);
+                          }
                       },
                       { label: t("presetLocale.keepPatch") }
                   ]
@@ -105,10 +111,11 @@ export function BottomPresetBar({ preset }: BottomPresetBarProps) {
         <div className={"bottom_bar"}>
             <div>
                 <WaitingInput
+                    className={"monospaced"}
                     type={"text"}
                     value={view.name}
                     aria-label={t("presetLocale.presetName")}
-                    setValue={(name) => {
+                    onCommit={(name) => {
                         apply([
                             new EditPresetAction(
                                 preset,
@@ -130,7 +137,7 @@ export function BottomPresetBar({ preset }: BottomPresetBarProps) {
                     min={0}
                     max={127}
                     value={view.bankLSB}
-                    setValue={setNumber("bankLSB")}
+                    onCommit={setNumber("bankLSB")}
                 />
             </label>
             <label>
@@ -140,7 +147,7 @@ export function BottomPresetBar({ preset }: BottomPresetBarProps) {
                     min={0}
                     max={127}
                     value={view.bankMSB}
-                    setValue={setNumber("bankMSB")}
+                    onCommit={setNumber("bankMSB")}
                 />
             </label>
 
@@ -151,7 +158,7 @@ export function BottomPresetBar({ preset }: BottomPresetBarProps) {
                     min={0}
                     max={127}
                     value={view.program}
-                    setValue={setNumber("program")}
+                    onCommit={setNumber("program")}
                 />
             </label>
             <div className={"drums_toggle"}>

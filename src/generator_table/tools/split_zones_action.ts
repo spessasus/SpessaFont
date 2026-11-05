@@ -3,12 +3,13 @@ import {
     BasicInstrumentZone,
     type BasicPreset,
     type BasicPresetZone,
+    GeneratorTypes,
     type GenericRange
 } from "spessasynth_core";
 import type { HistoryAction } from "../../core_backend/history.ts";
 import type { BankDocument } from "../../core_backend/bank_document.ts";
 import type { ChangeSet } from "../../core_backend/change_set.ts";
-import { getPlayedRange } from "./key_curve_actions.ts";
+import { getPlayedRange } from "../played_value.ts";
 
 type ElementZone = BasicPresetZone | BasicInstrumentZone;
 
@@ -23,10 +24,10 @@ export interface ZoneSplit {
 }
 
 /**
- * The ranges a range becomes: `step` wide from its low end, the last one shorter if needed.
+ * The ranges a played range becomes: `step` wide from its low end, the last one shorter if
+ * needed.
  */
-export function getSplitRanges(range: GenericRange, step: number) {
-    const { min, max } = getPlayedRange(range);
+export function getSplitRanges({ min, max }: GenericRange, step: number) {
     const ranges = new Array<GenericRange>();
     for (let low = min; low <= max; low += step) {
         ranges.push({ min: low, max: Math.min(max, low + step - 1) });
@@ -66,6 +67,21 @@ function getRange(zone: ElementZone, mode: SplitMode) {
     return mode === "key" ? zone.keyRange : zone.velRange;
 }
 
+/**
+ * The range the zone plays, its own or the global zone's, so the copies cover the same keys.
+ */
+function getSplitRange(
+    element: BasicPreset | BasicInstrument,
+    zone: ElementZone,
+    mode: SplitMode
+) {
+    return getPlayedRange(
+        element,
+        zone,
+        mode === "key" ? GeneratorTypes.keyRange : GeneratorTypes.velRange
+    );
+}
+
 function setRange(zone: ElementZone, mode: SplitMode, range: GenericRange) {
     if (mode === "key") {
         zone.keyRange = { ...range };
@@ -89,7 +105,8 @@ export function countSplitZones(
         const parts =
             only && !only.has(zone)
                 ? 1
-                : getSplitRanges(getRange(zone, mode), step).length;
+                : getSplitRanges(getSplitRange(element, zone, mode), step)
+                      .length;
         total += parts;
         isChanged ||= parts > 1;
     }
@@ -98,9 +115,9 @@ export function countSplitZones(
 
 /**
  * Splits zones into one zone per key (or velocity) or per `step` of them. Each new zone is a
- * full copy of its zone with a narrower range, in its place in the zone order. The zone itself
- * keeps the first range, so earlier actions that point to it stay valid. Undo restores the
- * exact zone list and order.
+ * full copy of its zone with a narrower range of what it played (its own range or the global
+ * one). The zone itself keeps the first range, so earlier actions that point to it stay valid.
+ * The zones are sorted by key afterwards, and undo restores the exact zone list and order.
  */
 export class SplitZonesAction implements HistoryAction {
     private readonly element: BasicPreset | BasicInstrument;
@@ -164,7 +181,10 @@ export class SplitZonesAction implements HistoryAction {
         const { mode, step } = this.split;
         const order = new Array<ElementZone>();
         for (const unit of getSplitUnits(this.element)) {
-            const ranges = getSplitRanges(getRange(unit[0], mode), step);
+            const ranges = getSplitRanges(
+                getSplitRange(this.element, unit[0], mode),
+                step
+            );
             if (
                 ranges.length < 2 ||
                 (this.only && unit.every((z) => !this.only?.has(z)))
@@ -195,7 +215,8 @@ export class SplitZonesAction implements HistoryAction {
 
     public do(document: BankDocument, changes: ChangeSet) {
         this.previousOrder = [...this.element.zones];
-        if (this.nextOrder.length === 0) {
+        const isFirstTime = this.nextOrder.length === 0;
+        if (isFirstTime) {
             this.splitFirstTime();
         } else {
             // Redo restores the same zone objects, so later actions that edit them stay valid
@@ -211,6 +232,12 @@ export class SplitZonesAction implements HistoryAction {
             setRange(zone, this.split.mode, after);
         }
         document.setZoneOrder(this.element, this.nextOrder);
+        if (isFirstTime) {
+            // Velocity layers split by key would be out of key order, and redo restores
+            // this exact order
+            document.sortZones(this.element);
+            this.nextOrder = [...this.element.zones];
+        }
         changes.touch(this.element, ...this.children);
     }
 

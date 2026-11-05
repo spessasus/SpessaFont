@@ -2,12 +2,23 @@ import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { MIDIAccessContext, type MIDIAccessStatus } from "./midi_context.ts";
 import { logError, logWarn } from "../../utils/core_utils.ts";
+import { useSettings } from "../settings_context.ts";
 
 interface MIDIAccessState {
     status: MIDIAccessStatus;
     error: string | null;
     devices: MIDIInput[];
     midiAccess: MIDIAccess | null;
+}
+
+/**
+ * An unplugged port that was open stays in the inputs as disconnected, it is left out so its
+ * held notes are released and it is not offered.
+ */
+function getConnectedInputs(midiAccess: MIDIAccess) {
+    return Array.from(midiAccess.inputs.values()).filter(
+        (input) => input.state === "connected"
+    );
 }
 
 function getInitialAccessState(): MIDIAccessState {
@@ -29,9 +40,11 @@ interface MIDIProviderProps {
 
 export function MIDIProvider({ children }: MIDIProviderProps) {
     const [access, setAccess] = useState(getInitialAccessState);
-    const [selectedDevice, setSelectedDevice] = useState<MIDIInput | null>(
-        null
-    );
+    const { settings, updateSettings } = useSettings();
+    // The saved device, so it is selected again after a reload or when it is plugged back in
+    const selectedDevice =
+        access.devices.find((device) => device.id === settings.midiInputId) ??
+        null;
     const isWaiting = access.status === "waiting";
 
     useEffect(() => {
@@ -49,7 +62,7 @@ export function MIDIProvider({ children }: MIDIProviderProps) {
                     setAccess({
                         status: "granted",
                         error: null,
-                        devices: Array.from(midiAccess.inputs.values()),
+                        devices: getConnectedInputs(midiAccess),
                         midiAccess
                     });
                 }
@@ -81,11 +94,8 @@ export function MIDIProvider({ children }: MIDIProviderProps) {
             return;
         }
         const handleStateChange = () => {
-            const devices = Array.from(midiAccess.inputs.values());
+            const devices = getConnectedInputs(midiAccess);
             setAccess((previous) => ({ ...previous, devices }));
-            setSelectedDevice((selected) =>
-                selected && devices.includes(selected) ? selected : null
-            );
         };
         midiAccess.addEventListener("statechange", handleStateChange);
         return () =>
@@ -98,9 +108,11 @@ export function MIDIProvider({ children }: MIDIProviderProps) {
             accessError: access.error,
             devices: access.devices,
             selectedDevice,
-            setSelectedDevice
+            setSelectedDevice: (device: MIDIInput | null) => {
+                updateSettings({ midiInputId: device?.id ?? "" });
+            }
         }),
-        [access, selectedDevice]
+        [access, selectedDevice, updateSettings]
     );
 
     return <MIDIAccessContext value={value}>{children}</MIDIAccessContext>;

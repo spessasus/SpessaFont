@@ -8,7 +8,6 @@ export const SoundBankLocale = {
     thisIsAStereoSamplePair: "这是一对立体声采样对。",
 
     modifiedSamples: "修改了{{count}}个采样",
-    noSamplesWereChanged: "未修改采样。",
     removedElements: "已删除{{instruments}}个乐器和{{samples}}个采样。",
 
     loopingModes: {

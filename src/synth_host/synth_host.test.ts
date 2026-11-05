@@ -1,12 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
     BasicPreset,
+    EmptySample,
     GeneratorTypes,
+    MIDIBuilder,
     MIDIMessageTypes
 } from "spessasynth_core";
 import {
     createTestHost,
     createTestSession,
+    getMirror,
     publishSetUp
 } from "../test_utils/bank_fixture.ts";
 import { CreatePresetAction } from "../menu_list/create_actions/create_preset_action.ts";
@@ -22,6 +25,10 @@ import { DEFAULT_SETTINGS } from "../settings/save_load/settings_typedef.ts";
 import { getObjectId } from "../utils/object_id.ts";
 import { KEYBOARD_TARGET_CHANNEL } from "../keyboard/target_channel.ts";
 import { SynthHost } from "./synth_host.ts";
+import type { HostPort } from "./protocol.ts";
+import type { PlaybackReport } from "./playback_worklet.ts";
+import { CreateSampleAction } from "../menu_list/create_actions/create_sample_action.ts";
+import { loadNewBank } from "../core_backend/load_sound_bank.ts";
 
 function createAttachedSession() {
     const testHost = createTestHost();
@@ -169,14 +176,118 @@ describe("SynthHost with the history", () => {
     });
 });
 
+describe("SynthHost sample data", () => {
+    it("answers a stored data read with that sample's bytes only", async () => {
+        const session = createTestSession();
+        const [sample] = session.document.samples;
+
+        const stored = await session.readStoredData(sample);
+
+        // The mirror's samples are views into the whole file
+        expect(stored.data.byteLength).toBeGreaterThan(0);
+        expect(stored.data.buffer.byteLength).toBe(stored.data.byteLength);
+    });
+
+    it("answers an audio read with a copy and keeps nothing decoded", async () => {
+        const session = createTestSession();
+        const [sample] = session.document.samples;
+        const mirrorSample = getMirror(session).getSample(getObjectId(sample));
+
+        const audio = await session.readAudio(sample);
+
+        expect(audio.length).toBe(sample.sampleLength);
+        expect(audio.buffer.byteLength).toBe(audio.byteLength);
+        // Nothing left to drop
+        expect(mirrorSample?.releaseDecoded()).toBe(false);
+    });
+
+    it("forgets a removed sample once the editor lets go of it", () => {
+        const testHost = createTestHost();
+        const session = createTestSession(testHost);
+        const imported = new EmptySample();
+        imported.setAudioData(new Float32Array(100), 44_100);
+        session.history.do([new CreateSampleAction(imported)]);
+        session.history.undo();
+        const id = getObjectId(imported);
+        const kept = getObjectId(session.document.samples[0]);
+        expect(getMirror(session).getSample(id)?.hasData).toBe(true);
+
+        // What the editor sends when the sample was garbage collected
+        testHost.client.send({
+            type: "releaseSamples",
+            sessionId: session.id,
+            ids: [id, kept]
+        });
+
+        expect(getMirror(session).getSample(id)).toBeUndefined();
+        // A sample still in the bank stays
+        expect(getMirror(session).getSample(kept)?.hasData).toBe(true);
+    });
+});
+
+describe("SynthHost errors", () => {
+    it("reports a command that failed", () => {
+        const testHost = createTestHost();
+        const errors = new Array<string>();
+        testHost.client.hostErrors.subscribe((message) => {
+            errors.push(message);
+        });
+
+        testHost.client.attach(999);
+
+        expect(errors).toEqual(["No bank is open for session 999."]);
+    });
+
+    it("rejects the opening of a bank the host cannot load, and drops its patches", async () => {
+        const testHost = createTestHost();
+        const errors = new Array<string>();
+        testHost.client.hostErrors.subscribe((message) => {
+            errors.push(message);
+        });
+        const { bank } = loadNewBank();
+
+        const session = new BankSession(testHost.client, {
+            bank,
+            file: new ArrayBuffer(16),
+            has24BitSamples: false
+        });
+
+        await expect(session.opened).rejects.toThrow();
+        expect(errors).toEqual([]);
+        session.close();
+    });
+
+    it("rejects pending requests when the host failed", async () => {
+        const port: HostPort = {
+            postMessage: () => undefined,
+            onmessage: null
+        };
+        const client = new SynthClient(port);
+        const errors = new Array<string>();
+        client.hostErrors.subscribe((message) => {
+            errors.push(message);
+        });
+        const read = client.readAudio(1, 1);
+
+        port.onmessage?.(
+            new MessageEvent("message", {
+                data: { type: "hostFailed", message: "Out of memory" }
+            })
+        );
+
+        await expect(read).rejects.toThrow("Out of memory");
+        expect(errors).toEqual(["Out of memory"]);
+    });
+});
+
 /**
  * A host behind a real MessageChannel, as the app runs it before it moves to a Worker.
  */
-function createChannelHost() {
+function createChannelHost(sampleRate = 44_100, queuedBlocks = 32) {
     const channel = new MessageChannel();
     const host = new SynthHost(channel.port2, {
-        sampleRate: 44_100,
-        queuedBlocks: 32,
+        sampleRate,
+        queuedBlocks,
         currentTime: 0,
         settings: getHostSettings(DEFAULT_SETTINGS),
         isVerbose: false
@@ -251,6 +362,36 @@ describe("SynthHost over a MessageChannel", () => {
         second.close();
     });
 
+    it("keeps the playback queue at its size when reports waited, at any rate", async () => {
+        // Firefox's queue at 192 kHz, four times the blocks of 48 kHz
+        const { client } = createChannelHost(192_000, 64);
+        const output = new MessageChannel();
+        openChannels.push(output);
+        let received = 0;
+        output.port1.onmessage = (e: MessageEvent<Float32Array[]>) => {
+            received += e.data.length;
+        };
+        client.send({ type: "connectOutput", port: output.port2 }, [
+            output.port2
+        ]);
+        const report = (played: number) => {
+            const message: PlaybackReport = { played, underruns: 0 };
+            output.port1.postMessage(message);
+        };
+
+        // What piles up while the host is busy: reports from before any chunk arrived
+        for (let i = 0; i < 300; i++) {
+            report(0);
+        }
+        // Answered after all of those, with what the queue has room for
+        report(10);
+
+        await vi.waitFor(() => {
+            expect(received).toBeGreaterThanOrEqual(258);
+        });
+        expect(received).toBe(258);
+    });
+
     it("writes a bank and moves the file back", async () => {
         const { client } = createChannelHost();
         const session = new BankSession(client);
@@ -263,5 +404,23 @@ describe("SynthHost over a MessageChannel", () => {
 
         expect(result.error).toBeUndefined();
         expect(result.binary?.byteLength).toBeGreaterThan(0);
+    });
+
+    it("plays a MIDI file it parsed itself, and reports a broken one", async () => {
+        const { host, client } = createChannelHost();
+        const midi = new MIDIBuilder({ name: "song" });
+        midi.noteOn(0, 0, 1, 60, 100);
+        midi.noteOff(480, 0, 1, 60);
+        midi.flush();
+        const file = midi.writeMIDI();
+
+        await client.loadSong(file, "song");
+        expect(host.sequencer.paused).toBe(false);
+        // The file moved to the host
+        expect(file.byteLength).toBe(0);
+
+        await expect(
+            client.loadSong(new Uint8Array([1, 2, 3, 4]).buffer, "broken")
+        ).rejects.toThrow();
     });
 });

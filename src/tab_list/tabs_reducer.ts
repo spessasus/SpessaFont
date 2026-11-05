@@ -120,14 +120,19 @@ export function tabsReducer<T extends Tab>(
             const isBack = action.type === "goBack";
             const from = [...(isBack ? trail.back : trail.forward)];
             const to = [...(isBack ? trail.forward : trail.back)];
+            const current = state.views.get(action.id) ?? "info";
+            // The shown element can be in the trail too, when the one between was removed
             let view = from.pop();
-            while (view !== undefined && !action.isAvailable(view)) {
+            while (
+                view !== undefined &&
+                (view === current || !action.isAvailable(view))
+            ) {
                 view = from.pop();
             }
             if (view === undefined) {
                 return state;
             }
-            to.push(state.views.get(action.id) ?? "info");
+            to.push(current);
             return {
                 ...state,
                 views: new Map(state.views).set(action.id, view),

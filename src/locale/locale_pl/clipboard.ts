@@ -29,13 +29,13 @@ export const ClipboardLocale = {
     pastedPresets_many: "Wklejono {{count}} presetów.",
     pastedPresets_other: "Wklejono {{count}} presetu.",
     movedPresets_one:
-        "{{count}} wklejony preset trafił na następny wolny patch MIDI, bo jego był zajęty.",
+        "{{count}} wklejony preset trafił na następny wolny patch MIDI, bo jego własny był zajęty.",
     movedPresets_few:
-        "{{count}} wklejone presety trafiły na następny wolny patch MIDI, bo ich był zajęty.",
+        "{{count}} wklejone presety trafiły na następne wolne patche MIDI, bo ich własne były zajęte.",
     movedPresets_many:
-        "{{count}} wklejonych presetów trafiło na następny wolny patch MIDI, bo ich był zajęty.",
+        "{{count}} wklejonych presetów trafiło na następne wolne patche MIDI, bo ich własne były zajęte.",
     movedPresets_other:
-        "{{count}} wklejonego presetu trafiło na następny wolny patch MIDI, bo jego był zajęty.",
+        "{{count}} wklejonego presetu trafiło na następne wolne patche MIDI, bo ich własne były zajęte.",
     pastedModulators_one: "Wklejono {{count}} modulator.",
     pastedModulators_few: "Wklejono {{count}} modulatory.",
     pastedModulators_many: "Wklejono {{count}} modulatorów.",

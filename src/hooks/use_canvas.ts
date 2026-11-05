@@ -33,7 +33,8 @@ export function getCanvasColor(ctx: CanvasRenderingContext2D, name: string) {
  * Owns a canvas and draws it with `draw` in the next animation frame.
  * The canvas matches its size on the page at the device pixel ratio, and `draw` works in CSS
  * pixels on a cleared canvas. It redraws when `draw` changes (so on every render of the caller),
- * when the canvas is resized, and when the theme changes.
+ * when the canvas is resized, when the theme changes, and when the pixel ratio changes (the
+ * window moved to another screen, or the page was zoomed).
  */
 export function useCanvas(
     draw: DrawCanvas,
@@ -41,6 +42,7 @@ export function useCanvas(
 ) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [size, setSize] = useState<CanvasSize | null>(null);
+    const [pixelRatio, setPixelRatio] = useState(() => window.devicePixelRatio);
     // Colors come from CSS custom properties, which the theme changes
     const {
         settings: { theme }
@@ -65,6 +67,14 @@ export function useCanvas(
         return () => observer.disconnect();
     }, []);
 
+    // The CSS size can stay the same when only the ratio changes, so it is watched on its own
+    useEffect(() => {
+        const query = matchMedia(`(resolution: ${pixelRatio}dppx)`);
+        const handleChange = () => setPixelRatio(window.devicePixelRatio);
+        query.addEventListener("change", handleChange);
+        return () => query.removeEventListener("change", handleChange);
+    }, [pixelRatio]);
+
     useEffect(() => {
         const canvas = canvasRef.current;
         const ctx = canvas?.getContext("2d");
@@ -72,7 +82,7 @@ export function useCanvas(
             return;
         }
         const render = () => {
-            const ratio = window.devicePixelRatio;
+            const ratio = pixelRatio;
             const pixelWidth = Math.round(size.width * ratio);
             const pixelHeight = Math.round(size.height * ratio);
             // Setting the size clears the canvas even when it does not change
@@ -93,7 +103,7 @@ export function useCanvas(
         };
         let frame = requestAnimationFrame(render);
         return () => cancelAnimationFrame(frame);
-    }, [draw, isAnimated, size, theme]);
+    }, [draw, isAnimated, size, theme, pixelRatio]);
 
     return canvasRef;
 }

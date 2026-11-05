@@ -26,6 +26,26 @@ describe("createSpreadActions", () => {
         ]);
     });
 
+    it("uses a root key set in the global zone", () => {
+        const session = createTestSession();
+        const [instrument] = session.document.instruments;
+        const [inheriting, own] = instrument.zones;
+        instrument.globalZone.setGenerator(
+            GeneratorTypes.overridingRootKey,
+            40
+        );
+        inheriting.setGenerator(GeneratorTypes.overridingRootKey, null);
+        own.setGenerator(GeneratorTypes.overridingRootKey, 80);
+        publishSetUp(session);
+
+        expectRoundTrip(session, createSpreadActions(instrument));
+
+        expect(instrument.zones.map((z) => ({ ...z.keyRange }))).toEqual([
+            { min: 0, max: 60 },
+            { min: 61, max: 127 }
+        ]);
+    });
+
     it("gives zones with the same root key the whole keyboard", () => {
         const session = createTestSession();
         const [instrument] = session.document.instruments;

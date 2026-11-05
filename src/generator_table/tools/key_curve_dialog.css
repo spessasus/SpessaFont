@@ -6,7 +6,12 @@
     color: var(--muted-font-color);
 }
 
+.key_curve_plot {
+    position: relative;
+}
+
 .key_curve_graph svg {
+    display: block;
     width: 100%;
     height: 10rem;
     border: 1px solid var(--track-border-color);
@@ -42,10 +47,16 @@
 }
 
 .key_curve_marker {
-    fill: var(--curve-color);
-    stroke: var(--font-color);
-    stroke-width: 1px;
-    vector-effect: non-scaling-stroke;
+    position: absolute;
+    left: calc(var(--marker-x) * 100%);
+    top: calc(var(--marker-y) * 100%);
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 50%;
+    background: var(--curve-color);
+    border: 1px solid var(--font-color);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
 }
 
 .key_curve_marker.excluded {

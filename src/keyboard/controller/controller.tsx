@@ -12,14 +12,14 @@ import { useSynthValue } from "../../hooks/use_synth_value.ts";
 
 interface ControllerProps {
     cc: MIDIController;
-    setCC: (cc: MIDIController) => void;
+    onCCChange: (cc: MIDIController) => void;
     /**
      * The 1-based slot number, for the labels.
      */
     number: number;
 }
 
-export function Controller({ cc, setCC, number }: ControllerProps) {
+export function Controller({ cc, onCCChange, number }: ControllerProps) {
     const { t } = useTranslation();
     const { controllers } = useTranslatedOptions();
     const { audioEngine } = useAudioEngine();
@@ -44,7 +44,7 @@ export function Controller({ cc, setCC, number }: ControllerProps) {
                 aria-label={t("keyboardLocale.controller", { number })}
                 value={cc}
                 onChange={(e) =>
-                    setCC(
+                    onCCChange(
                         (Number.parseInt(e.target.value) as MIDIController) ||
                             MIDIControllers.modulationWheel
                     )

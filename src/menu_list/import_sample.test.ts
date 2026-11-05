@@ -5,7 +5,7 @@ import {
     PLAIN_IMPORT,
     prepareImportedAudio
 } from "./import_sample.ts";
-import { readWavLoop } from "./wav_loop.ts";
+import { readWavLoop, readWavRootKey } from "./wav_loop.ts";
 
 /**
  * 1000 frames: silence, then a sine wave.
@@ -84,6 +84,115 @@ function createLoopedWav() {
     return buffer;
 }
 
+/**
+ * A RIFF chunk, padded to an even size unless `isPadded` is false (some writers forget).
+ */
+function riffChunk(tag: string, body: Uint8Array, isPadded = true) {
+    const size = body.length;
+    const chunk = new Uint8Array(8 + size + (isPadded ? size % 2 : 0));
+    chunk.set(new TextEncoder().encode(tag), 0);
+    new DataView(chunk.buffer).setUint32(4, size, true);
+    chunk.set(body, 8);
+    return chunk;
+}
+
+/**
+ * An 8-bit mono WAV file at 22,050 Hz made of the chunks after `fmt `.
+ */
+function createWav(chunks: Uint8Array[]) {
+    const fmt = new DataView(new ArrayBuffer(16));
+    fmt.setUint16(0, 1, true);
+    fmt.setUint16(2, 1, true);
+    fmt.setUint32(4, 22_050, true);
+    fmt.setUint32(8, 22_050, true);
+    fmt.setUint16(12, 1, true);
+    fmt.setUint16(14, 8, true);
+    const all = [
+        riffChunk(
+            "fmt ",
+            new Uint8Array(fmt.buffer, fmt.byteOffset, fmt.byteLength)
+        ),
+        ...chunks
+    ];
+    const total = all.reduce((sum, c) => sum + c.length, 4);
+    const file = new Uint8Array(8 + total);
+    file.set(new TextEncoder().encode("RIFF"), 0);
+    new DataView(file.buffer).setUint32(4, total, true);
+    file.set(new TextEncoder().encode("WAVE"), 8);
+    let offset = 12;
+    for (const chunk of all) {
+        file.set(chunk, offset);
+        offset += chunk.length;
+    }
+    return file.buffer;
+}
+
+/**
+ * A `smpl` chunk body that loops frames 5 to 20, with a unity note.
+ */
+function smplBody(unityNote = 60, fraction = 0) {
+    const body = new DataView(new ArrayBuffer(60));
+    body.setUint32(12, unityNote, true);
+    body.setUint32(16, fraction, true);
+    body.setUint32(28, 1, true);
+    body.setUint32(36 + 8, 5, true);
+    body.setUint32(36 + 12, 20, true);
+    return new Uint8Array(body.buffer, body.byteOffset, body.byteLength);
+}
+
+/**
+ * A `cue ` chunk body with two points, at frames 10 and 90.
+ */
+function cueBody() {
+    const body = new DataView(new ArrayBuffer(4 + 2 * 24));
+    body.setUint32(0, 2, true);
+    body.setUint32(4 + 20, 10, true);
+    body.setUint32(4 + 24 + 4, 1, true);
+    body.setUint32(4 + 24 + 20, 90, true);
+    return new Uint8Array(body.buffer, body.byteOffset, body.byteLength);
+}
+
+describe("WAV chunks", () => {
+    it("finds the loop after an odd sized chunk that was not padded", () => {
+        const wav = createWav([
+            riffChunk("data", new Uint8Array(33), false),
+            riffChunk("smpl", smplBody())
+        ]);
+        expect(readWavLoop(wav)).toEqual({
+            start: 5,
+            end: 21,
+            sampleRate: 22_050
+        });
+    });
+
+    it("takes two named cue points as markers, not a loop", () => {
+        const labels = new Uint8Array(4 + 12);
+        labels.set(new TextEncoder().encode("adtllabl"), 0);
+        const wav = createWav([
+            riffChunk("data", new Uint8Array(100)),
+            riffChunk("cue ", cueBody()),
+            riffChunk("LIST", labels)
+        ]);
+        expect(readWavLoop(wav)).toBeUndefined();
+        const unnamed = createWav([
+            riffChunk("data", new Uint8Array(100)),
+            riffChunk("cue ", cueBody())
+        ]);
+        expect(readWavLoop(unnamed)?.start).toBe(10);
+    });
+
+    it("reads the unity note and the pitch fraction as the root key", () => {
+        // A quarter of a semitone above E4
+        const wav = createWav([
+            riffChunk("data", new Uint8Array(100)),
+            riffChunk("smpl", smplBody(64, 0x40_00_00_00))
+        ]);
+        expect(readWavRootKey(wav)).toEqual({ key: 64, pitchCorrection: -25 });
+        const plain = createWav([riffChunk("data", new Uint8Array(100))]);
+        expect(readWavRootKey(plain)).toBeUndefined();
+    });
+});
+
 describe("readWavLoop", () => {
     it("reads the first loop and the file's rate", () => {
         expect(readWavLoop(createLoopedWav())).toEqual({
@@ -150,6 +259,28 @@ describe("createSamplesImportActions", () => {
             ["Piano C4", 60],
             ["Piano A4L", 69],
             ["Piano A4R", 69]
+        ]);
+    });
+});
+
+describe("createSamplesImportActions names", () => {
+    it("gives imported samples names the bank and the import do not have yet", async () => {
+        const files = [
+            new File(["mono"], "Kick.wav"),
+            new File(["mono"], "Kick.wav"),
+            new File(["stereo"], "Pad.wav")
+        ];
+        const { samples } = await createSamplesImportActions(
+            createStubContext(),
+            files,
+            { takenNames: ["Kick", "PadR"] }
+        );
+
+        expect(samples.map((s) => s.name)).toEqual([
+            "Kick-1",
+            "Kick-2",
+            "Pad-1L",
+            "Pad-1R"
         ]);
     });
 });

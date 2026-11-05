@@ -54,4 +54,27 @@ describe("locales", () => {
     it("pl has every key of English", () => {
         expect(getFoldedShape(LocaleList.pl.translation)).toEqual([...english]);
     });
+
+    // The folded shape passes with only some forms, and a missing one shows English
+    it("pl has every plural form of English's plural keys", () => {
+        const keysOf = (value: unknown) =>
+            new Set(getShape(value).map((entry) => entry.split(" ", 1)[0]));
+        const englishKeys = keysOf(LocaleList.en.translation);
+        const polishKeys = keysOf(LocaleList.pl.translation);
+        const forms = new Intl.PluralRules("pl").resolvedOptions()
+            .pluralCategories;
+        const missing = new Array<string>();
+        for (const key of englishKeys) {
+            const base = /^(.*)_(?:one|other)$/.exec(key)?.[1];
+            if (base === undefined) {
+                continue;
+            }
+            for (const form of forms) {
+                if (!polishKeys.has(`${base}_${form}`)) {
+                    missing.push(`${base}_${form}`);
+                }
+            }
+        }
+        expect([...new Set(missing)]).toEqual([]);
+    });
 });

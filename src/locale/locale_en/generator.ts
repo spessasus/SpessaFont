@@ -81,8 +81,12 @@ export const GeneratorLocale = {
     fixedVelocity: "Fixed Velocity", // not modulated
 
     sampleStartOffset: "Sample Start Offset",
+    sampleStartCoarseOffset: "Sample Start Coarse Offset",
     sampleEndOffset: "Sample End Offset",
+    sampleEndCoarseOffset: "Sample End Coarse Offset",
 
     loopStartOffset: "Loop Start Offset",
-    loopEndOffset: "Loop End Offset"
+    loopStartCoarseOffset: "Loop Start Coarse Offset",
+    loopEndOffset: "Loop End Offset",
+    loopEndCoarseOffset: "Loop End Coarse Offset"
 };

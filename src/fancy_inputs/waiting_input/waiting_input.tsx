@@ -1,26 +1,28 @@
 import type { InputHTMLAttributes } from "react";
 import { useRef, useState } from "react";
+import { parseTypedNumber } from "./parse_typed_number.ts";
 
-type WaitingInputProps<T extends string | number> = Omit<
+interface WaitingInputProps<T extends string | number> extends Omit<
     InputHTMLAttributes<HTMLInputElement>,
     "value" | "onChange"
-> & {
+> {
     value: T;
     /**
      * Applies the typed value and returns the value that was applied (it may be clamped).
      */
-    setValue: (v: T) => T;
+    onCommit: (v: T) => T;
     suffix?: string;
-};
+}
 
 /**
  * An input that applies its value when it loses focus or Enter is pressed, not on every key.
  * While the user types, the input shows the draft. Otherwise it shows `value`.
- * Escape drops the draft and leaves the value as it was.
+ * Escape drops the draft and leaves the value as it was, and so does a number field left
+ * empty or with text that is not a number.
  */
 export function WaitingInput<T extends string | number>({
     value,
-    setValue,
+    onCommit,
     suffix = "",
     max,
     min,
@@ -31,17 +33,19 @@ export function WaitingInput<T extends string | number>({
     // Set by Escape, so the blur that follows does not apply the draft
     const cancelRef = useRef(false);
 
-    const parse = (text: string): T => {
+    /**
+     * The value the text stands for, or undefined to keep the current one.
+     */
+    const parse = (text: string) => {
         if (typeof value === "number") {
-            const number = Number(text);
+            const number = parseTypedNumber(text, suffix);
+            if (number === undefined) {
+                return undefined;
+            }
             const minValue = min === undefined ? -Infinity : Number(min);
             const maxValue = max === undefined ? Infinity : Number(max);
-            const clamped = Math.min(
-                Math.max(Number.isNaN(number) ? 0 : number, minValue),
-                maxValue
-            );
             // T is number here, TypeScript cannot narrow a type parameter from a value
-            return clamped as T;
+            return Math.min(Math.max(number, minValue), maxValue) as T;
         }
         return (maxLength === undefined ? text : text.slice(0, maxLength)) as T;
     };
@@ -53,8 +57,8 @@ export function WaitingInput<T extends string | number>({
             return;
         }
         const parsed = parse(text);
-        if (parsed.toString() !== value.toString()) {
-            setValue(parsed);
+        if (parsed !== undefined && parsed.toString() !== value.toString()) {
+            onCommit(parsed);
         }
     };
 
@@ -62,7 +66,10 @@ export function WaitingInput<T extends string | number>({
         <input
             {...attributes}
             min={min}
-            maxLength={maxLength}
+            // The limit is for the typed text, the suffix comes on top
+            maxLength={
+                maxLength === undefined ? undefined : maxLength + suffix.length
+            }
             size={maxLength}
             max={max}
             value={(draft ?? value.toString()) + suffix}

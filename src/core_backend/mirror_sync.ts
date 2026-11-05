@@ -5,6 +5,7 @@ import type { BankDocument } from "./bank_document.ts";
 import type { BankSnapshot, BankStore } from "./bank_store.ts";
 import type { SynthClient } from "./synth_client.ts";
 import { diffBankViews } from "./view_diff.ts";
+import { getObjectId } from "../utils/object_id.ts";
 
 /**
  * Keeps the session's mirror in the host up to date with the store: each commit becomes one
@@ -27,10 +28,30 @@ export class MirrorSync {
      * Pasted and duplicated samples, whose data the mirror copies from the source's mirror.
      */
     private readonly pendingCopies = new WeakMap<BasicSample, SampleCopyRef>();
+    /**
+     * Tells the mirror when one of the editor's samples is gone for good. A removed sample
+     * stays in the history for an undo, so once nothing refers to it, it can never come back.
+     */
+    private readonly registry = new FinalizationRegistry<number>((id) => {
+        this.sentRevisions.delete(id);
+        this.registered.delete(id);
+        this.collected.push(id);
+        if (this.collected.length === 1) {
+            queueMicrotask(() => {
+                this.client.send({
+                    type: "releaseSamples",
+                    sessionId: this.sessionId,
+                    ids: this.collected.splice(0)
+                });
+            });
+        }
+    });
+    private readonly collected = new Array<number>();
+    private readonly registered = new Set<number>();
 
     /**
-     * Sends the first patch: the mirror was loaded from the same file, so it only needs the
-     * editor's order (the document sorts on load) and bank info.
+     * Sends the first patch: the mirror was loaded from the same file, so it needs the
+     * editor's order and zone order (the document sorts both on load) and bank info.
      */
     public constructor(
         client: SynthClient,
@@ -47,12 +68,26 @@ export class MirrorSync {
         for (const view of views.samples.values()) {
             this.sentRevisions.set(view.id, view.audioRevision);
         }
-        const unchanged = { changed: [], removed: [], order: undefined };
+        for (const sample of document.samples) {
+            this.register(sample);
+        }
         client.patchBank(sessionId, {
             views: {
-                presets: { ...unchanged, order: views.presetOrder },
-                instruments: { ...unchanged, order: views.instrumentOrder },
-                samples: { ...unchanged, order: views.sampleOrder },
+                presets: {
+                    changed: Array.from(views.presets.values()),
+                    removed: [],
+                    order: views.presetOrder
+                },
+                instruments: {
+                    changed: Array.from(views.instruments.values()),
+                    removed: [],
+                    order: views.instrumentOrder
+                },
+                samples: {
+                    changed: [],
+                    removed: [],
+                    order: views.sampleOrder
+                },
                 defaultModulators: undefined
             },
             info: this.snapshot.info,
@@ -60,6 +95,15 @@ export class MirrorSync {
             sampleCopies: new Map(),
             sampleRestores: new Map()
         });
+    }
+
+    private register(sample: BasicSample) {
+        const id = getObjectId(sample);
+        if (this.registered.has(id)) {
+            return;
+        }
+        this.registered.add(id);
+        this.registry.register(sample, id);
     }
 
     /**
@@ -85,14 +129,26 @@ export class MirrorSync {
         const sampleData = new Map<number, SampleStoredData>();
         const sampleCopies = new Map<number, SampleCopyRef>();
         const sampleRestores = new Map<number, number>();
+        // One lookup for the commit, as a conversion changes every sample
+        let samplesById: Map<number, BasicSample> | undefined;
+        const findSample = (id: number) => {
+            samplesById ??= new Map(
+                this.document.samples.map((s) => [getObjectId(s), s])
+            );
+            const sample = samplesById.get(id);
+            if (!sample) {
+                throw new Error(`The sample with the id ${id} is gone.`);
+            }
+            return sample;
+        };
         for (const view of views.samples.changed) {
+            if (!this.registered.has(view.id)) {
+                this.register(findSample(view.id));
+            }
             if (this.sentRevisions.get(view.id) === view.audioRevision) {
                 continue;
             }
-            const sample = this.document.getSample(view.id);
-            if (!sample) {
-                throw new Error(`The sample with the id ${view.id} is gone.`);
-            }
+            const sample = findSample(view.id);
             this.sentRevisions.set(view.id, view.audioRevision);
             const restored = this.store.getRestoredAudio(sample);
             const copy = this.pendingCopies.get(sample);

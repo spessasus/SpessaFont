@@ -1,6 +1,6 @@
 import type { BasicSample } from "spessasynth_core";
 import { EditSampleAction } from "./edit_sample_action.ts";
-import { getStereoGroup } from "./sample_audio.ts";
+import { getStereoGroup, isLoopShared } from "./sample_audio.ts";
 import { clamp } from "../generator_table/generator_range.ts";
 
 export type ShiftableProperty =
@@ -47,25 +47,19 @@ function getPropertyRange(
 
 /**
  * The samples a shift changes. A pair stays in tune, so the other half of a stereo pair follows
- * for the root key and correction, and for loop points when both halves have the same length
- * and rate (as auto loop treats them). Each sample comes once.
+ * for the root key and correction, and for loop points when both halves share one loop (as the
+ * sample editor does). Each sample comes once.
  */
 function getShiftedSamples(
     samples: Iterable<BasicSample>,
-    property: ShiftableProperty,
-    getLength: (sample: BasicSample) => number
+    property: ShiftableProperty
 ) {
     const result = new Set<BasicSample>();
     const isLoop = property === "loopStart" || property === "loopEnd";
     for (const sample of samples) {
         result.add(sample);
         const [, partner] = getStereoGroup(sample);
-        if (
-            partner &&
-            (!isLoop ||
-                (getLength(partner) === getLength(sample) &&
-                    partner.sampleRate === sample.sampleRate))
-        ) {
+        if (partner && (!isLoop || isLoopShared(sample, partner))) {
             result.add(partner);
         }
     }
@@ -86,7 +80,7 @@ export function createShiftActions(
 ) {
     const actions = new Array<EditSampleAction<ShiftableProperty>>();
     let clamped = 0;
-    for (const sample of getShiftedSamples(samples, property, getLength)) {
+    for (const sample of getShiftedSamples(samples, property)) {
         const old = sample[property];
         const shifted = Math.round(
             operation === "add" ? old + value : old * value

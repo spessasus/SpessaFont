@@ -8,9 +8,6 @@ export const SampleLocale = {
     type: "Tipo",
     link: "Vínculo",
     unlinked: "Sin Vincular",
-    waveZoom: "Zoom de Onda",
-    length: "Longitud",
-    loop: "Bucle",
     types: {
         invalid: "Inválido",
         mono: "Mono",

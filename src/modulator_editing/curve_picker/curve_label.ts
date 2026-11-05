@@ -1,6 +1,6 @@
 import type { TFunction } from "i18next";
 import { ModulatorCurveTypes } from "spessasynth_core";
-import type { SpessaFontModulatorCurveType } from "./curve_picker.tsx";
+import type { SpessaFontModulatorCurveType } from "./curve_shape.ts";
 
 const SHAPE_KEYS = {
     [ModulatorCurveTypes.linear]: "modulatorLocale.curves.linear",

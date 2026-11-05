@@ -120,4 +120,20 @@ describe("tabsReducer", () => {
         });
         expect(next.views.get(1)).toBe("info");
     });
+
+    it("skips the shown element when going back past a removed one", () => {
+        const a = new BasicInstrument();
+        const x = new BasicInstrument();
+        let next = stateWith([1], 1);
+        next = tabsReducer(next, { type: "setView", id: 1, view: a });
+        next = tabsReducer(next, { type: "setView", id: 1, view: x });
+        // x is removed, then a is shown again, so the trail holds a, x
+        next = tabsReducer(next, { type: "setView", id: 1, view: a });
+        next = tabsReducer(next, {
+            type: "goBack",
+            id: 1,
+            isAvailable: (view) => view !== x
+        });
+        expect(next.views.get(1)).toBe("info");
+    });
 });

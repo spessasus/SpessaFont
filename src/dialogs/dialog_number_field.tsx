@@ -1,3 +1,5 @@
+import { readNumberField } from "./read_number_field.ts";
+
 interface DialogNumberFieldProps {
     label: string;
     /**
@@ -6,13 +8,16 @@ interface DialogNumberFieldProps {
     value: string;
     min: number;
     max: number;
+    /**
+     * What the spinner adds. Typed values off the step are fine.
+     */
     step: number;
     onChange: (text: string) => void;
-    isDisabled?: boolean;
 }
 
 /**
- * A labeled number input of a tool dialog. Read it with `readNumberField`.
+ * A labeled number input of a tool dialog. Read it with `readNumberField` and the same range,
+ * the field marks itself invalid when that gives nothing.
  */
 export function DialogNumberField({
     label,
@@ -20,8 +25,7 @@ export function DialogNumberField({
     min,
     max,
     step,
-    onChange,
-    isDisabled = false
+    onChange
 }: DialogNumberFieldProps) {
     return (
         <label className={"tool_dialog_field"}>
@@ -33,7 +37,7 @@ export function DialogNumberField({
                 max={max}
                 step={step}
                 value={value}
-                disabled={isDisabled}
+                aria-invalid={readNumberField(value, min, max) === undefined}
                 onChange={(e) => onChange(e.target.value)}
             />
         </label>

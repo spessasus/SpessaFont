@@ -4,8 +4,10 @@ export const ToolsLocale = {
 
     cells: {
         clear: "Clear",
-        otherGenerator:
-            "The copied cells are of another generator, paste them into the same row."
+        otherTable:
+            "Cells copied from an instrument cannot be pasted into a preset, or the other way around, as a preset's values add to its instruments' values.",
+        invalidText: "“{{text}}” is not a value this cell can take.",
+        stereoValues: "{{first}}: {{firstValue}}, {{second}}: {{secondValue}}"
     },
 
     keyCurve: {
@@ -31,15 +33,16 @@ export const ToolsLocale = {
         fromKey: "From key",
         toKey: "To key",
         steepness: "Steepness",
-        spread: "Gathering to the middle",
+        spread: "Pull to the middle",
         reroll: "Reroll",
         velocityFilter: "Only zones in a velocity range",
         velocityMin: "Lowest velocity",
         velocityMax: "Highest velocity",
         clickHint:
-            "Click the graph to move the nearer end of the curve, right click to move its end.",
+            'Click the graph to move the nearer end of the curve, right click to move the "To key" end.',
         drawHint: "Draw the curve on the graph.",
         randomHint: "Each key gets the value shown, reroll for others.",
+        flat: "Minimum and maximum are the same, so every zone gets that value.",
         noZones: "No zone is in the velocity range."
     },
 
@@ -87,7 +90,9 @@ export const ToolsLocale = {
             "One zone per velocity makes up to 128 zones out of each zone, a larger width is usually enough.",
         nothingToSplit: "There is nothing to split.",
         skipped: "Skipped elements with nothing to split: {{count}}",
-        confirmMany:
+        confirmMany_one:
+            "Splitting makes {{count}} zone in one element. Split anyway?",
+        confirmMany_other:
             "Splitting makes {{count}} zones in one element. Split anyway?"
     },
 
@@ -96,7 +101,7 @@ export const ToolsLocale = {
         title: "Shift a property of the selected samples",
         property: "Property",
         originalKey: "Original key",
-        pitchCorrection: "Pitch correction",
+        pitchCorrection: "Cent correction",
         loopStart: "Loop start",
         loopEnd: "Loop end",
         operation: "Operation",
@@ -112,6 +117,8 @@ export const ToolsLocale = {
         trimAfterLoopTitle:
             "Removes the audio after the loop end, keeping a few frames for interpolation",
         noSilence: "There is no silence at the start.",
+        loopAtStart:
+            "The loop starts at the beginning of the sample, so the silence before the sound cannot be removed.",
         skippedSilent: "Skipped silent samples: {{count}}",
         skippedNoLoop:
             "Skipped samples without a loop or with nothing after it: {{count}}",
@@ -123,7 +130,7 @@ export const ToolsLocale = {
 
     merge: {
         menuSelection: "Merge Duplicates",
-        searching: "Looking for duplicate samples...",
+        searching: "Looking for duplicate samples…",
         none: "No duplicate samples found.",
         merged: "Merged duplicate samples: {{count}}"
     }

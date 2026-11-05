@@ -7,9 +7,10 @@ import { getErrorMessage } from "./error_message.ts";
 interface ErrorBoundaryProps {
     children: ReactNode;
     /**
-     * Renders the fallback. Without it, the app-level fallback with a reload button is shown.
+     * Renders the fallback, which can call `reset` to render the children again.
+     * Without it, the app-level fallback with a reload button is shown.
      */
-    fallback?: (error: unknown) => ReactNode;
+    fallback?: (error: unknown, reset: () => void) => ReactNode;
 }
 
 interface ErrorBoundaryState {
@@ -53,6 +54,10 @@ export class ErrorBoundary extends Component<
         return { error, hasError: true };
     }
 
+    private readonly reset = () => {
+        this.setState({ error: undefined, hasError: false });
+    };
+
     public state: ErrorBoundaryState = { error: undefined, hasError: false };
 
     public componentDidCatch(error: unknown, info: ErrorInfo) {
@@ -65,7 +70,7 @@ export class ErrorBoundary extends Component<
         }
         const { fallback } = this.props;
         return fallback ? (
-            fallback(this.state.error)
+            fallback(this.state.error, this.reset)
         ) : (
             <ErrorFallback error={this.state.error} />
         );

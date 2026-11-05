@@ -34,6 +34,29 @@ describe("createRemoveUnusedActions", () => {
         expect(lonelySample.linkedTo).toEqual([unusedInstrument]);
     });
 
+    it("keeps a stereo half whose partner stays used, as the bank check does", () => {
+        const session = createTestSession();
+        const [left, right] = session.document.samples;
+        const [instrument, other] = session.document.instruments;
+        const [, preset] = session.document.presets;
+        left.setLinkedSample(right, SampleTypes.leftSample);
+        // Only the first instrument stays used, and only it plays the left half
+        preset.zones[0].instrument = instrument;
+        other.deleteZone(0, true);
+        other.deleteZone(0, true);
+        expect(right.useCount).toBe(0);
+        expect(left.useCount).toBeGreaterThan(0);
+
+        const { actions, instrumentCount, sampleCount } =
+            createRemoveUnusedActions(session.document);
+        expect(instrumentCount).toBe(1);
+        expect(sampleCount).toBe(0);
+        session.history.do(actions);
+
+        expect(session.document.samples).toContain(right);
+        expect(left.linkedSample).toBe(right);
+    });
+
     it("returns no actions for a bank without unused elements", () => {
         const session = createTestSession();
         expect(createRemoveUnusedActions(session.document).actions).toEqual([]);

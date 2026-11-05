@@ -1,34 +1,27 @@
 import type { BasicSample } from "spessasynth_core";
 
 /**
- * Adds linked samples to the list if needed, and reorders, making sure that they are in pairs
+ * The samples in their order, each followed by the other half of its stereo pair (added when
+ * it was not given), so pairs stay together.
  */
-export function addAndReorderStereoSamples(
-    samples: Iterable<BasicSample>
-): BasicSample[] {
-    const samples1 = new Set<BasicSample>();
-
-    for (const s of samples) {
-        samples1.add(s);
-        if (s.linkedSample) {
-            samples1.add(s.linkedSample);
+export function addAndReorderStereoSamples(samples: Iterable<BasicSample>) {
+    const ordered = new Array<BasicSample>();
+    const added = new Set<BasicSample>();
+    const add = (sample: BasicSample) => {
+        if (added.has(sample)) {
+            return;
         }
-    }
-
-    const orderedSamples: BasicSample[] = [];
-    // reorder the samples
+        added.add(sample);
+        ordered.push(sample);
+    };
     for (const sample of samples) {
-        if (orderedSamples.includes(sample)) {
+        if (added.has(sample)) {
             continue;
         }
-        orderedSamples.push(sample);
-        if (
-            sample.linkedSample &&
-            !orderedSamples.includes(sample.linkedSample)
-        ) {
-            orderedSamples.push(sample.linkedSample);
+        add(sample);
+        if (sample.linkedSample) {
+            add(sample.linkedSample);
         }
     }
-
-    return orderedSamples;
+    return ordered;
 }

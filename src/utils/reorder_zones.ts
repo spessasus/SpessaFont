@@ -45,7 +45,7 @@ function findBestLinkedZone(
 export function reorderInstrumentZones(
     zones: BasicInstrumentZone[]
 ): BasicInstrumentZone[] {
-    const ordered: BasicInstrumentZone[] = [];
+    const ordered = new Array<BasicInstrumentZone>();
     const added = new Set<BasicInstrumentZone>();
     zones = zones.slice().sort(ZONE_SORTING_FUNCTION);
 

@@ -1,7 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { BasicPreset, EmptySample, GeneratorTypes } from "spessasynth_core";
 import { type HistoryAction, MERGE_WINDOW_MS } from "./history.ts";
-import { createTestSession } from "../test_utils/bank_fixture.ts";
+import {
+    createTestHost,
+    createTestSession
+} from "../test_utils/bank_fixture.ts";
 import { EditSampleAction } from "../sample_editor/edit_sample_action.ts";
+import { SetGeneratorAction } from "../generator_table/cell/set_generator_action.ts";
+import { SetBankInfoAction } from "../info_view/set_bank_info_action.ts";
+import { ClipboardManager } from "./clipboard_manager.ts";
+import { CreateSampleAction } from "../menu_list/create_actions/create_sample_action.ts";
 
 /**
  * An action that only records when it runs, so tests can check ordering.
@@ -210,6 +218,12 @@ describe("HistoryManager dirty state", () => {
 
         expect(session.history.canRedo).toBe(true);
         expect(session.history.canUndo).toBe(false);
+        // The rollback published the state too, which the Edit menu reads
+        expect(session.store.getSnapshot().history).toMatchObject({
+            canRedo: true,
+            canUndo: false,
+            redoLabel: "editSample"
+        });
     });
 
     describe("merging", () => {
@@ -274,5 +288,67 @@ describe("HistoryManager labels", () => {
             undoLabel: "renameSample",
             redoLabel: "editSample"
         });
+    });
+});
+
+describe("HistoryManager focus", () => {
+    it("shows the pasted presets' neighbor when a paste into another bank is undone", () => {
+        const host = createTestHost();
+        const source = createTestSession(host);
+        const target = createTestSession(host);
+        const clipboard = new ClipboardManager();
+        clipboard.copyPresets(new Set([source.document.presets[0]]), source);
+
+        const doFocus = target.history.do(clipboard.pastePresets(target));
+        expect(doFocus).toBeInstanceOf(BasicPreset);
+        const index = target.document.presets.findIndex((p) => p === doFocus);
+
+        // Not the first sample, which the paste's first action would point to
+        const undoFocus = target.history.undo();
+        expect(undoFocus).toBe(target.document.presets[Math.max(index - 1, 0)]);
+        expect(target.history.redo()).toBe(doFocus);
+    });
+
+    it("skips hints to elements the rest of the group removed", () => {
+        const session = createTestSession();
+        const last = session.document.samples.at(-1);
+        const [first, second] = ["Zz 1", "Zz 2"].map((name) => {
+            const sample = new EmptySample();
+            sample.name = name;
+            return sample;
+        });
+        session.history.do([
+            new CreateSampleAction(first),
+            new CreateSampleAction(second)
+        ]);
+
+        // Undoing the second one points to the first, which is removed right after
+        expect(session.history.undo()).toBe(last);
+    });
+
+    it("shows the element an undo or redo changed when no action points to one", () => {
+        const session = createTestSession();
+        const [instrument, other] = session.document.instruments;
+        const zone = instrument.zones[0];
+        const action = new SetGeneratorAction(
+            instrument,
+            zone,
+            GeneratorTypes.pan,
+            null,
+            100
+        );
+        // An edit happens in the shown editor, so it moves nothing
+        expect(session.history.do([action])).toBeUndefined();
+
+        expect(other).toBeDefined();
+        expect(session.history.undo()).toBe(instrument);
+        expect(session.history.redo()).toBe(instrument);
+    });
+
+    it("shows the overview when an undo changed the bank info", () => {
+        const session = createTestSession();
+        session.history.do([new SetBankInfoAction("name", "", "Named")]);
+
+        expect(session.history.undo()).toBe("info");
     });
 });

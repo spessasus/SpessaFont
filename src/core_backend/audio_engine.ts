@@ -40,7 +40,6 @@ export function getHostSettings(settings: SavedSettingsType): HostSettings {
  * talks to only through `client`.
  */
 export class AudioEngine {
-    private readonly currentSampleRate;
     private worklet: AudioWorkletNode | undefined;
     private outputInsert: OutputInsert | undefined;
     private started: Promise<void> | undefined;
@@ -61,7 +60,10 @@ export class AudioEngine {
      */
     public readonly hostMode;
 
-    constructor(context: AudioContext, initialSettings: SavedSettingsType) {
+    public constructor(
+        context: AudioContext,
+        initialSettings: SavedSettingsType
+    ) {
         this.context = context;
         const isDev = import.meta.env.MODE === "development";
         if (isDev) {
@@ -83,8 +85,7 @@ export class AudioEngine {
         this.inputNode = new GainNode(context);
         this.inputNode.connect(this.targetNode);
 
-        this.currentSampleRate = context.sampleRate;
-        this.applySettings(initialSettings);
+        this.setVolume(initialSettings.volume);
     }
 
     private async start() {
@@ -153,16 +154,13 @@ export class AudioEngine {
         ]);
     }
 
+    /**
+     * Applies everything but the sample rate, which only a reload changes
+     * (`reloadWithSampleRate`).
+     */
     public applySettings(settings: SavedSettingsType) {
         this.setVolume(settings.volume);
         this.client.applySettings(getHostSettings(settings));
-        const rate = settings.sampleRate;
-        if (this.currentSampleRate === rate) {
-            return;
-        }
-        const url = new URL(location.href);
-        url.searchParams.set("samplerate", rate.toString());
-        location.replace(url);
     }
 
     /**
@@ -199,10 +197,11 @@ export class AudioEngine {
     }
 
     /**
-     * Plays a MIDI file, which the host parses again. The buffer moves to the host.
+     * Plays a MIDI file, which only the host parses. Rejects when the file is broken.
+     * The buffer moves to the host.
      */
     public playMIDI(file: ArrayBuffer, name: string) {
-        this.client.send({ type: "loadSong", file, name }, [file]);
+        return this.client.loadSong(file, name);
     }
 
     public pauseMIDI() {

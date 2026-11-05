@@ -1,17 +1,26 @@
-import { MIDIPatchTools } from "spessasynth_core";
+import { MIDIPatchTools, type SoundBankInfoData } from "spessasynth_core";
 import type {
     BankViews,
     RangeView,
     ZoneView
 } from "../../core_backend/entity_views.ts";
 import type { MirrorTarget } from "../../synth_host/bank_mirror.ts";
+import { findUnusedIds } from "../../core_backend/bank_maintenance.ts";
+import {
+    hasInfoTextOutsideLatin1,
+    isOutsideLatin1
+} from "../../core_backend/latin1_text.ts";
+import { isBankNumberLostInSF2 } from "../../core_backend/sf2_bank_numbers.ts";
+import { hasZoneSFEData, isSFEGenerator } from "../../core_backend/sfe_data.ts";
+import { isSameModulator } from "../../modulator_editing/same_modulator.ts";
+import { isLinkedModulator } from "../../modulator_editing/linked_modulator.ts";
 
 /**
- * SF2 and SF3 keep 20 characters of a name (SFE and DLS keep more).
+ * SF2 and SF3 keep 20 characters of a name for other players. SpessaSynth reads 20 more from
+ * the extra chunk that SF2, SF3 and SFE saves write, and DLS keeps the whole name.
  */
 export const SF2_NAME_LENGTH = 20;
-
-const LATIN_1_MAX = 0xff;
+export const EXTENDED_NAME_LENGTH = 40;
 
 /**
  * Something in the bank that is likely a mistake, or that a save cannot keep.
@@ -37,35 +46,62 @@ export type BankIssue =
           reason: "rate" | "length" | "oneSided";
       }
     | { kind: "longName"; target: MirrorTarget }
-    | { kind: "nonLatin1Name"; target: MirrorTarget };
+    | { kind: "cutName"; target: MirrorTarget }
+    | { kind: "nonLatin1Name"; target: MirrorTarget }
+    | { kind: "nonLatin1Info" }
+    | { kind: "bankNumberLost"; presetId: number }
+    | { kind: "sfeOnlyData"; target: MirrorTarget }
+    | { kind: "sfeDefaultModulators" }
+    | { kind: "linkedModulator"; target: MirrorTarget };
 
-function isOutsideLatin1(text: string) {
-    for (const char of text) {
-        if ((char.codePointAt(0) ?? 0) > LATIN_1_MAX) {
-            return true;
-        }
-    }
-    return false;
+/**
+ * A zone without a range of its own plays every key or velocity.
+ */
+const FULL_RANGE: RangeView = { min: 0, max: 127 };
+
+/**
+ * The loop "fix the loop" sets: a reversed loop is turned around and the end is kept inside the
+ * sample. A loop that would be empty after that (it lay past the end) covers the whole sample.
+ */
+export function getFixedLoop(
+    loopStart: number,
+    loopEnd: number,
+    length: number
+) {
+    const end = Math.min(Math.max(loopStart, loopEnd), length);
+    const start = Math.min(loopStart, loopEnd, end);
+    return start < end ? { start, end } : { start: 0, end: length };
 }
 
 function isSameRange(a: RangeView | undefined, b: RangeView | undefined) {
-    return a?.min === b?.min && a?.max === b?.max;
+    const rangeA = a ?? FULL_RANGE;
+    const rangeB = b ?? FULL_RANGE;
+    return rangeA.min === rangeB.min && rangeA.max === rangeB.max;
 }
 
+/**
+ * The order of the generators does not change how a zone plays.
+ */
 function isSameGenerators(a: ZoneView, b: ZoneView) {
+    const values = new Map(a.generators.map((g) => [g.type, g.value]));
     return (
         a.generators.length === b.generators.length &&
-        a.generators.every(
-            (g, i) =>
-                g.type === b.generators[i].type &&
-                g.value === b.generators[i].value
+        b.generators.every((g) => values.get(g.type) === g.value)
+    );
+}
+
+function isSameModulators(a: ZoneView, b: ZoneView) {
+    return (
+        a.modulators.length === b.modulators.length &&
+        a.modulators.every((mod) =>
+            b.modulators.some((other) => isSameModulator(mod, other, true))
         )
     );
 }
 
 /**
- * The first zone that repeats an earlier one: the same child, ranges and generators, which plays
- * the child twice the same way. A detuned copy (a chorus) differs in its generators.
+ * The first zone that repeats an earlier one: the same child, ranges, generators and modulators,
+ * which plays the child twice the same way. A detuned copy (a chorus) differs in its generators.
  */
 function findDuplicateZone(zones: readonly ZoneView[]) {
     return zones.find((zone, i) =>
@@ -76,13 +112,16 @@ function findDuplicateZone(zones: readonly ZoneView[]) {
                     earlier.childId === zone.childId &&
                     isSameRange(earlier.keyRange, zone.keyRange) &&
                     isSameRange(earlier.velocityRange, zone.velocityRange) &&
-                    isSameGenerators(earlier, zone)
+                    isSameGenerators(earlier, zone) &&
+                    isSameModulators(earlier, zone)
             )
     );
 }
 
 function checkNames(issues: BankIssue[], target: MirrorTarget, name: string) {
-    if (name.length > SF2_NAME_LENGTH) {
+    if (name.length > EXTENDED_NAME_LENGTH) {
+        issues.push({ kind: "cutName", target });
+    } else if (name.length > SF2_NAME_LENGTH) {
         issues.push({ kind: "longName", target });
     }
     if (isOutsideLatin1(name)) {
@@ -91,10 +130,56 @@ function checkNames(issues: BankIssue[], target: MirrorTarget, name: string) {
 }
 
 /**
- * Lists the issues of a bank, from its views. Fast enough to run on every render of the panel.
+ * The checks a preset and an instrument share: zones, data only SFE keeps, linked modulators.
  */
-export function checkBank(views: BankViews): BankIssue[] {
+function checkZones(
+    issues: BankIssue[],
+    target: MirrorTarget,
+    element: {
+        readonly globalZone: ZoneView;
+        readonly zones: readonly ZoneView[];
+    },
+    getChildName: (id: number) => string
+) {
+    if (element.zones.length === 0) {
+        issues.push({ kind: "emptyElement", target });
+    }
+    const duplicate = findDuplicateZone(element.zones);
+    if (duplicate?.childId !== undefined) {
+        issues.push({
+            kind: "duplicateZone",
+            target,
+            zoneName: getChildName(duplicate.childId)
+        });
+    }
+    const zones = [element.globalZone, ...element.zones];
+    if (zones.some((zone) => hasZoneSFEData(zone))) {
+        issues.push({ kind: "sfeOnlyData", target });
+    }
+    if (
+        zones.some((zone) => zone.modulators.some((m) => isLinkedModulator(m)))
+    ) {
+        issues.push({ kind: "linkedModulator", target });
+    }
+}
+
+/**
+ * Lists the issues of a bank, from its views and info. Fast enough to run on every render of
+ * the overview.
+ */
+export function checkBank(
+    views: BankViews,
+    info: Readonly<SoundBankInfoData>
+): BankIssue[] {
     const issues = new Array<BankIssue>();
+    const unused = findUnusedIds(views);
+
+    if (hasInfoTextOutsideLatin1(info)) {
+        issues.push({ kind: "nonLatin1Info" });
+    }
+    if (views.defaultModulators.some((m) => isSFEGenerator(m.destination))) {
+        issues.push({ kind: "sfeDefaultModulators" });
+    }
 
     const byPatch = new Map<string, number[]>();
     for (const id of views.presetOrder) {
@@ -105,16 +190,14 @@ export function checkBank(views: BankViews): BankIssue[] {
         const target: MirrorTarget = { kind: "preset", id };
         const patch = MIDIPatchTools.toMIDIString(preset);
         byPatch.set(patch, [...(byPatch.get(patch) ?? []), id]);
-        if (preset.zones.length === 0) {
-            issues.push({ kind: "emptyElement", target });
-        }
-        const duplicate = findDuplicateZone(preset.zones);
-        if (duplicate?.childId !== undefined) {
-            issues.push({
-                kind: "duplicateZone",
-                target,
-                zoneName: views.instruments.get(duplicate.childId)?.name ?? ""
-            });
+        checkZones(
+            issues,
+            target,
+            preset,
+            (childId) => views.instruments.get(childId)?.name ?? ""
+        );
+        if (isBankNumberLostInSF2(preset)) {
+            issues.push({ kind: "bankNumberLost", presetId: id });
         }
         checkNames(issues, target, preset.name);
     }
@@ -130,20 +213,15 @@ export function checkBank(views: BankViews): BankIssue[] {
             continue;
         }
         const target: MirrorTarget = { kind: "instrument", id };
-        if (instrument.usedBy.length === 0) {
+        if (unused.instruments.has(id)) {
             issues.push({ kind: "unusedInstrument", instrumentId: id });
         }
-        if (instrument.zones.length === 0) {
-            issues.push({ kind: "emptyElement", target });
-        }
-        const duplicate = findDuplicateZone(instrument.zones);
-        if (duplicate?.childId !== undefined) {
-            issues.push({
-                kind: "duplicateZone",
-                target,
-                zoneName: views.samples.get(duplicate.childId)?.name ?? ""
-            });
-        }
+        checkZones(
+            issues,
+            target,
+            instrument,
+            (childId) => views.samples.get(childId)?.name ?? ""
+        );
         checkNames(issues, target, instrument.name);
     }
 
@@ -156,9 +234,7 @@ export function checkBank(views: BankViews): BankIssue[] {
             sample.linkedSampleId === undefined
                 ? undefined
                 : views.samples.get(sample.linkedSampleId);
-        // A stereo half that is used counts its partner as used too
-        const isPartnerUsed = (partner?.usedBy.length ?? 0) > 0;
-        if (!isPartnerUsed && sample.usedBy.length === 0) {
+        if (unused.samples.has(id)) {
             issues.push({ kind: "unusedSample", sampleId: id });
         }
         if (

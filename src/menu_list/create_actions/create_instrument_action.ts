@@ -2,6 +2,7 @@ import type { BasicInstrument } from "spessasynth_core";
 import type { HistoryAction } from "../../core_backend/history.ts";
 import type { BankDocument } from "../../core_backend/bank_document.ts";
 import type { ChangeSet } from "../../core_backend/change_set.ts";
+import { neighborOrInfo } from "../../core_backend/neighbor_or_info.ts";
 
 export class CreateInstrumentAction implements HistoryAction {
     private readonly instrument: BasicInstrument;
@@ -32,6 +33,8 @@ export class CreateInstrumentAction implements HistoryAction {
         this.removedIndex = document.removeInstrument(this.instrument);
         changes.touchList("instruments");
         changes.touch(...this.instrument.zones.map((z) => z.sample));
-        changes.focusOn(document.instruments[0] ?? "info");
+        changes.focusOn(
+            neighborOrInfo(document.instruments, this.removedIndex)
+        );
     }
 }

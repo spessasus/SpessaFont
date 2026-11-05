@@ -8,11 +8,9 @@ import {
     type AttenuationStats,
     limitAttenuationOffset
 } from "./attenuation_actions.ts";
-import type { GeneratorRowType } from "../generator_row_type.ts";
+import { type GeneratorRowType, identity } from "../generator_row_type.ts";
 
 const LIMIT = 1000;
-const identity = (v: number) => v;
-
 interface AttenuationDialogProps {
     stats: AttenuationStats;
     /**
@@ -68,7 +66,7 @@ export function AttenuationDialog({
     return (
         <ToolDialog
             title={t("toolsLocale.attenuation.title")}
-            canApply={offset !== undefined && offset !== 0}
+            canApply={offset !== undefined}
             onCancel={() => onAnswer(undefined)}
             onApply={() => {
                 if (offset !== undefined) {

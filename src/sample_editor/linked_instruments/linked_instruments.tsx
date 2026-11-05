@@ -44,7 +44,7 @@ export function LinkedInstruments({ sampleId }: LinkedInstrumentsProps) {
     const createInstrument = () => {
         const toLink = session.document.getSample(sampleId);
         if (toLink) {
-            apply([createInstrumentFromSamples([toLink])]);
+            apply([createInstrumentFromSamples(session.document, [toLink])]);
         }
     };
 
@@ -90,7 +90,7 @@ export function LinkedInstruments({ sampleId }: LinkedInstrumentsProps) {
                 </>
             ) : (
                 <>
-                    <div>{t("sampleLocale.usedBy")}:</div>
+                    <div>{t("sampleLocale.usedBy")}</div>
                     {linked.map((id) => (
                         <button
                             type={"button"}

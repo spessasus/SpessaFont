@@ -12,7 +12,7 @@
 }
 
 .generator_cell_header i {
-    opacity: 0.5;
+    color: var(--muted-font-color);
     cursor: help;
 }
 
@@ -42,21 +42,36 @@
     outline: outset var(--sample-item-color) 0.15rem;
 }
 
-.generator_cell.selected input {
-    background: var(--selection-color);
+.generator_cell.selected input,
+.generator_cell.selected select {
+    background: var(--cell-selection-color);
 }
 
 .generator_cell input:focus,
 .generator_cell select:focus {
-    outline: outset var(--border-color) 0.15rem;
+    outline: outset var(--focus-color) 0.15rem;
+}
+
+/*a cell being typed into*/
+.generator_cell input:not(:read-only):focus {
+    outline-style: solid;
+    cursor: text;
+}
+
+.generator_cell input[aria-invalid="true"] {
+    outline: solid var(--warning-color) 0.15rem;
 }
 
 .generator_cell input.exclusive_class {
     font-weight: bold;
+    color: hsl(
+        var(--exclusive-class-hue) 100% var(--exclusive-class-lightness)
+    );
 }
 
 .generator_cell input::placeholder {
-    opacity: 0.5;
+    color: var(--muted-font-color);
+    opacity: 1;
     font-size: calc(var(--generator-table-font-size) * 0.9);
 }
 

@@ -1,4 +1,4 @@
-import { BasicInstrument, type BasicPreset } from "spessasynth_core";
+import type { BasicInstrument, BasicPreset } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import type { BankEntity } from "../core_backend/bank_view.ts";
@@ -29,22 +29,16 @@ import {
     FLAT_EQUALIZER
 } from "../sample_editor/equalizer/equalizer.ts";
 import { createRootKeyActions } from "../sample_editor/root_key_actions.ts";
-import { createSpreadActions } from "../instrument_editor/spread_actions.ts";
 import {
     type BatchScope,
     createBatchGeneratorActions,
     isBatchEditableRow
 } from "./batch_generator_actions.ts";
 import type { CellEdit } from "../generator_table/cell/parse_generator_text.ts";
-import { INSTRUMENT_ROWS } from "../instrument_editor/instrument_rows.ts";
-import { PRESET_ROWS } from "../preset_editor/preset_rows.ts";
+import { getElementRows } from "../generator_table/tools/element_rows.ts";
 import { generatorLocaleMap } from "../utils/translated_options/generator_to_locale_map.ts";
 import { GENERATOR_UNITS } from "../generator_table/generator_unit.ts";
-import {
-    createDrumMapActions,
-    DRUM_MAP_START_KEY
-} from "../instrument_editor/drum_map_actions.ts";
-import { shortcutText } from "../utils/shortcut_text.ts";
+import { DELETE_KEY_TEXT, shortcutText } from "../utils/shortcut_text.ts";
 import { runAudioTool } from "../sample_editor/run_audio_tool.ts";
 import { useSampleTools } from "../sample_editor/use_sample_tools.tsx";
 import { useElementTools } from "../generator_table/tools/use_element_tools.tsx";
@@ -113,32 +107,14 @@ export function useListMenu() {
         }
     };
 
-    const mapToKeys = async (instruments: ReadonlySet<BasicInstrument>) => {
-        const startKey = await askNumber({
-            title: t("contextMenu.drumMapTitle"),
-            label: t("contextMenu.drumMapLabel"),
-            initial: DRUM_MAP_START_KEY,
-            min: 0,
-            max: 127,
-            step: 1
-        });
-        if (startKey !== undefined) {
-            apply(
-                [...instruments].flatMap((i) =>
-                    createDrumMapActions(i, startKey)
-                )
-            );
-        }
-    };
-
     // Many elements at once, like typing the edit into every cell of the row
     const editGenerator = async (
         elements: ReadonlySet<BasicPreset | BasicInstrument>
     ) => {
         const [first] = elements;
-        const rows = (
-            first instanceof BasicInstrument ? INSTRUMENT_ROWS : PRESET_ROWS
-        ).filter((row) => isBatchEditableRow(row));
+        const rows = getElementRows(first).filter((row) =>
+            isBatchEditableRow(row)
+        );
         const row = await pickElement({
             title: t("contextMenu.batchGeneratorTitle"),
             items: rows,
@@ -200,7 +176,7 @@ export function useListMenu() {
             mode.scope
         );
         if (actions.length === 0) {
-            toast(t("contextMenu.batchNothingChanged"));
+            toast(t("toolsLocale.nothingChanged"));
             return;
         }
         apply(actions);
@@ -216,7 +192,11 @@ export function useListMenu() {
             max: EQ_MAX_GAIN,
             step: 0.5
         });
-        if (gain === undefined || gain === 0) {
+        if (gain === undefined) {
+            return;
+        }
+        if (gain === 0) {
+            toast(t("toolsLocale.nothingChanged"));
             return;
         }
         await runAudioTool(async () => {
@@ -258,6 +238,8 @@ export function useListMenu() {
         }
         if (skipped > 0) {
             toast.error(t("contextMenu.skippedNoNote", { count: skipped }));
+        } else if (actions.length === 0) {
+            toast(t("contextMenu.rootKeysUnchanged"));
         }
     };
 
@@ -267,10 +249,16 @@ export function useListMenu() {
                 session,
                 selectionOf(samples, isSample)
             );
+            if (actions.length === 0) {
+                toast(t("sampleLocale.tools.nothingToNormalize"));
+                return;
+            }
             apply(actions);
         });
 
-    return (selection: ReadonlySet<BankEntity>): ContextMenuEntry[] => {
+    const getEntries = (
+        selection: ReadonlySet<BankEntity>
+    ): ContextMenuEntry[] => {
         const hasClipboard =
             contents.presets + contents.instruments + contents.samples > 0;
         const editEntries: ContextMenuEntry[] = [
@@ -298,7 +286,7 @@ export function useListMenu() {
             {
                 label: t("contextMenu.delete"),
                 onSelect: () => commands.remove(selection),
-                shortcut: "Del"
+                shortcut: DELETE_KEY_TEXT
             }
         ];
         const samples = selectionOf(selection, isSample);
@@ -324,7 +312,7 @@ export function useListMenu() {
                 {
                     label: t("contextMenu.newInstrument"),
                     onSelect: () =>
-                        apply([createInstrumentFromSamples(samples)])
+                        apply([createInstrumentFromSamples(document, samples)])
                 },
                 "separator",
                 {
@@ -383,12 +371,7 @@ export function useListMenu() {
                 "separator",
                 {
                     label: t("contextMenu.spreadSamples"),
-                    onSelect: () =>
-                        apply(
-                            [...instruments].flatMap((i) =>
-                                createSpreadActions(i)
-                            )
-                        )
+                    onSelect: () => elementTools.spread([...instruments])
                 },
                 ...getZoneToolEntries([...instruments]),
                 {
@@ -398,7 +381,8 @@ export function useListMenu() {
                 },
                 {
                     label: t("contextMenu.drumMap"),
-                    onSelect: () => void mapToKeys(instruments)
+                    onSelect: () =>
+                        void elementTools.openDrumMap([...instruments])
                 },
                 {
                     label: t("contextMenu.batchGenerator"),
@@ -419,4 +403,38 @@ export function useListMenu() {
               ]
             : [];
     };
+
+    // The menu stays open while the bank changes (an undo from the menu bar), so a picked entry
+    // acts on the part of the selection still in the bank, and does nothing when none is left
+    return (selection: ReadonlySet<BankEntity>): ContextMenuEntry[] =>
+        getEntries(selection).map((entry) =>
+            entry === "separator"
+                ? entry
+                : {
+                      ...entry,
+                      onSelect: () => {
+                          const live = new Set(
+                              [...selection].filter((e) => document.contains(e))
+                          );
+                          if (live.size === selection.size) {
+                              entry.onSelect();
+                              return;
+                          }
+                          if (live.size === 0) {
+                              return;
+                          }
+                          const current = getEntries(live).find(
+                              (e) =>
+                                  e !== "separator" && e.label === entry.label
+                          );
+                          if (
+                              current &&
+                              current !== "separator" &&
+                              !current.isDisabled
+                          ) {
+                              current.onSelect();
+                          }
+                      }
+                  }
+        );
 }

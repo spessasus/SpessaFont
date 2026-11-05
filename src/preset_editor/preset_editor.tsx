@@ -1,6 +1,6 @@
 import type { BasicPreset } from "spessasynth_core";
 import "./preset_editor.css";
-import { BottomPresetBar } from "./bottom_bar/bottom_bar.tsx";
+import { BottomBar } from "./bottom_bar/bottom_bar.tsx";
 import { GeneratorTable } from "../generator_table/generator_table.tsx";
 import { getObjectId } from "../utils/object_id.ts";
 import { useLinkDropTarget } from "../drag_and_drop/use_link_drop_target.ts";
@@ -20,7 +20,7 @@ export function PresetEditor({ preset }: PresetEditorProps) {
                 rows={PRESET_ROWS}
                 element={preset}
             />
-            <BottomPresetBar preset={preset} />
+            <BottomBar preset={preset} />
         </div>
     );
 }

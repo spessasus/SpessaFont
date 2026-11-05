@@ -1,40 +1,31 @@
 import type * as React from "react";
-import {
-    BasicInstrument,
-    type BasicPreset,
-    GeneratorTypes
-} from "spessasynth_core";
-import { midiNoteToPitchClass } from "../../utils/note_name.ts";
+import { GeneratorTypes } from "spessasynth_core";
+import { useTranslation } from "react-i18next";
 import {
     type CellInputCommands,
     GeneratorCellInput
 } from "./generator_cell_input.tsx";
-import { useTranslation } from "react-i18next";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
-import type { GeneratorRowType } from "../generator_row_type.ts";
-import { getViewGenerator, type ZoneColumn } from "../zone_columns.ts";
-import { getGeneratorOptions } from "../generator_options.ts";
-import { getGeneratorDefault } from "../generator_range.ts";
-import { useWheelStep } from "../../hooks/use_wheel_step.ts";
+import type { ZoneView } from "../../core_backend/entity_views.ts";
+import { getViewZones, type ZoneColumn } from "../zone_columns.ts";
 import {
-    applyTextToNumber,
     type CellContext,
-    createSetCellActions,
-    formatNumberCell
+    createTextEditActions,
+    getCellDisplay
 } from "./cell_values.ts";
 
-const EXCLUSIVE_CLASS_COLORS = 10;
+/**
+ * Exclusive classes get one of this many hues, so neighboring classes look apart.
+ */
+const EXCLUSIVE_CLASS_HUES = 10;
 
-function getExclusiveClassColor(exclusiveClass: number) {
-    const hue = ((exclusiveClass - 1) * (360 / EXCLUSIVE_CLASS_COLORS)) % 360;
-    return `hsl(${hue}, 100%, 50%)`;
-}
-
-interface NumberGeneratorCellProps {
-    element: BasicPreset | BasicInstrument;
+interface GeneratorCellProps {
+    context: CellContext;
     column: ZoneColumn;
-    row: GeneratorRowType;
+    globalZone: ZoneView;
     label: string;
+    gridKey: string;
+    isActive: boolean;
     isSelected: boolean;
     /**
      * The selected cells of this row, which an edit to a selected cell changes too.
@@ -45,135 +36,97 @@ interface NumberGeneratorCellProps {
      */
     onSelect: (event: React.MouseEvent) => void;
     commands: CellInputCommands;
-    onSelectKeyDown: (e: React.KeyboardEvent<HTMLSelectElement>) => void;
     onContextMenu: (e: React.MouseEvent) => void;
 }
 
-export function NumberGeneratorCell({
-    element,
+/**
+ * A cell that takes typed text: a number, a key or velocity range, or a sample offset.
+ */
+export function GeneratorCell({
+    context,
     column,
-    row,
+    globalZone,
     label,
+    gridKey,
+    isActive,
     isSelected,
     selectedColumns,
     onSelect,
     commands,
-    onSelectKeyDown,
     onContextMenu
-}: NumberGeneratorCellProps) {
+}: GeneratorCellProps) {
     const { t } = useTranslation();
     const { apply } = useBankEditor();
-    const { generator } = row;
-    const { zone, colSpan, sample } = column;
-    const value = getViewGenerator(zone, generator);
-    const textValue = formatNumberCell(row, value);
-    const isInstrument = element instanceof BasicInstrument;
-    const context: CellContext = { element, row, isInstrument };
-    const selectWheelRef = useWheelStep<HTMLSelectElement>(commands.nudge);
-
-    let placeholder = formatNumberCell(
-        row,
-        getGeneratorDefault(generator, isInstrument)
-    );
-    if (sample && generator === GeneratorTypes.overridingRootKey) {
-        const key = sample.originalKey;
-        placeholder = `${key} (${midiNoteToPitchClass(key)})`;
-    } else if (placeholder === "-1") {
-        placeholder = "-";
-    }
+    const { generator } = context.row;
+    const display = getCellDisplay(context, column, globalZone);
+    const [firstValue] = display.values;
 
     // Several selected cells of this row take one edit, each from its own value
-    const isMultiSelected = isSelected && selectedColumns.length > 1;
-    const targets = isMultiSelected ? selectedColumns : [column];
+    const targets =
+        isSelected && selectedColumns.length > 1 ? selectedColumns : [column];
 
-    const setGenerators = (values: (number | null)[]) =>
-        apply(
-            targets.flatMap((target, i) =>
-                createSetCellActions(context, target, values[i])
-            )
-        );
-
-    const commitText = (typedText: string) => {
-        if (typedText === textValue && targets.length === 1) {
-            return textValue;
+    const didCommit = (typedText: string) => {
+        if (typedText === display.text && targets.length === 1) {
+            return true;
         }
-        if (typedText === "") {
-            setGenerators(targets.map(() => null));
-            return "";
+        const actions = createTextEditActions(context, targets, typedText);
+        if (!actions) {
+            return false;
         }
-        const values = targets.map((target) => {
-            const current = getViewGenerator(target.zone, generator);
-            return applyTextToNumber(context, current, typedText) ?? current;
-        });
-        setGenerators(values);
-        return formatNumberCell(row, values[targets.indexOf(column)] ?? value);
+        if (actions.length > 0) {
+            apply(actions);
+        }
+        return true;
     };
 
-    const isModulated = zone.modulators.some(
-        (m) => m.destination === generator
+    const isModulated = getViewZones(column).some((z) =>
+        z.modulators.some((m) => m.destination === generator)
     );
-    const className = `generator_cell ${isModulated ? "modulated" : ""} ${isSelected ? "selected" : ""}`;
-
-    const options = getGeneratorOptions(generator);
-    if (options) {
-        return (
-            <td
-                className={className}
-                colSpan={colSpan}
-                onContextMenu={onContextMenu}
-            >
-                <select
-                    ref={selectWheelRef}
-                    aria-label={label}
-                    value={value ?? "null"}
-                    onKeyDown={onSelectKeyDown}
-                    onChange={(e) => {
-                        const picked =
-                            e.target.value === "null"
-                                ? null
-                                : Number(e.target.value);
-                        setGenerators(targets.map(() => picked));
-                    }}
-                >
-                    <option value={"null"}>{"-"}</option>
-                    {options.map((option) => (
-                        <option value={option.value} key={option.value}>
-                            {t(option.label)}
-                        </option>
-                    ))}
-                </select>
-            </td>
-        );
-    }
-
-    const hasExclusiveClass =
-        generator === GeneratorTypes.exclusiveClass &&
-        value !== null &&
-        value > 0;
+    const exclusiveClass =
+        typeof firstValue === "number" &&
+        firstValue > 0 &&
+        !display.isMixed &&
+        generator === GeneratorTypes.exclusiveClass
+            ? firstValue
+            : 0;
+    const [firstText, secondText] = display.parts;
 
     return (
         <td
-            className={className}
-            colSpan={colSpan}
+            className={`generator_cell ${isModulated ? "modulated" : ""} ${isSelected ? "selected" : ""}`}
+            colSpan={column.colSpan}
+            aria-selected={isSelected}
             onContextMenu={onContextMenu}
         >
             <GeneratorCellInput
-                aria-label={label}
-                regex={/[^0-9-.+*x]/g}
-                type={"text"}
-                maxLength={10}
-                className={hasExclusiveClass ? "exclusive_class" : undefined}
-                style={
-                    hasExclusiveClass
-                        ? { color: getExclusiveClassColor(value) }
+                label={label}
+                title={
+                    display.isMixed
+                        ? t("toolsLocale.cells.stereoValues", {
+                              first: column.sample?.name ?? "",
+                              firstValue: firstText,
+                              second: column.linkedSample?.name ?? "",
+                              secondValue: secondText
+                          })
                         : undefined
                 }
-                placeholder={placeholder}
-                value={textValue}
+                gridKey={gridKey}
+                isActive={isActive}
+                className={exclusiveClass > 0 ? "exclusive_class" : undefined}
+                style={
+                    exclusiveClass > 0
+                        ? {
+                              "--exclusive-class-hue":
+                                  ((exclusiveClass - 1) * 360) /
+                                  EXCLUSIVE_CLASS_HUES
+                          }
+                        : undefined
+                }
+                placeholder={display.placeholder}
+                value={display.text}
                 onClick={onSelect}
-                onBlur={commitText}
+                onCommit={didCommit}
                 commands={commands}
-                isMultiSelected={isMultiSelected}
             />
         </td>
     );

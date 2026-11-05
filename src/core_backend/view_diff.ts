@@ -40,7 +40,7 @@ function diffElements<T>(
     next: ReadonlyMap<number, T>,
     previousOrder: readonly number[],
     nextOrder: readonly number[]
-): ElementDiff<T> {
+) {
     const changed = new Array<T>();
     const removed = new Array<number>();
     // An unchanged map means unchanged views, so the walk is only paid for the touched kinds

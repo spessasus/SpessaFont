@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useRef, useState } from "react";
 import type { SoundBankInfoData } from "spessasynth_core";
 import { SetBankInfoAction } from "./set_bank_info_action.ts";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
@@ -7,6 +8,13 @@ import { WaitingInput } from "../fancy_inputs/waiting_input/waiting_input.tsx";
 import { WaitingTextArea } from "../fancy_inputs/waiting_input/waiting_text_area.tsx";
 
 const MS_PER_MINUTE = 60_000;
+
+/**
+ * An SF2 INFO text is at most 256 bytes with its closing zero, and core writes a byte per
+ * character. The comment may be 65,536 bytes. DLS has no limits, but a name this long is enough.
+ */
+const INFO_TEXT_LENGTH = 255;
+const COMMENT_LENGTH = 65_535;
 
 /**
  * Formats a date as local 'YYYY-MM-DDTHH:MM', which is what datetime-local inputs use.
@@ -29,16 +37,28 @@ interface InfoTextFieldProps {
     label: string;
     value: string;
     onCommit: (value: string) => void;
+    /**
+     * The id of a hint about the field.
+     */
+    describedBy?: string;
 }
 
-function InfoTextField({ id, label, value, onCommit }: InfoTextFieldProps) {
+function InfoTextField({
+    id,
+    label,
+    value,
+    onCommit,
+    describedBy
+}: InfoTextFieldProps) {
     return (
         <span>
             <label htmlFor={id}>{label}</label>
             <WaitingInput
                 className={"pretty_input hover_brightness"}
                 id={id}
-                setValue={(v) => {
+                maxLength={INFO_TEXT_LENGTH}
+                aria-describedby={describedBy}
+                onCommit={(v) => {
                     onCommit(v);
                     return v;
                 }}
@@ -49,7 +69,67 @@ function InfoTextField({ id, label, value, onCommit }: InfoTextFieldProps) {
     );
 }
 
-export function EditableBankInfo() {
+interface CreationDateFieldProps {
+    date: Date;
+    onCommit: (date: Date) => void;
+}
+
+/**
+ * Commits on blur, typing a year digit by digit would make an undo step each. The field is not
+ * controlled, as a half typed date has no value to control it with.
+ */
+function CreationDateField({ date, onCommit }: CreationDateFieldProps) {
+    const { t } = useTranslation();
+    // Remounts the field, which shows the bank's date again after Escape or emptying it
+    const [revision, setRevision] = useState(0);
+    // Set by Escape, so the blur that follows does not apply the draft
+    const cancelRef = useRef(false);
+    const value = toLocalDateTimeValue(date);
+    return (
+        <span>
+            <label htmlFor={"ICRD"}>{t("bankInfo.creationDate")}</label>
+            <input
+                type={"datetime-local"}
+                className={"pretty_input hover_brightness"}
+                id={"ICRD"}
+                // A new value from outside (undo, another bank) replaces the field
+                key={`${value}-${revision}`}
+                defaultValue={value}
+                // toISOString writes longer years in another form, which breaks the field
+                min={"0001-01-01T00:00"}
+                max={"9999-12-31T23:59"}
+                onKeyDown={(e) => {
+                    if (e.key !== "Escape") {
+                        return;
+                    }
+                    // Only cancels the edit, not a dialog or menu around it
+                    e.preventDefault();
+                    e.stopPropagation();
+                    cancelRef.current = true;
+                    e.currentTarget.blur();
+                }}
+                onBlur={(e) => {
+                    const isCanceled = cancelRef.current;
+                    cancelRef.current = false;
+                    // The value is local time, valueAsDate does not work for this input type
+                    const typed = new Date(e.target.value);
+                    const isValid = !Number.isNaN(typed.getTime());
+                    if (
+                        !isCanceled &&
+                        isValid &&
+                        toLocalDateTimeValue(typed) !== value
+                    ) {
+                        onCommit(typed);
+                    } else if (e.target.value !== value) {
+                        setRevision((r) => r + 1);
+                    }
+                }}
+            />
+        </span>
+    );
+}
+
+export function EditableInfo() {
     const { t } = useTranslation();
     const { session, apply } = useBankEditor();
     const info = useBankSnapshot(session.store, (s) => s.info);
@@ -64,15 +144,20 @@ export function EditableBankInfo() {
     const getTextField = (
         field: "engineer" | "product" | "copyright" | "subject",
         id: string,
-        label: string
+        label: string,
+        describedBy?: string
     ) => (
         <InfoTextField
             id={id}
             label={label}
             value={info[field] ?? ""}
             onCommit={(v) => setInfo(field, v)}
+            describedBy={describedBy}
         />
     );
+
+    // SF2 saves write the subject at the end of the comment, and both must fit in one text
+    const subjectLength = info.subject ? info.subject.length + 1 : 0;
 
     return (
         <div className={"editable"}>
@@ -80,7 +165,8 @@ export function EditableBankInfo() {
                 className={"pretty_input hover_brightness"}
                 id={"INAM"}
                 aria-label={t("bankInfo.name")}
-                setValue={(name) => {
+                maxLength={INFO_TEXT_LENGTH}
+                onCommit={(name) => {
                     setInfo("name", name);
                     return name;
                 }}
@@ -90,45 +176,29 @@ export function EditableBankInfo() {
 
             <div className={"fields"}>
                 {getTextField("engineer", "IENG", t("bankInfo.engineer"))}
-
-                <span>
-                    <label htmlFor={"ICRD"}>{t("bankInfo.creationDate")}</label>
-                    {/* Commits on blur, typing a year digit by digit would make an undo step each */}
-                    <input
-                        type={"datetime-local"}
-                        className={"pretty_input hover_brightness"}
-                        id={"ICRD"}
-                        // A new value from outside (undo, another bank) replaces the field
-                        key={toLocalDateTimeValue(info.creationDate)}
-                        defaultValue={toLocalDateTimeValue(info.creationDate)}
-                        // toISOString writes longer years in another form, which breaks the field
-                        min={"0001-01-01T00:00"}
-                        max={"9999-12-31T23:59"}
-                        onBlur={(e) => {
-                            // The value is local time, valueAsDate does not work for this input type
-                            const date = new Date(e.target.value);
-                            const value = toLocalDateTimeValue(date);
-                            if (
-                                !Number.isNaN(date.getTime()) &&
-                                value !==
-                                    toLocalDateTimeValue(info.creationDate)
-                            ) {
-                                setInfo("creationDate", date);
-                            }
-                        }}
-                    />
-                </span>
-
+                <CreationDateField
+                    date={info.creationDate}
+                    onCommit={(date) => setInfo("creationDate", date)}
+                />
                 {getTextField("product", "IPRD", t("bankInfo.product"))}
                 {getTextField("copyright", "ICOP", t("bankInfo.copyright"))}
-                {getTextField("subject", "ISBJ", t("bankInfo.subject"))}
+                {getTextField(
+                    "subject",
+                    "ISBJ",
+                    t("bankInfo.subject"),
+                    "ISBJ_hint"
+                )}
+                <p className={"info_field_hint"} id={"ISBJ_hint"}>
+                    {t("bankInfo.subjectHint")}
+                </p>
             </div>
             <div className={"comment"}>
                 <WaitingTextArea
                     className={"pretty_input hover_brightness"}
                     id={"ICMT"}
                     aria-label={t("bankInfo.description")}
-                    setValue={(v) => setInfo("comment", v)}
+                    maxLength={COMMENT_LENGTH - subjectLength}
+                    onCommit={(v) => setInfo("comment", v)}
                     value={info.comment ?? ""}
                     placeholder={t("bankInfo.description")}
                 />

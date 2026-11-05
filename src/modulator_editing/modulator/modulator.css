@@ -34,12 +34,6 @@
     user-select: none;
 }
 
-.modulator_title {
-    display: flex;
-    flex-direction: column;
-    gap: var(--flex-gap);
-}
-
 .modulator_title_left {
     font-weight: bold;
     position: absolute;
@@ -70,12 +64,12 @@
     gap: var(--flex-gap);
 }
 
-.modulator_main .amount_input,
+.modulator_main .modulator_amount_input,
 .modulator_main .transform_selector {
     font-size: 1rem;
 }
 
-.amount_input {
+.modulator_amount_input {
     text-align: end;
     width: 8ch;
     border-radius: var(--primary-border-radius);

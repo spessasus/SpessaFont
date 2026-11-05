@@ -1,6 +1,6 @@
 import { type InterpolationType, InterpolationTypes } from "spessasynth_core";
 import {
-    readSampleRateParam,
+    DEFAULT_SAMPLE_RATE,
     SAMPLE_RATE_LIMITS
 } from "../../utils/sample_rate_param.ts";
 import type { ThemeType } from "../../themes/theme_list.ts";
@@ -23,6 +23,11 @@ export interface SavedSettingsType {
 
     removeImportSilence: boolean;
     trimImportAfterLoop: boolean;
+
+    /**
+     * The MIDI input to listen to, selected again when it is plugged in. Empty for none.
+     */
+    midiInputId: string;
 }
 
 /**
@@ -50,10 +55,12 @@ export const DEFAULT_SETTINGS: SavedSettingsType = {
     delayLevel: 1,
 
     voiceCap: 350,
-    sampleRate: readSampleRateParam(),
+    sampleRate: DEFAULT_SAMPLE_RATE,
 
     removeImportSilence: false,
-    trimImportAfterLoop: false
+    trimImportAfterLoop: false,
+
+    midiInputId: ""
 };
 
 type NumericSettingKey = {

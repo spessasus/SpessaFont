@@ -22,6 +22,7 @@ import type {
     ZoneView
 } from "../core_backend/entity_views.ts";
 import type { ElementDiff, ViewDiff } from "../core_backend/view_diff.ts";
+import { refreshXGState } from "../core_backend/xg_state.ts";
 
 /*
  * The mirror is a second copy of one bank, which the synthesizer plays and which holds the sample
@@ -58,7 +59,7 @@ export interface MirrorPatch {
 }
 
 /**
- * The data a pasted sample gets, which the mirror copies so the two never share it.
+ * The data a pasted sample gets, shared with its source (see `shareOwnStoredData`).
  */
 export interface SampleCopySource {
     readonly data: SampleStoredData;
@@ -81,6 +82,19 @@ export function copyStoredData(stored: SampleStoredData): SampleStoredData {
     return stored.form === "float32"
         ? { form: stored.form, data: stored.data.slice() }
         : { form: stored.form, data: stored.data.slice() };
+}
+
+/**
+ * The same data when its array is its own, which is safe to share as nothing changes stored
+ * data in place (an edit or a conversion gives the sample new arrays). Data loaded from a file
+ * is a view into all of it, and sharing that would keep the whole file alive after its bank
+ * closes, so only the sample's own bytes are copied then.
+ */
+export function shareOwnStoredData(stored: SampleStoredData) {
+    const { data } = stored;
+    return data.byteOffset === 0 && data.byteLength === data.buffer.byteLength
+        ? stored
+        : copyStoredData(stored);
 }
 
 function applySource(source: ModulatorSource, view: ModulatorSourceView) {
@@ -326,15 +340,21 @@ export class BankMirror {
         for (const [id, stored] of patch.sampleData) {
             getOrThrow(this.samples, id, "sample").setStoredData(stored);
         }
+        // Pasted and duplicated samples share their source's own arrays
         for (const [id, source] of patch.sampleCopies) {
             getOrThrow(this.samples, id, "sample").setStoredData(
-                copyStoredData(source.data)
+                shareOwnStoredData(source.data)
             );
         }
         // Presets first, so a removed preset lets go of its instruments before they are removed
         this.applyPresetRemovals(views.presets);
         this.applyInstruments(views.instruments);
         this.applyPresets(views.presets);
+        const { changed, removed } = views.presets;
+        // A patch change or an added or removed kit can make the bank XG or not, as in the editor
+        if (changed.length > 0 || removed.length > 0) {
+            refreshXGState(this.bank);
+        }
         if (views.defaultModulators) {
             this.bank.defaultModulators = views.defaultModulators.map((m) =>
                 buildModulator(m)
@@ -348,6 +368,30 @@ export class BankMirror {
 
     public getSample(id: number) {
         return this.samples.get(id);
+    }
+
+    /**
+     * Forgets removed samples that can never come back, with their data.
+     */
+    public releaseSamples(ids: Iterable<number>) {
+        const inBank = new Set(this.bank.samples);
+        for (const id of ids) {
+            const sample = this.samples.get(id);
+            if (!sample || inBank.has(sample)) {
+                continue;
+            }
+            this.samples.delete(id);
+            sample.releaseData();
+        }
+    }
+
+    /**
+     * Drops the data of every sample, removed ones too, when the bank closes.
+     */
+    public releaseData() {
+        for (const sample of this.samples.values()) {
+            sample.releaseData();
+        }
     }
 
     /**

@@ -13,13 +13,13 @@
     transition: none;
 }
 
-.search_bar {
+.list_search_bar {
     width: 100%;
     display: flex;
     margin-top: auto;
 }
 
-.search_bar input {
+.list_search_bar input {
     flex-grow: 1;
 }
 
@@ -42,10 +42,21 @@
     border-color: var(--border-color);
 }
 
-.search_bar button {
+.list_search_bar button {
     padding: 0 0.5rem;
 }
 
-.search_bar button[aria-pressed="true"] {
+.list_search_bar button[aria-pressed="true"] {
     background: var(--selection-color);
+}
+
+.menu_list_empty {
+    padding: 0.5rem;
+    text-align: center;
+    color: var(--muted-font-color);
+}
+
+/* The search text can still be selected */
+.menu_list_main input {
+    user-select: text;
 }
