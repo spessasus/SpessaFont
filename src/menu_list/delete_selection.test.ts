@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EmptySample } from "spessasynth_core";
+import { EmptySample, SampleTypes } from "spessasynth_core";
 import {
     createTestSession,
     expectRoundTrip
@@ -34,5 +34,25 @@ describe("createDeleteSelectionActions", () => {
         ]);
         session.history.undo();
         expect(session.document.samples).toContain(unused);
+    });
+
+    it("also deletes the unused other half of a stereo sample", () => {
+        const session = createTestSession();
+        const left = new EmptySample();
+        const right = new EmptySample();
+        left.name = "Pad L";
+        right.name = "Pad R";
+        left.setLinkedSample(right, SampleTypes.leftSample);
+        session.history.do([
+            new CreateSampleAction(left),
+            new CreateSampleAction(right)
+        ]);
+
+        const { actions } = createDeleteSelectionActions(new Set([left]));
+        expectRoundTrip(session, actions);
+
+        expect(session.document.samples).not.toContain(right);
+        session.history.undo();
+        expect(left.linkedSample).toBe(right);
     });
 });

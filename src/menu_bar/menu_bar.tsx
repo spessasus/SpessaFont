@@ -55,10 +55,15 @@ export function MenuBar({
         ) {
             return;
         }
-        switch (e.key) {
+        // Shift or Caps Lock gives upper case letters, and Ctrl+Shift+Z is redo too
+        switch (e.key.toLowerCase()) {
             case "z": {
                 e.preventDefault();
-                undo();
+                if (e.shiftKey) {
+                    redo();
+                } else {
+                    undo();
+                }
                 break;
             }
             case "y": {

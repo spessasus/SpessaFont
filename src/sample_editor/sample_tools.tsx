@@ -26,6 +26,7 @@ export function SampleTools({
             <button
                 type={"button"}
                 className={buttonClass}
+                disabled={isLoading}
                 onClick={() => void onExportWav(false)}
             >
                 {t("sampleLocale.tools.wavExport")}
@@ -33,6 +34,7 @@ export function SampleTools({
             <button
                 type={"button"}
                 className={buttonClass}
+                disabled={isLoading}
                 onClick={() => void onExportWav(true)}
             >
                 {t("sampleLocale.tools.wavExportLoop")}

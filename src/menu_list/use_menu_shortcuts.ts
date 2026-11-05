@@ -5,7 +5,7 @@ import { isEditorShortcut } from "../utils/is_editor_shortcut.ts";
 
 /**
  * Delete removes the selection (except what is still used), Ctrl+C copies the selection,
- * Ctrl+X cuts it, and Ctrl+V pastes what the clipboard holds.
+ * Ctrl+X cuts it, and Ctrl+V pastes what the clipboard holds (Cmd on macOS).
  * Nothing runs while the editor is covered (by the settings), as its changes would be out of sight.
  */
 export function useMenuShortcuts(
@@ -19,12 +19,26 @@ export function useMenuShortcuts(
         }
         if (e.key === "Delete") {
             commands.remove(selection);
-        } else if (e.ctrlKey && e.key === "c") {
-            commands.copy(selection);
-        } else if (e.ctrlKey && e.key === "x") {
-            commands.cut(selection);
-        } else if (e.ctrlKey && e.key === "v") {
-            commands.paste();
+            return;
+        }
+        // Cmd on macOS, and Caps Lock gives upper case letters
+        if (!(e.ctrlKey || e.metaKey)) {
+            return;
+        }
+        switch (e.key.toLowerCase()) {
+            case "c": {
+                commands.copy(selection);
+                break;
+            }
+
+            case "x": {
+                commands.cut(selection);
+                break;
+            }
+
+            case "v": {
+                commands.paste();
+            }
         }
     });
 }

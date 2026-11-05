@@ -20,28 +20,37 @@ export function useSelectionCommands() {
     const { session, apply } = useBankEditor();
     const { clipboard } = useClipboard();
 
-    const copy = (selection: ReadonlySet<BankEntity>) => {
+    /**
+     * Copies the selection and returns the message that says what was copied.
+     */
+    const copyToClipboard = (selection: ReadonlySet<BankEntity>) => {
         // A selection holds one kind, and copying one kind clears the others
         const presets = selectionOf(selection, isPreset);
-        const instruments = selectionOf(selection, isInstrument);
-        const samples = selectionOf(selection, isSample);
         if (presets.size > 0) {
             clipboard.copyPresets(presets, session);
-            toast.success(
-                t("clipboardLocale.copiedPresets", { count: presets.size })
-            );
-        } else if (instruments.size > 0) {
+            return t("clipboardLocale.copiedPresets", { count: presets.size });
+        }
+        const instruments = selectionOf(selection, isInstrument);
+        if (instruments.size > 0) {
             clipboard.copyInstruments(instruments, session);
-            toast.success(
-                t("clipboardLocale.copiedInstruments", {
-                    count: instruments.size
-                })
-            );
-        } else if (samples.size > 0) {
+            return t("clipboardLocale.copiedInstruments", {
+                count: instruments.size
+            });
+        }
+        const samples = selectionOf(selection, isSample);
+        if (samples.size > 0) {
             clipboard.copySamples(samples, session);
-            toast.success(
-                t("clipboardLocale.copiedSamples", { count: samples.size })
-            );
+            return t("clipboardLocale.copiedSamples", {
+                count: samples.size
+            });
+        }
+        return undefined;
+    };
+
+    const copy = (selection: ReadonlySet<BankEntity>) => {
+        const message = copyToClipboard(selection);
+        if (message) {
+            toast.success(message);
         }
     };
 
@@ -100,9 +109,19 @@ export function useSelectionCommands() {
 
     return {
         copy,
+        // Elements still in use stay, so the cut says that they were only copied
         cut: (selection: ReadonlySet<BankEntity>) => {
-            copy(selection);
-            remove(selection);
+            const message = copyToClipboard(selection);
+            const { actions, skipped } =
+                createDeleteSelectionActions(selection);
+            if (actions.length > 0) {
+                apply(actions);
+            }
+            if (skipped > 0) {
+                toast.error(t("presetList.cutKept", { count: skipped }));
+            } else if (message) {
+                toast.success(message);
+            }
         },
         paste,
         duplicate,

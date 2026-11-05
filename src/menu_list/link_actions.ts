@@ -53,7 +53,25 @@ export function createInstrumentLinkActions(
 }
 
 /**
- * A new looping instrument with a zone for each sample, named after the first one.
+ * Shorter loops are taken as no loop.
+ */
+const MIN_LOOP_LENGTH = 32;
+
+/**
+ * Whether the sample has a loop of its own. An imported file loops its whole length, which is
+ * no loop, so a drum hit is not looped.
+ */
+function hasRealLoop(sample: BasicSample) {
+    const isWholeSample =
+        sample.loopStart === 0 && sample.loopEnd >= sample.sampleLength - 1;
+    return (
+        !isWholeSample && sample.loopEnd - sample.loopStart >= MIN_LOOP_LENGTH
+    );
+}
+
+/**
+ * A new instrument with a zone for each sample, named after the first one. It loops when every
+ * sample has a loop of its own.
  */
 export function createInstrumentFromSamples(samples: Iterable<BasicSample>) {
     const ordered = addAndReorderStereoSamples(samples);
@@ -62,8 +80,9 @@ export function createInstrumentFromSamples(samples: Iterable<BasicSample>) {
     instrument.name = firstSample.linkedSample
         ? firstSample.name.replace(STEREO_REGEX, "")
         : firstSample.name;
-    // add loop for convenience
-    instrument.globalZone.setGenerator(GeneratorTypes.sampleModes, 1);
+    if (ordered.every((s) => hasRealLoop(s))) {
+        instrument.globalZone.setGenerator(GeneratorTypes.sampleModes, 1);
+    }
     for (const sample of ordered) {
         setStereoPan(instrument.createZone(sample), sample);
     }

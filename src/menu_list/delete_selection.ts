@@ -7,14 +7,32 @@ import { DeletePresetAction } from "../preset_editor/bottom_bar/delete_preset_ac
 
 /**
  * The actions that delete the selected elements. Instruments and samples that are still used
- * are left alone and counted in `skipped`, so the caller can tell the user.
+ * are left alone and counted in `skipped`, so the caller can tell the user. The unused other
+ * half of a deleted stereo sample goes too, as the sample editor's delete button does.
  */
 export function createDeleteSelectionActions(
     selection: ReadonlySet<BankEntity>
 ) {
     const actions = new Array<HistoryAction>();
     let skipped = 0;
+    const deleted = new Set<BankEntity>();
+    const targets = new Array<BankEntity>(...selection);
     for (const entity of selection) {
+        const partner =
+            entity instanceof BasicSample ? entity.linkedSample : undefined;
+        if (
+            entity instanceof BasicSample &&
+            entity.useCount === 0 &&
+            partner?.useCount === 0
+        ) {
+            targets.push(partner);
+        }
+    }
+    for (const entity of targets) {
+        if (deleted.has(entity)) {
+            continue;
+        }
+        deleted.add(entity);
         if (entity instanceof BasicPreset) {
             actions.push(new DeletePresetAction(entity));
         } else if (entity.useCount > 0) {
