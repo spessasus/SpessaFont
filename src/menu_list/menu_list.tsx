@@ -1,5 +1,5 @@
 import type { MouseEvent, PointerEvent } from "react";
-import { useDeferredValue, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./menu_list.css";
 import type { BankEditView, BankEntity } from "../core_backend/bank_view.ts";
@@ -56,7 +56,7 @@ export function MenuList({ view, isCovered }: MenuListProps) {
 
     // Filtering thousands of elements must not delay typing
     const deferredQuery = useDeferredValue(searchQuery);
-    const filtered = useMemo(() => {
+    const filtered = (() => {
         const found = filterElements(views, deferredQuery);
         const ids = isUnusedOnly ? keepUnused(views, found) : found;
         // The lists keep the core objects as identities, which the selection and handlers use
@@ -75,17 +75,13 @@ export function MenuList({ view, isCovered }: MenuListProps) {
             instruments: keep(instruments, ids.instruments),
             samples: keep(samples, ids.samples)
         };
-    }, [views, presets, instruments, samples, deferredQuery, isUnusedOnly]);
+    })();
 
-    const listed = useMemo(
-        () =>
-            new Set<BankEntity>([
-                ...filtered.presets,
-                ...filtered.instruments,
-                ...filtered.samples
-            ]),
-        [filtered]
-    );
+    const listed = new Set<BankEntity>([
+        ...filtered.presets,
+        ...filtered.instruments,
+        ...filtered.samples
+    ]);
     const selection = getSelection(view, multiSelection, (e) => listed.has(e));
     const selectedPresets = selectionOf(selection, isPreset);
     const selectedInstruments = selectionOf(selection, isInstrument);

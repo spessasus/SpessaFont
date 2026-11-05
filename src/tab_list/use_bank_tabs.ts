@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useRef } from "react";
+import { useEffect, useReducer, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { BasicInstrument, BasicPreset } from "spessasynth_core";
 import type { BankSession } from "../core_backend/bank_session.ts";
@@ -102,15 +102,11 @@ export function useBankTabs() {
         dispatch({ type: "activate", id });
     };
 
-    // Stable per active tab, because the bank editor context depends on it
-    const setActiveView = useCallback(
-        (view: BankEditView) => {
-            if (activeId !== undefined) {
-                dispatch({ type: "setView", id: activeId, view });
-            }
-        },
-        [activeId]
-    );
+    const setActiveView = (view: BankEditView) => {
+        if (activeId !== undefined) {
+            dispatch({ type: "setView", id: activeId, view });
+        }
+    };
 
     /**
      * Shows the element shown before (or after) the current one, skipping removed ones.

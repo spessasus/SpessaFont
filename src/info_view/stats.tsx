@@ -5,7 +5,6 @@ import { EditIcon } from "../utils/icons/edit_icons.tsx";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
 import { checkBank } from "./bank_check/check_bank.ts";
-import { useMemo } from "react";
 
 /**
  * Counts the generators and modulators of all zones, including the global ones.
@@ -65,7 +64,7 @@ export function BankInfoStats({
         }
     }
     const sampleCount = views.sampleOrder.length;
-    const issueCount = useMemo(() => checkBank(views).length, [views]);
+    const issueCount = checkBank(views).length;
     const compressedPercent =
         sampleCount > 0 ? Math.round((compressed / sampleCount) * 100) : 0;
     const { version, soundEngine, software = "" } = info;

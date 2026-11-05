@@ -48,7 +48,7 @@ export function useSampleEdits(sample: BasicSample, view: SampleView) {
     const changeProperty = <K extends EditableSampleProperty>(
         property: K,
         value: BasicSample[K],
-        fitPartner: (partner: BasicSample) => BasicSample[K] = () => value
+        fitPartner?: (partner: BasicSample) => BasicSample[K]
     ) => {
         if (value === sample[property]) {
             return value;
@@ -57,7 +57,8 @@ export function useSampleEdits(sample: BasicSample, view: SampleView) {
         const actions = [
             new EditSampleAction(sample, property, sample[property], value)
         ];
-        const partnerValue = linkedSample ? fitPartner(linkedSample) : value;
+        const partnerValue =
+            linkedSample && fitPartner ? fitPartner(linkedSample) : value;
         if (linkedSample && partnerValue !== linkedSample[property]) {
             actions.push(
                 new EditSampleAction(

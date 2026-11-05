@@ -30,7 +30,9 @@
         "electron-updater": "^6.8.11"
     },
     "devDependencies": {
+        "@babel/core": "^7.29.13",
         "@eslint/js": "^10.0.1",
+        "@rolldown/plugin-babel": "^0.3.0",
         "@tanstack/react-virtual": "^3.14.25",
         "@testing-library/react": "^16.3.3",
         "@types/node": "^26.6.5",
@@ -39,6 +41,7 @@
         "@types/serviceworker": "^0.0.203",
         "@types/wicg-file-system-access": "^2023.10.7",
         "@vitejs/plugin-react": "^6.2.1",
+        "babel-plugin-react-compiler": "^1.0.0",
         "concurrently": "^10.0.6",
         "electron": "^45.0.0",
         "electron-builder": "^26.18.0",

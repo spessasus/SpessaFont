@@ -1,4 +1,3 @@
-import { memo } from "react";
 import { getCanvasColor, useCanvas } from "../../hooks/use_canvas.ts";
 import { drawWaveform } from "./wave_drawing.ts";
 
@@ -11,10 +10,10 @@ interface WaveformLayerProps {
 }
 
 /**
- * Memoized because drawing a long sample is slow, and the view re-renders on every pointer
- * move to show the hovered sample.
+ * Its own layer because drawing a long sample is slow, and the view re-renders on every pointer
+ * move to show the hovered sample. The compiler skips it while its props stay the same.
  */
-export const WaveformLayer = memo(function WaveformLayer({
+export function WaveformLayer({
     data,
     loopStart,
     loopEnd,
@@ -37,4 +36,4 @@ export const WaveformLayer = memo(function WaveformLayer({
         )
     );
     return <canvas ref={canvasRef} aria-hidden={true} />;
-});
+}

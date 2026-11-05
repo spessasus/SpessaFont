@@ -38,14 +38,18 @@ function NumberSetting({
     isPercent = false,
     suffix,
     maxLength = 5,
-    normalize = (value) => value
+    normalize
 }: NumberSettingProps) {
     const scale = isPercent ? 100 : 1;
     return (
         <Setting label={label}>
             <WaitingInput
                 setValue={(typed) => {
-                    const value = clampSetting(name, normalize(typed / scale));
+                    const scaled = typed / scale;
+                    const value = clampSetting(
+                        name,
+                        normalize ? normalize(scaled) : scaled
+                    );
                     onChange({ [name]: value });
                     return value * scale;
                 }}

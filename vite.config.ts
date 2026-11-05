@@ -1,9 +1,11 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import react, { reactCompilerPreset } from "@vitejs/plugin-react";
+import babel from "@rolldown/plugin-babel";
 
-// The app and spessasynth_core chunks load at startup. Core is the larger one, a bit under 750 kB
-const CHUNK_SIZE_LIMIT_KB = 750;
+// The app and spessasynth_core chunks load at startup, and the Worker carries its own core.
+// The app is the largest, a bit under 800 kB with the React Compiler's caches
+const CHUNK_SIZE_LIMIT_KB = 800;
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -13,8 +15,8 @@ export default defineConfig({
         strictPort: true,
         host: "127.0.0.1"
     },
-    // No React Compiler: it caches by object identity, and the bank objects are edited in place
-    plugins: [react()],
+    // The React Compiler caches by identity, which works as render reads only the frozen views
+    plugins: [react(), babel({ presets: [reactCompilerPreset()] })],
     define: {
         __APP_VERSION__: JSON.stringify(process.env.npm_package_version)
     },

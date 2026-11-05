@@ -1,5 +1,4 @@
 import "./bank_check.css";
-import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import type { BankViews } from "../../core_backend/entity_views.ts";
@@ -78,7 +77,7 @@ export function BankCheck() {
     const { session, apply, setView } = useBankEditor();
     const views = useBankSnapshot(session.store, (s) => s.views);
     const lookup = useEntityLookup(session.store);
-    const issues = useMemo(() => checkBank(views), [views]);
+    const issues = checkBank(views);
 
     // The elements' names are on their buttons, so the text only says what is wrong
     const describe = (issue: BankIssue) => {

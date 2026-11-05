@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode, useMemo, useState } from "react";
+import { Fragment, type ReactNode, useMemo, useRef, useState } from "react";
 import {
     type AskNumberOptions,
     type DialogRenderer,
@@ -42,8 +42,9 @@ export function DialogsProvider({ children }: DialogsProviderProps) {
     type DialogRequest = DialogQuestion & { id: number };
 
     const [request, setRequest] = useState<DialogRequest | null>(null);
+    // Counts the dialogs, so one that replaces another starts with fresh state
+    const nextId = useRef(0);
     const api: DialogsAPI = useMemo(() => {
-        let nextId = 0;
         // A new question cancels the open one
         const replaceRequest = (next: DialogQuestion) =>
             setRequest((previous) => {
@@ -52,9 +53,9 @@ export function DialogsProvider({ children }: DialogsProviderProps) {
                 } else {
                     previous?.resolve(undefined);
                 }
-                return { ...next, id: nextId++ };
+                nextId.current++;
+                return { ...next, id: nextId.current };
             });
-        let dialogCount = 0;
         return {
             pickElement: <T,>({
                 title,
@@ -82,8 +83,8 @@ export function DialogsProvider({ children }: DialogsProviderProps) {
                 ),
             openDialog: <T,>(render: DialogRenderer<T>) =>
                 new Promise<T | undefined>((resolve) => {
-                    dialogCount++;
-                    const key = dialogCount;
+                    nextId.current++;
+                    const key = nextId.current;
                     const node = render((value) => {
                         resolve(value);
                         // Only closes itself, not a dialog that replaced it

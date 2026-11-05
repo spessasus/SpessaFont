@@ -1,6 +1,6 @@
 import type { BasicSample } from "spessasynth_core";
 import "./sample_editor.css";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { WaveView } from "./wave_view/wave_view.tsx";
 import { WaitingInput } from "../fancy_inputs/waiting_input/waiting_input.tsx";
@@ -69,19 +69,15 @@ export function SampleEditor({
         session.store,
         (s) => s.views.sampleOrder
     );
-    // In bank order, for the stereo link list
-    const samples = useMemo(
-        () =>
-            sampleOrder.flatMap((id) => {
-                const v = sampleViews.get(id);
-                return v ? [v] : [];
-            }),
-        [sampleOrder, sampleViews]
-    );
     if (!view) {
         // The pane is closed when its sample is removed, this only covers the render before
         return null;
     }
+    // In bank order, for the stereo link list
+    const samples = sampleOrder.flatMap((id) => {
+        const v = sampleViews.get(id);
+        return v ? [v] : [];
+    });
     return (
         <SampleEditorPane
             sample={sample}

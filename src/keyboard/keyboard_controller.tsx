@@ -1,6 +1,6 @@
 import "./keyboard_controller.css";
 import { Keyboard } from "./keyboard/keyboard.tsx";
-import { memo, useState } from "react";
+import { useState } from "react";
 import { type MIDIController, MIDIControllers } from "spessasynth_core";
 import { Controller } from "./controller/controller.tsx";
 import { OtherControllers } from "./controller/other_controllers.tsx";
@@ -25,10 +25,10 @@ const INITIAL_CC_LIST: readonly MIDIController[] = [
 const NUMBER_WIDTH = 3;
 
 /**
- * Memoized (it has no props) so moving the pointer over the keyboard does not re-render the
- * controller selects with their 128 options each.
+ * Its own component (it has no props), so the compiler can skip it when the pointer moves over
+ * the keyboard, instead of re-rendering the controller selects with their 128 options each.
  */
-const ControllerKnobs = memo(function ControllerKnobs() {
+function ControllerKnobs() {
     const [controllers, setControllers] = useState(INITIAL_CC_LIST);
     return (
         <div className={"controller_row"}>
@@ -45,9 +45,7 @@ const ControllerKnobs = memo(function ControllerKnobs() {
             ))}
         </div>
     );
-});
-
-const MemoOtherControllers = memo(OtherControllers);
+}
 
 interface KeyboardControllerProps {
     /**
@@ -81,7 +79,7 @@ export function KeyboardController({ session, view }: KeyboardControllerProps) {
                 />
                 <div className={"controller_row_scroll"}>
                     <div className={"controller_row controller_row_main"}>
-                        <MemoOtherControllers />
+                        <OtherControllers />
                         <ControllerKnobs />
                         <div className={"controller_column"}>
                             <div>

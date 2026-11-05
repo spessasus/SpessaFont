@@ -38,14 +38,14 @@ export function useSampleAudioCommands(
 
     const run = async (task: () => Promise<void>) => {
         setIsLoading(true);
+        // No finally, the React Compiler cannot compile it yet. The catch takes every error
         try {
             await task();
         } catch (error) {
             logError("Failed to process the sample audio.", error);
             toast.error(String(error));
-        } finally {
-            setIsLoading(false);
         }
+        setIsLoading(false);
     };
 
     const replaceAudio = async () => {
