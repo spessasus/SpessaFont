@@ -9,6 +9,7 @@ import { DropdownHeader } from "./dropdown_header/dropdown_header.tsx";
 import { PresetDisplay } from "./preset_display/preset_display.tsx";
 import { getObjectId } from "../utils/object_id.ts";
 import { VirtualItemList } from "./virtual_item_list.tsx";
+import { useSelectionCommands } from "./use_selection_commands.ts";
 import { useExpandedItems, useSectionOpen } from "./use_list_state.ts";
 import {
     createInstrumentLinkActions,
@@ -37,6 +38,7 @@ export function PresetList({
     const { t } = useTranslation();
     const { session, apply } = useBankEditor();
     const { clipboard, contents } = useClipboard();
+    const commands = useSelectionCommands();
     const [isOpen, setIsOpen] = useSectionOpen(
         view,
         view instanceof BasicPreset
@@ -74,16 +76,7 @@ export function PresetList({
                         : undefined
                 }
                 onPaste={
-                    contents.presets > 0
-                        ? () => {
-                              apply(clipboard.pastePresets(session));
-                              toast.success(
-                                  t("clipboardLocale.pastedPresets", {
-                                      count: clipboard.presetCount
-                                  })
-                              );
-                          }
-                        : undefined
+                    contents.presets > 0 ? commands.pastePresets : undefined
                 }
             />
             {isOpen ? (

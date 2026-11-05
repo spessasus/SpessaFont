@@ -10,6 +10,7 @@ import { useInstrumentView } from "../../hooks/use_instrument_view.ts";
 import { useBankSnapshot } from "../../hooks/use_bank_snapshot.ts";
 import { useEntityLookup } from "../../hooks/use_entity_lookup.ts";
 import { createSpreadActions } from "../spread_actions.ts";
+import { createPresetFromInstruments } from "../../menu_list/link_actions.ts";
 
 const MAX_NAME_LENGTH = 40;
 
@@ -77,6 +78,19 @@ export function LinkedPresets({ instrument }: LinkedPresetsProps) {
                             {t("instrumentLocale.notLinkedToPreset")}
                         </strong>
                     </div>
+                    <button
+                        type={"button"}
+                        className={"plain_button"}
+                        onClick={() =>
+                            apply([
+                                createPresetFromInstruments(session.document, [
+                                    instrument
+                                ])
+                            ])
+                        }
+                    >
+                        {t("instrumentLocale.newPresetFromInstrument")}
+                    </button>
                     <button
                         type={"button"}
                         className={"plain_button"}

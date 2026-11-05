@@ -7,6 +7,8 @@ export const ClipboardLocale = {
     pastedSamples: "Pasted {{count}} samples.",
     pastedInstruments: "Pasted {{count}} instruments.",
     pastedPresets: "Pasted {{count}} presets.",
+    movedPresets:
+        "{{count}} pasted presets went to the next free MIDI patch, as theirs was taken.",
     pastedModulators: "Pasted {{count}} modulators.",
     copiedToBank: "Copied {{count}} elements to {{name}}."
 };

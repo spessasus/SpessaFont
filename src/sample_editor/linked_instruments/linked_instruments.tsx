@@ -5,6 +5,7 @@ import { DeleteSampleAction } from "./delete_sample_action.ts";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 import { useSampleView } from "../../hooks/use_sample_view.ts";
 import { useBankSnapshot } from "../../hooks/use_bank_snapshot.ts";
+import { createInstrumentFromSamples } from "../../menu_list/link_actions.ts";
 
 interface LinkedInstrumentsProps {
     /**
@@ -40,6 +41,13 @@ export function LinkedInstruments({ sampleId }: LinkedInstrumentsProps) {
         apply(actions);
     };
 
+    const createInstrument = () => {
+        const toLink = session.document.getSample(sampleId);
+        if (toLink) {
+            apply([createInstrumentFromSamples([toLink])]);
+        }
+    };
+
     const showInstrument = (id: number) => {
         const instrument = session.document.getInstrument(id);
         if (instrument) {
@@ -65,6 +73,13 @@ export function LinkedInstruments({ sampleId }: LinkedInstrumentsProps) {
                             {t("sampleLocale.notLinkedToInstrument")}
                         </strong>
                     </div>
+                    <button
+                        type={"button"}
+                        onClick={createInstrument}
+                        className={"plain_button"}
+                    >
+                        {t("sampleLocale.newInstrumentFromSample")}
+                    </button>
                     <button
                         type={"button"}
                         onClick={deleteSample}

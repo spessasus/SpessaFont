@@ -1,7 +1,10 @@
-import type { BasicPreset, MIDIPatch } from "spessasynth_core";
+import {
+    type BasicPreset,
+    type MIDIPatch,
+    MIDIPatchTools
+} from "spessasynth_core";
 import "../../bank_editor/bottom_bar.css";
 import { useTranslation } from "react-i18next";
-import toast from "react-hot-toast";
 import { DeletePresetAction } from "./delete_preset_action.ts";
 import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
 import { EditPresetAction } from "./edit_preset_action.ts";
@@ -10,6 +13,11 @@ import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 import { useBankSnapshot } from "../../hooks/use_bank_snapshot.ts";
 import { usePresetView } from "../../hooks/use_preset_view.ts";
 import { getObjectId } from "../../utils/object_id.ts";
+import { showToastDialog } from "../../toasts/show_toast_dialog.tsx";
+import {
+    findFreePatch,
+    getTakenPatches
+} from "../../core_backend/free_patch.ts";
 
 const MAX_NAME_LENGTH = 40;
 
@@ -30,9 +38,24 @@ export function BottomPresetBar({ preset }: BottomPresetBarProps) {
         return null;
     }
 
+    const applyPatch = (patch: MIDIPatch) =>
+        apply(
+            (["program", "bankMSB", "bankLSB", "isGMGSDrum"] as const)
+                .filter((key) => preset[key] !== patch[key])
+                .map(
+                    (key) =>
+                        new EditPresetAction(
+                            preset,
+                            key,
+                            preset[key],
+                            patch[key]
+                        )
+                )
+        );
+
     /**
      * Applies a patch change unless another preset already uses the resulting patch.
-     * Returns the preset that blocked the change, if any.
+     * Then it offers the next free patch instead, and returns the preset that blocked it.
      */
     const changePatch = (changes: Partial<MIDIPatch>) => {
         const patch: MIDIPatch = {
@@ -43,19 +66,29 @@ export function BottomPresetBar({ preset }: BottomPresetBarProps) {
             ...changes
         };
         const duplicate = presets.find((p) => p !== preset && p.matches(patch));
-        if (duplicate) {
-            toast.error(
-                `${t("presetLocale.presetWithTheParametersExists")} (${duplicate.name})`
-            );
-            return duplicate;
+        if (!duplicate) {
+            applyPatch(patch);
+            return undefined;
         }
-        apply(
-            (Object.keys(changes) as (keyof MIDIPatch)[]).map(
-                (key) =>
-                    new EditPresetAction(preset, key, preset[key], patch[key])
-            )
-        );
-        return undefined;
+        const message = `${t("presetLocale.presetWithTheParametersExists")} (${duplicate.name})`;
+        // Its own patch counts as taken, "Keep" already offers that
+        const free = findFreePatch(patch, getTakenPatches(presets));
+        showToastDialog({
+            content: message,
+            isError: true,
+            buttons: free
+                ? [
+                      {
+                          label: t("presetLocale.useFreePatch", {
+                              patch: MIDIPatchTools.toMIDIString(free)
+                          }),
+                          onClick: () => applyPatch(free)
+                      },
+                      { label: t("presetLocale.keepPatch") }
+                  ]
+                : [{ label: t("presetLocale.keepPatch") }]
+        });
+        return duplicate;
     };
 
     const setNumber = (key: "program" | "bankMSB" | "bankLSB") => {

@@ -6,6 +6,8 @@ export const PresetLocale = {
     drums: "Drums",
     programNumber: "Program Number",
     linkSelectedInstruments: "Link selected Instruments",
+    useFreePatch: "Use {{patch}} instead",
+    keepPatch: "Keep",
     presetWithTheParametersExists:
         "Preset with these parameters already exists."
 };

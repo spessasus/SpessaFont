@@ -32,6 +32,20 @@ describe("ClipboardManager", () => {
         expect(target.document.instruments).toHaveLength(2);
     });
 
+    it("counts the copied presets a paste moves to another patch", () => {
+        const host = createTestHost();
+        const source = createTestSession(host);
+        const target = createTestSession(host);
+        const clipboard = new ClipboardManager();
+        const [preset] = source.document.presets;
+        clipboard.copyPresets(new Set([preset]), source);
+        expect(clipboard.countMovedPresets(target.document)).toBe(1);
+
+        // A free patch is kept
+        preset.program = 10;
+        expect(clipboard.countMovedPresets(target.document)).toBe(0);
+    });
+
     it("pastes samples with unique names", () => {
         const session = createTestSession();
         const clipboard = new ClipboardManager();

@@ -64,14 +64,23 @@ export function useSelectionCommands() {
         }
     };
 
+    const pastePresets = () => {
+        // Counted before the paste, after it the copies take the patches
+        const moved = clipboard.countMovedPresets(session.document);
+        apply(clipboard.pastePresets(session));
+        toast.success(
+            t("clipboardLocale.pastedPresets", {
+                count: clipboard.presetCount
+            })
+        );
+        if (moved > 0) {
+            toast(t("clipboardLocale.movedPresets", { count: moved }));
+        }
+    };
+
     const paste = () => {
         if (clipboard.hasPresets()) {
-            apply(clipboard.pastePresets(session));
-            toast.success(
-                t("clipboardLocale.pastedPresets", {
-                    count: clipboard.presetCount
-                })
-            );
+            pastePresets();
         }
         if (clipboard.hasInstruments()) {
             apply(clipboard.pasteInstruments(session));
@@ -109,6 +118,7 @@ export function useSelectionCommands() {
 
     return {
         copy,
+        pastePresets,
         // Elements still in use stay, so the cut says that they were only copied
         cut: (selection: ReadonlySet<BankEntity>) => {
             const message = copyToClipboard(selection);

@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { GeneratorTypes } from "spessasynth_core";
 import { createTestSession } from "../test_utils/bank_fixture.ts";
-import { createInstrumentFromSamples } from "./link_actions.ts";
+import {
+    createInstrumentFromSamples,
+    createPresetFromInstruments
+} from "./link_actions.ts";
 
 /**
  * The loop mode of the new instrument, the only one with a single zone (the list is sorted
@@ -35,5 +38,20 @@ describe("createInstrumentFromSamples", () => {
         session.history.do([createInstrumentFromSamples([sample])]);
 
         expect(getLoopMode(session)).toBe(1);
+    });
+});
+
+describe("createPresetFromInstruments", () => {
+    it("puts the new preset on the first free program of bank 0", () => {
+        const session = createTestSession();
+        // Both presets of the test bank use 000:000:000
+        const action = createPresetFromInstruments(session.document, [
+            session.document.instruments[0]
+        ]);
+        session.history.do([action]);
+
+        const created = session.document.presets.find((p) => p.program === 1);
+        expect(created?.bankMSB).toBe(0);
+        expect(created?.bankLSB).toBe(0);
     });
 });

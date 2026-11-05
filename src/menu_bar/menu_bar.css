@@ -204,5 +204,8 @@ button.menu_bar_icon {
 
 button.menu_bar_icon:disabled {
     cursor: default;
-    color: var(--muted-font-color);
+}
+
+button.menu_bar_icon:disabled > * {
+    opacity: 0.5;
 }

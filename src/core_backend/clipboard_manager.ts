@@ -12,6 +12,7 @@ import { CreateInstrumentAction } from "../menu_list/create_actions/create_instr
 import { CreatePresetAction } from "../menu_list/create_actions/create_preset_action.ts";
 import type { BankDocument } from "./bank_document.ts";
 import type { BankSession } from "./bank_session.ts";
+import { findFreePatch, getTakenPatches } from "./free_patch.ts";
 
 /**
  * How many items of each kind the clipboard holds. A new object is created on every copy.
@@ -102,32 +103,21 @@ function getSampleCopies(
     return copies;
 }
 
-const MIDI_VALUES = 128;
-
 /**
- * The first free patch from the preset's own: the next programs of its bank first, then the
- * next bank numbers (MSB, then LSB). Undefined when every patch is taken.
+ * The patch each preset gets in the document, its own when free, or the next free one.
  */
-function findFreePatch(preset: BasicPreset, taken: ReadonlySet<string>) {
-    // Drum kits are told apart by their bank numbers too, so they step through banks as well
-    for (let bankStep = 0; bankStep < MIDI_VALUES * MIDI_VALUES; bankStep++) {
-        const msb = preset.bankMSB + bankStep;
-        const bankMSB = msb % MIDI_VALUES;
-        const bankLSB =
-            (preset.bankLSB + Math.floor(msb / MIDI_VALUES)) % MIDI_VALUES;
-        for (let step = 0; step < MIDI_VALUES; step++) {
-            const patch: MIDIPatch = {
-                bankMSB,
-                bankLSB,
-                program: (preset.program + step) % MIDI_VALUES,
-                isGMGSDrum: preset.isGMGSDrum
-            };
-            if (!taken.has(MIDIPatchTools.toMIDIString(patch))) {
-                return patch;
-            }
+function planPatches(document: BankDocument, presets: Iterable<BasicPreset>) {
+    const taken = getTakenPatches(document.presets);
+    const targets = new Array<{ preset: BasicPreset; patch: MIDIPatch }>();
+    for (const preset of presets) {
+        const patch = findFreePatch(preset, taken);
+        if (!patch) {
+            throw new Error(`No free space to paste ${preset.toMIDIString()}`);
         }
+        taken.add(MIDIPatchTools.toMIDIString(patch));
+        targets.push({ preset, patch });
     }
-    return undefined;
+    return targets;
 }
 
 /**
@@ -239,6 +229,16 @@ export class ClipboardManager {
     }
 
     /**
+     * How many of the copied presets a paste into the document would move to another patch,
+     * because a preset there (or one pasted before it) already uses theirs.
+     */
+    countMovedPresets(document: BankDocument) {
+        return planPatches(document, this.presetClipboard).filter(
+            ({ preset, patch }) => !preset.matches(patch)
+        ).length;
+    }
+
+    /**
      * Builds the actions that paste the copied instruments with their samples.
      */
     pasteInstruments(target: BankSession) {
@@ -270,23 +270,9 @@ export class ClipboardManager {
     ) {
         const { document } = target;
         const cloner = createCloner(document);
-        const taken = new Set<string>();
-        for (const p of document.presets) {
-            taken.add(p.toMIDIString());
-        }
         // Every patch is found before anything is cloned, as cloned zones already link to
         // the instruments they reuse
-        const targets = new Array<{ preset: BasicPreset; patch: MIDIPatch }>();
-        for (const preset of presets) {
-            const patch = findFreePatch(preset, taken);
-            if (!patch) {
-                throw new Error(
-                    `No free space to paste ${preset.toMIDIString()}`
-                );
-            }
-            taken.add(MIDIPatchTools.toMIDIString(patch));
-            targets.push({ preset, patch });
-        }
+        const targets = planPatches(document, presets);
         const pairs = new Array<[BasicPreset, BasicPreset]>();
         for (const { preset: oldPreset, patch } of targets) {
             const newPreset = cloner.clonePreset(oldPreset);

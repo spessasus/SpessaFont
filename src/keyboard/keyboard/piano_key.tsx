@@ -27,5 +27,12 @@ export const PianoKey = memo(function PianoKey({
     if (isPressed) {
         className += " pressed";
     }
-    return <div className={className} data-note={midiNote} />;
+    // C keys show their octave so the keyboard can be read, with C4 as middle C (60)
+    return (
+        <div className={className} data-note={midiNote}>
+            {midiNote % 12 === 0 ? (
+                <span className={"key_label"}>{`C${midiNote / 12 - 1}`}</span>
+            ) : null}
+        </div>
+    );
 });

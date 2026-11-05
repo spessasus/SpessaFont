@@ -41,6 +41,7 @@
 
     /* piano */
     --piano-gap-color: oklch(80% 0.01 255);
+    --piano-label-color: oklch(80% 0.01 255);
     --piano-white-key: linear-gradient(
         90deg,
         oklch(93% 0.004 255),

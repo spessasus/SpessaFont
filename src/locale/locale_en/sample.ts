@@ -52,6 +52,7 @@ export const SampleLocale = {
             "The result is louder than full scale and will clip when saved. Normalize it or lower the gain."
     },
 
+    newInstrumentFromSample: "New Instrument from This Sample",
     notLinkedToInstrument: "Not used by an Instrument yet.",
     usedBy: "Used by",
     compressedSample: "Compressed Sample",

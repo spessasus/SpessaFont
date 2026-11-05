@@ -12,6 +12,7 @@ import { STEREO_REGEX } from "../utils/stereo_regex.ts";
 import { CreateInstrumentAction } from "./create_actions/create_instrument_action.ts";
 import { CreatePresetAction } from "./create_actions/create_preset_action.ts";
 import type { BankDocument } from "../core_backend/bank_document.ts";
+import { findFreePatch, getTakenPatches } from "../core_backend/free_patch.ts";
 
 /**
  * Stereo halves are panned fully to their side.
@@ -90,8 +91,8 @@ export function createInstrumentFromSamples(samples: Iterable<BasicSample>) {
 }
 
 /**
- * A new preset with a zone for each instrument, named after the first one and moved to the
- * first free bank number.
+ * A new preset with a zone for each instrument, named after the first one, on the first free
+ * program of bank 0 (or a later bank when bank 0 is full).
  */
 export function createPresetFromInstruments(
     document: BankDocument,
@@ -103,10 +104,17 @@ export function createPresetFromInstruments(
     for (const instrument of list) {
         preset.createZone(instrument);
     }
-    const allPresets = document.presets;
-    for (let i = 1; allPresets.some((p) => p.matches(preset)); i++) {
-        preset.bankMSB = i & 0x7f;
-        preset.bankLSB = Math.max(i >> 7, 0);
+    const patch = findFreePatch(
+        { program: 0, bankMSB: 0, bankLSB: 0, isGMGSDrum: false },
+        getTakenPatches(document.presets)
+    );
+    if (!patch) {
+        throw new Error(
+            "Every MIDI patch is taken, there is no room for a preset."
+        );
     }
+    preset.program = patch.program;
+    preset.bankMSB = patch.bankMSB;
+    preset.bankLSB = patch.bankLSB;
     return new CreatePresetAction(preset);
 }

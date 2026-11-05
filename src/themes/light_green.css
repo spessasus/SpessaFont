@@ -41,6 +41,7 @@
 
     /* piano */
     --piano-gap-color: #33412a;
+    --piano-label-color: #33412a;
     --piano-white-key: linear-gradient(90deg, #dcdcc0, #fffef5);
     --piano-black-key: linear-gradient(140deg, #4a5a3a, #33412a);
     --piano-disabled-key: linear-gradient(65deg, #c2c49a, #e3e4c9);
