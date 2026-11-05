@@ -34,6 +34,7 @@ export const localePolish = {
 
     unsavedChanges: "Ten plik ma niezapisane zmiany.",
     closeTab: "Zamknij {{name}}",
+    saveAndClose: "Zapisz i zamknij",
     discard: "Odrzuć",
     keep: "Zachowaj",
 

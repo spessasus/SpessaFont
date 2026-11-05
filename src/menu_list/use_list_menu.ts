@@ -30,6 +30,7 @@ import {
 import { logError } from "../utils/core_utils.ts";
 import { createRootKeyActions } from "../sample_editor/root_key_actions.ts";
 import { createSpreadActions } from "../instrument_editor/spread_actions.ts";
+import { shortcutText } from "../utils/shortcut_text.ts";
 
 /**
  * Runs an audio tool, which reads the audio first, and reports a failed read.
@@ -155,24 +156,29 @@ export function useListMenu() {
         const editEntries: ContextMenuEntry[] = [
             {
                 label: t("contextMenu.copy"),
-                onSelect: () => commands.copy(selection)
+                onSelect: () => commands.copy(selection),
+                shortcut: shortcutText("C")
             },
             {
                 label: t("contextMenu.cut"),
-                onSelect: () => commands.cut(selection)
+                onSelect: () => commands.cut(selection),
+                shortcut: shortcutText("X")
             },
             {
                 label: t("contextMenu.paste"),
                 onSelect: commands.paste,
-                isDisabled: !hasClipboard
+                isDisabled: !hasClipboard,
+                shortcut: shortcutText("V")
             },
             {
                 label: t("contextMenu.duplicate"),
-                onSelect: () => commands.duplicate(selection)
+                onSelect: () => commands.duplicate(selection),
+                shortcut: shortcutText("D")
             },
             {
                 label: t("contextMenu.delete"),
-                onSelect: () => commands.remove(selection)
+                onSelect: () => commands.remove(selection),
+                shortcut: "Del"
             }
         ];
         const samples = selectionOf(selection, isSample);

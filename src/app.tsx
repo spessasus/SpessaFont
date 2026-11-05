@@ -18,6 +18,7 @@ import { useBankFileOpener } from "./hooks/use_bank_file_opener.ts";
 import { useLaunchQueue } from "./hooks/use_launch_queue.ts";
 import { useElectronFileOpen } from "./hooks/use_electron_file_open.ts";
 import { useEventListener } from "./hooks/use_event_listener.ts";
+import { isEditorShortcut } from "./utils/is_editor_shortcut.ts";
 import { useUncaughtErrorToasts } from "./hooks/use_uncaught_error_toasts.ts";
 import { pickFile } from "./utils/pick_file.ts";
 import { getFileName } from "./utils/file_path.ts";
@@ -43,7 +44,9 @@ export function App() {
         openSession,
         requestClose,
         activate,
-        setActiveView
+        setActiveView,
+        goBack,
+        goForward
     } = useBankTabs();
     const openBankFile = useBankFileOpener(openSession);
     const [isKeyboardShown, setIsKeyboardShown] = useState(false);
@@ -116,6 +119,38 @@ export function App() {
     };
 
     const isEditorShown = activeSession !== undefined && !areSettingsShown;
+
+    // Alt+Left and Right, and the mouse's side buttons, go back and forward between elements.
+    // The page has no history of its own, so the browser would leave it instead
+    useEventListener(document, "keydown", (e) => {
+        if (!isEditorShown || !e.altKey || !isEditorShortcut(e)) {
+            return;
+        }
+        if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            goBack();
+        } else if (e.key === "ArrowRight") {
+            e.preventDefault();
+            goForward();
+        }
+    });
+    useEventListener(document, "mousedown", (e) => {
+        if (isEditorShown && (e.button === 3 || e.button === 4)) {
+            e.preventDefault();
+        }
+    });
+    useEventListener(document, "mouseup", (e) => {
+        if (!isEditorShown) {
+            return;
+        }
+        if (e.button === 3) {
+            e.preventDefault();
+            goBack();
+        } else if (e.button === 4) {
+            e.preventDefault();
+            goForward();
+        }
+    });
 
     return (
         <div className={`spessafont_main`}>

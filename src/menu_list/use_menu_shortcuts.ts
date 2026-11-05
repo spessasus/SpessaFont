@@ -5,7 +5,7 @@ import { isEditorShortcut } from "../utils/is_editor_shortcut.ts";
 
 /**
  * Delete removes the selection (except what is still used), Ctrl+C copies the selection,
- * Ctrl+X cuts it, and Ctrl+V pastes what the clipboard holds (Cmd on macOS).
+ * Ctrl+X cuts it, Ctrl+D duplicates it, and Ctrl+V pastes what the clipboard holds (Cmd on macOS).
  * Nothing runs while the editor is covered (by the settings), as its changes would be out of sight.
  */
 export function useMenuShortcuts(
@@ -33,6 +33,13 @@ export function useMenuShortcuts(
 
             case "x": {
                 commands.cut(selection);
+                break;
+            }
+
+            case "d": {
+                // The browser would bookmark the page
+                e.preventDefault();
+                commands.duplicate(selection);
                 break;
             }
 

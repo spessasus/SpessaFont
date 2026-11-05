@@ -1,5 +1,5 @@
 import type { InputHTMLAttributes } from "react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 type WaitingInputProps<T extends string | number> = Omit<
     InputHTMLAttributes<HTMLInputElement>,
@@ -16,6 +16,7 @@ type WaitingInputProps<T extends string | number> = Omit<
 /**
  * An input that applies its value when it loses focus or Enter is pressed, not on every key.
  * While the user types, the input shows the draft. Otherwise it shows `value`.
+ * Escape drops the draft and leaves the value as it was.
  */
 export function WaitingInput<T extends string | number>({
     value,
@@ -27,6 +28,8 @@ export function WaitingInput<T extends string | number>({
     ...attributes
 }: WaitingInputProps<T>) {
     const [draft, setDraft] = useState<string | null>(null);
+    // Set by Escape, so the blur that follows does not apply the draft
+    const cancelRef = useRef(false);
 
     const parse = (text: string): T => {
         if (typeof value === "number") {
@@ -45,6 +48,10 @@ export function WaitingInput<T extends string | number>({
 
     const commit = (text: string) => {
         setDraft(null);
+        if (cancelRef.current) {
+            cancelRef.current = false;
+            return;
+        }
         const parsed = parse(text);
         if (parsed.toString() !== value.toString()) {
             setValue(parsed);
@@ -61,10 +68,15 @@ export function WaitingInput<T extends string | number>({
             value={(draft ?? value.toString()) + suffix}
             onBlur={(e) => commit(e.target.value.replaceAll(suffix, ""))}
             onKeyDown={(e) => {
-                if (e.key !== "Enter") {
+                if (e.key !== "Enter" && e.key !== "Escape") {
                     return;
                 }
                 e.preventDefault();
+                if (e.key === "Escape") {
+                    // Only cancels the edit, not a dialog or menu around it
+                    e.stopPropagation();
+                    cancelRef.current = true;
+                }
                 e.currentTarget.blur();
             }}
             onChange={(e) => setDraft(e.target.value.replaceAll(suffix, ""))}

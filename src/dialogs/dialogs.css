@@ -67,7 +67,8 @@
 }
 
 .element_picker .element_picker_item:hover,
-.element_picker .element_picker_item:focus-visible {
+.element_picker .element_picker_item:focus-visible,
+.element_picker .element_picker_item[data-highlighted="true"] {
     background: var(--selection-color);
     outline: none;
 }

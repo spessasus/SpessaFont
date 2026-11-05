@@ -11,6 +11,7 @@ import {
 import type { SaveFormat } from "../core_backend/persistence.ts";
 import { showToastDialog } from "../toasts/show_toast_dialog.tsx";
 import { logError } from "../utils/core_utils.ts";
+import { shortcutText } from "../utils/shortcut_text.ts";
 
 async function enterFullscreen() {
     try {
@@ -77,6 +78,7 @@ export function FileMenu({
                     <MenuBarIcon
                         onClick={() => onSave("auto")}
                         text={t("menuBarLocale.file.save")}
+                        shortcut={shortcutText("S")}
                     >
                         <SaveFileIcon />
                     </MenuBarIcon>

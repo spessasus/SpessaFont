@@ -15,7 +15,8 @@ interface ElementPickerProps {
 }
 
 /**
- * A searchable list of elements. Enter picks the first match.
+ * A searchable list of elements. The arrow keys move the highlight, which starts on the first
+ * match, and Enter picks it.
  */
 export function ElementPicker({
     title,
@@ -31,6 +32,16 @@ export function ElementPicker({
             : options.filter((o) =>
                   o.label.toLowerCase().includes(deferredQuery)
               );
+    const [highlighted, setHighlighted] = useState<PickerOption>();
+    // Typing can filter the highlighted option out, then the first match is highlighted
+    const current =
+        highlighted && matches.includes(highlighted) ? highlighted : matches[0];
+
+    const moveHighlight = (step: number) => {
+        const index = current ? matches.indexOf(current) : -1;
+        const next = matches[index + step];
+        if (next) setHighlighted(next);
+    };
 
     return (
         <ModalDialog
@@ -47,8 +58,23 @@ export function ElementPicker({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => {
-                    if (e.key === "Enter" && matches.length > 0) {
-                        onAnswer(matches[0].index);
+                    switch (e.key) {
+                        case "Enter": {
+                            if (current) onAnswer(current.index);
+                            break;
+                        }
+
+                        case "ArrowDown": {
+                            e.preventDefault();
+                            moveHighlight(1);
+                            break;
+                        }
+
+                        case "ArrowUp": {
+                            e.preventDefault();
+                            moveHighlight(-1);
+                            break;
+                        }
                     }
                 }}
             />
@@ -60,7 +86,7 @@ export function ElementPicker({
                 ) : (
                     <VirtualItemList
                         items={matches}
-                        focusedItem={undefined}
+                        focusedItem={current}
                         renderItem={(option) => (
                             <button
                                 type={"button"}
@@ -68,6 +94,7 @@ export function ElementPicker({
                                     "plain_button monospaced element_picker_item"
                                 }
                                 title={option.label}
+                                data-highlighted={option === current}
                                 onClick={() => onAnswer(option.index)}
                             >
                                 {option.label}

@@ -1,5 +1,5 @@
 import type { MouseEvent, PointerEvent } from "react";
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./menu_list.css";
 import type { BankEditView, BankEntity } from "../core_backend/bank_view.ts";
@@ -8,7 +8,9 @@ import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
 import { SampleList } from "./sample_list.tsx";
 import { InstrumentList } from "./instrument_list.tsx";
 import { PresetList } from "./preset_list.tsx";
-import { filterElements } from "./filter_elements.ts";
+import { filterElements, keepUnused } from "./filter_elements.ts";
+import { useEventListener } from "../hooks/use_event_listener.ts";
+import { isEditorShortcut } from "../utils/is_editor_shortcut.ts";
 import {
     getClickResult,
     getSelection,
@@ -23,6 +25,11 @@ import { useListMenu } from "./use_list_menu.ts";
 import { useContextMenu } from "../context_menu/context_menu_context.ts";
 import { useDragSource } from "../drag_and_drop/drag_context.ts";
 import { getObjectId } from "../utils/object_id.ts";
+
+const ARROW_STEPS = new Map([
+    ["ArrowUp", -1],
+    ["ArrowDown", 1]
+]);
 
 interface MenuListProps {
     view: BankEditView;
@@ -41,6 +48,8 @@ export function MenuList({ view, isCovered }: MenuListProps) {
     const views = useBankSnapshot(session.store, (s) => s.views);
     const [isOpen, setIsOpen] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
+    const [isUnusedOnly, setIsUnusedOnly] = useState(false);
+    const searchRef = useRef<HTMLInputElement>(null);
     const [multiSelection, setMultiSelection] = useState<MultiSelection | null>(
         null
     );
@@ -48,7 +57,8 @@ export function MenuList({ view, isCovered }: MenuListProps) {
     // Filtering thousands of elements must not delay typing
     const deferredQuery = useDeferredValue(searchQuery);
     const filtered = useMemo(() => {
-        const ids = filterElements(views, deferredQuery);
+        const found = filterElements(views, deferredQuery);
+        const ids = isUnusedOnly ? keepUnused(views, found) : found;
         // The lists keep the core objects as identities, which the selection and handlers use
         const keep = <T extends object>(
             list: readonly T[],
@@ -65,7 +75,7 @@ export function MenuList({ view, isCovered }: MenuListProps) {
             instruments: keep(instruments, ids.instruments),
             samples: keep(samples, ids.samples)
         };
-    }, [views, presets, instruments, samples, deferredQuery]);
+    }, [views, presets, instruments, samples, deferredQuery, isUnusedOnly]);
 
     const listed = useMemo(
         () =>
@@ -81,6 +91,48 @@ export function MenuList({ view, isCovered }: MenuListProps) {
     const selectedInstruments = selectionOf(selection, isInstrument);
     const selectedSamples = selectionOf(selection, isSample);
     useMenuShortcuts(selection, isCovered);
+    useEventListener(document, "keydown", (e) => {
+        if (isCovered) {
+            return;
+        }
+        // Ctrl+F finds elements, the list is what the user searches in the editor
+        if (
+            (e.ctrlKey || e.metaKey) &&
+            e.key.toLowerCase() === "f" &&
+            searchRef.current
+        ) {
+            e.preventDefault();
+            searchRef.current.focus();
+            searchRef.current.select();
+            return;
+        }
+        // The arrow keys show the next or previous element of the shown one's list
+        const step = ARROW_STEPS.get(e.key);
+        if (
+            step === undefined ||
+            view === "info" ||
+            e.ctrlKey ||
+            e.metaKey ||
+            e.altKey ||
+            e.shiftKey ||
+            !isEditorShortcut(e)
+        ) {
+            return;
+        }
+        const list: readonly BankEntity[] = isPreset(view)
+            ? filtered.presets
+            : isInstrument(view)
+              ? filtered.instruments
+              : filtered.samples;
+        const index = list.indexOf(view);
+        const next = index === -1 ? undefined : list[index + step];
+        if (!next) {
+            return;
+        }
+        e.preventDefault();
+        setMultiSelection(null);
+        setView(next);
+    });
     const getMenuEntries = useListMenu();
     const { openMenu } = useContextMenu();
     const startDrag = useDragSource();
@@ -209,13 +261,42 @@ export function MenuList({ view, isCovered }: MenuListProps) {
             />
             <div className={"search_bar"}>
                 <input
+                    ref={searchRef}
                     className={"pretty_input"}
                     placeholder={t("presetList.search")}
                     aria-label={t("presetList.search")}
                     type={"text"}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Escape") {
+                            setSearchQuery("");
+                        }
+                    }}
                 />
+                {searchQuery === "" ? null : (
+                    <button
+                        type={"button"}
+                        className={"pretty_button"}
+                        aria-label={t("presetList.clearSearch")}
+                        title={t("presetList.clearSearch")}
+                        onClick={() => {
+                            setSearchQuery("");
+                            searchRef.current?.focus();
+                        }}
+                    >
+                        &times;
+                    </button>
+                )}
+                <button
+                    type={"button"}
+                    className={"pretty_button"}
+                    aria-pressed={isUnusedOnly}
+                    title={t("presetList.unusedOnlyTitle")}
+                    onClick={() => setIsUnusedOnly((only) => !only)}
+                >
+                    {t("presetList.unusedOnly")}
+                </button>
             </div>
         </div>
     );

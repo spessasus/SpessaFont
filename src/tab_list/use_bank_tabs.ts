@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useReducer, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { BasicInstrument, BasicPreset } from "spessasynth_core";
 import type { BankSession } from "../core_backend/bank_session.ts";
 import type { BankEditView } from "../core_backend/bank_view.ts";
 import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
 import { useEventListener } from "../hooks/use_event_listener.ts";
 import { showToastDialog } from "../toasts/show_toast_dialog.tsx";
+import { useSaveBank } from "../hooks/use_save_bank.ts";
 import { createTabsState, tabsReducer } from "./tabs_reducer.ts";
 
 /**
@@ -14,6 +16,7 @@ import { createTabsState, tabsReducer } from "./tabs_reducer.ts";
 export function useBankTabs() {
     const { t } = useTranslation();
     const { audioEngine } = useAudioEngine();
+    const saveBank = useSaveBank();
     const [state, dispatch] = useReducer(
         tabsReducer<BankSession>,
         undefined,
@@ -69,6 +72,21 @@ export function useBankTabs() {
             isError: true,
             buttons: [
                 {
+                    label: t("saveAndClose"),
+                    onClick: () => {
+                        forgetPrompt();
+                        void saveBank(session, "auto").then((result) => {
+                            // An edit made while it was writing is not in the file
+                            if (
+                                result === "saved" &&
+                                !session.history.isDirty
+                            ) {
+                                closeSession(session);
+                            }
+                        });
+                    }
+                },
+                {
                     label: t("discard"),
                     onClick: () => {
                         forgetPrompt();
@@ -94,7 +112,30 @@ export function useBankTabs() {
         [activeId]
     );
 
+    /**
+     * Shows the element shown before (or after) the current one, skipping removed ones.
+     */
+    const navigate = (type: "goBack" | "goForward") => {
+        if (!activeSession) return;
+        const { document } = activeSession;
+        dispatch({
+            type,
+            id: activeSession.id,
+            isAvailable: (view) => {
+                if (view === "info") return true;
+                if (view instanceof BasicPreset) {
+                    return document.presets.includes(view);
+                }
+                return view instanceof BasicInstrument
+                    ? document.instruments.includes(view)
+                    : document.samples.includes(view);
+            }
+        });
+    };
+
     return {
+        goBack: () => navigate("goBack"),
+        goForward: () => navigate("goForward"),
         tabs,
         activeSession,
         activeView,

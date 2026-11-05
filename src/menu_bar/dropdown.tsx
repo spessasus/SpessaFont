@@ -4,6 +4,11 @@ interface MenuBarIconProps {
     text: string;
     title?: string;
     onClick?: () => void;
+    /**
+     * The keys that do the same, shown after the text.
+     */
+    shortcut?: string;
+    isDisabled?: boolean;
     children?: ReactNode;
 }
 
@@ -11,6 +16,8 @@ export function MenuBarIcon({
     text,
     title,
     onClick,
+    shortcut,
+    isDisabled = false,
     children
 }: MenuBarIconProps) {
     return (
@@ -18,10 +25,14 @@ export function MenuBarIcon({
             type={"button"}
             onClick={onClick}
             title={title}
+            disabled={isDisabled}
             className={"menu_bar_icon"}
         >
             {children}
             <span>{text}</span>
+            {shortcut ? (
+                <kbd className={"menu_bar_shortcut"}>{shortcut}</kbd>
+            ) : null}
         </button>
     );
 }

@@ -34,6 +34,7 @@ export const localeEnglish = {
 
     unsavedChanges: "This file has unsaved changes.",
     closeTab: "Close {{name}}",
+    saveAndClose: "Save and close",
     discard: "Discard",
     keep: "Keep",
 

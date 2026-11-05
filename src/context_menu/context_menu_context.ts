@@ -4,6 +4,10 @@ export interface ContextMenuItem {
     label: string;
     onSelect: () => void;
     isDisabled?: boolean;
+    /**
+     * The keys that do the same, shown next to the label.
+     */
+    shortcut?: string;
 }
 
 /**

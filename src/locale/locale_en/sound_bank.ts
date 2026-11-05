@@ -7,6 +7,8 @@ export const SoundBankLocale = {
 
     modifiedSamples: "Modified {{count}} samples.",
     noSamplesWereChanged: "No samples were changed.",
+    nothingToRemove:
+        "Every instrument and sample is in use, nothing was removed.",
     removedElements:
         "Removed {{instruments}} instruments and {{samples}} samples.",
 

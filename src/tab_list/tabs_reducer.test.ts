@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { BasicInstrument } from "spessasynth_core";
 import {
     createTabsState,
     tabsReducer,
@@ -21,6 +22,8 @@ function stateWith(ids: number[], activeId?: number): TabsState<TestTab> {
 }
 
 const ids = (state: TabsState<TestTab>) => state.tabs.map((t) => t.id);
+
+const isAvailable = () => true;
 
 describe("tabsReducer", () => {
     it("opens new tabs first and activates them", () => {
@@ -81,5 +84,40 @@ describe("tabsReducer", () => {
         expect(
             tabsReducer(state, { type: "setView", id: 9, view: "info" })
         ).toBe(state);
+    });
+
+    it("goes back and forward between the shown elements", () => {
+        let next = stateWith([1], 1);
+        const a = new BasicInstrument();
+        const b = new BasicInstrument();
+        next = tabsReducer(next, { type: "setView", id: 1, view: a });
+        next = tabsReducer(next, { type: "setView", id: 1, view: b });
+
+        next = tabsReducer(next, { type: "goBack", id: 1, isAvailable });
+        expect(next.views.get(1)).toBe(a);
+        next = tabsReducer(next, { type: "goBack", id: 1, isAvailable });
+        expect(next.views.get(1)).toBe("info");
+        next = tabsReducer(next, { type: "goForward", id: 1, isAvailable });
+        expect(next.views.get(1)).toBe(a);
+
+        // Showing something new drops the way forward
+        next = tabsReducer(next, { type: "setView", id: 1, view: "info" });
+        expect(
+            tabsReducer(next, { type: "goForward", id: 1, isAvailable })
+        ).toBe(next);
+    });
+
+    it("skips removed elements when going back", () => {
+        const a = new BasicInstrument();
+        const b = new BasicInstrument();
+        let next = stateWith([1], 1);
+        next = tabsReducer(next, { type: "setView", id: 1, view: a });
+        next = tabsReducer(next, { type: "setView", id: 1, view: b });
+        next = tabsReducer(next, {
+            type: "goBack",
+            id: 1,
+            isAvailable: (view) => view !== a
+        });
+        expect(next.views.get(1)).toBe("info");
     });
 });

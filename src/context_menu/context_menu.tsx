@@ -104,7 +104,12 @@ export function ContextMenu({ x, y, entries, onClose }: ContextMenuProps) {
                             entry.onSelect();
                         }}
                     >
-                        {entry.label}
+                        <span>{entry.label}</span>
+                        {entry.shortcut ? (
+                            <kbd className={"context_menu_shortcut"}>
+                                {entry.shortcut}
+                            </kbd>
+                        ) : null}
                     </button>
                 )
             )}

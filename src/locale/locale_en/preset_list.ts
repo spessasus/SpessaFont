@@ -1,5 +1,8 @@
 export const PresetListLocale = {
     search: "Search...",
+    clearSearch: "Clear the search",
+    unusedOnly: "Unused",
+    unusedOnlyTitle: "Only list the instruments and samples nothing uses",
     overview: "Overview",
     presets: "Presets",
     instruments: "Instruments",

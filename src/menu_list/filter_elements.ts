@@ -68,3 +68,19 @@ export function filterElements(views: BankViews, query: string): FilteredIds {
         samples: views.sampleOrder.filter((id) => samples.has(id))
     };
 }
+
+/**
+ * Only the instruments and samples nothing uses, for finding what "remove unused" would remove.
+ * Presets are never used by anything, so none are kept.
+ */
+export function keepUnused(views: BankViews, ids: FilteredIds): FilteredIds {
+    return {
+        presets: [],
+        instruments: ids.instruments.filter(
+            (id) => views.instruments.get(id)?.usedBy.length === 0
+        ),
+        samples: ids.samples.filter(
+            (id) => views.samples.get(id)?.usedBy.length === 0
+        )
+    };
+}

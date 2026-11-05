@@ -29,7 +29,9 @@
 
 /* Beats the reset of .plain_button */
 .context_menu .context_menu_item {
-    display: block;
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5rem;
     text-align: start;
     padding: 0.35rem 0.75rem;
     border-radius: calc(var(--primary-border-radius) / 2);
@@ -53,4 +55,9 @@
     border: none;
     border-top: 1px solid var(--track-border-color);
     margin: 0.25rem 0.5rem;
+}
+
+.context_menu .context_menu_shortcut {
+    color: var(--muted-font-color);
+    font-size: 0.85rem;
 }

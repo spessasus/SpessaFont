@@ -91,6 +91,7 @@ export function MenuBar({
             />
             {session ? (
                 <EditMenu
+                    store={session.store}
                     onUndo={undo}
                     onRedo={redo}
                     onRemoveUnusedElements={removeUnusedElements}

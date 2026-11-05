@@ -41,3 +41,11 @@
 .menu_list_closed:active {
     border-color: var(--border-color);
 }
+
+.search_bar button {
+    padding: 0 0.5rem;
+}
+
+.search_bar button[aria-pressed="true"] {
+    background: var(--selection-color);
+}

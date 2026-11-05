@@ -119,7 +119,7 @@
     cursor: pointer;
 }
 
-.menu_bar_icon:hover,
+.menu_bar_icon:hover:not(:disabled),
 .flex_menu_bar div:hover {
     filter: brightness(1.2);
 }
@@ -193,4 +193,16 @@ button.menu_bar_icon {
 
 .menu_bar_spacer {
     flex: 1;
+}
+
+.menu_bar_shortcut {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.85em;
+    white-space: nowrap;
+    color: var(--muted-font-color);
+}
+
+button.menu_bar_icon:disabled {
+    cursor: default;
+    color: var(--muted-font-color);
 }

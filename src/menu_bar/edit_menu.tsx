@@ -6,8 +6,12 @@ import {
     RedoIcon,
     UndoIcon
 } from "../utils/icons/edit_icons.tsx";
+import type { BankStore } from "../core_backend/bank_store.ts";
+import { useHistoryState } from "../hooks/use_history_state.ts";
+import { shortcutText } from "../utils/shortcut_text.ts";
 
 interface EditMenuProps {
+    store: BankStore;
     onUndo: () => void;
     onRedo: () => void;
     onRemoveUnusedElements: () => void;
@@ -15,18 +19,30 @@ interface EditMenuProps {
 }
 
 export function EditMenu({
+    store,
     onUndo,
     onRedo,
     onRemoveUnusedElements,
     onAutoLinkSamples
 }: EditMenuProps) {
     const { t } = useTranslation();
+    const { canUndo, canRedo } = useHistoryState(store);
     return (
         <MenuBarDropdown main={t("menuBarLocale.edit.edit")}>
-            <MenuBarIcon onClick={onUndo} text={t("menuBarLocale.edit.undo")}>
+            <MenuBarIcon
+                onClick={onUndo}
+                text={t("menuBarLocale.edit.undo")}
+                shortcut={shortcutText("Z")}
+                isDisabled={!canUndo}
+            >
                 <UndoIcon />
             </MenuBarIcon>
-            <MenuBarIcon onClick={onRedo} text={t("menuBarLocale.edit.redo")}>
+            <MenuBarIcon
+                onClick={onRedo}
+                text={t("menuBarLocale.edit.redo")}
+                shortcut={shortcutText("Y")}
+                isDisabled={!canRedo}
+            >
                 <RedoIcon />
             </MenuBarIcon>
             <MenuBarIcon
