@@ -76,8 +76,6 @@ export const localeEnglish = {
         writingFailed: "Error writing the sound bank!",
         encoderUnavailable:
             "The Vorbis encoder for SF3 could not be loaded. Check your connection and try again.",
-        dlsTooLarge:
-            "A preset has too many zones to save as DLS, where each pair of a preset zone and an instrument zone becomes a region. Use fewer zones or save in another format.",
         saveRunning: "This sound bank is being saved already.",
         unsupportedFile: "{{name}} is neither a sound bank nor an audio file.",
         openBankForSamples: "Open or create a sound bank to add samples to it."

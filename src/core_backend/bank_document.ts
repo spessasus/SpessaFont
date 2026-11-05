@@ -14,7 +14,7 @@ import { presetSorter } from "../utils/preset_sorter.ts";
 import { nameSorter } from "../utils/name_sorter.ts";
 import type { BankEntity } from "./bank_view.ts";
 import { getObjectId } from "../utils/object_id.ts";
-import { isXGDrumBank, refreshXGState } from "./xg_state.ts";
+import { isXGDrumBank } from "./xg_state.ts";
 
 /**
  * Inserts the item before the first item that sorts after it, and returns its index.
@@ -91,7 +91,7 @@ export class BankDocument {
             return false;
         }
         const wasXG = this.bank.isXGBank;
-        refreshXGState(this.bank);
+        this.bank.flush(false);
         if (this.bank.isXGBank === wasXG) {
             return false;
         }
@@ -161,7 +161,7 @@ export class BankDocument {
      * Re-sorts the presets after a MIDI patch change, which can also change the bank's XG state.
      */
     public sortPresets() {
-        refreshXGState(this.bank);
+        this.bank.flush(false);
         this.presets.sort(presetSorter);
     }
 
@@ -177,9 +177,15 @@ export class BankDocument {
         ) {
             throw new Error("The preset order does not match the bank.");
         }
-        this.presets.splice(0, this.presets.length, ...presets);
+        // A copy, as the order may be the bank's own list. One by one, as spreading tens of
+        // thousands of presets into a call overflows a Chromium Worker's stack
+        const order = Array.from(presets);
+        this.presets.length = 0;
+        for (const preset of order) {
+            this.presets.push(preset);
+        }
         // The patch that undo put back can change the XG state too
-        refreshXGState(this.bank);
+        this.bank.flush(false);
     }
 
     public sortZones(element: BasicPreset | BasicInstrument) {
@@ -303,15 +309,7 @@ export class BankDocument {
         ];
         zones.splice(index, 0, zone);
         replaceZones(element, zones);
-        // linkTo is internal in spessasynth_core, so the zone's link is added directly,
-        // one entry per zone like linkTo does. A public linkTo would remove this.
-        if (element instanceof BasicInstrument) {
-            if (zone instanceof BasicInstrumentZone) {
-                zone.sample.linkedTo.push(element);
-            }
-        } else if (zone instanceof BasicPresetZone) {
-            zone.instrument.linkedTo.push(element);
-        }
+        zone.linkChild();
     }
 
     /**

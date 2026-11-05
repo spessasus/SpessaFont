@@ -21,8 +21,7 @@ const FORMAT_NAMES = {
 } as const;
 
 const FAILURE_KEYS = {
-    encoderUnavailable: "loadingAndSaving.encoderUnavailable",
-    dlsTooLarge: "loadingAndSaving.dlsTooLarge"
+    encoderUnavailable: "loadingAndSaving.encoderUnavailable"
 } as const;
 
 const DLS_LOSS_KEYS = {

@@ -134,9 +134,8 @@ export function useSampleAudioCommands(
     const exportWav = (isLoopOnly: boolean) =>
         run(async () => {
             const { loopStart, loopEnd, sampleRate } = sample;
-            // In seconds, which core floors to frames, so half a frame keeps each point on its
-            // frame. The loop export is all loop
-            const toSeconds = (frame: number) => (frame + 0.5) / sampleRate;
+            // In seconds, which core rounds to frames. The loop export is all loop
+            const toSeconds = (frame: number) => frame / sampleRate;
             const loop =
                 loopEnd <= loopStart
                     ? undefined

@@ -85,11 +85,22 @@ export class BankSession implements SampleDataSource {
         const undecodable = getUndecodableSamples(bank);
         this.undecodableSampleCount = undecodable.length;
         // The mirror pairs the elements by index, so it is opened before the document sorts them
-        this.opened = client.openBank(this.id, file, {
-            presets: bank.presets.map((p) => getObjectId(p)),
-            instruments: bank.instruments.map((i) => getObjectId(i)),
-            samples: bank.samples.map((s) => getObjectId(s))
-        });
+        let size = 0;
+        for (const element of [...bank.presets, ...bank.instruments]) {
+            for (const zone of [element.globalZone, ...element.zones]) {
+                size += 1 + zone.generators.length + zone.modulators.length;
+            }
+        }
+        this.opened = client.openBank(
+            this.id,
+            file,
+            {
+                presets: bank.presets.map((p) => getObjectId(p)),
+                instruments: bank.instruments.map((i) => getObjectId(i)),
+                samples: bank.samples.map((s) => getObjectId(s))
+            },
+            size
+        );
         try {
             this.document = new BankDocument(bank);
             this.writeFormat = getInitialWriteFormat(this.document.bank);

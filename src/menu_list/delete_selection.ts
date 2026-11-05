@@ -16,7 +16,7 @@ export function createDeleteSelectionActions(
     const actions = new Array<HistoryAction>();
     let skipped = 0;
     const deleted = new Set<BankEntity>();
-    const targets = new Array<BankEntity>(...selection);
+    const targets = Array.from(selection);
     for (const entity of selection) {
         const partner =
             entity instanceof BasicSample ? entity.linkedSample : undefined;

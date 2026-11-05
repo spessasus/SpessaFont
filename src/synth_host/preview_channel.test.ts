@@ -155,9 +155,7 @@ describe("the keyboard channel without a tab or presets", () => {
     it("plays the sample bank after the last tab closes", () => {
         const { testHost, session, channel } = createPreviewSession();
         expect(channel.preset?.name).toBe(PREVIEW);
-        const mirrorSample = getMirror(session).getSample(
-            getObjectId(session.document.samples[0])
-        );
+        const closedBank = getMirror(session).bank;
 
         // What the app does when the last tab closes
         session.close();
@@ -170,8 +168,7 @@ describe("the keyboard channel without a tab or presets", () => {
             );
         expect(channel.preset?.name).not.toBe(PREVIEW);
         expect(banks).toContain(getPresetBank(channel));
-        // Its data points into the whole file
-        expect(mirrorSample?.hasData).toBe(false);
+        expect(banks).not.toContain(closedBank);
     });
 
     it("keeps rendering when the shown bank has no presets left", () => {

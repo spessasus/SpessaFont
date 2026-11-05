@@ -38,14 +38,6 @@ interface ChildSharing {
 }
 
 /**
- * A duplicate plays the very instruments and samples the original uses.
- */
-const SHARE_ORIGINALS: ChildSharing = {
-    instrument: (source) => source,
-    sample: (source) => source
-};
-
-/**
  * What one clone session made: the elements to add, in the order they can be added in.
  */
 interface CreatedElements {
@@ -75,48 +67,48 @@ function getCreateActions({ samples, instruments, presets }: CreatedElements) {
 }
 
 /**
- * Pairs each instrument and sample the clone session made with the element it copied. The
- * cloner keeps that map to itself, but it copies zones in order, so the copied elements line up
- * with their sources. Shared children are not in `created`, so they are skipped.
+ * Pairs each instrument and sample the clone session made with the element it copied, walking
+ * the sources. Shared children and the copies `shareChildren` left out are not in `created`,
+ * so they are skipped.
  */
-function getCopies(created: CreatedElements, pairs: Iterable<ElementPair>) {
+function getCopies(
+    cloner: SoundBankCloner,
+    created: CreatedElements,
+    pairs: Iterable<ElementPair>
+) {
     const createdSamples = new Set(created.samples);
     const createdInstruments = new Set(created.instruments);
     const samples = new Map<BasicSample, BasicSample>();
     const instruments = new Map<BasicInstrument, BasicInstrument>();
-    const addSample = (source: BasicSample, copy: BasicSample) => {
-        if (!createdSamples.has(copy) || samples.has(copy)) {
+    const addSample = (source: BasicSample) => {
+        const copy = cloner.getClone(source);
+        if (!copy || !createdSamples.has(copy) || samples.has(copy)) {
             return;
         }
         samples.set(copy, source);
-        if (source.linkedSample && copy.linkedSample) {
-            addSample(source.linkedSample, copy.linkedSample);
+        if (source.linkedSample) {
+            addSample(source.linkedSample);
         }
     };
-    const addInstrument = (source: BasicInstrument, copy: BasicInstrument) => {
-        if (!createdInstruments.has(copy) || instruments.has(copy)) {
+    const addInstrument = (source: BasicInstrument) => {
+        const copy = cloner.getClone(source);
+        if (!copy || !createdInstruments.has(copy) || instruments.has(copy)) {
             return;
         }
         instruments.set(copy, source);
-        for (const [i, zone] of source.zones.entries()) {
-            addSample(zone.sample, copy.zones[i].sample);
+        for (const zone of source.zones) {
+            addSample(zone.sample);
         }
     };
-    for (const [source, copy] of pairs) {
-        if (source instanceof BasicPreset && copy instanceof BasicPreset) {
-            for (const [i, zone] of source.zones.entries()) {
-                addInstrument(zone.instrument, copy.zones[i].instrument);
+    for (const [source] of pairs) {
+        if (source instanceof BasicPreset) {
+            for (const zone of source.zones) {
+                addInstrument(zone.instrument);
             }
-        } else if (
-            source instanceof BasicInstrument &&
-            copy instanceof BasicInstrument
-        ) {
-            addInstrument(source, copy);
-        } else if (
-            source instanceof BasicSample &&
-            copy instanceof BasicSample
-        ) {
-            addSample(source, copy);
+        } else if (source instanceof BasicInstrument) {
+            addInstrument(source);
+        } else {
+            addSample(source);
         }
     }
     return { samples, instruments };
@@ -124,9 +116,10 @@ function getCopies(created: CreatedElements, pairs: Iterable<ElementPair>) {
 
 /**
  * Points the copies' zones at the children they share and leaves out the copies of those
- * children. Core's cloner can only reuse children by name, which picks the first element of
- * that name, a different one when names repeat (they often do in real banks). So everything is
- * copied and the shared children are put back by identity here.
+ * children. A paste into the bank it was copied from shares the children the clipboard's
+ * copies came from, which only the clipboard's ids know (core's cloner only shares children
+ * that are in the target bank themselves). So everything is copied and the shared children are
+ * put back here.
  */
 function shareChildren(
     created: CreatedElements,
@@ -286,14 +279,14 @@ export class ClipboardManager {
     ) {
         const cloner = new SoundBankCloner(new BasicSoundBank(), {
             reuseByName: false,
-            reuseChildrenByName: false,
+            reuseChildren: "none",
             addToBank: true
         });
         const pairs = Array.from(elements, (element): [T, T] => [
             element,
             clone(cloner, element)
         ]);
-        const copies = getCopies(cloner.created, pairs);
+        const copies = getCopies(cloner, cloner.created, pairs);
         this.sampleOrigins = getOriginIds(copies.samples);
         this.instrumentOrigins = getOriginIds(copies.instruments);
         source.copyToClipboard(copies.samples.values());
@@ -340,7 +333,7 @@ export class ClipboardManager {
                           )
                   }
                 : undefined;
-        return this.cloneInto(target, elements, sharing, (original) =>
+        return this.cloneInto(target, elements, "none", sharing, (original) =>
             this.fromClipboard(original)
         );
     }
@@ -354,13 +347,14 @@ export class ClipboardManager {
     private cloneInto(
         target: BankSession,
         elements: ClonedElements,
+        reuseChildren: "identity" | "none",
         sharing: ChildSharing | undefined,
         getDataSource: (original: BasicSample) => SampleCopyRef
     ) {
         const { document } = target;
         const cloner = new SoundBankCloner(document.bank, {
             reuseByName: false,
-            reuseChildrenByName: false,
+            reuseChildren,
             addToBank: false
         });
         const targets = planPatches(document, elements.presets ?? []);
@@ -385,7 +379,8 @@ export class ClipboardManager {
             ? shareChildren(cloner.created, pairs, sharing)
             : cloner.created;
         const dataSources = new Map<BasicSample, SampleCopyRef>();
-        for (const [copy, original] of getCopies(created, pairs).samples) {
+        for (const [copy, original] of getCopies(cloner, created, pairs)
+            .samples) {
             dataSources.set(copy, getDataSource(original));
         }
         target.copySampleData(dataSources);
@@ -517,10 +512,12 @@ export class ClipboardManager {
         elements: ClonedElements,
         source = target
     ) {
+        // A duplicate shares the children it uses, which are in the bank already
         return this.cloneInto(
             target,
             elements,
-            source === target ? SHARE_ORIGINALS : undefined,
+            source === target ? "identity" : "none",
+            undefined,
             (original) => ({
                 from: "session",
                 sessionId: source.id,

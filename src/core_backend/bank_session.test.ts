@@ -65,6 +65,22 @@ function createHandle(onWrite?: () => void, name = "bank.sf2"): SaveFileHandle {
 }
 
 describe("BankSession.save", () => {
+    it("saves an unnamed bank with an empty name, which SF2 allows", async () => {
+        const session = createTestSession();
+        session.document.bank.soundBankInfo.name = "";
+        publishSetUp(session);
+        const { handle, written } = createRecordingHandle("bank.sf2");
+        vi.stubGlobal("showSaveFilePicker", () => Promise.resolve(handle));
+
+        await session.save("sf2", "x");
+
+        const [file] = written;
+        expect(new TextDecoder("latin1").decode(file)).toContain("INAM");
+        expect(SoundBankLoader.fromArrayBuffer(file).soundBankInfo.name).toBe(
+            ""
+        );
+    });
+
     it("changes nothing when the file picker is cancelled", async () => {
         const session = createTestSession();
         const sample = session.document.samples[0];
@@ -440,7 +456,7 @@ describe("saves while the bank changes", () => {
         vi.stubGlobal("showSaveFilePicker", () => Promise.resolve(handle));
 
         await expect(session.save("sf3", "x")).rejects.toThrow(
-            "could not be compressed"
+            "Failed to compress"
         );
 
         expect(written).toHaveLength(0);
@@ -554,7 +570,8 @@ describe("DLS saves", () => {
         expectMirrorUpToDate(session);
     });
 
-    it("fail with a clear reason when a preset flattens to too many regions", async () => {
+    // Core 4.4.7 overflowed the stack here
+    it("write a preset that flattens to many regions", async () => {
         const session = createTestSession();
         const [preset] = session.document.presets;
         const [instrument] = session.document.instruments;
@@ -569,13 +586,18 @@ describe("DLS saves", () => {
             };
         }
         publishSetUp(session);
+        let isWritten = false;
         vi.stubGlobal("showSaveFilePicker", () =>
-            Promise.resolve(createHandle(undefined, "bank.dls"))
+            Promise.resolve(
+                createHandle(() => {
+                    isWritten = true;
+                }, "bank.dls")
+            )
         );
 
-        await expect(session.save("dls", "x")).rejects.toThrow(
-            expect.objectContaining({ failure: "dlsTooLarge" })
-        );
+        await session.save("dls", "x");
+
+        expect(isWritten).toBe(true);
         expectMirrorUpToDate(session);
     });
 });

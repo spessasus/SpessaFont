@@ -10,10 +10,9 @@ export type WriteFormat = Exclude<SaveFormat, "auto">;
 
 /**
  * Why the host could not write a bank, when the reason is one the user can act on: the Vorbis
- * encoder did not load (offline before it was cached), or a preset flattens to more DLS regions
- * than core can write.
+ * encoder did not load (offline before it was cached).
  */
-export type WriteFailure = "encoderUnavailable" | "dlsTooLarge";
+export type WriteFailure = "encoderUnavailable";
 
 /**
  * A save the host could not write.

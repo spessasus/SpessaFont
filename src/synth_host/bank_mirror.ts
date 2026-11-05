@@ -2,11 +2,11 @@ import {
     BasicInstrument,
     BasicPreset,
     BasicSample,
-    type BasicSoundBank,
+    BasicSoundBank,
     type BasicZone,
     Generator,
     Modulator,
-    type ModulatorSource,
+    ModulatorSource,
     type SampleStoredData,
     SampleTypes,
     SoundBankLoader,
@@ -22,7 +22,6 @@ import type {
     ZoneView
 } from "../core_backend/entity_views.ts";
 import type { ElementDiff, ViewDiff } from "../core_backend/view_diff.ts";
-import { refreshXGState } from "../core_backend/xg_state.ts";
 
 /*
  * The mirror is a second copy of one bank, which the synthesizer plays and which holds the sample
@@ -66,6 +65,17 @@ export interface SampleCopySource {
 }
 
 /**
+ * A whole mirror as plain data, to build it again in another host: every element as a view
+ * (in a diff from an empty bank), and the data of every sample it keeps, removed ones too, so
+ * an undo that brings one back still finds it.
+ */
+export interface MirrorState {
+    readonly type: BasicSoundBank["type"];
+    readonly customDefaultModulators: boolean;
+    readonly patch: MirrorPatch & { readonly info: SoundBankInfoData };
+}
+
+/**
  * An element of the mirror, by the editor's id.
  */
 export interface MirrorTarget {
@@ -97,23 +107,60 @@ export function shareOwnStoredData(stored: SampleStoredData) {
         : copyStoredData(stored);
 }
 
-function applySource(source: ModulatorSource, view: ModulatorSourceView) {
-    source.index = view.index;
-    source.curveType = view.curveType;
-    source.isCC = view.isCC;
-    source.isBipolar = view.isBipolar;
-    source.isNegative = view.isNegative;
+function sourceToView(source: ModulatorSource): ModulatorSourceView {
+    return {
+        index: source.index,
+        curveType: source.curveType,
+        isCC: source.isCC,
+        isBipolar: source.isBipolar,
+        isNegative: source.isNegative
+    };
+}
+
+// The ids of zones and modulators only key the editor's rows, the mirror never reads them
+function modulatorToView(modulator: Modulator): ModulatorView {
+    return {
+        id: 0,
+        primarySource: sourceToView(modulator.primarySource),
+        secondarySource: sourceToView(modulator.secondarySource),
+        destination: modulator.destination,
+        transformAmount: modulator.transformAmount,
+        transformType: modulator.transformType
+    };
+}
+
+function zoneToView(zone: BasicZone, childId: number | undefined): ZoneView {
+    return {
+        id: 0,
+        keyRange: zone.hasKeyRange ? { ...zone.keyRange } : undefined,
+        velocityRange: zone.hasVelRange ? { ...zone.velRange } : undefined,
+        generators: zone.generators.map((g) => ({
+            type: g.type,
+            value: g.value
+        })),
+        modulators: zone.modulators.map((m) => modulatorToView(m)),
+        childId
+    };
+}
+
+function buildSource(view: ModulatorSourceView) {
+    return new ModulatorSource(
+        view.index,
+        view.curveType,
+        view.isCC,
+        view.isBipolar,
+        view.isNegative
+    );
 }
 
 function buildModulator(view: ModulatorView) {
-    // Core does not export the source's constructor, so the modulator's own sources are filled in
-    const modulator = new Modulator();
-    applySource(modulator.primarySource, view.primarySource);
-    applySource(modulator.secondarySource, view.secondarySource);
-    modulator.destination = view.destination;
-    modulator.transformAmount = view.transformAmount;
-    modulator.transformType = view.transformType;
-    return modulator;
+    return new Modulator(
+        buildSource(view.primarySource),
+        buildSource(view.secondarySource),
+        view.destination,
+        view.transformAmount,
+        view.transformType
+    );
 }
 
 function buildRange(view: RangeView | undefined) {
@@ -162,6 +209,21 @@ export class BankMirror {
             SoundBankLoader.fromArrayBuffer(buffer, { copySampleData: false }),
             ids
         );
+    }
+
+    /**
+     * Builds a mirror from another host's `exportState`. Its sample data is used as is.
+     */
+    public static fromState(state: MirrorState) {
+        const bank = new BasicSoundBank(state.type);
+        bank.customDefaultModulators = state.customDefaultModulators;
+        const mirror = new BankMirror(bank, {
+            presets: [],
+            instruments: [],
+            samples: []
+        });
+        mirror.apply(state.patch);
+        return mirror;
     }
 
     // Removed elements stay in these maps, so an undo that brings one back finds it with its data
@@ -353,7 +415,7 @@ export class BankMirror {
         const { changed, removed } = views.presets;
         // A patch change or an added or removed kit can make the bank XG or not, as in the editor
         if (changed.length > 0 || removed.length > 0) {
-            refreshXGState(this.bank);
+            this.bank.flush(false);
         }
         if (views.defaultModulators) {
             this.bank.defaultModulators = views.defaultModulators.map((m) =>
@@ -364,6 +426,108 @@ export class BankMirror {
             // A deep copy, as a format conversion changes the version object in place
             this.bank.soundBankInfo = structuredClone(patch.info);
         }
+    }
+
+    /**
+     * The whole mirror as plain data for `fromState`. Removed presets and instruments are left
+     * out, as an undo rebuilds them from their views anyway. The sample data is shared, not
+     * copied, so this mirror must not be used afterward if it is transferred.
+     */
+    public exportState(): MirrorState {
+        const idOf = new Map<object, number>();
+        for (const map of [this.presets, this.instruments, this.samples]) {
+            for (const [id, element] of map) {
+                idOf.set(element, id);
+            }
+        }
+        const getId = (element: object) => {
+            const id = idOf.get(element);
+            if (id === undefined) {
+                throw new Error(
+                    "The mirror's bank has an element without an id."
+                );
+            }
+            return id;
+        };
+        const { bank } = this;
+        const samples = new Array<SampleView>();
+        const sampleData = new Map<number, SampleStoredData>();
+        for (const [id, sample] of this.samples) {
+            samples.push({
+                id,
+                name: sample.name,
+                sampleRate: sample.sampleRate,
+                originalKey: sample.originalKey,
+                pitchCorrection: sample.pitchCorrection,
+                loopStart: sample.loopStart,
+                loopEnd: sample.loopEnd,
+                type: sample.sampleType,
+                linkedSampleId: sample.linkedSample
+                    ? getId(sample.linkedSample)
+                    : undefined,
+                length: sample.sampleLength,
+                isCompressed: sample.isCompressed,
+                usedBy: [],
+                audioRevision: 0
+            });
+            if (sample.hasData) {
+                sampleData.set(id, sample.getStoredData());
+            }
+        }
+        const instruments = bank.instruments.map(
+            (instrument): InstrumentView => ({
+                id: getId(instrument),
+                name: instrument.name,
+                globalZone: zoneToView(instrument.globalZone, undefined),
+                zones: instrument.zones.map((z) =>
+                    zoneToView(z, getId(z.sample))
+                ),
+                usedBy: []
+            })
+        );
+        const presets = bank.presets.map((preset): PresetView => ({
+            id: getId(preset),
+            name: preset.name,
+            program: preset.program,
+            bankMSB: preset.bankMSB,
+            bankLSB: preset.bankLSB,
+            isGMGSDrum: preset.isGMGSDrum,
+            isDrum: preset.isDrum,
+            library: preset.library,
+            genre: preset.genre,
+            morphology: preset.morphology,
+            globalZone: zoneToView(preset.globalZone, undefined),
+            zones: preset.zones.map((z) => zoneToView(z, getId(z.instrument)))
+        }));
+        return {
+            type: bank.type,
+            customDefaultModulators: bank.customDefaultModulators,
+            patch: {
+                views: {
+                    presets: {
+                        changed: presets,
+                        removed: [],
+                        order: presets.map((p) => p.id)
+                    },
+                    instruments: {
+                        changed: instruments,
+                        removed: [],
+                        order: instruments.map((i) => i.id)
+                    },
+                    samples: {
+                        changed: samples,
+                        removed: [],
+                        order: bank.samples.map((s) => getId(s))
+                    },
+                    defaultModulators: bank.defaultModulators.map((m) =>
+                        modulatorToView(m)
+                    )
+                },
+                info: structuredClone(bank.soundBankInfo),
+                sampleData,
+                sampleCopies: new Map()
+            }
+        };
     }
 
     public getSample(id: number) {
@@ -381,15 +545,6 @@ export class BankMirror {
                 continue;
             }
             this.samples.delete(id);
-            sample.releaseData();
-        }
-    }
-
-    /**
-     * Drops the data of every sample, removed ones too, when the bank closes.
-     */
-    public releaseData() {
-        for (const sample of this.samples.values()) {
             sample.releaseData();
         }
     }

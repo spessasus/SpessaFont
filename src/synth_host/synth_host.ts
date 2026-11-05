@@ -1,7 +1,5 @@
 import {
-    type BasicInstrument,
     BasicMIDI,
-    BasicPreset,
     type BasicSample,
     BasicSoundBank,
     DEFAULT_SYNTH_MODE,
@@ -31,8 +29,10 @@ import {
 import type {
     ConversionReport,
     ForwardedSynthEvent,
+    HandoffEvent,
     HostCommand,
     HostEvent,
+    HostHandoff,
     HostPort,
     HostRequest,
     HostSettings,
@@ -41,6 +41,7 @@ import type {
     WriteOptions,
     WriteResult
 } from "./protocol.ts";
+import { getHandoffTransfer } from "./protocol.ts";
 import type { KeyboardChannelValues } from "../core_backend/keyboard_channel_store.ts";
 import type { WriteFormat } from "../core_backend/persistence.ts";
 import type { PlaybackReport } from "./playback_worklet.ts";
@@ -90,6 +91,10 @@ export interface SynthHostOptions {
      * Logs the synthesizer's info and warnings, as the dev build does.
      */
     isVerbose: boolean;
+    /**
+     * What the host on the other thread kept, when this host takes over from it.
+     */
+    handoff?: HostHandoff;
 }
 
 function isForwarded(event: { type: string }): event is ForwardedSynthEvent {
@@ -120,81 +125,25 @@ function isSameVersion(a: SF2VersionTag, b: SF2VersionTag) {
     return a.major === b.major && a.minor === b.minor;
 }
 
-/**
- * Writes the bank as DLS, around two bugs in core's DLS writer (CORE_WISHLIST.md):
- * - it writes the whole buffer under a sample's s16le data, ignoring the view's offset and
- *   length, and the mirror's file samples are views into the file. So they get standalone
- *   copies for the write.
- * - flattening the presets links every sample to a helper instrument once per zone, on each
- *   save. So the samples get their old `linkedTo` lists back afterward.
- */
-function writeDLS(
-    bank: BasicSoundBank,
-    options: Partial<SoundBankWriteOptions>
-) {
-    const views = new Map<BasicSample, SampleStoredData>();
-    const links = new Map<BasicSample, BasicInstrument[]>();
-    for (const sample of bank.samples) {
-        links.set(sample, [...sample.linkedTo]);
-        if (!sample.hasData) {
-            continue;
-        }
-        const stored = sample.getStoredData();
-        if (stored.form !== "s16le") {
-            continue;
-        }
-        const { data } = stored;
-        if (
-            data.byteOffset === 0 &&
-            data.byteLength === data.buffer.byteLength
-        ) {
-            continue;
-        }
-        views.set(sample, stored);
-        sample.setStoredData({ form: "s16le", data: data.slice() });
-    }
-    try {
-        return bank.writeDLS(options);
-    } finally {
-        for (const [sample, stored] of views) {
-            sample.setStoredData(stored);
-        }
-        for (const [sample, linkedTo] of links) {
-            sample.linkedTo = linkedTo;
-        }
-    }
-}
-
 function writeBank(
     bank: BasicSoundBank,
     format: WriteFormat,
     options: Partial<SoundBankWriteOptions>
 ) {
-    // SF2 requires an INAM chunk, but core leaves it out for an empty name, so an unnamed bank
-    // is written with a placeholder (CORE_WISHLIST.md)
-    const { soundBankInfo } = bank;
-    const name = soundBankInfo.name;
-    if (format !== "dls" && name.trim() === "") {
-        soundBankInfo.name = "Unnamed";
-    }
-    try {
-        switch (format) {
-            case "sf2":
-            case "sf3": {
-                // An SF2 write keeps compressed samples compressed, which preserves SF3 on "auto"
-                return bank.writeSF2(options);
-            }
-
-            case "sf4": {
-                return bank.writeSFE(options);
-            }
-
-            case "dls": {
-                return writeDLS(bank, options);
-            }
+    switch (format) {
+        case "sf2":
+        case "sf3": {
+            // An SF2 write keeps compressed samples compressed, which preserves SF3 on "auto"
+            return bank.writeSF2(options);
         }
-    } finally {
-        soundBankInfo.name = name;
+
+        case "sf4": {
+            return bank.writeSFE(options);
+        }
+
+        case "dls": {
+            return bank.writeDLS(options);
+        }
     }
 }
 
@@ -227,6 +176,15 @@ export class SynthHost {
      */
     private isRenderFailing = false;
     private readonly maxChunksQueued: number;
+    private settings: HostSettings;
+    /**
+     * The playing song's file, kept to hand it to another host.
+     */
+    private song: { file: ArrayBuffer; name: string } | undefined;
+    /**
+     * Requests still being answered, which a handoff waits for.
+     */
+    private readonly running = new Set<Promise<void>>();
     private lastStatusTime = 0;
     private lastChannel: KeyboardChannelValues | undefined;
     private readonly mirrors = new Map<number, BankMirror>();
@@ -283,7 +241,7 @@ export class SynthHost {
             options.isVerbose
         );
         this.processor = new SpessaSynthProcessor(options.sampleRate, {
-            initialTime: options.currentTime,
+            initialTime: options.handoff?.currentTime ?? options.currentTime,
             decodedSampleBudget: DECODED_SAMPLE_BUDGET
         });
         this.processor.onEventCall = (e) => {
@@ -309,7 +267,11 @@ export class SynthHost {
         );
         this.sequencer = new SpessaSynthSequencer(this.processor);
         this.sequencer.loopCount = Infinity;
-        this.applySettings(options.settings);
+        this.settings = options.handoff?.settings ?? options.settings;
+        this.applySettings(this.settings);
+        if (options.handoff) {
+            this.takeOver(options.handoff);
+        }
         this.port.onmessage = (e: MessageEvent<HostCommand>) => {
             this.handle(e.data);
         };
@@ -321,21 +283,12 @@ export class SynthHost {
     }
 
     /**
-     * Changes the synthesizer's bank list without a reset. Core's `addSoundBank` and
-     * `deleteSoundBank` reset every channel (CORE_WISHLIST), which would put a playing song's
-     * volumes, pans and pitch bend ranges back to their defaults.
+     * Bank changes never reset the synthesizer, which would put a playing song's volumes, pans
+     * and pitch bend ranges back to their defaults. The preview is applied again after them.
      */
-    private setSoundBanks(banks: SoundBankManagerListEntry[]) {
-        this.processor.soundBankManager.soundBankList = banks;
-        this.refreshPresets();
-    }
-
     private setMainBank(bank: BasicSoundBank) {
-        this.setSoundBanks(
-            this.processor.soundBankManager.soundBankList.map((entry) =>
-                entry.id === MAIN_BANK ? { ...entry, soundBank: bank } : entry
-            )
-        );
+        this.processor.soundBankManager.addSoundBank(bank, MAIN_BANK, 0, false);
+        this.applyPreviewTarget();
     }
 
     /**
@@ -346,8 +299,13 @@ export class SynthHost {
         this.sequencer.play();
         const embedded = this.pausedEmbeddedBank;
         this.pausedEmbeddedBank = undefined;
-        const banks = this.processor.soundBankManager.soundBankList;
-        this.setSoundBanks(embedded ? [embedded, ...banks] : banks);
+        const manager = this.processor.soundBankManager;
+        if (embedded) {
+            // Back in front, where the sequencer put it, as core's addSoundBank appends and the
+            // first bank wins a patch both have
+            manager.soundBankList = [embedded, ...manager.soundBankList];
+        }
+        this.refreshPresets();
     }
 
     /**
@@ -356,12 +314,15 @@ export class SynthHost {
      */
     private pauseSong() {
         this.sequencer.pause();
-        const banks = this.processor.soundBankManager.soundBankList;
-        const embedded = banks.find((entry) => entry.id !== MAIN_BANK);
+        const manager = this.processor.soundBankManager;
+        const embedded = manager.soundBankList.find(
+            (entry) => entry.id !== MAIN_BANK
+        );
         if (embedded) {
             this.pausedEmbeddedBank = embedded;
+            manager.deleteSoundBank(embedded.id, false);
         }
-        this.setSoundBanks(banks.filter((entry) => entry !== embedded));
+        this.applyPreviewTarget();
     }
 
     /**
@@ -437,12 +398,10 @@ export class SynthHost {
         const element = preview.target
             ? mirror.resolve(preview.target)
             : undefined;
-        // Set directly, as a program change would follow the channel's bank select. A bank
-        // without presets gets an empty one, since core cannot render a channel without a
-        // preset (CORE_WISHLIST).
+        // Set directly, as a program change would follow the channel's bank select
         this.processor.midiChannels[KEYBOARD_TARGET_CHANNEL].preset = element
             ? createPreviewPreset(element, mirror.bank)
-            : (mirror.bank.presets.at(0) ?? new BasicPreset(mirror.bank));
+            : mirror.bank.presets.at(0);
         this.processor.clearCache();
     }
 
@@ -493,6 +452,7 @@ export class SynthHost {
     }
 
     private applySettings(settings: HostSettings) {
+        this.settings = settings;
         const processor = this.processor;
         processor.setSystemParameter(
             "interpolationType",
@@ -618,9 +578,6 @@ export class SynthHost {
         }
         this.mirrors.delete(sessionId);
         this.snapshots.delete(sessionId);
-        // Core's decoded sample cache may still hold some of its samples (CORE_WISHLIST), which
-        // would keep the whole file alive through their data
-        mirror.releaseData();
         mirror.bank.destroySoundBank();
     }
 
@@ -712,8 +669,7 @@ export class SynthHost {
             hasCompressedSamples: false
         });
 
-        // Loaded before anything changes, as core leaves a sample uncompressed when encoding
-        // fails, which would write PCM data as SF3 and call it saved
+        // Loaded before anything changes, so a missing encoder gets its own message
         let compressionFunction: SampleEncodingFunction | undefined;
         if (options.convert === "compressed") {
             try {
@@ -757,19 +713,13 @@ export class SynthHost {
             if (options.convert === "pcm") {
                 await bank.setSampleFormat({ format: "pcm", progressFunction });
             } else if (compressionFunction) {
+                // Otherwise a sample that fails stays PCM and the bank saves as SF3 anyway
                 await bank.setSampleFormat({
                     format: "compressed",
                     compressionFunction,
-                    progressFunction
+                    progressFunction,
+                    rejectOnFailure: true
                 });
-                const uncompressed = bank.samples.filter(
-                    (s) => s.hasData && !s.isCompressed
-                ).length;
-                if (uncompressed > 0) {
-                    throw new Error(
-                        `${uncompressed} samples could not be compressed.`
-                    );
-                }
             }
             const isClosing = this.heldCommands
                 .get(sessionId)
@@ -786,12 +736,7 @@ export class SynthHost {
         } catch (error) {
             logError("Failed to write the sound bank.", error);
             restore(getChanged());
-            // Core's DLS writer overflows the stack for presets that flatten to many regions
-            const isTooLarge =
-                options.format === "dls" &&
-                (error instanceof RangeError ||
-                    (error instanceof Error && error.name === "InternalError"));
-            return failed(error, isTooLarge ? "dlsTooLarge" : undefined);
+            return failed(error);
         }
 
         const changed = getChanged();
@@ -843,19 +788,25 @@ export class SynthHost {
                 const sample = this.getSample(request.sessionId, request.id);
                 // A copy, as the decoded data may be what the synthesizer plays, or a view
                 // into the file
+                const wasDecoded = sample.isDecoded;
                 const audio = sample.getAudioData().slice();
                 // The editor reads every sample it shows, the Worker should not keep them all
-                // decoded. Voices that play it keep their data, and the next ones decode again.
-                sample.releaseDecoded();
+                // decoded. One the synthesizer decoded stays.
+                if (!wasDecoded) {
+                    sample.releaseDecoded();
+                }
                 return audio;
             }
 
             case "readStoredData": {
                 const sample = this.getSample(request.sessionId, request.id);
                 // Only the sample's own bytes: data loaded from a file is a view into all of it
+                const wasDecoded = sample.isDecoded;
                 const stored = copyStoredData(sample.getStoredData());
                 // A DLS sample decodes to give its stored data
-                sample.releaseDecoded();
+                if (!wasDecoded) {
+                    sample.releaseDecoded();
+                }
                 return stored;
             }
 
@@ -882,9 +833,11 @@ export class SynthHost {
                 // A request, so a broken file is reported without parsing it on the page too.
                 // The new song brings its own embedded bank, or none
                 this.pausedEmbeddedBank = undefined;
+                const file = request.file.slice(0);
                 this.sequencer.loadNewSongList([
                     BasicMIDI.fromArrayBuffer(request.file, request.name)
                 ]);
+                this.song = { file, name: request.name };
                 this.playSong();
                 this.refreshStatus();
                 return undefined;
@@ -919,6 +872,16 @@ export class SynthHost {
         }
     }
 
+    /**
+     * Answers a request, kept in `running` until it is answered, which a handoff waits for.
+     */
+    private async runRequest(request: HostRequest) {
+        const answered = this.handleRequest(request);
+        this.running.add(answered);
+        await answered;
+        this.running.delete(answered);
+    }
+
     private handleCommand(command: HostCommand) {
         switch (command.type) {
             case "readAudio":
@@ -927,7 +890,12 @@ export class SynthHost {
             case "readSampleLengths":
             case "write":
             case "loadSong": {
-                void this.handleRequest(command);
+                void this.runRequest(command);
+                return;
+            }
+
+            case "handOff": {
+                void this.handOff();
                 return;
             }
 
@@ -1126,6 +1094,92 @@ export class SynthHost {
         } catch (error) {
             this.reportError(command.type, error);
         }
+    }
+
+    /**
+     * Restores what the host on the other thread handed off. A mirror that cannot be rebuilt
+     * is reported and its session fails, like a bank that could not open.
+     */
+    private takeOver(handoff: HostHandoff) {
+        for (const [sessionId, state] of handoff.mirrors) {
+            try {
+                this.mirrors.set(sessionId, BankMirror.fromState(state));
+            } catch (error) {
+                this.failedSessions.add(sessionId);
+                this.reportError("handoff", error);
+            }
+        }
+        for (const sessionId of handoff.failedSessions) {
+            this.failedSessions.add(sessionId);
+        }
+        for (const [sessionId, snapshots] of handoff.snapshots) {
+            this.snapshots.set(sessionId, new Map(snapshots));
+        }
+        this.nextSnapshot = handoff.nextSnapshot;
+        this.clipboardData = new Map(handoff.clipboardData);
+        if (
+            handoff.attachedSession !== undefined &&
+            this.mirrors.has(handoff.attachedSession)
+        ) {
+            this.attach(handoff.attachedSession);
+        }
+        this.previewTarget = handoff.previewTarget;
+        const { song } = handoff;
+        if (song) {
+            this.sequencer.loadNewSongList([
+                BasicMIDI.fromArrayBuffer(song.file.slice(0), song.name)
+            ]);
+            this.song = { file: song.file, name: song.name };
+            this.playSong();
+            this.sequencer.currentTime = song.time;
+            if (song.isPaused) {
+                this.pauseSong();
+            }
+        }
+        this.applyPreviewTarget();
+    }
+
+    /**
+     * Waits for the running requests (a save can take a while), then sends everything to the
+     * connection and stops. The sample data is transferred, so nothing here may run afterward.
+     */
+    private async handOff() {
+        while (this.running.size > 0) {
+            await Promise.all(this.running);
+        }
+        const song = this.song;
+        const state: HostHandoff = {
+            mirrors: new Map(
+                Array.from(this.mirrors, ([id, mirror]) => [
+                    id,
+                    mirror.exportState()
+                ])
+            ),
+            failedSessions: [...this.failedSessions],
+            attachedSession: this.attachedSession,
+            previewTarget: this.previewTarget,
+            clipboardData: this.clipboardData,
+            snapshots: this.snapshots,
+            nextSnapshot: this.nextSnapshot,
+            settings: this.settings,
+            currentTime: this.processor.currentTime,
+            song: song
+                ? {
+                      file: song.file,
+                      name: song.name,
+                      time: this.sequencer.currentTime,
+                      isPaused: this.sequencer.paused
+                  }
+                : undefined
+        };
+        if (this.output) {
+            this.output.onmessage = null;
+            this.output.close();
+            this.output = undefined;
+        }
+        this.port.onmessage = null;
+        const event: HandoffEvent = { type: "handOff", state };
+        this.port.postMessage(event, getHandoffTransfer(state));
     }
 
     /**

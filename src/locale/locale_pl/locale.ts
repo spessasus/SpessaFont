@@ -83,8 +83,6 @@ export const localePolish = {
         writingFailed: "Błąd podczas zapisu banku dźwięków!",
         encoderUnavailable:
             "Nie udało się załadować kodera Vorbis dla SF3. Sprawdź połączenie i spróbuj ponownie.",
-        dlsTooLarge:
-            "Preset ma zbyt wiele stref, aby zapisać go jako DLS, gdzie każda para strefy presetu i strefy instrumentu staje się osobnym regionem. Użyj mniejszej liczby stref lub zapisz w innym formacie.",
         saveRunning: "Ten bank dźwięków jest już zapisywany.",
         unsupportedFile:
             "{{name}} nie jest bankiem dźwięków ani plikiem audio.",

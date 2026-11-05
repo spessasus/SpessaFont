@@ -55,7 +55,7 @@ export function AudioEngineProvider({ children }: AudioEngineProviderProps) {
             { id: "sampleRateRejected" }
         );
     });
-    const handleMainThreadHost = useEffectEvent(() => {
+    const handleWorkerFailed = useEffectEvent(() => {
         toast.error(t("settingsLocale.audioEngine.workerFailed"), {
             id: "workerFailed"
         });
@@ -72,8 +72,8 @@ export function AudioEngineProvider({ children }: AudioEngineProviderProps) {
     useEffect(() => {
         let isIgnored = false;
         void audioEngine.hostMode.then((mode) => {
-            if (!isIgnored && mode === "main thread") {
-                handleMainThreadHost();
+            if (!isIgnored && mode === "worker failed") {
+                handleWorkerFailed();
             }
         });
         return () => {

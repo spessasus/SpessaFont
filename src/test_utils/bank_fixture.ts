@@ -5,7 +5,7 @@ import {
     type ModulatorSource,
     SoundBankLoader
 } from "spessasynth_core";
-import { expect } from "vitest";
+import { expect, vi } from "vitest";
 import { BankSession } from "../core_backend/bank_session.ts";
 import { loadSoundBank } from "../core_backend/load_sound_bank.ts";
 import type { BankViews } from "../core_backend/entity_views.ts";
@@ -14,8 +14,13 @@ import type { HistoryActionGroup } from "../core_backend/history.ts";
 import { SynthClient } from "../core_backend/synth_client.ts";
 import { getHostSettings } from "../core_backend/audio_engine.ts";
 import { DEFAULT_SETTINGS } from "../settings/save_load/settings_typedef.ts";
-import { SynthHost } from "../synth_host/synth_host.ts";
-import type { HostPort } from "../synth_host/protocol.ts";
+import { SynthHost, type SynthHostOptions } from "../synth_host/synth_host.ts";
+import type {
+    HandoffEvent,
+    HostCommand,
+    HostHandoff,
+    HostPort
+} from "../synth_host/protocol.ts";
 
 /**
  * Suffix appended to every element of the second copy of the sample bank,
@@ -41,7 +46,16 @@ class LoopbackPort implements HostPort {
 export interface TestHost {
     host: SynthHost;
     client: SynthClient;
+    clientEnd: LoopbackPort;
 }
+
+const TEST_HOST_OPTIONS: SynthHostOptions = {
+    sampleRate: 44_100,
+    queuedBlocks: 32,
+    currentTime: 0,
+    settings: getHostSettings(DEFAULT_SETTINGS),
+    isVerbose: false
+};
 
 /**
  * A synthesizer host and its client, connected by loopback ports.
@@ -51,14 +65,42 @@ export function createTestHost(): TestHost {
     const hostEnd = new LoopbackPort();
     clientEnd.other = hostEnd;
     hostEnd.other = clientEnd;
-    const host = new SynthHost(hostEnd, {
-        sampleRate: 44_100,
-        queuedBlocks: 32,
-        currentTime: 0,
-        settings: getHostSettings(DEFAULT_SETTINGS),
-        isVerbose: false
+    const host = new SynthHost(hostEnd, TEST_HOST_OPTIONS);
+    return { host, client: new SynthClient(clientEnd), clientEnd };
+}
+
+/**
+ * Hands the host off to a new one, as a move to the other thread does. The old host's sample
+ * data is transferred, so a test that still reads it fails.
+ */
+export async function moveTestHost(testHost: TestHost) {
+    const { clientEnd } = testHost;
+    const clientHandler = clientEnd.onmessage;
+    let state: HostHandoff | undefined;
+    clientEnd.onmessage = (event: MessageEvent<HandoffEvent>) => {
+        if (event.data.type === "handOff") {
+            state = event.data.state;
+        } else {
+            clientHandler?.(event);
+        }
+    };
+    const command: HostCommand = { type: "handOff" };
+    clientEnd.postMessage(command, []);
+    // The host first waits for its running requests
+    const handoff = await vi.waitFor(() => {
+        if (!state) {
+            throw new Error("The host has not handed off yet.");
+        }
+        return state;
     });
-    return { host, client: new SynthClient(clientEnd) };
+    clientEnd.onmessage = clientHandler;
+    const hostEnd = new LoopbackPort();
+    hostEnd.other = clientEnd;
+    clientEnd.other = hostEnd;
+    testHost.host = new SynthHost(hostEnd, {
+        ...TEST_HOST_OPTIONS,
+        handoff
+    });
 }
 
 const testHosts = new WeakMap<BankSession, TestHost>();

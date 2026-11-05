@@ -9,7 +9,7 @@ import type { ViewDiff } from "../core_backend/view_diff.ts";
 import type { EngineStatus } from "../core_backend/engine_status.ts";
 import type { KeyboardChannelValues } from "../core_backend/keyboard_channel_store.ts";
 import type { WriteFailure, WriteFormat } from "../core_backend/persistence.ts";
-import type { MirrorIds, MirrorTarget } from "./bank_mirror.ts";
+import type { MirrorIds, MirrorState, MirrorTarget } from "./bank_mirror.ts";
 
 /*
  * The messages between the editor and the synthesizer host. They are plain, structured-cloneable
@@ -220,7 +220,80 @@ export type HostCommand =
           type: "previewTarget";
           sessionId: number;
           target: MirrorTarget | undefined;
-      };
+      }
+    /**
+     * Stops the host once its running requests are done and answers with a `HandoffEvent`.
+     * Sent by the connection when the host moves to the other thread.
+     */
+    | { type: "handOff" };
+
+/**
+ * Everything a host keeps, so another host (on the other thread) can take over. Sample data is
+ * transferred, so the host that handed it off stops.
+ */
+export interface HostHandoff {
+    readonly mirrors: ReadonlyMap<number, MirrorState>;
+    readonly failedSessions: readonly number[];
+    readonly attachedSession: number | undefined;
+    readonly previewTarget:
+        { sessionId: number; target: MirrorTarget | undefined } | undefined;
+    readonly clipboardData: ReadonlyMap<number, SampleStoredData>;
+    readonly snapshots: ReadonlyMap<
+        number,
+        ReadonlyMap<number, ReadonlyMap<number, SampleStoredData>>
+    >;
+    readonly nextSnapshot: number;
+    readonly settings: HostSettings;
+    readonly currentTime: number;
+    readonly song:
+        | {
+              readonly file: ArrayBuffer;
+              readonly name: string;
+              readonly time: number;
+              readonly isPaused: boolean;
+          }
+        | undefined;
+}
+
+/**
+ * The host's answer to "handOff", which only the connection sees, never the client.
+ */
+export interface HandoffEvent {
+    type: "handOff";
+    state: HostHandoff;
+}
+
+/**
+ * The buffers to transfer with a handoff, each once, as samples share their file's buffer.
+ */
+export function getHandoffTransfer(state: HostHandoff) {
+    const buffers = new Set<ArrayBuffer>();
+    const add = (stored: SampleStoredData) => {
+        const { buffer } = stored.data;
+        if (buffer instanceof ArrayBuffer) {
+            buffers.add(buffer);
+        }
+    };
+    for (const mirror of state.mirrors.values()) {
+        for (const stored of mirror.patch.sampleData.values()) {
+            add(stored);
+        }
+    }
+    for (const stored of state.clipboardData.values()) {
+        add(stored);
+    }
+    for (const session of state.snapshots.values()) {
+        for (const snapshot of session.values()) {
+            for (const stored of snapshot.values()) {
+                add(stored);
+            }
+        }
+    }
+    if (state.song) {
+        buffers.add(state.song.file);
+    }
+    return [...buffers];
+}
 
 /**
  * The synth events the editor uses. The others carry core objects, which cannot be sent.

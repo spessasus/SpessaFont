@@ -8,6 +8,17 @@ import { startHost } from "./start_host.ts";
 import { IS_FIREFOX } from "../utils/environment_detection.ts";
 
 /**
+ * The size of the open banks (zones, generators and modulators) above which Firefox moves the
+ * host to the main thread. Its Workers collect garbage in one blocking pass, never in slices,
+ * and that pass grows with the bank: a 2.9 million bank stopped the Worker for 200 ms every
+ * 5 seconds, longer than the queue, while 1.6 million played without dropouts and 2.35 million
+ * lost a few blocks now and then. The main thread collects in slices, but shares its time with
+ * the editor, so a large instrument's table there stops the audio while it renders. Chromium
+ * collects alongside the Worker and keeps the host there.
+ */
+const MAIN_THREAD_BANK_SIZE = 2_000_000;
+
+/**
  * Blocks of 128 frames the playback worklet keeps queued at 48 kHz, the smallest with a margin
  * that played without dropouts on a CPU in powersave mode (`AUDIO_WORKLET_MIGRATION_PLAN.md`,
  * phase 5). Chromium played 690 voices at 24 (about 64 ms). Firefox needs 64 (about 171 ms),
@@ -69,14 +80,21 @@ export class AudioEngine {
         if (isDev) {
             logInfo("Dev mode on");
         }
-        const { port, mode } = startHost({
+        const { connection, mode } = startHost({
             sampleRate: context.sampleRate,
             queuedBlocks: QUEUED_BLOCKS,
             currentTime: context.currentTime,
             settings: getHostSettings(initialSettings),
             isVerbose: isDev
         });
-        this.client = new SynthClient(port);
+        connection.onMoved = () => this.connectOutput();
+        this.client = new SynthClient(connection, (size) => {
+            if (IS_FIREFOX) {
+                connection.place(
+                    size > MAIN_THREAD_BANK_SIZE ? "main thread" : "worker"
+                );
+            }
+        });
         this.hostMode = mode;
         this.analyser = new AnalyserNode(this.context, { fftSize: 1024 });
         this.analyser.connect(this.context.destination);
@@ -101,7 +119,17 @@ export class AudioEngine {
             }
         );
         this.worklet.connect(this.inputNode);
-        // The host sends the rendered audio straight to the worklet
+        this.connectOutput();
+    }
+
+    /**
+     * The host sends the rendered audio straight to the worklet, through a channel of its own.
+     * A host that moved to the other thread needs a new one.
+     */
+    private connectOutput() {
+        if (!this.worklet) {
+            return;
+        }
         const output = new MessageChannel();
         this.worklet.port.postMessage(output.port1, [output.port1]);
         this.client.send({ type: "connectOutput", port: output.port2 }, [

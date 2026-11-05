@@ -32,6 +32,11 @@ export class SynthClient {
     private nextRequest = 1;
     private readonly pending = new Map<number, PendingRequest>();
     /**
+     * The zones, generators and modulators of each open bank, by session.
+     */
+    private readonly bankSizes = new Map<number, number>();
+    private readonly onBankSizeChange: ((total: number) => void) | undefined;
+    /**
      * Note on and off, stop all and reset events of the synthesizer, one by one.
      */
     public readonly synthEvents = new ListenerSet<ForwardedSynthEvent>();
@@ -48,8 +53,17 @@ export class SynthClient {
      */
     public readonly hostErrors = new ListenerSet<string>();
 
-    public constructor(port: HostPort) {
+    /**
+     * @param port the host's port
+     * @param onBankSizeChange called with the open banks' total size when a bank opens (before
+     * the host gets it) and when one closes
+     */
+    public constructor(
+        port: HostPort,
+        onBankSizeChange?: (total: number) => void
+    ) {
         this.port = port;
+        this.onBankSizeChange = onBankSizeChange;
         this.port.onmessage = (e: MessageEvent<HostEvent>) => {
             this.handle(e.data);
         };
@@ -130,6 +144,14 @@ export class SynthClient {
         });
     }
 
+    private reportBankSize() {
+        let total = 0;
+        for (const size of this.bankSizes.values()) {
+            total += size;
+        }
+        this.onBankSizeChange?.(total);
+    }
+
     public send(command: HostCommand, transfer: Transferable[] = []) {
         this.port.postMessage(command, transfer);
     }
@@ -146,8 +168,16 @@ export class SynthClient {
      * Gives the host the bank's file, which it loads with the sample data. The buffer moves to
      * the host, the editor's bank does not use it after loading. Resolves once the host has
      * loaded it, and rejects when it could not.
+     * @param size the bank's zones, generators and modulators
      */
-    public openBank(sessionId: number, file: ArrayBuffer, ids: MirrorIds) {
+    public openBank(
+        sessionId: number,
+        file: ArrayBuffer,
+        ids: MirrorIds,
+        size: number
+    ) {
+        this.bankSizes.set(sessionId, size);
+        this.reportBankSize();
         return this.request(
             {
                 type: "openBank",
@@ -172,6 +202,9 @@ export class SynthClient {
 
     public closeBank(sessionId: number) {
         this.send({ type: "closeBank", sessionId });
+        if (this.bankSizes.delete(sessionId)) {
+            this.reportBankSize();
+        }
     }
 
     public copyToClipboard(sessionId: number, ids: number[]) {

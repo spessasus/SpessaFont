@@ -1,6 +1,6 @@
 /*
  * The playback worklet: it plays the chunks the synthesizer host renders, from a queue. The
- * host's end of a channel arrives as the first message. The worklet reports how many chunks it
+ * host's end of a channel arrives as a message. The worklet reports how many chunks it
  * has played after every block, which is what makes the host render, and counts the blocks it
  * had nothing to play for (underruns).
  */
@@ -22,15 +22,20 @@ class PlaybackProcessor extends AudioWorkletProcessor {
     private host: MessagePort | undefined;
     private underruns = 0;
     private played = 0;
+    private hasPlayed = false;
 
     public constructor() {
         super();
+        // A new port comes when the host moves to the other thread. What is queued still plays,
+        // and the count starts again, as the new host counts what it sent from zero
         this.port.onmessage = (e: MessageEvent<MessagePort>) => {
             const host = e.data;
+            this.host?.close();
             host.onmessage = (message: MessageEvent<Float32Array[]>) => {
                 this.queue.push(...message.data);
             };
             this.host = host;
+            this.played = 0;
             // Asks for the first chunks
             this.report();
         };
@@ -49,9 +54,10 @@ class PlaybackProcessor extends AudioWorkletProcessor {
         const chunk = this.queue.shift();
         if (chunk) {
             this.played++;
+            this.hasPlayed = true;
             left.set(chunk.subarray(0, left.length));
             right.set(chunk.subarray(left.length, left.length * 2));
-        } else if (this.played > 0) {
+        } else if (this.hasPlayed) {
             // Before the first chunk the host is still starting, which is not a dropout
             this.underruns++;
         }

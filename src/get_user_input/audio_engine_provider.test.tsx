@@ -15,7 +15,7 @@ const REJECTED_RATE = 4000;
 
 vi.mock("../core_backend/audio_engine.ts", () => ({
     AudioEngine: class {
-        public hostMode = Promise.resolve("main thread");
+        public hostMode = Promise.resolve("worker failed");
         public client = { hostErrors: { subscribe: () => () => undefined } };
         public context: { sampleRate: number; resume: () => Promise<void> };
         public constructor(context: { sampleRate: number }) {
