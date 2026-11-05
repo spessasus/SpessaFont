@@ -1,7 +1,7 @@
 const RELEASES_API =
     "https://api.github.com/repos/spessasus/SpessaFont/releases/latest";
 export const DEFAULT_RELEASE_URL =
-    "https://github.com/spessasus/SpessaFont/releases/tag/v1.2.0";
+    "https://github.com/spessasus/SpessaFont/releases/latest";
 
 export interface DesktopDownloads {
     windowsInstaller: string;
@@ -18,11 +18,17 @@ interface ReleaseAsset {
 /**
  * Finds the desktop app downloads of the latest release.
  * Returns undefined when the release has no assets. Missing assets link to the release page.
+ * Throws when the API answers with an error (offline, or the rate limit).
  */
 export async function fetchDesktopDownloads(): Promise<
     DesktopDownloads | undefined
 > {
     const response = await fetch(RELEASES_API);
+    if (!response.ok) {
+        throw new Error(
+            `The release API answered ${response.status} ${response.statusText}`
+        );
+    }
     const release = (await response.json()) as { assets?: ReleaseAsset[] };
     const assets = release.assets;
     if (!assets) {

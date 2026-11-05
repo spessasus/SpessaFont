@@ -44,11 +44,23 @@
         }
     ],
 
+    "launch_handler": {
+        "client_mode": "focus-existing"
+    },
+
     "file_handlers": [
         {
             "action": "./",
             "accept": {
-                "application/octet-stream": [".sf2", ".sf3", ".dls", ".sfogg"]
+                "application/octet-stream": [
+                    ".sf2",
+                    ".sf3",
+                    ".sf4",
+                    ".sfogg",
+                    ".dls",
+                    ".dlp",
+                    ".rmi"
+                ]
             }
         }
     ]

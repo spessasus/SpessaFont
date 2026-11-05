@@ -22,7 +22,7 @@
         "release": "debug_scripts/npm_core.sh",
         "prepare": "husky",
         "app:dev": "concurrently \"vite\" \"electron .\"",
-        "app:dist": "vite build && node electron/builder.ts",
+        "app:dist": "vite build --mode electron && node electron/builder.ts",
         "test": "vitest run"
     },
     "desktopName": "com.spessasus.SpessaFont",
