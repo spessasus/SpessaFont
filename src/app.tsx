@@ -23,7 +23,7 @@ import { useUncaughtErrorToasts } from "./hooks/use_uncaught_error_toasts.ts";
 import { pickFile } from "./utils/pick_file.ts";
 import { getFileName } from "./utils/file_path.ts";
 import { useFileDrop } from "./hooks/use_file_drop.ts";
-import { createSampleImportActions } from "./menu_list/import_sample.ts";
+import { useSampleImport } from "./menu_list/use_sample_import.ts";
 
 const SOUND_BANK_EXTENSIONS = ACCEPTED_SOUNDBANK_FORMATS.split(",");
 
@@ -49,6 +49,7 @@ export function App() {
         goForward
     } = useBankTabs();
     const openBankFile = useBankFileOpener(openSession);
+    const importSamples = useSampleImport();
     const [isKeyboardShown, setIsKeyboardShown] = useState(false);
     const [areSettingsShown, setAreSettingsShown] = useState(false);
 
@@ -69,32 +70,28 @@ export function App() {
     });
 
     // Sound banks open in new tabs, anything else is tried as audio for the open bank
+    // All the audio files are one undo step
     const handleDroppedFiles = async (files: File[]) => {
+        const audioFiles = files.filter((file) => !isSoundBankFile(file));
         for (const file of files) {
             if (isSoundBankFile(file)) {
                 await openBankFile(file);
-                continue;
-            }
-            if (!activeSession) {
-                toast.error(t("loadingAndSaving.openBankForSamples"));
-                return;
-            }
-            try {
-                const actions = await createSampleImportActions(
-                    audioEngine.context,
-                    file
-                );
-                const focus = activeSession.history.do(actions);
-                if (focus) {
-                    setActiveView(focus);
-                }
-            } catch (error) {
-                logError(`Failed to import ${file.name}.`, error);
-                toast.error(
-                    t("loadingAndSaving.unsupportedFile", { name: file.name })
-                );
             }
         }
+        if (audioFiles.length === 0) {
+            return;
+        }
+        if (!activeSession) {
+            toast.error(t("loadingAndSaving.openBankForSamples"));
+            return;
+        }
+        const session = activeSession;
+        await importSamples(audioFiles, (actions) => {
+            const focus = session.history.do(actions);
+            if (focus) {
+                setActiveView(focus);
+            }
+        });
     };
     useFileDrop((files) => void handleDroppedFiles(files));
 

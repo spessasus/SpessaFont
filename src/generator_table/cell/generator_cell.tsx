@@ -3,7 +3,6 @@ import {
     BasicInstrument,
     type BasicPreset,
     GeneratorLimits,
-    type GeneratorType,
     GeneratorTypes
 } from "spessasynth_core";
 import { SetGeneratorAction } from "./set_generator_action.ts";
@@ -20,6 +19,7 @@ import {
     parseCellText,
     parseGeneratorText
 } from "./parse_generator_text.ts";
+import { getGeneratorRange } from "./generator_range.ts";
 
 const EXCLUSIVE_CLASS_COLORS = 10;
 
@@ -29,20 +29,6 @@ function getExclusiveClassColor(exclusiveClass: number) {
 }
 
 const identity = (v: number) => v;
-
-/**
- * The range of a generator in an instrument or a preset zone.
- * spessasynth_core 4.4.5 has no preset ranges for generators 61 to 88, so a preset offset there
- * may span the whole instrument range in either direction. Preset ranges in core remove this.
- */
-function getGeneratorRange(generator: GeneratorType, isInstrument: boolean) {
-    const { min, max, presetMin, presetMax } = GeneratorLimits[generator];
-    if (isInstrument) {
-        return { min, max };
-    }
-    const span = max - min;
-    return { min: presetMin ?? -span, max: presetMax ?? span };
-}
 
 interface NumberGeneratorCellProps {
     element: BasicPreset | BasicInstrument;

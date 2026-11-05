@@ -1,7 +1,8 @@
 import {
     type BasicInstrument,
     type BasicInstrumentZone,
-    GeneratorTypes
+    GeneratorTypes,
+    type GenericRange
 } from "spessasynth_core";
 import { SetRangeAction } from "../generator_table/cell/set_range_action.ts";
 
@@ -14,14 +15,14 @@ function getZoneRootKey(zone: BasicInstrumentZone) {
 }
 
 /**
- * Gives each zone the keys closest to its root key: the ranges split halfway between
- * neighbouring root keys, and the lowest and highest zones reach the ends of the keyboard.
+ * The keys closest to each zone's root key: the ranges split halfway between neighbouring
+ * root keys, and the lowest and highest zones reach the ends of the keyboard.
  * Zones with the same root key (velocity layers, stereo halves) share a range.
  */
-export function createSpreadActions(instrument: BasicInstrument) {
-    const keys = [
-        ...new Set(instrument.zones.map((z) => getZoneRootKey(z)))
-    ].toSorted((a, b) => a - b);
+export function getSpreadRanges(zones: readonly BasicInstrumentZone[]) {
+    const keys = [...new Set(zones.map((z) => getZoneRootKey(z)))].toSorted(
+        (a, b) => a - b
+    );
     const ranges = new Map(
         keys.map((key, i) => {
             const min = i === 0 ? 0 : Math.floor((keys[i - 1] + key) / 2) + 1;
@@ -32,8 +33,21 @@ export function createSpreadActions(instrument: BasicInstrument) {
             return [key, { min, max }];
         })
     );
+    return new Map(
+        zones.flatMap((zone): [BasicInstrumentZone, GenericRange][] => {
+            const range = ranges.get(getZoneRootKey(zone));
+            return range ? [[zone, range]] : [];
+        })
+    );
+}
+
+/**
+ * Gives each zone the keys closest to its root key, see `getSpreadRanges`.
+ */
+export function createSpreadActions(instrument: BasicInstrument) {
+    const ranges = getSpreadRanges(instrument.zones);
     return instrument.zones.flatMap((zone) => {
-        const range = ranges.get(getZoneRootKey(zone));
+        const range = ranges.get(zone);
         if (
             !range ||
             (zone.keyRange.min === range.min && zone.keyRange.max === range.max)

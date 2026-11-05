@@ -12,6 +12,7 @@ import { STEREO_REGEX } from "../utils/stereo_regex.ts";
 import { CreateInstrumentAction } from "./create_actions/create_instrument_action.ts";
 import { CreatePresetAction } from "./create_actions/create_preset_action.ts";
 import type { BankDocument } from "../core_backend/bank_document.ts";
+import { getSpreadRanges } from "../instrument_editor/spread_actions.ts";
 import { findFreePatch, getTakenPatches } from "../core_backend/free_patch.ts";
 
 /**
@@ -72,7 +73,8 @@ function hasRealLoop(sample: BasicSample) {
 
 /**
  * A new instrument with a zone for each sample, named after the first one. It loops when every
- * sample has a loop of its own.
+ * sample has a loop of its own, and samples with different root keys are spread across the
+ * keyboard, as playing them all on every key is rarely what a multisample wants.
  */
 export function createInstrumentFromSamples(samples: Iterable<BasicSample>) {
     const ordered = addAndReorderStereoSamples(samples);
@@ -86,6 +88,12 @@ export function createInstrumentFromSamples(samples: Iterable<BasicSample>) {
     }
     for (const sample of ordered) {
         setStereoPan(instrument.createZone(sample), sample);
+    }
+    const ranges = getSpreadRanges(instrument.zones);
+    if (new Set(ranges.values()).size > 1) {
+        for (const [zone, range] of ranges) {
+            zone.keyRange = range;
+        }
     }
     return new CreateInstrumentAction(instrument);
 }

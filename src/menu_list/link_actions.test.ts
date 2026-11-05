@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { GeneratorTypes } from "spessasynth_core";
-import { createTestSession } from "../test_utils/bank_fixture.ts";
+import { EmptySample, GeneratorTypes } from "spessasynth_core";
+import { createTestSession, publishSetUp } from "../test_utils/bank_fixture.ts";
 import {
     createInstrumentFromSamples,
     createPresetFromInstruments
@@ -38,6 +38,30 @@ describe("createInstrumentFromSamples", () => {
         session.history.do([createInstrumentFromSamples([sample])]);
 
         expect(getLoopMode(session)).toBe(1);
+    });
+});
+
+describe("createInstrumentFromSamples spreading", () => {
+    it("spreads samples with different root keys across the keyboard", () => {
+        const session = createTestSession();
+        const [low] = session.document.samples;
+        low.originalKey = 48;
+        const high = new EmptySample();
+        high.name = "High";
+        high.originalKey = 72;
+        session.document.addSample(high);
+        publishSetUp(session);
+
+        const action = createInstrumentFromSamples([low, high]);
+        session.history.do([action]);
+
+        const instrument = session.document.instruments.find(
+            (i) => i.zones.length === 2
+        );
+        expect(instrument?.zones.map((z) => z.keyRange)).toEqual([
+            { min: 0, max: 60 },
+            { min: 61, max: 127 }
+        ]);
     });
 });
 

@@ -4,14 +4,12 @@ import type { MouseEvent, PointerEvent } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { DropdownHeader } from "./dropdown_header/dropdown_header.tsx";
-import { createSampleImportActions } from "./import_sample.ts";
 import type { BankEditView } from "../core_backend/bank_view.ts";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useClipboard } from "../clipboard/clipboard_context.ts";
 import { SampleDisplay } from "./sample_display/sample_display.tsx";
-import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
-import { logError } from "../utils/core_utils.ts";
-import { pickFile } from "../utils/pick_file.ts";
+import { pickFiles } from "../utils/pick_file.ts";
+import { useSampleImport } from "./use_sample_import.ts";
 import { VirtualItemList } from "./virtual_item_list.tsx";
 import { useSectionOpen } from "./use_list_state.ts";
 
@@ -33,7 +31,7 @@ export function SampleList({
     onItemPointerDown
 }: SampleListProps) {
     const { t } = useTranslation();
-    const { audioEngine } = useAudioEngine();
+    const importSamples = useSampleImport();
     const { session, apply, playSample } = useBankEditor();
     const { clipboard, contents } = useClipboard();
     const [isOpen, setIsOpen] = useSectionOpen(
@@ -41,24 +39,11 @@ export function SampleList({
         view instanceof BasicSample
     );
 
-    const addSample = async () => {
-        const file = await pickFile("audio/*");
-        if (!file) {
-            return;
+    const addSamples = async () => {
+        const files = await pickFiles("audio/*");
+        if ((await importSamples(files, apply)) > 0) {
+            setIsOpen(true);
         }
-        let actions;
-        try {
-            actions = await createSampleImportActions(
-                audioEngine.context,
-                file
-            );
-        } catch (error) {
-            logError("Failed to decode the audio file.", error);
-            toast.error(t("sampleLocale.tools.invalidAudioFile"));
-            return;
-        }
-        apply(actions);
-        setIsOpen(true);
     };
 
     return (
@@ -67,7 +52,7 @@ export function SampleList({
                 text={t("presetList.samples")}
                 isOpen={isOpen}
                 onToggle={() => setIsOpen(!isOpen)}
-                onAdd={() => void addSample()}
+                onAdd={() => void addSamples()}
                 onCopy={
                     selected.size > 0
                         ? () => {

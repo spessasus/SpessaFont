@@ -60,7 +60,17 @@ export function ElementPicker({
                 onKeyDown={(e) => {
                     switch (e.key) {
                         case "Enter": {
-                            if (current) onAnswer(current.index);
+                            // A dialog asked next would take this Enter as its own answer
+                            e.preventDefault();
+                            // The matches may still be for older text, typing is deferred
+                            const typed = e.currentTarget.value.toLowerCase();
+                            const picked =
+                                typed === deferredQuery
+                                    ? current
+                                    : options.find((o) =>
+                                          o.label.toLowerCase().includes(typed)
+                                      );
+                            if (picked) onAnswer(picked.index);
                             break;
                         }
 

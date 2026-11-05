@@ -1,3 +1,4 @@
+import { BasicInstrument, type BasicPreset } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import type { BankEntity } from "../core_backend/bank_view.ts";
@@ -30,6 +31,20 @@ import {
 import { logError } from "../utils/core_utils.ts";
 import { createRootKeyActions } from "../sample_editor/root_key_actions.ts";
 import { createSpreadActions } from "../instrument_editor/spread_actions.ts";
+import {
+    type BatchScope,
+    createBatchGeneratorActions,
+    isBatchEditableRow
+} from "./batch_generator_actions.ts";
+import type { CellEdit } from "../generator_table/cell/parse_generator_text.ts";
+import { INSTRUMENT_ROWS } from "../instrument_editor/instrument_rows.ts";
+import { PRESET_ROWS } from "../preset_editor/preset_rows.ts";
+import { generatorLocaleMap } from "../utils/translated_options/generator_to_locale_map.ts";
+import { GENERATOR_UNITS } from "../generator_table/generator_unit.ts";
+import {
+    createDrumMapActions,
+    DRUM_MAP_START_KEY
+} from "../instrument_editor/drum_map_actions.ts";
 import { shortcutText } from "../utils/shortcut_text.ts";
 
 /**
@@ -84,6 +99,99 @@ export function useListMenu() {
                 )
             );
         }
+    };
+
+    const mapToKeys = async (instruments: ReadonlySet<BasicInstrument>) => {
+        const startKey = await askNumber({
+            title: t("contextMenu.drumMapTitle"),
+            label: t("contextMenu.drumMapLabel"),
+            initial: DRUM_MAP_START_KEY,
+            min: 0,
+            max: 127,
+            step: 1
+        });
+        if (startKey !== undefined) {
+            apply(
+                [...instruments].flatMap((i) =>
+                    createDrumMapActions(i, startKey)
+                )
+            );
+        }
+    };
+
+    // Many elements at once, like typing the edit into every cell of the row
+    const editGenerator = async (
+        elements: ReadonlySet<BasicPreset | BasicInstrument>
+    ) => {
+        const [first] = elements;
+        const rows = (
+            first instanceof BasicInstrument ? INSTRUMENT_ROWS : PRESET_ROWS
+        ).filter((row) => isBatchEditableRow(row));
+        const row = await pickElement({
+            title: t("contextMenu.batchGeneratorTitle"),
+            items: rows,
+            getLabel: (r) => {
+                const name = t(generatorLocaleMap[r.generator]);
+                return r.unit
+                    ? `${name} (${t(GENERATOR_UNITS[r.unit].suffix)})`
+                    : name;
+            }
+        });
+        if (!row) {
+            return;
+        }
+        const modes: {
+            label: string;
+            kind: CellEdit["kind"];
+            scope: BatchScope;
+        }[] = [
+            {
+                label: t("contextMenu.batchSetGlobal"),
+                kind: "set",
+                scope: "global"
+            },
+            {
+                label: t("contextMenu.batchSetZones"),
+                kind: "set",
+                scope: "zones"
+            },
+            { label: t("contextMenu.batchAdd"), kind: "add", scope: "zones" },
+            {
+                label: t("contextMenu.batchMultiply"),
+                kind: "multiply",
+                scope: "zones"
+            }
+        ];
+        const mode = await pickElement({
+            title: t(generatorLocaleMap[row.generator]),
+            items: modes,
+            getLabel: (m) => m.label
+        });
+        if (!mode) {
+            return;
+        }
+        const value = await askNumber({
+            title: mode.label,
+            label: t(generatorLocaleMap[row.generator]),
+            initial: mode.kind === "multiply" ? 1 : 0,
+            min: -1_000_000,
+            max: 1_000_000,
+            step: 0.01
+        });
+        if (value === undefined) {
+            return;
+        }
+        const actions = createBatchGeneratorActions(
+            elements,
+            row,
+            { kind: mode.kind, value },
+            mode.scope
+        );
+        if (actions.length === 0) {
+            toast(t("contextMenu.batchNothingChanged"));
+            return;
+        }
+        apply(actions);
     };
 
     const changeGain = async (selection: ReadonlySet<BankEntity>) => {
@@ -251,9 +359,27 @@ export function useListMenu() {
                                 createSpreadActions(i)
                             )
                         )
+                },
+                {
+                    label: t("contextMenu.drumMap"),
+                    onSelect: () => void mapToKeys(instruments)
+                },
+                {
+                    label: t("contextMenu.batchGenerator"),
+                    onSelect: () => void editGenerator(instruments)
                 }
             ];
         }
-        return selectionOf(selection, isPreset).size > 0 ? editEntries : [];
+        const presets = selectionOf(selection, isPreset);
+        return presets.size > 0
+            ? [
+                  ...editEntries,
+                  "separator",
+                  {
+                      label: t("contextMenu.batchGenerator"),
+                      onSelect: () => void editGenerator(presets)
+                  }
+              ]
+            : [];
     };
 }

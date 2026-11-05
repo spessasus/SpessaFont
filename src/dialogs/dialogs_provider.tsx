@@ -13,7 +13,7 @@ interface DialogsProviderProps {
 }
 
 export function DialogsProvider({ children }: DialogsProviderProps) {
-    type DialogRequest =
+    type DialogQuestion =
         | {
               type: "pick";
               title: string;
@@ -25,14 +25,17 @@ export function DialogsProvider({ children }: DialogsProviderProps) {
               options: AskNumberOptions;
               resolve: (value: number | undefined) => void;
           };
+    // Each question gets a fresh dialog, one asked right after another must not keep its search
+    type DialogRequest = DialogQuestion & { id: number };
 
     const [request, setRequest] = useState<DialogRequest | null>(null);
     const api: DialogsAPI = useMemo(() => {
+        let nextId = 0;
         // A new question cancels the open one
-        const replaceRequest = (next: DialogRequest) =>
+        const replaceRequest = (next: DialogQuestion) =>
             setRequest((previous) => {
                 previous?.resolve(undefined);
-                return next;
+                return { ...next, id: nextId++ };
             });
         return {
             pickElement: <T,>({
@@ -72,13 +75,18 @@ export function DialogsProvider({ children }: DialogsProviderProps) {
             {children}
             {request?.type === "pick" ? (
                 <ElementPicker
+                    key={request.id}
                     title={request.title}
                     options={request.options}
                     onAnswer={answer}
                 />
             ) : null}
             {request?.type === "number" ? (
-                <NumberDialog options={request.options} onAnswer={answer} />
+                <NumberDialog
+                    key={request.id}
+                    options={request.options}
+                    onAnswer={answer}
+                />
             ) : null}
         </DialogsContext>
     );
