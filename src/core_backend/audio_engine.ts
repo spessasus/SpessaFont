@@ -5,13 +5,15 @@ import type { HostSettings } from "../synth_host/protocol.ts";
 import playbackWorkletURL from "../synth_host/playback_worklet.ts?worker&url";
 import { SynthClient } from "./synth_client.ts";
 import { startHost } from "./start_host.ts";
+import { IS_FIREFOX } from "../utils/environment_detection.ts";
 
 /**
- * Blocks of 128 frames the playback worklet keeps queued at 48 kHz (about 85 ms), as before the
- * Worker. A smaller queue should work now, but it has to be measured per browser on an idle
- * machine first (`AUDIO_WORKLET_MIGRATION_PLAN.md`, phase 5).
+ * Blocks of 128 frames the playback worklet keeps queued at 48 kHz, the smallest with a margin
+ * that played without dropouts on a CPU in powersave mode (`AUDIO_WORKLET_MIGRATION_PLAN.md`,
+ * phase 5). Chromium played 690 voices at 24 (about 64 ms). Firefox needs 64 (about 171 ms),
+ * it dropped blocks at 48 with 180 voices.
  */
-const QUEUED_BLOCKS = 32;
+const QUEUED_BLOCKS = IS_FIREFOX ? 64 : 24;
 
 /**
  * A chain of audio nodes, from the first to the last.
