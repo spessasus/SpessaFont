@@ -3,7 +3,9 @@
 Fully online SoundFont/DLS Editor, written in TypeScript and React.
 No download needed!
 
-**v1.0.0 is here!**
+**v2.0.0 is here!**
+
+_Complete rewrite with many new features!_
 
 ## [Try it out!](https://spessasus.github.io/SpessaFont)
 
