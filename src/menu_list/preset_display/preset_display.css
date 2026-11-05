@@ -49,15 +49,13 @@
 }
 
 .preset_item_left .triangle {
-    color: var(--preset-item-color);
     flex-grow: 1;
     align-items: center;
     gap: 0.3rem;
 }
 
-/* The patch is part of the expand button, but keeps the text color */
-.preset_item_left .triangle .preset_item_patch {
-    color: var(--font-color);
+.preset_item_left .triangle_glyph {
+    color: var(--preset-item-color);
 }
 
 .preset_item_left svg {

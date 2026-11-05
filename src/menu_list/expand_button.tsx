@@ -33,7 +33,9 @@ export function ExpandButton({
         >
             {children ? (
                 <>
-                    <span aria-hidden={true}>{triangle}</span>
+                    <span className={"triangle_glyph"} aria-hidden={true}>
+                        {triangle}
+                    </span>
                     {children}
                 </>
             ) : (
