@@ -16,6 +16,7 @@ import { isElementDiffEmpty } from "../core_backend/view_diff.ts";
 import { logError } from "../utils/core_utils.ts";
 import {
     BankMirror,
+    copyStoredData,
     type MirrorTarget,
     type SampleCopySource
 } from "./bank_mirror.ts";
@@ -120,6 +121,11 @@ export class SynthHost {
     /**
      * The sample data before and after each conversion, for its undo and redo.
      */
+    /**
+     * The data of the copied samples, by their ids, for pasting.
+     */
+    private clipboardData = new Map<number, SampleStoredData>();
+
     private readonly snapshots = new Map<
         number,
         Map<number, SampleStoredData>
@@ -358,10 +364,14 @@ export class SynthHost {
         }
         const sampleCopies = new Map<number, SampleCopySource>();
         for (const [id, ref] of patch.sampleCopies) {
-            sampleCopies.set(id, {
-                mirror: this.getMirror(ref.sessionId),
-                id: ref.id
-            });
+            const data =
+                ref.from === "clipboard"
+                    ? this.clipboardData.get(ref.id)
+                    : this.getSample(ref.sessionId, ref.id).getStoredData();
+            if (!data) {
+                throw new Error(`The clipboard has no sample ${ref.id}.`);
+            }
+            sampleCopies.set(id, { data });
         }
         mirror.apply({
             views: patch.views,
@@ -680,6 +690,21 @@ export class SynthHost {
 
             case "closeBank": {
                 this.closeBank(command.sessionId);
+                return;
+            }
+
+            case "copyToClipboard": {
+                const mirror = this.getMirror(command.sessionId);
+                // Copied, as a conversion changes the mirror's data in place
+                this.clipboardData = new Map(
+                    command.ids.map((id) => {
+                        const sample = mirror.getSample(id);
+                        if (!sample) {
+                            throw new Error(`No sample ${id} to copy.`);
+                        }
+                        return [id, copyStoredData(sample.getStoredData())];
+                    })
+                );
                 return;
             }
 

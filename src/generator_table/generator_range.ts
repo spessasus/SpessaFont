@@ -16,3 +16,21 @@ export function getGeneratorRange(
     const span = max - min;
     return { min: presetMin ?? -span, max: presetMax ?? span };
 }
+
+/**
+ * The value an unset generator plays with. An unset preset generator adds nothing to the
+ * instrument, so it is 0 there.
+ */
+export function getGeneratorDefault(
+    generator: GeneratorType,
+    isInstrument: boolean
+) {
+    return isInstrument ? GeneratorLimits[generator].def : 0;
+}
+
+/**
+ * Keeps a value inside the range.
+ */
+export function clamp(value: number, min: number, max: number) {
+    return Math.max(min, Math.min(max, value));
+}

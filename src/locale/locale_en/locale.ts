@@ -12,6 +12,7 @@ import { InstrumentLocale } from "./instrument.ts";
 import { PresetLocale } from "./preset.ts";
 import { ClipboardLocale } from "./clipboard.ts";
 import { ContextMenuLocale } from "./context_menu.ts";
+import { ToolsLocale } from "./tools.ts";
 
 /**
  *
@@ -105,5 +106,6 @@ export const localeEnglish = {
     presetLocale: PresetLocale,
     soundBankLocale: SoundBankLocale,
     clipboardLocale: ClipboardLocale,
-    contextMenu: ContextMenuLocale
+    contextMenu: ContextMenuLocale,
+    toolsLocale: ToolsLocale
 };

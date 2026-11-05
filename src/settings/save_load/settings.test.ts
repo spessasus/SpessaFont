@@ -68,6 +68,12 @@ describe("parseSettings", () => {
         }
     });
 
+    it("reads the on and off settings and drops values that are not booleans", () => {
+        expect(
+            parseSettings({ removeImportSilence: true, trimImportAfterLoop: 1 })
+        ).toEqual({ ...DEFAULT_SETTINGS, removeImportSilence: true });
+    });
+
     it("drops unknown keys", () => {
         expect(parseSettings({ unknown: true, volume: 2 })).toEqual({
             ...DEFAULT_SETTINGS,

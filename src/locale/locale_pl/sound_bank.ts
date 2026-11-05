@@ -2,15 +2,20 @@ export const SoundBankLocale = {
     deleteZone: "Usuń strefę {{name}}",
     cellLabel: "{{generator}}, {{zone}}",
     globalZone: "Strefa globalna",
+    pickZoneSample: "Dodać strefę z którą próbką?",
+    pickZoneInstrument: "Dodać strefę z którym instrumentem?",
     createNewZone: "Utwórz nową strefę",
     thisIsAStereoSamplePair: "To jest para próbek stereo.",
 
-    modifiedSamples: "Zmodyfikowano {{count}} próbek.",
+    modifiedSamples_one: "Zmodyfikowano {{count}} próbkę.",
+    modifiedSamples_few: "Zmodyfikowano {{count}} próbki.",
+    modifiedSamples_many: "Zmodyfikowano {{count}} próbek.",
+    modifiedSamples_other: "Zmodyfikowano {{count}} próbki.",
     noSamplesWereChanged: "Nie zmieniono żadnych próbek.",
     nothingToRemove:
         "Wszystkie instrumenty i próbki są używane, nic nie usunięto.",
     removedElements:
-        "Usunięto {{instruments}} instrumentów i {{samples}} próbek.",
+        "Usunięto nieużywane elementy. Instrumenty: {{instruments}}, próbki: {{samples}}",
 
     loopingModes: {
         noLoop: "Brak pętli",

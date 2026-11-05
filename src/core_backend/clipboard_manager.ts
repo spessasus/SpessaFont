@@ -2,6 +2,7 @@ import {
     BasicInstrument,
     BasicPreset,
     BasicSample,
+    BasicSoundBank,
     type MIDIPatch,
     MIDIPatchTools,
     Modulator,
@@ -13,6 +14,9 @@ import { CreatePresetAction } from "../menu_list/create_actions/create_preset_ac
 import type { BankDocument } from "./bank_document.ts";
 import type { BankSession } from "./bank_session.ts";
 import { findFreePatch, getTakenPatches } from "./free_patch.ts";
+import type { SampleCopyRef } from "../synth_host/protocol.ts";
+import { getObjectId } from "../utils/object_id.ts";
+import type { CellCopy } from "../generator_table/cell/cell_clipboard.ts";
 
 /**
  * How many items of each kind the clipboard holds. A new object is created on every copy.
@@ -26,13 +30,14 @@ export interface ClipboardContents {
 
 /**
  * Starts one paste or duplicate. The copied elements are always new, under a free name
- * (`Name-1`), while the instruments and samples they use are reused when the document has
- * one with the same name. Nothing is added to the bank, the create actions do that.
+ * (`Name-1`). Nothing is added to the bank, the create actions do that.
+ * In the same bank, the instruments and samples they use are shared by name. A paste into
+ * another bank copies them, as an element there with the same name is a different one.
  */
-function createCloner(document: BankDocument) {
+function createCloner(document: BankDocument, isSameBank: boolean) {
     return new SoundBankCloner(document.bank, {
         reuseByName: false,
-        reuseChildrenByName: true,
+        reuseChildrenByName: isSameBank,
         addToBank: false
     });
 }
@@ -56,10 +61,12 @@ function getCreateActions(cloner: SoundBankCloner) {
  */
 function getSampleCopies(
     cloner: SoundBankCloner,
+    // Each side is checked, so a pair of different kinds is skipped
     pairs: Iterable<
-        | [BasicPreset, BasicPreset]
-        | [BasicInstrument, BasicInstrument]
-        | [BasicSample, BasicSample]
+        readonly [
+            BasicPreset | BasicInstrument | BasicSample,
+            BasicPreset | BasicInstrument | BasicSample
+        ]
     >
 ) {
     const createdSamples = new Set(cloner.created.samples);
@@ -121,18 +128,33 @@ function planPatches(document: BankDocument, presets: Iterable<BasicPreset>) {
 }
 
 /**
+ * The elements one paste, duplicate or drop copies.
+ */
+interface ClonedElements {
+    presets?: Iterable<BasicPreset>;
+    instruments?: Iterable<BasicInstrument>;
+    samples?: Iterable<BasicSample>;
+}
+
+/**
  * Copied elements and modulators, shared by all tabs.
  * Observable with `subscribe` and `getSnapshot` for `useSyncExternalStore`.
  */
 export class ClipboardManager {
     private modulatorClipboard: Modulator[] = [];
+    private cellClipboard: CellCopy | undefined;
     private sampleClipboard = new Set<BasicSample>();
     private instrumentClipboard = new Set<BasicInstrument>();
     private presetClipboard = new Set<BasicPreset>();
     /**
-     * The session the copied elements belong to, whose mirror has their sample data.
+     * The session the elements were copied from. A paste into it shares instruments and samples
+     * by name, like a duplicate.
      */
     private source: BankSession | undefined;
+    /**
+     * The id of the sample each copied sample was copied from, which the host kept the data of.
+     */
+    private sampleOrigins = new Map<BasicSample, number>();
     private readonly listeners = new Set<() => void>();
     private contents: ClipboardContents = {
         presets: 0,
@@ -160,6 +182,60 @@ export class ClipboardManager {
         for (const listener of this.listeners) {
             listener();
         }
+    }
+
+    /**
+     * Copies the elements into a bank of the clipboard's own, and has the host keep their sample
+     * data, so edits made after copying (or an undo that removes them) do not change the paste.
+     */
+    private keepCopies<T extends BasicPreset | BasicInstrument | BasicSample>(
+        elements: Iterable<T>,
+        source: BankSession,
+        clone: (cloner: SoundBankCloner, element: T) => T
+    ) {
+        const cloner = new SoundBankCloner(new BasicSoundBank(), {
+            reuseByName: false,
+            reuseChildrenByName: false,
+            addToBank: true
+        });
+        const pairs = Array.from(elements, (element): [T, T] => [
+            element,
+            clone(cloner, element)
+        ]);
+        const copies = getSampleCopies(cloner, pairs);
+        this.sampleOrigins = new Map(
+            Array.from(copies, ([copy, original]) => [
+                copy,
+                getObjectId(original)
+            ])
+        );
+        source.copyToClipboard(copies.values());
+        this.source = source;
+        return new Set(pairs.map(([, copy]) => copy));
+    }
+
+    /**
+     * Where a pasted sample's data comes from: what the host kept of the sample it copies.
+     */
+    private fromClipboard(original: BasicSample): SampleCopyRef {
+        const id = this.sampleOrigins.get(original);
+        if (id === undefined) {
+            throw new Error(`The clipboard has no data for ${original.name}.`);
+        }
+        return { from: "clipboard", id };
+    }
+
+    /**
+     * Pastes the clipboard's own copies, with the sample data the host kept of them. A paste
+     * into the bank they came from shares its instruments and samples by name, like a duplicate.
+     */
+    private paste(target: BankSession, elements: ClonedElements) {
+        return this.cloneElements(
+            target,
+            elements,
+            target === this.source ? target : null,
+            (original) => this.fromClipboard(original)
+        );
     }
 
     get presetCount() {
@@ -190,29 +266,46 @@ export class ClipboardManager {
         return this.presetClipboard.size > 0;
     }
 
-    // Copies keep their own sets, so later selection changes do not alter the clipboard
     copyPresets(p: ReadonlySet<BasicPreset>, source: BankSession) {
-        this.source = source;
-        this.presetClipboard = new Set(p);
+        this.presetClipboard = this.keepCopies(p, source, (cloner, preset) => {
+            const copy = cloner.clonePreset(preset);
+            // The clipboard's bank may have renamed it, a pasted preset keeps its name
+            copy.name = preset.name;
+            return copy;
+        });
         this.sampleClipboard = new Set();
         this.instrumentClipboard = new Set();
         this.notify();
     }
 
     copyInstruments(i: ReadonlySet<BasicInstrument>, source: BankSession) {
-        this.source = source;
-        this.instrumentClipboard = new Set(i);
+        this.instrumentClipboard = this.keepCopies(i, source, (cloner, e) =>
+            cloner.cloneInstrument(e)
+        );
         this.sampleClipboard = new Set();
         this.presetClipboard = new Set();
         this.notify();
     }
 
     copySamples(s: ReadonlySet<BasicSample>, source: BankSession) {
-        this.source = source;
-        this.sampleClipboard = new Set(s);
+        this.sampleClipboard = this.keepCopies(s, source, (cloner, e) =>
+            cloner.cloneSample(e)
+        );
         this.instrumentClipboard = new Set();
         this.presetClipboard = new Set();
         this.notify();
+    }
+
+    /**
+     * Generator cell values are plain data, so they paste into any bank. Nothing shows how many
+     * there are, so this does not notify.
+     */
+    public copyCells(cells: CellCopy) {
+        this.cellClipboard = cells;
+    }
+
+    public get cells() {
+        return this.cellClipboard;
     }
 
     copyModulators(mods: readonly Modulator[]) {
@@ -225,7 +318,7 @@ export class ClipboardManager {
      * Pasted presets move to the next free MIDI patch.
      */
     pastePresets(target: BankSession) {
-        return this.clonePresets(target, this.presetClipboard, this.source);
+        return this.paste(target, { presets: this.presetClipboard });
     }
 
     /**
@@ -242,38 +335,52 @@ export class ClipboardManager {
      * Builds the actions that paste the copied instruments with their samples.
      */
     pasteInstruments(target: BankSession) {
-        return this.cloneInstruments(
-            target,
-            this.instrumentClipboard,
-            this.source
-        );
+        return this.paste(target, { instruments: this.instrumentClipboard });
     }
 
     /**
      * Builds the actions that paste the copied samples.
      */
     pasteSamples(target: BankSession) {
-        return this.cloneSamples(target, this.sampleClipboard, this.source);
+        return this.paste(target, { samples: this.sampleClipboard });
     }
 
     /**
-     * Builds the actions that copy presets into the document (the same bank or another one),
-     * with their instruments and samples. Instruments and samples with a name the document
-     * already has are reused, so a duplicate in the same bank shares them.
-     * The copies keep their names and move to the next free MIDI patch.
-     * @param source the session the presets belong to, the target itself for a duplicate
+     * Builds the actions that copy elements into the document (the same bank or another one),
+     * with the instruments and samples they use. In the same bank those are shared (a duplicate
+     * plays the same instruments), in another bank they are copied too. One cloner copies the
+     * whole selection, so an instrument selected with a preset that uses it is copied once.
+     * Copied presets keep their names and move to the next free MIDI patch.
+     * @param source the session the elements belong to, the target itself for a duplicate
      */
-    clonePresets(
+    cloneElements(
         target: BankSession,
-        presets: Iterable<BasicPreset>,
-        source = target
+        elements: ClonedElements,
+        // null for copies with no session of their own (the clipboard's)
+        source: BankSession | null = target,
+        getDataSource = (original: BasicSample): SampleCopyRef => {
+            if (!source) {
+                throw new Error(
+                    "Copied samples need the session they come from."
+                );
+            }
+            return {
+                from: "session",
+                sessionId: source.id,
+                id: getObjectId(original)
+            };
+        }
     ) {
         const { document } = target;
-        const cloner = createCloner(document);
+        const cloner = createCloner(document, source === target);
         // Every patch is found before anything is cloned, as cloned zones already link to
         // the instruments they reuse
-        const targets = planPatches(document, presets);
-        const pairs = new Array<[BasicPreset, BasicPreset]>();
+        const targets = planPatches(document, elements.presets ?? []);
+        const pairs = new Array<
+            | [BasicPreset, BasicPreset]
+            | [BasicInstrument, BasicInstrument]
+            | [BasicSample, BasicSample]
+        >();
         for (const { preset: oldPreset, patch } of targets) {
             const newPreset = cloner.clonePreset(oldPreset);
             pairs.push([oldPreset, newPreset]);
@@ -283,42 +390,51 @@ export class ClipboardManager {
             newPreset.bankMSB = patch.bankMSB;
             newPreset.bankLSB = patch.bankLSB;
         }
-        target.copySampleData(getSampleCopies(cloner, pairs), source);
+        const { instruments = [], samples = [] } = elements;
+        for (const instrument of instruments) {
+            pairs.push([instrument, cloner.cloneInstrument(instrument)]);
+        }
+        for (const sample of samples) {
+            pairs.push([sample, cloner.cloneSample(sample)]);
+        }
+        const dataSources = new Map<BasicSample, SampleCopyRef>();
+        for (const [copy, original] of getSampleCopies(cloner, pairs)) {
+            dataSources.set(copy, getDataSource(original));
+        }
+        target.copySampleData(dataSources);
         return getCreateActions(cloner);
     }
 
     /**
-     * Builds the actions that copy instruments into the document with their samples.
-     * Samples with a name the document already has are reused.
+     * `cloneElements` for presets only.
+     */
+    clonePresets(
+        target: BankSession,
+        presets: Iterable<BasicPreset>,
+        source = target
+    ) {
+        return this.cloneElements(target, { presets }, source);
+    }
+
+    /**
+     * `cloneElements` for instruments only.
      */
     cloneInstruments(
         target: BankSession,
         instruments: Iterable<BasicInstrument>,
         source = target
     ) {
-        const cloner = createCloner(target.document);
-        const pairs = new Array<[BasicInstrument, BasicInstrument]>();
-        for (const instrument of instruments) {
-            pairs.push([instrument, cloner.cloneInstrument(instrument)]);
-        }
-        target.copySampleData(getSampleCopies(cloner, pairs), source);
-        return getCreateActions(cloner);
+        return this.cloneElements(target, { instruments }, source);
     }
 
     /**
-     * Builds the actions that copy samples into the document, with their stereo partners.
+     * `cloneElements` for samples only, with their stereo partners.
      */
     cloneSamples(
         target: BankSession,
         samples: Iterable<BasicSample>,
         source = target
     ) {
-        const cloner = createCloner(target.document);
-        const pairs = new Array<[BasicSample, BasicSample]>();
-        for (const sample of samples) {
-            pairs.push([sample, cloner.cloneSample(sample)]);
-        }
-        target.copySampleData(getSampleCopies(cloner, pairs), source);
-        return getCreateActions(cloner);
+        return this.cloneElements(target, { samples }, source);
     }
 }

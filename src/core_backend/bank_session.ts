@@ -19,6 +19,7 @@ import {
     writeFile,
     type WriteFormat
 } from "./persistence.ts";
+import type { SampleCopyRef } from "../synth_host/protocol.ts";
 import { ConvertSamplesAction } from "./convert_samples_action.ts";
 
 let nextSessionId = 1;
@@ -73,19 +74,22 @@ export class BankSession implements SampleDataSource {
 
     /**
      * Gives pasted or duplicated samples (not added yet) the data of their source samples.
-     * @param copies each new sample and the sample it copies
-     * @param source the session the source samples belong to
+     * @param copies each new sample and where its data comes from
      */
-    public copySampleData(
-        copies: ReadonlyMap<BasicSample, BasicSample>,
-        source: BankSession
-    ) {
-        for (const [copy, original] of copies) {
-            this.mirrorSync.copyDataOnAdd(copy, {
-                sessionId: source.id,
-                id: getObjectId(original)
-            });
+    public copySampleData(copies: ReadonlyMap<BasicSample, SampleCopyRef>) {
+        for (const [copy, ref] of copies) {
+            this.mirrorSync.copyDataOnAdd(copy, ref);
         }
+    }
+
+    /**
+     * Has the host keep the samples' data as it is now, for pasting later.
+     */
+    public copyToClipboard(samples: Iterable<BasicSample>) {
+        this.client.copyToClipboard(
+            this.id,
+            Array.from(samples, (s) => getObjectId(s))
+        );
     }
 
     /**
@@ -108,6 +112,17 @@ export class BankSession implements SampleDataSource {
 
     public readStoredData(sample: BasicSample) {
         return this.client.readStoredData(this.id, getObjectId(sample));
+    }
+
+    /**
+     * The sample's length in frames. The view knows it after audio the host kept came back,
+     * which the editor's sample cannot tell.
+     */
+    public getSampleLength(sample: BasicSample) {
+        return (
+            this.store.getSnapshot().views.samples.get(getObjectId(sample))
+                ?.length ?? sample.sampleLength
+        );
     }
 
     /**

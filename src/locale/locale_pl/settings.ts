@@ -31,6 +31,12 @@ export const SettingsLocale = {
         velocitySenseOffset: "Przesunięcie czułości na dynamikę"
     },
 
+    sampleImport: {
+        title: "Import próbek",
+        removeSilence: "Usuń ciszę na początku importowanych próbek",
+        trimAfterLoop: "Przytnij importowane próbki po ich pętli"
+    },
+
     midi: {
         title: "Ustawienia MIDI",
         waitingForAccess: "Oczekiwanie na dostęp MIDI...",

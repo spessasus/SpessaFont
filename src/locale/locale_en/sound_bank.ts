@@ -2,15 +2,18 @@ export const SoundBankLocale = {
     deleteZone: "Delete zone {{name}}",
     cellLabel: "{{generator}}, {{zone}}",
     globalZone: "Global Zone",
+    pickZoneSample: "Add a zone with which sample?",
+    pickZoneInstrument: "Add a zone with which instrument?",
     createNewZone: "Create New Zone",
     thisIsAStereoSamplePair: "This is a stereo sample pair.",
 
-    modifiedSamples: "Modified {{count}} samples.",
+    modifiedSamples_one: "Modified {{count}} sample.",
+    modifiedSamples_other: "Modified {{count}} samples.",
     noSamplesWereChanged: "No samples were changed.",
     nothingToRemove:
         "Every instrument and sample is in use, nothing was removed.",
     removedElements:
-        "Removed {{instruments}} instruments and {{samples}} samples.",
+        "Removed unused elements. Instruments: {{instruments}}, samples: {{samples}}",
 
     loopingModes: {
         noLoop: "No Loop",

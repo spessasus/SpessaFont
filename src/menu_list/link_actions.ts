@@ -8,7 +8,7 @@ import {
 } from "spessasynth_core";
 import { CreateZoneAction } from "../generator_table/create_zone_action.ts";
 import { addAndReorderStereoSamples } from "../utils/add_stereo_samples.ts";
-import { STEREO_REGEX } from "../utils/stereo_regex.ts";
+import { getStereoBaseName } from "../utils/stereo_regex.ts";
 import { CreateInstrumentAction } from "./create_actions/create_instrument_action.ts";
 import { CreatePresetAction } from "./create_actions/create_preset_action.ts";
 import type { BankDocument } from "../core_backend/bank_document.ts";
@@ -81,7 +81,7 @@ export function createInstrumentFromSamples(samples: Iterable<BasicSample>) {
     const instrument = new BasicInstrument();
     const [firstSample] = ordered;
     instrument.name = firstSample.linkedSample
-        ? firstSample.name.replace(STEREO_REGEX, "")
+        ? getStereoBaseName(firstSample.name, firstSample.linkedSample.name)
         : firstSample.name;
     if (ordered.every((s) => hasRealLoop(s))) {
         instrument.globalZone.setGenerator(GeneratorTypes.sampleModes, 1);

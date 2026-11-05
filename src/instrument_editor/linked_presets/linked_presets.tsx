@@ -11,6 +11,7 @@ import { useBankSnapshot } from "../../hooks/use_bank_snapshot.ts";
 import { useEntityLookup } from "../../hooks/use_entity_lookup.ts";
 import { createSpreadActions } from "../spread_actions.ts";
 import { createPresetFromInstruments } from "../../menu_list/link_actions.ts";
+import { useElementTools } from "../../generator_table/tools/use_element_tools.tsx";
 
 const MAX_NAME_LENGTH = 40;
 
@@ -27,6 +28,7 @@ export function LinkedPresets({ instrument }: LinkedPresetsProps) {
     const view = useInstrumentView(session.store, getObjectId(instrument));
     const presets = useBankSnapshot(session.store, (s) => s.views.presets);
     const lookup = useEntityLookup(session.store);
+    const tools = useElementTools();
     // The pane closes when its instrument is removed, this only covers the render before
     if (!view) {
         return null;
@@ -69,6 +71,26 @@ export function LinkedPresets({ instrument }: LinkedPresetsProps) {
                 >
                     {t("contextMenu.spreadSamples")}
                 </button>
+            ) : null}
+            {view.zones.length > 0 ? (
+                <>
+                    <button
+                        type={"button"}
+                        className={"plain_button"}
+                        onClick={() => void tools.openKeyCurve([instrument])}
+                    >
+                        {t("toolsLocale.keyCurve.menu")}
+                    </button>
+                    <button
+                        type={"button"}
+                        className={"plain_button"}
+                        onClick={() =>
+                            void tools.openNaturalRelease([instrument])
+                        }
+                    >
+                        {t("toolsLocale.naturalRelease.menu")}
+                    </button>
+                </>
             ) : null}
 
             {linked.size === 0 ? (

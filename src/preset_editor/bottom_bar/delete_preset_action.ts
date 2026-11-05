@@ -8,6 +8,8 @@ export class DeletePresetAction implements HistoryAction {
     private readonly preset: BasicPreset;
     private index = -1;
 
+    public readonly label = "deletePreset";
+
     public constructor(preset: BasicPreset) {
         this.preset = preset;
     }

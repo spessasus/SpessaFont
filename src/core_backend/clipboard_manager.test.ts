@@ -7,6 +7,8 @@ import {
     publishSetUp
 } from "../test_utils/bank_fixture.ts";
 import { ClipboardManager } from "./clipboard_manager.ts";
+import { EditSampleAction } from "../sample_editor/edit_sample_action.ts";
+import { DeleteSampleAction } from "../sample_editor/linked_instruments/delete_sample_action.ts";
 
 describe("ClipboardManager", () => {
     it("pastes presets with their instruments and samples into another bank", () => {
@@ -17,6 +19,7 @@ describe("ClipboardManager", () => {
         const clipboard = new ClipboardManager();
         clipboard.copyPresets(new Set([source.document.presets[0]]), source);
 
+        const instrumentsBefore = [...target.document.instruments];
         const { after } = expectRoundTrip(target, () =>
             clipboard.pastePresets(target)
         );
@@ -28,8 +31,32 @@ describe("ClipboardManager", () => {
         );
         if (!pasted) throw new Error("The preset was not pasted.");
         expect(pasted.zones[0].instrument.linkedTo).toContain(pasted);
-        // Instruments and samples with the same name are reused instead of duplicated
-        expect(target.document.instruments).toHaveLength(2);
+        // The target's instrument with the same name is a different one, so it is not reused
+        expect(target.document.instruments).toHaveLength(
+            instrumentsBefore.length + 1
+        );
+        expect(instrumentsBefore).not.toContain(pasted.zones[0].instrument);
+    });
+
+    it("copies an instrument once when it is selected with a preset that uses it", () => {
+        const host = createTestHost();
+        const source = createTestSession(host);
+        const target = createTestSession(host);
+        const [preset] = source.document.presets;
+        const before = target.document.instruments.length;
+
+        expectRoundTrip(target, () =>
+            new ClipboardManager().cloneElements(
+                target,
+                {
+                    presets: [preset],
+                    instruments: [preset.zones[0].instrument]
+                },
+                source
+            )
+        );
+
+        expect(target.document.instruments).toHaveLength(before + 1);
     });
 
     it("counts the copied presets a paste moves to another patch", () => {
@@ -43,7 +70,30 @@ describe("ClipboardManager", () => {
 
         // A free patch is kept
         preset.program = 10;
+        clipboard.copyPresets(new Set([preset]), source);
         expect(clipboard.countMovedPresets(target.document)).toBe(0);
+    });
+
+    it("pastes what was copied, not what the source became after", () => {
+        const host = createTestHost();
+        const source = createTestSession(host);
+        const target = createTestSession(host);
+        const clipboard = new ClipboardManager();
+        const [sample] = source.document.samples;
+        const name = sample.name;
+        clipboard.copySamples(new Set([sample]), source);
+
+        // Renamed, then removed from the source bank after copying
+        source.history.do([
+            new EditSampleAction(sample, "name", sample.name, "Renamed")
+        ]);
+        source.history.do([new DeleteSampleAction(sample)]);
+
+        const { after } = expectRoundTrip(target, () =>
+            clipboard.pasteSamples(target)
+        );
+        expect(after.samples.map((s) => s.name)).toContain(name);
+        expect(after.samples.map((s) => s.name)).not.toContain("Renamed");
     });
 
     it("pastes samples with unique names", () => {

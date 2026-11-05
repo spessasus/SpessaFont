@@ -30,6 +30,20 @@ describe("EditPresetAction", () => {
         ]);
         expect(session.document.presets).toEqual([second, first]);
     });
+
+    it("puts presets that share a patch back in their order on undo", () => {
+        // Both presets of the test bank use 000:000:000
+        const session = createTestSession();
+        const before = [...session.document.presets];
+        const [, second] = before;
+
+        session.history.do([
+            new EditPresetAction(second, "program", second.program, 5)
+        ]);
+        session.history.undo();
+
+        expect(session.document.presets).toEqual(before);
+    });
 });
 
 describe("DeletePresetAction", () => {

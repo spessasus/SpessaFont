@@ -22,6 +22,8 @@ export class SetGeneratorAction implements HistoryAction {
      * @param previousValue the current value, null if unset
      * @param newValue the new value, null to unset
      */
+    public readonly label = "editGenerator";
+
     public constructor(
         element: BasicPreset | BasicInstrument,
         zone: BasicZone,

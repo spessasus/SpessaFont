@@ -138,6 +138,22 @@ export class BankDocument {
         this.presets.sort(presetSorter);
     }
 
+    /**
+     * Puts the same presets back in a previous order. Presets that share a patch sort in no
+     * fixed order, so undo restores the exact order instead of sorting again.
+     */
+    public setPresetOrder(presets: readonly BasicPreset[]) {
+        const current = new Set(this.presets);
+        if (
+            presets.length !== current.size ||
+            presets.some((p) => !current.has(p))
+        ) {
+            throw new Error("The preset order does not match the bank.");
+        }
+        this.presets.splice(0, this.presets.length, ...presets);
+        this.bank.flush();
+    }
+
     public sortZones(element: BasicPreset | BasicInstrument) {
         if (element instanceof BasicInstrument) {
             element.zones = reorderInstrumentZones(element.zones);

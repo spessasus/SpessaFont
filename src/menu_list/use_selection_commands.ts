@@ -103,17 +103,13 @@ export function useSelectionCommands() {
 
     // Leaves the clipboard alone. Instruments and samples are shared with the original.
     const duplicate = (selection: ReadonlySet<BankEntity>) => {
-        apply([
-            ...clipboard.clonePresets(
-                session,
-                selectionOf(selection, isPreset)
-            ),
-            ...clipboard.cloneInstruments(
-                session,
-                selectionOf(selection, isInstrument)
-            ),
-            ...clipboard.cloneSamples(session, selectionOf(selection, isSample))
-        ]);
+        apply(
+            clipboard.cloneElements(session, {
+                presets: selectionOf(selection, isPreset),
+                instruments: selectionOf(selection, isInstrument),
+                samples: selectionOf(selection, isSample)
+            })
+        );
     };
 
     return {

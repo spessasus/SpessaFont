@@ -17,6 +17,8 @@ export class DeleteSampleAction implements HistoryAction {
     private index = -1;
     private links = captureSampleLinks([]);
 
+    public readonly label = "deleteSample";
+
     public constructor(sample: BasicSample) {
         this.sample = sample;
     }

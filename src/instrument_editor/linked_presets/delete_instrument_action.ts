@@ -8,6 +8,8 @@ export class DeleteInstrumentAction implements HistoryAction {
     private readonly instrument: BasicInstrument;
     private index = -1;
 
+    public readonly label = "deleteInstrument";
+
     public constructor(instrument: BasicInstrument) {
         this.instrument = instrument;
     }

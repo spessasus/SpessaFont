@@ -1,20 +1,27 @@
-import type { BasicInstrument, BasicPreset } from "spessasynth_core";
-import { GeneratorCellInput } from "./generator_cell_input.tsx";
-import { SetGeneratorAction } from "./set_generator_action.ts";
+import type * as React from "react";
+import { BasicInstrument, type BasicPreset } from "spessasynth_core";
+import {
+    type CellInputCommands,
+    GeneratorCellInput
+} from "./generator_cell_input.tsx";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 import { getViewGenerator, type ZoneColumn } from "../zone_columns.ts";
-import { getColumnZones } from "./column_zones.ts";
+import type { GeneratorRowType } from "../generator_row_type.ts";
 import {
     COARSE_OFFSET_SIZE,
     getCoarseOffsetGenerator,
-    type OffsetGenerator
+    isOffsetGenerator
 } from "./offset_generator.ts";
+import { clamp } from "../generator_range.ts";
+import { createSetCellActions } from "./cell_values.ts";
 
 interface OffsetGeneratorCellProps {
     element: BasicPreset | BasicInstrument;
     column: ZoneColumn;
-    generator: OffsetGenerator;
+    row: GeneratorRowType;
     label: string;
+    commands: CellInputCommands;
+    onContextMenu: (e: React.MouseEvent) => void;
 }
 
 /**
@@ -23,44 +30,36 @@ interface OffsetGeneratorCellProps {
 export function OffsetGeneratorCell({
     element,
     column,
-    generator,
-    label
+    row,
+    label,
+    commands,
+    onContextMenu
 }: OffsetGeneratorCellProps) {
     const { apply } = useBankEditor();
     const { zone, colSpan, sample } = column;
-    const coarseGenerator = getCoarseOffsetGenerator(generator);
+    const { generator } = row;
+    if (!isOffsetGenerator(generator)) {
+        throw new Error(`Generator ${generator} is not a sample offset.`);
+    }
     const fine = getViewGenerator(zone, generator);
-    const coarse = getViewGenerator(zone, coarseGenerator);
+    const coarse = getViewGenerator(zone, getCoarseOffsetGenerator(generator));
     const textValue =
         fine === null && coarse === null
             ? ""
             : ((fine ?? 0) + (coarse ?? 0) * COARSE_OFFSET_SIZE).toString();
 
-    const setOffset = (offset: number | null) => {
-        const newFine = offset === null ? null : offset % COARSE_OFFSET_SIZE;
-        const newCoarse =
-            offset === null
-                ? null
-                : Math.trunc(offset / COARSE_OFFSET_SIZE) || null;
+    const setOffset = (offset: number | null) =>
         apply(
-            getColumnZones(element, column).flatMap((z) => [
-                new SetGeneratorAction(
+            createSetCellActions(
+                {
                     element,
-                    z,
-                    generator,
-                    z.getGenerator(generator, null),
-                    newFine
-                ),
-                new SetGeneratorAction(
-                    element,
-                    z,
-                    coarseGenerator,
-                    z.getGenerator(coarseGenerator, null),
-                    newCoarse
-                )
-            ])
+                    row,
+                    isInstrument: element instanceof BasicInstrument
+                },
+                column,
+                offset
+            )
         );
-    };
 
     const commitText = (typedText: string) => {
         if (typedText === textValue) {
@@ -76,13 +75,17 @@ export function OffsetGeneratorCell({
         }
         // An offset cannot move past the whole sample
         const limit = sample ? sample.length - 1 : Infinity;
-        const offset = Math.min(limit, Math.max(-limit, typed));
+        const offset = clamp(typed, -limit, limit);
         setOffset(offset);
         return offset.toString();
     };
 
     return (
-        <td className={"generator_cell"} colSpan={colSpan}>
+        <td
+            className={"generator_cell"}
+            colSpan={colSpan}
+            onContextMenu={onContextMenu}
+        >
             <GeneratorCellInput
                 aria-label={label}
                 value={textValue}
@@ -90,6 +93,7 @@ export function OffsetGeneratorCell({
                 onBlur={commitText}
                 maxLength={10}
                 type={"text"}
+                commands={commands}
             />
         </td>
     );

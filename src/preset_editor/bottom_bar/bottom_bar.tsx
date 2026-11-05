@@ -18,6 +18,7 @@ import {
     findFreePatch,
     getTakenPatches
 } from "../../core_backend/free_patch.ts";
+import { useElementTools } from "../../generator_table/tools/use_element_tools.tsx";
 
 const MAX_NAME_LENGTH = 40;
 
@@ -33,6 +34,7 @@ export function BottomPresetBar({ preset }: BottomPresetBarProps) {
     const { session, apply } = useBankEditor();
     const presets = useBankSnapshot(session.store, (s) => s.presets);
     const view = usePresetView(session.store, getObjectId(preset));
+    const tools = useElementTools();
     // The pane closes when its preset is removed, this only covers the render before
     if (!view) {
         return null;
@@ -92,8 +94,11 @@ export function BottomPresetBar({ preset }: BottomPresetBarProps) {
     };
 
     const setNumber = (key: "program" | "bankMSB" | "bankLSB") => {
-        return (value: number) =>
-            changePatch({ [key]: value }) ? preset[key] : value;
+        // A fraction never matches a program change and saves rounded down, so it is rounded here
+        return (typed: number) => {
+            const value = Math.round(typed);
+            return changePatch({ [key]: value }) ? preset[key] : value;
+        };
     };
 
     return (
@@ -160,6 +165,15 @@ export function BottomPresetBar({ preset }: BottomPresetBarProps) {
                     }
                 />
             </div>
+            {view.zones.length > 0 ? (
+                <button
+                    type={"button"}
+                    className={"plain_button"}
+                    onClick={() => void tools.openKeyCurve([preset])}
+                >
+                    {t("toolsLocale.keyCurve.menu")}
+                </button>
+            ) : null}
             <button
                 type={"button"}
                 className={"plain_button"}

@@ -1,97 +1,105 @@
-import type {
+import type * as React from "react";
+import {
     BasicInstrument,
-    BasicPreset,
-    GenericRange
+    type BasicPreset,
+    GeneratorTypes
 } from "spessasynth_core";
-import type { RangeView } from "../../core_backend/entity_views.ts";
-import { GeneratorTypes } from "spessasynth_core";
-import { GeneratorCellInput } from "./generator_cell_input.tsx";
-import { SetRangeAction } from "./set_range_action.ts";
-import type { RangeGenerator } from "./range_generator.ts";
+import {
+    type CellInputCommands,
+    GeneratorCellInput
+} from "./generator_cell_input.tsx";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 import type { ZoneColumn } from "../zone_columns.ts";
-import { getColumnZones } from "./column_zones.ts";
-
-function formatRange(range: RangeView | GenericRange | undefined) {
-    if (!range || range.min === -1) {
-        return "";
-    }
-    const { min, max } = range;
-    return min === max ? min.toString() : `${min}-${max}`;
-}
-
-const clampMIDI = (v: number) => Math.min(127, Math.max(0, v));
-
-/**
- * Reads "60" or "60-72". Returns undefined for text that is not a range.
- */
-function parseRange(text: string): GenericRange | undefined {
-    if (text === "") {
-        // An unset range
-        return { min: -1, max: 127 };
-    }
-    const [minText, maxText = minText] = text.split("-", 2);
-    const min = Number.parseInt(minText);
-    const max = Number.parseInt(maxText);
-    if (Number.isNaN(min) || Number.isNaN(max)) {
-        return undefined;
-    }
-    const clampedMin = clampMIDI(min);
-    return { min: clampedMin, max: Math.max(clampedMin, clampMIDI(max)) };
-}
+import type { GeneratorRowType } from "../generator_row_type.ts";
+import {
+    applyTextToRange,
+    createSetCellActions,
+    formatRange
+} from "./cell_values.ts";
 
 interface RangeGeneratorCellProps {
     element: BasicPreset | BasicInstrument;
     column: ZoneColumn;
-    generator: RangeGenerator;
+    row: GeneratorRowType;
     label: string;
+    commands: CellInputCommands;
+    onContextMenu: (e: React.MouseEvent) => void;
+    isSelected: boolean;
+    /**
+     * The selected cells of this row, which take one edit together.
+     */
+    selectedColumns: readonly ZoneColumn[];
+    onSelect: (event: React.MouseEvent) => void;
 }
 
 export function RangeGeneratorCell({
     element,
     column,
-    generator,
-    label
+    row,
+    label,
+    commands,
+    onContextMenu,
+    isSelected,
+    selectedColumns,
+    onSelect
 }: RangeGeneratorCellProps) {
     const { apply } = useBankEditor();
-    const isKeyRange = generator === GeneratorTypes.keyRange;
-    const { zone, colSpan } = column;
-    const rangeText = formatRange(
-        isKeyRange ? zone.keyRange : zone.velocityRange
-    );
+    const isKeyRange = row.generator === GeneratorTypes.keyRange;
+    const { colSpan } = column;
+    const getRange = (target: ZoneColumn) =>
+        isKeyRange ? target.zone.keyRange : target.zone.velocityRange;
+    const rangeText = formatRange(getRange(column));
+    const isMultiSelected = isSelected && selectedColumns.length > 1;
+    const targets = isMultiSelected ? selectedColumns : [column];
 
     const commitText = (typedText: string) => {
-        if (typedText === rangeText) {
+        if (typedText === rangeText && targets.length === 1) {
             return rangeText;
         }
-        const newRange = parseRange(typedText);
-        if (!newRange) {
-            return rangeText;
-        }
-        apply(
-            getColumnZones(element, column).map(
-                (z) =>
-                    new SetRangeAction(
-                        element,
-                        z,
-                        generator,
-                        isKeyRange ? z.keyRange : z.velRange,
-                        newRange
-                    )
+        const context = {
+            element,
+            row,
+            isInstrument: element instanceof BasicInstrument
+        };
+        // Each cell moves from its own range with "+12"
+        const ranges = targets.map((target) =>
+            applyTextToRange(
+                typedText,
+                getRange(target) ?? { min: -1, max: 127 }
             )
         );
-        return formatRange(newRange);
+        apply(
+            targets.flatMap((target, i) => {
+                const range = ranges[i];
+                return range
+                    ? createSetCellActions(
+                          context,
+                          target,
+                          range.min === -1 ? null : range
+                      )
+                    : [];
+            })
+        );
+        const shown = ranges[targets.indexOf(column)];
+        return shown ? formatRange(shown) : rangeText;
     };
 
     return (
-        <td className={"generator_cell"} colSpan={colSpan}>
+        <td
+            className={`generator_cell ${isSelected ? "selected" : ""}`}
+            colSpan={colSpan}
+            onContextMenu={onContextMenu}
+        >
             <GeneratorCellInput
                 aria-label={label}
-                regex={/[^0-9-]/g}
+                regex={/[^0-9+-]/g}
                 type={"text"}
                 maxLength={10}
                 value={rangeText}
+                onClick={onSelect}
                 onBlur={commitText}
+                commands={commands}
+                isMultiSelected={isMultiSelected}
             />
         </td>
     );

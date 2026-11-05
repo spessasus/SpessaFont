@@ -95,3 +95,41 @@
     width: 8rem;
     text-align: end;
 }
+
+.tool_dialog {
+    width: min(36rem, calc(100vw - 2rem));
+}
+
+.tool_dialog form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.tool_dialog_field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.tool_dialog_field input[type="number"],
+.tool_dialog_field select {
+    width: 10rem;
+    text-align: end;
+}
+
+.tool_dialog_field input:disabled {
+    opacity: 0.5;
+}
+
+.tool_dialog_check {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.tool_dialog_note {
+    color: var(--muted-font-color);
+    font-size: 0.9rem;
+}

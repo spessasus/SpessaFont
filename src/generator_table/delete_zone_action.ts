@@ -13,6 +13,8 @@ export class DeleteZoneAction implements HistoryAction {
     private readonly zone: BasicPresetZone | BasicInstrumentZone;
     private index = -1;
 
+    public readonly label = "deleteZone";
+
     public constructor(
         element: BasicPreset | BasicInstrument,
         zone: BasicPresetZone | BasicInstrumentZone

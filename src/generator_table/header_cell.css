@@ -53,3 +53,17 @@
 .header_cell .delete_zone:hover {
     filter: none;
 }
+
+.header_cell .header_cell_title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.header_cell .add_zone {
+    font-size: 1.2em;
+    line-height: 1;
+    padding: 0 0.3rem;
+    cursor: pointer;
+}

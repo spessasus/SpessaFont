@@ -9,6 +9,7 @@ import {
 import type { BankStore } from "../core_backend/bank_store.ts";
 import { useHistoryState } from "../hooks/use_history_state.ts";
 import { shortcutText } from "../utils/shortcut_text.ts";
+import { HISTORY_LABEL_KEYS } from "./history_label_keys.ts";
 
 interface EditMenuProps {
     store: BankStore;
@@ -16,6 +17,7 @@ interface EditMenuProps {
     onRedo: () => void;
     onRemoveUnusedElements: () => void;
     onAutoLinkSamples: () => void;
+    onMergeDuplicateSamples: () => void;
 }
 
 export function EditMenu({
@@ -23,15 +25,22 @@ export function EditMenu({
     onUndo,
     onRedo,
     onRemoveUnusedElements,
-    onAutoLinkSamples
+    onAutoLinkSamples,
+    onMergeDuplicateSamples
 }: EditMenuProps) {
     const { t } = useTranslation();
-    const { canUndo, canRedo } = useHistoryState(store);
+    const { canUndo, canRedo, undoLabel, redoLabel } = useHistoryState(store);
     return (
         <MenuBarDropdown main={t("menuBarLocale.edit.edit")}>
             <MenuBarIcon
                 onClick={onUndo}
-                text={t("menuBarLocale.edit.undo")}
+                text={
+                    undoLabel
+                        ? t("menuBarLocale.edit.undoWhat", {
+                              what: t(HISTORY_LABEL_KEYS[undoLabel])
+                          })
+                        : t("menuBarLocale.edit.undo")
+                }
                 shortcut={shortcutText("Z")}
                 isDisabled={!canUndo}
             >
@@ -39,7 +48,13 @@ export function EditMenu({
             </MenuBarIcon>
             <MenuBarIcon
                 onClick={onRedo}
-                text={t("menuBarLocale.edit.redo")}
+                text={
+                    redoLabel
+                        ? t("menuBarLocale.edit.redoWhat", {
+                              what: t(HISTORY_LABEL_KEYS[redoLabel])
+                          })
+                        : t("menuBarLocale.edit.redo")
+                }
                 shortcut={shortcutText("Y")}
                 isDisabled={!canRedo}
             >
@@ -50,6 +65,12 @@ export function EditMenu({
                 text={t("menuBarLocale.edit.removeUnusedElements")}
             >
                 <DeleteIcon />
+            </MenuBarIcon>
+            <MenuBarIcon
+                onClick={onMergeDuplicateSamples}
+                text={t("menuBarLocale.edit.mergeDuplicateSamples")}
+            >
+                <LinkIcon />
             </MenuBarIcon>
             <MenuBarIcon
                 onClick={onAutoLinkSamples}

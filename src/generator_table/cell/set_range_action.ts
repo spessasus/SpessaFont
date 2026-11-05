@@ -20,6 +20,8 @@ export class SetRangeAction implements HistoryAction {
     private readonly newValue: GenericRange;
     private previousOrder = new Array<BasicPresetZone | BasicInstrumentZone>();
 
+    public readonly label = "editRange";
+
     public constructor(
         element: BasicPreset | BasicInstrument,
         zone: BasicZone,

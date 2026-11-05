@@ -106,4 +106,20 @@ describe("getZoneColumns", () => {
             [right.id, left.id, 1]
         ]);
     });
+
+    it("does not link a partner that is not adjacent when the pairs are split", () => {
+        const { instrument, samples } = createStereoInstrument();
+        const [leftZone, rightZone, monoZone] = instrument.zones;
+        instrument.zones = [leftZone, monoZone, rightZone];
+        const view = buildInstrumentView(instrument);
+        const [left, mono, right] = view.zones;
+
+        const columns = getZoneColumns(view.zones, getChildren(samples), true);
+
+        expect(describeColumns(columns)).toEqual([
+            [left.id, undefined, 1],
+            [mono.id, undefined, 1],
+            [right.id, undefined, 1]
+        ]);
+    });
 });

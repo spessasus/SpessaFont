@@ -43,8 +43,14 @@ export function MenuBar({
     isEditorCovered
 }: MenuBarProps) {
     const { t } = useTranslation();
-    const { undo, redo, save, removeUnusedElements, autoLinkSamples } =
-        useBankCommands(session, setView);
+    const {
+        undo,
+        redo,
+        save,
+        removeUnusedElements,
+        autoLinkSamples,
+        mergeDuplicateSamples
+    } = useBankCommands(session, setView);
 
     useEventListener(document, "keydown", (e) => {
         if (
@@ -96,6 +102,7 @@ export function MenuBar({
                     onRedo={redo}
                     onRemoveUnusedElements={removeUnusedElements}
                     onAutoLinkSamples={autoLinkSamples}
+                    onMergeDuplicateSamples={mergeDuplicateSamples}
                 />
             ) : null}
             {showMidiPlayer && <MIDIPlayer />}

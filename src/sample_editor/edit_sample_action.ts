@@ -1,5 +1,5 @@
 import type { BasicSample } from "spessasynth_core";
-import type { HistoryAction } from "../core_backend/history.ts";
+import type { HistoryAction, HistoryLabel } from "../core_backend/history.ts";
 import type { BankDocument } from "../core_backend/bank_document.ts";
 import type { ChangeSet } from "../core_backend/change_set.ts";
 
@@ -18,6 +18,7 @@ export class EditSampleAction<
     private readonly propertyName: K;
     private readonly before: BasicSample[K];
     private readonly after: BasicSample[K];
+    public readonly label: HistoryLabel;
 
     public constructor(
         sample: BasicSample,
@@ -29,6 +30,7 @@ export class EditSampleAction<
         this.propertyName = propertyName;
         this.before = before;
         this.after = after;
+        this.label = propertyName === "name" ? "renameSample" : "editSample";
     }
 
     private apply(changes: ChangeSet, value: BasicSample[K]) {

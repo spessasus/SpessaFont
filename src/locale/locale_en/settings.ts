@@ -31,6 +31,12 @@ export const SettingsLocale = {
         velocitySenseOffset: "Velocity Sense Offset"
     },
 
+    sampleImport: {
+        title: "Sample Import",
+        removeSilence: "Remove silence at the start of imported samples",
+        trimAfterLoop: "Trim imported samples after their loop"
+    },
+
     midi: {
         title: "MIDI Settings",
         waitingForAccess: "Waiting for MIDI Access...",

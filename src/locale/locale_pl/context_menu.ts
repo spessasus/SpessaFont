@@ -28,6 +28,7 @@ export const ContextMenuLocale = {
     open: "Otwórz",
     replaceSample: "Zastąp próbkę…",
     replaceInstrument: "Zastąp instrument…",
+    duplicateZone: "Duplikuj strefę",
     deleteZone: "Usuń strefę",
 
     pickInstrument: "Do którego instrumentu dodać zaznaczone próbki?",

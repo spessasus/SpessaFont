@@ -27,6 +27,7 @@ export const ContextMenuLocale = {
     open: "Open",
     replaceSample: "Replace Sample…",
     replaceInstrument: "Replace Instrument…",
+    duplicateZone: "Duplicate Zone",
     deleteZone: "Delete Zone",
 
     pickInstrument: "Add the selected samples to which instrument?",

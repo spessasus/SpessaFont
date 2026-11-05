@@ -7,7 +7,10 @@ export const PresetListLocale = {
     presets: "Presets",
     instruments: "Instruments",
     samples: "Samples",
-    deleteSkipped: "Skipped {{count}} elements that are still in use.",
-    cutKept:
+    deleteSkipped_one: "Skipped {{count}} element that is still in use.",
+    deleteSkipped_other: "Skipped {{count}} elements that are still in use.",
+    cutKept_one:
+        "Copied, but kept {{count}} element that is still in use instead of cutting it.",
+    cutKept_other:
         "Copied, but kept {{count}} elements that are still in use instead of cutting them."
 };

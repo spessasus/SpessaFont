@@ -8,6 +8,10 @@ import {
     createRemoveUnusedActions
 } from "../core_backend/bank_maintenance.ts";
 import { useSaveBank } from "../hooks/use_save_bank.ts";
+import { HISTORY_LABEL_KEYS } from "./history_label_keys.ts";
+
+const HISTORY_TOAST = "history";
+import { mergeDuplicateSamples } from "../sample_editor/merge_duplicates_command.ts";
 
 /**
  * The menu bar commands for the active bank, with their toasts.
@@ -24,21 +28,36 @@ export function useBankCommands(
 
     const undo = () => {
         if (!session) return;
-        if (!session.history.canUndo) {
+        const { undoLabel } = session.history.state;
+        if (!undoLabel) {
             toast(t("menuBarLocale.edit.nothingToUndo"));
             return;
         }
         const focus = session.history.undo();
+        // One toast that each undo replaces, holding Ctrl+Z would stack them otherwise
+        toast(
+            t("menuBarLocale.edit.undone", {
+                what: t(HISTORY_LABEL_KEYS[undoLabel])
+            }),
+            { id: HISTORY_TOAST }
+        );
         if (focus) setView(focus);
     };
 
     const redo = () => {
         if (!session) return;
-        if (!session.history.canRedo) {
+        const { redoLabel } = session.history.state;
+        if (!redoLabel) {
             toast(t("menuBarLocale.edit.nothingToRedo"));
             return;
         }
         const focus = session.history.redo();
+        toast(
+            t("menuBarLocale.edit.redone", {
+                what: t(HISTORY_LABEL_KEYS[redoLabel])
+            }),
+            { id: HISTORY_TOAST }
+        );
         if (focus) setView(focus);
     };
 
@@ -79,5 +98,19 @@ export function useBankCommands(
         );
     };
 
-    return { undo, redo, save, removeUnusedElements, autoLinkSamples };
+    const mergeDuplicateSamplesOfBank = () => {
+        if (!session) return;
+        void mergeDuplicateSamples(session, undefined, t, (actions) =>
+            session.history.do(actions)
+        );
+    };
+
+    return {
+        undo,
+        redo,
+        save,
+        removeUnusedElements,
+        autoLinkSamples,
+        mergeDuplicateSamples: mergeDuplicateSamplesOfBank
+    };
 }

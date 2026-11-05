@@ -22,6 +22,8 @@ import {
     type ZoneColumn
 } from "./zone_columns.ts";
 import { moveTableFocus } from "./table_navigation.ts";
+import { useElementTools } from "./tools/use_element_tools.tsx";
+import { isCurveRow } from "./tools/key_curve_actions.ts";
 
 /**
  * Cells selected with Ctrl or Shift, all in one generator row.
@@ -93,6 +95,7 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
         session.store,
         (s) => s.views.defaultModulators
     );
+    const tools = useElementTools();
     const [editedZoneId, setEditedZoneId] = useState<number | null>(null);
     const [cellSelection, setCellSelection] = useState<CellSelection | null>(
         null
@@ -165,6 +168,22 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
                                     cellSelection?.generator === row.generator
                                         ? cellSelection.zoneIds
                                         : NO_CELLS
+                                }
+                                headerMenu={
+                                    isCurveRow(row) && view.zones.length > 0
+                                        ? [
+                                              {
+                                                  label: t(
+                                                      "toolsLocale.keyCurve.menu"
+                                                  ),
+                                                  onSelect: () =>
+                                                      void tools.openKeyCurve(
+                                                          [element],
+                                                          row.generator
+                                                      )
+                                              }
+                                          ]
+                                        : undefined
                                 }
                                 onSelectCell={(zoneId, e) =>
                                     setCellSelection((previous) =>

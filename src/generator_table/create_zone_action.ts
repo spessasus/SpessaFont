@@ -22,6 +22,8 @@ export class CreateZoneAction implements HistoryAction {
      * @param template the zone whose generators and modulators are copied
      * @param child the instrument (for a preset) or sample (for an instrument) of the new zone
      */
+    public readonly label = "addZone";
+
     public constructor(
         element: BasicPreset | BasicInstrument,
         template: BasicZone,

@@ -10,6 +10,8 @@ export class SetBankInfoAction<
     private readonly oldValue: SoundBankInfoData[K];
     private readonly newValue: SoundBankInfoData[K];
 
+    public readonly label = "editBankInfo";
+
     public constructor(
         fourCC: K,
         oldValue: SoundBankInfoData[K],

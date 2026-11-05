@@ -93,7 +93,8 @@ export function useSamplePlayer(
         };
     }, [buffer, context, inputNode, state, startTime]);
 
-    // Loop points and tuning apply to the playing sample without restarting it
+    // Loop points and tuning apply to the playing sample without restarting it. The effect
+    // also runs for each new player (new audio after an undo, a restart), which starts without them
     useEffect(() => {
         const player = playerRef.current;
         if (!player) {
@@ -102,7 +103,15 @@ export function useSamplePlayer(
         player.loopStart = loopStart / sampleRate;
         player.loopEnd = loopEnd / sampleRate;
         player.detune.value = pitchCorrection;
-    }, [loopEnd, loopStart, pitchCorrection, sampleRate, state, startTime]);
+    }, [
+        buffer,
+        loopEnd,
+        loopStart,
+        pitchCorrection,
+        sampleRate,
+        state,
+        startTime
+    ]);
 
     return {
         state,

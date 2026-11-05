@@ -7,6 +7,8 @@ export class SetDefaultModulatorsAction implements HistoryAction {
     private readonly oldModulators: Modulator[];
     private readonly newModulators: Modulator[];
 
+    public readonly label = "editDefaultModulators";
+
     public constructor(oldModulators: Modulator[], newModulators: Modulator[]) {
         this.oldModulators = [...oldModulators];
         this.newModulators = [...newModulators];

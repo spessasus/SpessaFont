@@ -8,8 +8,9 @@ export interface BankEditorContextType {
     session: BankSession;
     /**
      * Runs the actions through the history and selects the element they focus, if any.
+     * Quick repeats with the same merge key become one undo step (see `HistoryManager.do`).
      */
-    apply: (actions: HistoryActionGroup) => void;
+    apply: (actions: HistoryActionGroup, mergeKey?: string) => void;
     setView: (view: BankEditView) => void;
     /**
      * Shows the sample and plays it once from the start.

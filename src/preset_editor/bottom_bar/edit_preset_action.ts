@@ -1,5 +1,8 @@
 import type { BasicPreset } from "spessasynth_core";
-import type { HistoryAction } from "../../core_backend/history.ts";
+import type {
+    HistoryAction,
+    HistoryLabel
+} from "../../core_backend/history.ts";
 import type { BankDocument } from "../../core_backend/bank_document.ts";
 import type { ChangeSet } from "../../core_backend/change_set.ts";
 
@@ -13,6 +16,11 @@ export class EditPresetAction<
     private readonly propertyName: K;
     private readonly before: BasicPreset[K];
     private readonly after: BasicPreset[K];
+    /**
+     * The preset order before the edit, which undo puts back.
+     */
+    private previousOrder = new Array<BasicPreset>();
+    public readonly label: HistoryLabel;
 
     public constructor(
         preset: BasicPreset,
@@ -24,14 +32,12 @@ export class EditPresetAction<
         this.propertyName = propertyName;
         this.before = before;
         this.after = after;
+        this.label = propertyName === "name" ? "renamePreset" : "changePatch";
     }
 
-    private apply(
-        document: BankDocument,
-        changes: ChangeSet,
-        value: BasicPreset[K]
-    ) {
-        this.preset[this.propertyName] = value;
+    public do(document: BankDocument, changes: ChangeSet) {
+        this.previousOrder = [...document.presets];
+        this.preset[this.propertyName] = this.after;
         // Every property except the name is part of the MIDI patch, which sets the order
         if (this.propertyName !== "name") {
             document.sortPresets();
@@ -40,11 +46,12 @@ export class EditPresetAction<
         changes.touchList("presets");
     }
 
-    public do(document: BankDocument, changes: ChangeSet) {
-        this.apply(document, changes, this.after);
-    }
-
     public undo(document: BankDocument, changes: ChangeSet) {
-        this.apply(document, changes, this.before);
+        this.preset[this.propertyName] = this.before;
+        if (this.propertyName !== "name") {
+            document.setPresetOrder(this.previousOrder);
+        }
+        changes.touch(this.preset);
+        changes.touchList("presets");
     }
 }

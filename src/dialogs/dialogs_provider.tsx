@@ -1,6 +1,7 @@
-import { type ReactNode, useMemo, useState } from "react";
+import { Fragment, type ReactNode, useMemo, useState } from "react";
 import {
     type AskNumberOptions,
+    type DialogRenderer,
     type DialogsAPI,
     DialogsContext,
     type PickElementOptions
@@ -24,6 +25,18 @@ export function DialogsProvider({ children }: DialogsProviderProps) {
               type: "number";
               options: AskNumberOptions;
               resolve: (value: number | undefined) => void;
+          }
+        | {
+              type: "custom";
+              /**
+               * The dialog, made with its answer callback when it was opened.
+               */
+              node: ReactNode;
+              /**
+               * Counts the dialogs, so one that replaces another starts with fresh state.
+               */
+              key: number;
+              cancel: () => void;
           };
     // Each question gets a fresh dialog, one asked right after another must not keep its search
     type DialogRequest = DialogQuestion & { id: number };
@@ -34,9 +47,14 @@ export function DialogsProvider({ children }: DialogsProviderProps) {
         // A new question cancels the open one
         const replaceRequest = (next: DialogQuestion) =>
             setRequest((previous) => {
-                previous?.resolve(undefined);
+                if (previous?.type === "custom") {
+                    previous.cancel();
+                } else {
+                    previous?.resolve(undefined);
+                }
                 return { ...next, id: nextId++ };
             });
+        let dialogCount = 0;
         return {
             pickElement: <T,>({
                 title,
@@ -61,12 +79,35 @@ export function DialogsProvider({ children }: DialogsProviderProps) {
             askNumber: (options) =>
                 new Promise((resolve) =>
                     replaceRequest({ type: "number", options, resolve })
-                )
+                ),
+            openDialog: <T,>(render: DialogRenderer<T>) =>
+                new Promise<T | undefined>((resolve) => {
+                    dialogCount++;
+                    const key = dialogCount;
+                    const node = render((value) => {
+                        resolve(value);
+                        // Only closes itself, not a dialog that replaced it
+                        setRequest((current) =>
+                            current?.type === "custom" && current.key === key
+                                ? null
+                                : current
+                        );
+                    });
+                    replaceRequest({
+                        type: "custom",
+                        node,
+                        key,
+                        cancel: () => resolve(undefined)
+                    });
+                })
         };
     }, []);
 
+    // The picker and the number dialog answer here, a custom dialog answers its caller itself
     const answer = (value: number | undefined) => {
-        request?.resolve(value);
+        if (request?.type !== "custom") {
+            request?.resolve(value);
+        }
         setRequest(null);
     };
 
@@ -87,6 +128,9 @@ export function DialogsProvider({ children }: DialogsProviderProps) {
                     options={request.options}
                     onAnswer={answer}
                 />
+            ) : null}
+            {request?.type === "custom" ? (
+                <Fragment key={request.key}>{request.node}</Fragment>
             ) : null}
         </DialogsContext>
     );

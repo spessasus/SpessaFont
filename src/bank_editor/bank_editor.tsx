@@ -91,8 +91,8 @@ export function BankEditor({
         () => ({
             session,
             setView,
-            apply: (actions: HistoryActionGroup) => {
-                const focus = session.history.do(actions);
+            apply: (actions: HistoryActionGroup, mergeKey?: string) => {
+                const focus = session.history.do(actions, mergeKey);
                 if (focus) {
                     setView(focus);
                 }

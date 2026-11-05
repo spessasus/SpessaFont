@@ -1,5 +1,6 @@
 import { type InterpolationType, InterpolationTypes } from "spessasynth_core";
 import {
+    BOOLEAN_SETTINGS,
     DEFAULT_SETTINGS,
     type SavedSettingsType,
     SETTING_LIMITS,
@@ -49,6 +50,12 @@ export function parseSettings(data: unknown): SavedSettingsType {
     }
     if (INTERPOLATIONS.has(interpolation)) {
         settings.interpolation = interpolation as InterpolationType;
+    }
+    for (const key of BOOLEAN_SETTINGS) {
+        const value = data[key];
+        if (typeof value === "boolean") {
+            settings[key] = value;
+        }
     }
     for (const key of Object.keys(
         SETTING_LIMITS

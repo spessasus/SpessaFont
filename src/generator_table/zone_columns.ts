@@ -3,7 +3,7 @@ import type {
     SampleView,
     ZoneView
 } from "../core_backend/entity_views.ts";
-import { STEREO_REGEX } from "../utils/stereo_regex.ts";
+import { getStereoBaseName } from "../utils/stereo_regex.ts";
 
 /**
  * One column of the generator table. A stereo pair shares a column,
@@ -75,8 +75,8 @@ function getLinkedZoneMap(zones: readonly ZoneView[], children: ZoneChildren) {
 
 /**
  * Lays out the zones as table columns.
- * With `shouldSplitPairs`, both zones of an adjacent stereo pair get their own column and are edited
- * separately (used for pan, which differs between the left and right sample).
+ * With `shouldSplitPairs`, both zones of a stereo pair get their own column and are edited
+ * separately, adjacent or not (used for pan, which differs between the left and right sample).
  */
 export function getZoneColumns(
     zones: readonly ZoneView[],
@@ -99,7 +99,8 @@ export function getZoneColumns(
         if (index === 0 || shouldSplitPairs) {
             columns.push({
                 zone,
-                linkedZone: index === 0 ? linkedZone : undefined,
+                linkedZone:
+                    index === 0 && !shouldSplitPairs ? linkedZone : undefined,
                 colSpan: 1,
                 isStereo: false,
                 name,
@@ -115,7 +116,13 @@ export function getZoneColumns(
             linkedZone,
             colSpan: 2,
             isStereo: true,
-            name: name.replace(STEREO_REGEX, "").trim(),
+            name: getStereoBaseName(
+                name,
+                (linkedZone?.childId === undefined
+                    ? undefined
+                    : children.views.get(linkedZone.childId)
+                )?.name ?? name
+            ),
             sample
         });
     }

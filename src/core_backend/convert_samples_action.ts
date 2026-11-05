@@ -14,6 +14,8 @@ import type { ConversionReport, SampleState } from "../synth_host/protocol.ts";
 export class ConvertSamplesAction implements HistoryAction {
     private readonly report: ConversionReport;
 
+    public readonly label = "convertSamples";
+
     public constructor(report: ConversionReport) {
         this.report = report;
     }

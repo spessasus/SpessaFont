@@ -143,6 +143,10 @@ export class SynthClient {
         this.send({ type: "closeBank", sessionId });
     }
 
+    public copyToClipboard(sessionId: number, ids: number[]) {
+        this.send({ type: "copyToClipboard", sessionId, ids });
+    }
+
     public attach(sessionId: number) {
         this.send({ type: "attach", sessionId });
     }

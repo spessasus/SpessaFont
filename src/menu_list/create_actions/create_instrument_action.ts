@@ -8,6 +8,8 @@ export class CreateInstrumentAction implements HistoryAction {
     // Where undo removed it from, so redo puts it back there with its links
     private removedIndex: number | undefined;
 
+    public readonly label = "addInstrument";
+
     public constructor(instrument: BasicInstrument) {
         this.instrument = instrument;
     }

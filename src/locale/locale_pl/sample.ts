@@ -52,7 +52,10 @@ export const SampleLocale = {
             "Wynik przekracza pełną skalę i zostanie przycięty przy zapisie. Znormalizuj go lub zmniejsz wzmocnienie."
     },
 
-    importedSamples: "Zaimportowano {{count}} plików jako próbki.",
+    importedSamples_one: "Zaimportowano {{count}} plik jako próbkę.",
+    importedSamples_few: "Zaimportowano {{count}} pliki jako próbki.",
+    importedSamples_many: "Zaimportowano {{count}} plików jako próbki.",
+    importedSamples_other: "Zaimportowano {{count}} pliku jako próbki.",
     makeInstrument: "Utwórz z nich instrument",
     notNow: "Nie teraz",
     newInstrumentFromSample: "Nowy instrument z tej próbki",

@@ -1,12 +1,14 @@
-import { describe, expect, it, vi } from "vitest";
-import type { HistoryAction } from "./history.ts";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { type HistoryAction, MERGE_WINDOW_MS } from "./history.ts";
 import { createTestSession } from "../test_utils/bank_fixture.ts";
+import { EditSampleAction } from "../sample_editor/edit_sample_action.ts";
 
 /**
  * An action that only records when it runs, so tests can check ordering.
  */
 function recordingAction(name: string, log: string[]): HistoryAction {
     return {
+        label: "editSample",
         do: () => {
             log.push(`do ${name}`);
         },
@@ -18,6 +20,7 @@ function recordingAction(name: string, log: string[]): HistoryAction {
 
 function failingAction(): HistoryAction {
     return {
+        label: "editSample",
         do: () => {
             throw new Error("Failed on purpose.");
         },
@@ -171,6 +174,7 @@ describe("HistoryManager dirty state", () => {
         const session = createTestSession();
         const log = new Array<string>();
         const failingUndo: HistoryAction = {
+            label: "editSample",
             do: () => {
                 log.push("do bad");
             },
@@ -192,6 +196,7 @@ describe("HistoryManager dirty state", () => {
         const session = createTestSession();
         let shouldFail = false;
         const flaky: HistoryAction = {
+            label: "editSample",
             do: () => {
                 if (shouldFail) throw new Error("Failed on purpose.");
             },
@@ -205,5 +210,69 @@ describe("HistoryManager dirty state", () => {
 
         expect(session.history.canRedo).toBe(true);
         expect(session.history.canUndo).toBe(false);
+    });
+
+    describe("merging", () => {
+        afterEach(() => {
+            vi.useRealTimers();
+        });
+
+        it("joins quick groups with the same key into one undo step", () => {
+            vi.useFakeTimers();
+            const session = createTestSession();
+            const log = new Array<string>();
+
+            session.history.do([recordingAction("a", log)], "wheel");
+            vi.advanceTimersByTime(MERGE_WINDOW_MS - 100);
+            session.history.do([recordingAction("b", log)], "wheel");
+            session.history.undo();
+
+            expect(log).toEqual(["do a", "do b", "undo b", "undo a"]);
+            expect(session.history.canUndo).toBe(false);
+        });
+
+        it("keeps groups apart after a pause, another key or a save", () => {
+            vi.useFakeTimers();
+            const session = createTestSession();
+            const log = new Array<string>();
+
+            session.history.do([recordingAction("a", log)], "wheel");
+            vi.advanceTimersByTime(MERGE_WINDOW_MS);
+            session.history.do([recordingAction("b", log)], "wheel");
+            session.history.do([recordingAction("c", log)], "other");
+            session.history.markSaved();
+            session.history.do([recordingAction("d", log)], "other");
+            log.length = 0;
+            session.history.undo();
+
+            expect(log).toEqual(["undo d"]);
+            expect(session.history.isDirty).toBe(false);
+            session.history.undo();
+            session.history.undo();
+            expect(log).toEqual(["undo d", "undo c", "undo b"]);
+        });
+    });
+});
+
+describe("HistoryManager labels", () => {
+    it("names the next undo and redo in the store's history state", () => {
+        const session = createTestSession();
+        const [sample] = session.document.samples;
+        const history = () => session.store.getSnapshot().history;
+
+        session.history.do([
+            new EditSampleAction(sample, "name", sample.name, "Renamed")
+        ]);
+        expect(history().undoLabel).toBe("renameSample");
+        session.history.do([
+            new EditSampleAction(sample, "loopStart", sample.loopStart, 1)
+        ]);
+        expect(history().undoLabel).toBe("editSample");
+
+        session.history.undo();
+        expect(history()).toMatchObject({
+            undoLabel: "renameSample",
+            redoLabel: "editSample"
+        });
     });
 });

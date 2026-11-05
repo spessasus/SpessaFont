@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react";
+import { createContext, type ReactNode, useContext } from "react";
 
 export interface PickElementOptions<T> {
     title: string;
@@ -15,6 +15,13 @@ export interface AskNumberOptions {
     step: number;
 }
 
+/**
+ * Renders a dialog of a tool. It calls `onAnswer` once, with undefined when canceled.
+ */
+export type DialogRenderer<T> = (
+    onAnswer: (value: T | undefined) => void
+) => ReactNode;
+
 export interface DialogsAPI {
     /**
      * Asks for one of the items, with a search. Resolves to undefined when canceled.
@@ -24,6 +31,12 @@ export interface DialogsAPI {
      * Asks for a number. Resolves to undefined when canceled.
      */
     askNumber: (options: AskNumberOptions) => Promise<number | undefined>;
+    /**
+     * Shows a dialog of a tool, for the questions that need more than one number.
+     * The dialog is rendered outside the bank editor, so it gets what it shows from the caller.
+     * Resolves to its answer, or undefined when canceled.
+     */
+    openDialog: <T>(render: DialogRenderer<T>) => Promise<T | undefined>;
 }
 
 export const DialogsContext = createContext<DialogsAPI | null>(null);

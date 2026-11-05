@@ -31,12 +31,16 @@ export interface HostSettings {
 }
 
 /**
- * A sample whose data the mirror copies from a sample of a session's mirror.
+ * Where a pasted sample's data comes from: a sample of a session's mirror (a duplicate, a
+ * drop on a tab), or the data the host kept when the sample was copied (a paste).
  */
-export interface SampleCopyRef {
-    readonly sessionId: number;
-    readonly id: number;
-}
+export type SampleCopyRef =
+    | {
+          readonly from: "session";
+          readonly sessionId: number;
+          readonly id: number;
+      }
+    | { readonly from: "clipboard"; readonly id: number };
 
 /**
  * One commit of an editor's bank, as `MirrorSync` sends it.
@@ -160,6 +164,11 @@ export type HostCommand =
       }
     | { type: "patch"; sessionId: number; patch: PatchMessage }
     | { type: "closeBank"; sessionId: number }
+    /**
+     * Keeps a copy of the samples' data for pasting, so edits made after copying (or an undo
+     * that removes them) do not reach the clipboard. Replaces what was kept before.
+     */
+    | { type: "copyToClipboard"; sessionId: number; ids: number[] }
     | { type: "attach"; sessionId: number }
     | {
           type: "previewTarget";

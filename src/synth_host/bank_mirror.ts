@@ -57,9 +57,11 @@ export interface MirrorPatch {
     readonly sampleCopies: ReadonlyMap<number, SampleCopySource>;
 }
 
+/**
+ * The data a pasted sample gets, which the mirror copies so the two never share it.
+ */
 export interface SampleCopySource {
-    readonly mirror: BankMirror;
-    readonly id: number;
+    readonly data: SampleStoredData;
 }
 
 /**
@@ -325,12 +327,8 @@ export class BankMirror {
             getOrThrow(this.samples, id, "sample").setStoredData(stored);
         }
         for (const [id, source] of patch.sampleCopies) {
-            const from = source.mirror.getSample(source.id);
-            if (!from) {
-                throw new Error(`No sample with the id ${source.id} to copy.`);
-            }
             getOrThrow(this.samples, id, "sample").setStoredData(
-                copyStoredData(from.getStoredData())
+                copyStoredData(source.data)
             );
         }
         // Presets first, so a removed preset lets go of its instruments before they are removed

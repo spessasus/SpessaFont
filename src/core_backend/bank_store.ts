@@ -7,11 +7,17 @@ import type {
 import { type BankViews, updateBankViews } from "./entity_views.ts";
 import type { BankDocument } from "./bank_document.ts";
 import type { ChangeSet, RestoredAudio } from "./change_set.ts";
+import type { HistoryLabel } from "./history.ts";
 
 export interface HistoryState {
     readonly canUndo: boolean;
     readonly canRedo: boolean;
     readonly isDirty: boolean;
+    /**
+     * What undo and redo would undo or redo, for the Edit menu.
+     */
+    readonly undoLabel: HistoryLabel | undefined;
+    readonly redoLabel: HistoryLabel | undefined;
 }
 
 /**
@@ -79,7 +85,13 @@ export class BankStore {
             instruments: [...bank.instruments],
             samples: [...bank.samples],
             info: { ...bank.soundBankInfo },
-            history: { canUndo: false, canRedo: false, isDirty: false },
+            history: {
+                canUndo: false,
+                canRedo: false,
+                isDirty: false,
+                undoLabel: undefined,
+                redoLabel: undefined
+            },
             views: updateBankViews(bank, this.getAudioRevision)
         };
     }
@@ -120,7 +132,9 @@ export class BankStore {
         const isHistoryChanged =
             previous.history.canUndo !== history.canUndo ||
             previous.history.canRedo !== history.canRedo ||
-            previous.history.isDirty !== history.isDirty;
+            previous.history.isDirty !== history.isDirty ||
+            previous.history.undoLabel !== history.undoLabel ||
+            previous.history.redoLabel !== history.redoLabel;
 
         this.snapshot = {
             revision,

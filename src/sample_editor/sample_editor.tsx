@@ -176,6 +176,8 @@ function SampleEditorPane({
                     onExportWav={audio.exportWav}
                     onNormalize={audio.normalize}
                     onAutoLoop={audio.autoLoop}
+                    onRemoveSilence={audio.removeSilence}
+                    onTrimAfterLoop={audio.trimAfterLoop}
                     onReplaceAudio={audio.replaceAudio}
                 />
                 <EqualizerPanel

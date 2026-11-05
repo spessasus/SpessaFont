@@ -8,6 +8,8 @@ export class EditInstrumentNameAction implements HistoryAction {
     private readonly before: string;
     private readonly after: string;
 
+    public readonly label = "renameInstrument";
+
     public constructor(
         instrument: BasicInstrument,
         before: string,

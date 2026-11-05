@@ -8,6 +8,8 @@ export class CreatePresetAction implements HistoryAction {
     // Where undo removed it from, so redo puts it back there with its links
     private removedIndex: number | undefined;
 
+    public readonly label = "addPreset";
+
     public constructor(preset: BasicPreset) {
         this.preset = preset;
     }

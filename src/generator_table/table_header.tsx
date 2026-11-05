@@ -17,6 +17,12 @@ import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useEntityLookup } from "../hooks/use_entity_lookup.ts";
 import type { ZoneColumn } from "./zone_columns.ts";
 import { findZone } from "./cell/column_zones.ts";
+import { useElementTools } from "./tools/use_element_tools.tsx";
+import { CreateZoneAction } from "./create_zone_action.ts";
+import {
+    createInstrumentLinkActions,
+    createSampleLinkActions
+} from "../menu_list/link_actions.ts";
 
 interface GeneratorTableHeaderProps {
     /**
@@ -37,6 +43,7 @@ export function GeneratorTableHeader({
     const lookup = useEntityLookup(session.store);
     const { openMenu } = useContextMenu();
     const { pickElement } = useDialogs();
+    const tools = useElementTools();
 
     // The zones of a column, found when an edit needs them
     const getZones = (column: ZoneColumn) => {
@@ -45,6 +52,21 @@ export function GeneratorTableHeader({
             ? findZone(element, column.linkedZone.id)
             : undefined;
         return { zone, linkedZone };
+    };
+
+    // The zones of a column for splitting, both of a stereo pair
+    const getSplitZones = (column: ZoneColumn) => {
+        const zones = new Set<BasicPresetZone | BasicInstrumentZone>();
+        const { zone: own, linkedZone } = getZones(column);
+        for (const zone of [own, linkedZone]) {
+            if (
+                zone instanceof BasicInstrumentZone ||
+                zone instanceof BasicPresetZone
+            ) {
+                zones.add(zone);
+            }
+        }
+        return zones;
     };
 
     const deleteColumn = (column: ZoneColumn) => {
@@ -105,6 +127,41 @@ export function GeneratorTableHeader({
         }
     };
 
+    // A copy of each zone of the column, with its generators and modulators
+    const duplicateColumn = (column: ZoneColumn) => {
+        apply(
+            [...getSplitZones(column)].map(
+                (zone) =>
+                    new CreateZoneAction(
+                        element,
+                        zone,
+                        zone instanceof BasicInstrumentZone
+                            ? zone.sample
+                            : zone.instrument
+                    )
+            )
+        );
+    };
+
+    const addZone = async () => {
+        const { document } = session;
+        if (element instanceof BasicInstrument) {
+            const picked = await pickElement({
+                title: t("soundBankLocale.pickZoneSample"),
+                items: document.samples,
+                getLabel: (s) => s.name
+            });
+            if (picked) apply(createSampleLinkActions(element, [picked]));
+            return;
+        }
+        const picked = await pickElement({
+            title: t("soundBankLocale.pickZoneInstrument"),
+            items: document.instruments,
+            getLabel: (i) => i.name
+        });
+        if (picked) apply(createInstrumentLinkActions(element, [picked]));
+    };
+
     const openColumn = ({ zone }: ZoneColumn) => {
         if (zone.childId === undefined) {
             return;
@@ -128,7 +185,18 @@ export function GeneratorTableHeader({
                         : "preset")
                 }
             >
-                {elementName}
+                <span className={"header_cell_title"}>
+                    {elementName}
+                    <button
+                        type={"button"}
+                        className={"plain_button add_zone"}
+                        aria-label={t("soundBankLocale.createNewZone")}
+                        title={t("soundBankLocale.createNewZone")}
+                        onClick={() => void addZone()}
+                    >
+                        +
+                    </button>
+                </span>
             </th>
             <th scope={"col"} className={"header_cell"}>
                 {t("soundBankLocale.globalZone")}
@@ -157,6 +225,31 @@ export function GeneratorTableHeader({
                                                   "contextMenu.replaceInstrument"
                                               ),
                                     onSelect: () => void replaceColumn(column)
+                                },
+                                {
+                                    label: t("contextMenu.duplicateZone"),
+                                    onSelect: () => duplicateColumn(column)
+                                },
+                                "separator",
+                                {
+                                    label: t("toolsLocale.split.byKeyMenu"),
+                                    onSelect: () =>
+                                        tools.split(
+                                            [element],
+                                            { mode: "key", step: 1 },
+                                            getSplitZones(column)
+                                        )
+                                },
+                                {
+                                    label: t(
+                                        "toolsLocale.split.byVelocityMenu"
+                                    ),
+                                    onSelect: () =>
+                                        void tools.openSplitZones(
+                                            [element],
+                                            "velocity",
+                                            getSplitZones(column)
+                                        )
                                 },
                                 "separator",
                                 {

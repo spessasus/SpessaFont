@@ -52,7 +52,8 @@ export const SampleLocale = {
             "The result is louder than full scale and will clip when saved. Normalize it or lower the gain."
     },
 
-    importedSamples: "Imported {{count}} files as samples.",
+    importedSamples_one: "Imported {{count}} file as a sample.",
+    importedSamples_other: "Imported {{count}} files as samples.",
     makeInstrument: "Make an Instrument from Them",
     notNow: "Not now",
     newInstrumentFromSample: "New Instrument from This Sample",

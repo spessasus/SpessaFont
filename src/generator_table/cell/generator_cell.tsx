@@ -2,24 +2,26 @@ import type * as React from "react";
 import {
     BasicInstrument,
     type BasicPreset,
-    GeneratorLimits,
     GeneratorTypes
 } from "spessasynth_core";
-import { SetGeneratorAction } from "./set_generator_action.ts";
 import { midiNoteToPitchClass } from "../../utils/note_name.ts";
-import { GeneratorCellInput } from "./generator_cell_input.tsx";
+import {
+    type CellInputCommands,
+    GeneratorCellInput
+} from "./generator_cell_input.tsx";
 import { useTranslation } from "react-i18next";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 import type { GeneratorRowType } from "../generator_row_type.ts";
 import { getViewGenerator, type ZoneColumn } from "../zone_columns.ts";
-import { getColumnZones } from "./column_zones.ts";
 import { getGeneratorOptions } from "../generator_options.ts";
+import { getGeneratorDefault } from "../generator_range.ts";
+import { useWheelStep } from "../../hooks/use_wheel_step.ts";
 import {
-    applyCellEdit,
-    parseCellText,
-    parseGeneratorText
-} from "./parse_generator_text.ts";
-import { getGeneratorRange } from "./generator_range.ts";
+    applyTextToNumber,
+    type CellContext,
+    createSetCellActions,
+    formatNumberCell
+} from "./cell_values.ts";
 
 const EXCLUSIVE_CLASS_COLORS = 10;
 
@@ -27,8 +29,6 @@ function getExclusiveClassColor(exclusiveClass: number) {
     const hue = ((exclusiveClass - 1) * (360 / EXCLUSIVE_CLASS_COLORS)) % 360;
     return `hsl(${hue}, 100%, 50%)`;
 }
-
-const identity = (v: number) => v;
 
 interface NumberGeneratorCellProps {
     element: BasicPreset | BasicInstrument;
@@ -44,6 +44,9 @@ interface NumberGeneratorCellProps {
      * Ctrl or Shift and a click select cells, a plain click clears the selection.
      */
     onSelect: (event: React.MouseEvent) => void;
+    commands: CellInputCommands;
+    onSelectKeyDown: (e: React.KeyboardEvent<HTMLSelectElement>) => void;
+    onContextMenu: (e: React.MouseEvent) => void;
 }
 
 export function NumberGeneratorCell({
@@ -53,28 +56,25 @@ export function NumberGeneratorCell({
     label,
     isSelected,
     selectedColumns,
-    onSelect
+    onSelect,
+    commands,
+    onSelectKeyDown,
+    onContextMenu
 }: NumberGeneratorCellProps) {
     const { t } = useTranslation();
     const { apply } = useBankEditor();
-    const {
-        generator,
-        fromGenerator = identity,
-        toGenerator = identity,
-        precision = 0
-    } = row;
+    const { generator } = row;
     const { zone, colSpan, sample } = column;
     const value = getViewGenerator(zone, generator);
-    const toText = (v: number | null) =>
-        v === null ? "" : fromGenerator(v).toFixed(precision);
-    const textValue = toText(value);
-
-    const limits = GeneratorLimits[generator];
+    const textValue = formatNumberCell(row, value);
     const isInstrument = element instanceof BasicInstrument;
-    const { min, max } = getGeneratorRange(generator, isInstrument);
+    const context: CellContext = { element, row, isInstrument };
+    const selectWheelRef = useWheelStep<HTMLSelectElement>(commands.nudge);
 
-    // An unset preset generator adds nothing to the instrument, so its placeholder is 0
-    let placeholder = toText(isInstrument ? limits.def : 0);
+    let placeholder = formatNumberCell(
+        row,
+        getGeneratorDefault(generator, isInstrument)
+    );
     if (sample && generator === GeneratorTypes.overridingRootKey) {
         const key = sample.originalKey;
         placeholder = `${key} (${midiNoteToPitchClass(key)})`;
@@ -83,22 +83,13 @@ export function NumberGeneratorCell({
     }
 
     // Several selected cells of this row take one edit, each from its own value
-    const targets =
-        isSelected && selectedColumns.length > 1 ? selectedColumns : [column];
+    const isMultiSelected = isSelected && selectedColumns.length > 1;
+    const targets = isMultiSelected ? selectedColumns : [column];
 
     const setGenerators = (values: (number | null)[]) =>
         apply(
             targets.flatMap((target, i) =>
-                getColumnZones(element, target).map(
-                    (z) =>
-                        new SetGeneratorAction(
-                            element,
-                            z,
-                            generator,
-                            z.getGenerator(generator, null),
-                            values[i]
-                        )
-                )
+                createSetCellActions(context, target, values[i])
             )
         );
 
@@ -110,27 +101,12 @@ export function NumberGeneratorCell({
             setGenerators(targets.map(() => null));
             return "";
         }
-        const edit = parseCellText(typedText);
-        if (!edit) {
-            return textValue;
-        }
         const values = targets.map((target) => {
-            // An unset generator changes from what the cell shows for it
-            const current =
-                getViewGenerator(target.zone, generator) ??
-                (isInstrument ? limits.def : 0);
-            const shown = Number(fromGenerator(current).toFixed(precision));
-            return (
-                parseGeneratorText(
-                    applyCellEdit(edit, shown),
-                    toGenerator,
-                    min,
-                    max
-                ) ?? current
-            );
+            const current = getViewGenerator(target.zone, generator);
+            return applyTextToNumber(context, current, typedText) ?? current;
         });
         setGenerators(values);
-        return toText(values[targets.indexOf(column)] ?? value);
+        return formatNumberCell(row, values[targets.indexOf(column)] ?? value);
     };
 
     const isModulated = zone.modulators.some(
@@ -141,10 +117,16 @@ export function NumberGeneratorCell({
     const options = getGeneratorOptions(generator);
     if (options) {
         return (
-            <td className={className} colSpan={colSpan}>
+            <td
+                className={className}
+                colSpan={colSpan}
+                onContextMenu={onContextMenu}
+            >
                 <select
+                    ref={selectWheelRef}
                     aria-label={label}
                     value={value ?? "null"}
+                    onKeyDown={onSelectKeyDown}
                     onChange={(e) => {
                         const picked =
                             e.target.value === "null"
@@ -170,7 +152,11 @@ export function NumberGeneratorCell({
         value > 0;
 
     return (
-        <td className={className} colSpan={colSpan}>
+        <td
+            className={className}
+            colSpan={colSpan}
+            onContextMenu={onContextMenu}
+        >
             <GeneratorCellInput
                 aria-label={label}
                 regex={/[^0-9-.+*x]/g}
@@ -186,6 +172,8 @@ export function NumberGeneratorCell({
                 value={textValue}
                 onClick={onSelect}
                 onBlur={commitText}
+                commands={commands}
+                isMultiSelected={isMultiSelected}
             />
         </td>
     );

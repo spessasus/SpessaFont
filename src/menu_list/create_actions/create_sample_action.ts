@@ -6,6 +6,8 @@ import type { ChangeSet } from "../../core_backend/change_set.ts";
 export class CreateSampleAction implements HistoryAction {
     private readonly sample: BasicSample;
 
+    public readonly label = "addSample";
+
     public constructor(sample: BasicSample) {
         this.sample = sample;
     }

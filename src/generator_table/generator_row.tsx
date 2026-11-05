@@ -11,6 +11,12 @@ import type { ZoneColumn } from "./zone_columns.ts";
 import { GENERATOR_UNITS } from "./generator_unit.ts";
 import { isRangeGenerator } from "./cell/range_generator.ts";
 import { isOffsetGenerator } from "./cell/offset_generator.ts";
+import { useCellCommands } from "./cell/use_cell_commands.ts";
+import type { CellInputCommands } from "./cell/generator_cell_input.tsx";
+import {
+    type ContextMenuEntry,
+    useContextMenu
+} from "../context_menu/context_menu_context.ts";
 
 interface GeneratorCellProps {
     element: BasicPreset | BasicInstrument;
@@ -19,6 +25,9 @@ interface GeneratorCellProps {
     label: string;
     selectedColumns: readonly ZoneColumn[];
     onSelect: (event: React.MouseEvent) => void;
+    commands: CellInputCommands;
+    onSelectKeyDown: (e: React.KeyboardEvent<HTMLSelectElement>) => void;
+    onContextMenu: (e: React.MouseEvent) => void;
 }
 
 function GeneratorCell({
@@ -27,7 +36,10 @@ function GeneratorCell({
     column,
     label,
     selectedColumns,
-    onSelect
+    onSelect,
+    commands,
+    onSelectKeyDown,
+    onContextMenu
 }: GeneratorCellProps) {
     const { generator } = row;
     if (isRangeGenerator(generator)) {
@@ -35,8 +47,13 @@ function GeneratorCell({
             <RangeGeneratorCell
                 element={element}
                 column={column}
-                generator={generator}
+                row={row}
                 label={label}
+                commands={commands}
+                onContextMenu={onContextMenu}
+                isSelected={selectedColumns.includes(column)}
+                selectedColumns={selectedColumns}
+                onSelect={onSelect}
             />
         );
     }
@@ -45,8 +62,10 @@ function GeneratorCell({
             <OffsetGeneratorCell
                 element={element}
                 column={column}
-                generator={generator}
+                row={row}
                 label={label}
+                commands={commands}
+                onContextMenu={onContextMenu}
             />
         );
     }
@@ -59,6 +78,9 @@ function GeneratorCell({
             isSelected={selectedColumns.includes(column)}
             selectedColumns={selectedColumns}
             onSelect={onSelect}
+            commands={commands}
+            onSelectKeyDown={onSelectKeyDown}
+            onContextMenu={onContextMenu}
         />
     );
 }
@@ -75,6 +97,10 @@ interface GeneratorRowProps {
      */
     selectedZoneIds: ReadonlySet<number>;
     onSelectCell: (zoneId: number, event: React.MouseEvent) => void;
+    /**
+     * The entries of the row header's right-click menu, if it has one.
+     */
+    headerMenu: ContextMenuEntry[] | undefined;
 }
 
 export function GeneratorRow({
@@ -82,21 +108,30 @@ export function GeneratorRow({
     row,
     columns,
     selectedZoneIds,
-    onSelectCell
+    onSelectCell,
+    headerMenu
 }: GeneratorRowProps) {
     const { t } = useTranslation();
+    const { openMenu } = useContextMenu();
     const name = t(generatorLocaleMap[row.generator]);
     const unit = row.unit ? GENERATOR_UNITS[row.unit] : undefined;
     const selectedColumns = columns.filter((c) =>
         selectedZoneIds.has(c.zone.id)
     );
+    const commands = useCellCommands(element, row, columns, selectedColumns);
     return (
         <tr
             className={
                 row.highlight ? "generator_row_highlight" : "generator_row"
             }
         >
-            <th className={"generator_cell_header"} scope={"row"}>
+            <th
+                className={"generator_cell_header"}
+                scope={"row"}
+                onContextMenu={
+                    headerMenu ? (e) => openMenu(e, headerMenu) : undefined
+                }
+            >
                 <div>
                     <span>{name}</span>
                     {unit ? <i title={t(unit.full)}>{t(unit.suffix)}</i> : null}
@@ -114,6 +149,13 @@ export function GeneratorRow({
                     })}
                     selectedColumns={selectedColumns}
                     onSelect={(e) => onSelectCell(column.zone.id, e)}
+                    commands={commands.getInputCommands(column)}
+                    onSelectKeyDown={(e) =>
+                        commands.handleSelectKeyDown(e, column)
+                    }
+                    onContextMenu={(e) =>
+                        openMenu(e, commands.getMenuEntries(column))
+                    }
                 />
             ))}
         </tr>

@@ -28,7 +28,6 @@ import {
     EQ_MAX_GAIN,
     FLAT_EQUALIZER
 } from "../sample_editor/equalizer/equalizer.ts";
-import { logError } from "../utils/core_utils.ts";
 import { createRootKeyActions } from "../sample_editor/root_key_actions.ts";
 import { createSpreadActions } from "../instrument_editor/spread_actions.ts";
 import {
@@ -46,18 +45,9 @@ import {
     DRUM_MAP_START_KEY
 } from "../instrument_editor/drum_map_actions.ts";
 import { shortcutText } from "../utils/shortcut_text.ts";
-
-/**
- * Runs an audio tool, which reads the audio first, and reports a failed read.
- */
-async function runAudioTool(task: () => Promise<void>) {
-    try {
-        await task();
-    } catch (error) {
-        logError("Failed to process the sample audio.", error);
-        toast.error(String(error));
-    }
-}
+import { runAudioTool } from "../sample_editor/run_audio_tool.ts";
+import { useSampleTools } from "../sample_editor/use_sample_tools.tsx";
+import { useElementTools } from "../generator_table/tools/use_element_tools.tsx";
 
 /**
  * Builds the right-click menu of the element lists for a selection.
@@ -68,7 +58,29 @@ export function useListMenu() {
     const { contents } = useClipboard();
     const { pickElement, askNumber } = useDialogs();
     const commands = useSelectionCommands();
+    const sampleTools = useSampleTools();
+    const elementTools = useElementTools();
     const { document } = session;
+
+    /**
+     * The tools for many zones, the same for presets and instruments.
+     */
+    const getZoneToolEntries = (
+        elements: readonly (BasicPreset | BasicInstrument)[]
+    ): ContextMenuEntry[] => [
+        {
+            label: t("toolsLocale.keyCurve.menu"),
+            onSelect: () => void elementTools.openKeyCurve(elements)
+        },
+        {
+            label: t("toolsLocale.attenuation.menu"),
+            onSelect: () => void elementTools.openAttenuation(elements)
+        },
+        {
+            label: t("toolsLocale.split.menu"),
+            onSelect: () => void elementTools.openSplitZones(elements)
+        }
+    ];
 
     const addSamplesToInstrument = async (samples: ReadonlySet<BankEntity>) => {
         const picked = await pickElement({
@@ -330,6 +342,24 @@ export function useListMenu() {
                 {
                     label: t("contextMenu.rootKeysFromNames"),
                     onSelect: () => setRootKeysFromNames(samples)
+                },
+                {
+                    label: t("toolsLocale.shift.menu"),
+                    onSelect: () => void sampleTools.shift(samples)
+                },
+                "separator",
+                {
+                    label: t("toolsLocale.trim.removeSilence"),
+                    onSelect: () => void sampleTools.removeSilence(samples)
+                },
+                {
+                    label: t("toolsLocale.trim.trimAfterLoop"),
+                    onSelect: () => void sampleTools.trimAfterLoop(samples)
+                },
+                {
+                    label: t("toolsLocale.merge.menuSelection"),
+                    onSelect: () => void sampleTools.mergeDuplicates(samples),
+                    isDisabled: samples.size < 2
                 }
             ];
         }
@@ -360,6 +390,12 @@ export function useListMenu() {
                             )
                         )
                 },
+                ...getZoneToolEntries([...instruments]),
+                {
+                    label: t("toolsLocale.naturalRelease.menu"),
+                    onSelect: () =>
+                        void elementTools.openNaturalRelease([...instruments])
+                },
                 {
                     label: t("contextMenu.drumMap"),
                     onSelect: () => void mapToKeys(instruments)
@@ -375,6 +411,7 @@ export function useListMenu() {
             ? [
                   ...editEntries,
                   "separator",
+                  ...getZoneToolEntries([...presets]),
                   {
                       label: t("contextMenu.batchGenerator"),
                       onSelect: () => void editGenerator(presets)

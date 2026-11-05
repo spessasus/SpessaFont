@@ -14,6 +14,8 @@ export class EditModulatorsAction implements HistoryAction {
     private readonly oldModulators: Modulator[];
     private readonly newModulators: Modulator[];
 
+    public readonly label = "editModulators";
+
     public constructor(
         element: BasicPreset | BasicInstrument,
         zone: BasicZone,

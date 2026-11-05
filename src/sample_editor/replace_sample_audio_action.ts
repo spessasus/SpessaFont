@@ -45,6 +45,8 @@ export class ReplaceSampleAudioAction implements HistoryAction {
     private readonly before: SampleAudio;
     private readonly after: SampleAudio;
 
+    public readonly label = "changeAudio";
+
     public constructor(
         sample: BasicSample,
         before: SampleStoredData,

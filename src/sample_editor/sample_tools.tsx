@@ -5,17 +5,22 @@ interface SampleToolsProps {
     onExportWav: (isLoopOnly: boolean) => Promise<void>;
     onNormalize: () => Promise<void>;
     onAutoLoop: () => Promise<void>;
+    onRemoveSilence: () => Promise<void>;
+    onTrimAfterLoop: () => Promise<void>;
     onReplaceAudio: () => Promise<void>;
 }
 
 /**
- * WAV export (both channels of a stereo pair), normalize, auto loop, and audio replacement.
+ * WAV export (both channels of a stereo pair), normalize, auto loop, trimming, and audio
+ * replacement.
  */
 export function SampleTools({
     isLoading,
     onExportWav,
     onNormalize,
     onAutoLoop,
+    onRemoveSilence,
+    onTrimAfterLoop,
     onReplaceAudio
 }: SampleToolsProps) {
     const { t } = useTranslation();
@@ -55,6 +60,23 @@ export function SampleTools({
                 onClick={() => void onAutoLoop()}
             >
                 {t("sampleLocale.tools.autoLoop")}
+            </button>
+            <button
+                type={"button"}
+                className={buttonClass}
+                disabled={isLoading}
+                onClick={() => void onRemoveSilence()}
+            >
+                {t("toolsLocale.trim.removeSilence")}
+            </button>
+            <button
+                type={"button"}
+                className={buttonClass}
+                disabled={isLoading}
+                title={t("toolsLocale.trim.trimAfterLoopTitle")}
+                onClick={() => void onTrimAfterLoop()}
+            >
+                {t("toolsLocale.trim.trimAfterLoop")}
             </button>
             <button
                 type={"button"}

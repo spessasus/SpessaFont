@@ -3,7 +3,11 @@ import toast from "react-hot-toast";
 import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
 import type { HistoryActionGroup } from "../core_backend/history.ts";
 import { showToastDialog } from "../toasts/show_toast_dialog.tsx";
-import { createSamplesImportActions } from "./import_sample.ts";
+import {
+    createSamplesImportActions,
+    getImportOptions
+} from "./import_sample.ts";
+import { useSettings } from "../settings/settings_context.ts";
 import { createInstrumentFromSamples } from "./link_actions.ts";
 
 /**
@@ -15,13 +19,15 @@ import { createInstrumentFromSamples } from "./link_actions.ts";
 export function useSampleImport() {
     const { t } = useTranslation();
     const { audioEngine } = useAudioEngine();
+    const { settings } = useSettings();
     return async (
         files: readonly File[],
         apply: (actions: HistoryActionGroup) => void
     ) => {
         const { actions, samples, failed } = await createSamplesImportActions(
             audioEngine.context,
-            files
+            files,
+            getImportOptions(settings)
         );
         for (const name of failed) {
             toast.error(t("loadingAndSaving.unsupportedFile", { name }));

@@ -23,14 +23,28 @@ function getShape(value: unknown, path = ""): string[] {
         : [`${path} (${typeof value})`];
 }
 
+/**
+ * The shape with plural forms ("key_one", "key_few") folded into their key, as languages have
+ * different plural forms. Every form must have the same placeholders.
+ */
+function getFoldedShape(value: unknown) {
+    return [
+        ...new Set(
+            getShape(value).map((entry) =>
+                entry.replace(/_(?:zero|one|two|few|many|other)(?= )/, "")
+            )
+        )
+    ];
+}
+
 // Only English and Polish are kept complete. The others may miss keys, which fall back to English
 describe("locales", () => {
-    const english = new Set(getShape(LocaleList.en.translation));
+    const english = new Set(getFoldedShape(LocaleList.en.translation));
     it.each(Object.keys(LocaleList).filter((code) => code !== "en"))(
         "%s only has keys and placeholders that English has",
         (code) => {
             expect(
-                getShape(LocaleList[code].translation).filter(
+                getFoldedShape(LocaleList[code].translation).filter(
                     (entry) => !english.has(entry)
                 )
             ).toEqual([]);
@@ -38,6 +52,6 @@ describe("locales", () => {
     );
 
     it("pl has every key of English", () => {
-        expect(getShape(LocaleList.pl.translation)).toEqual([...english]);
+        expect(getFoldedShape(LocaleList.pl.translation)).toEqual([...english]);
     });
 });

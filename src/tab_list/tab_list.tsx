@@ -36,23 +36,17 @@ function Tab({ session, isActive, onSelect, onClose }: TabProps) {
     const dropTarget = useDropTarget({
         accepts: (payload) => payload.session !== session,
         onDrop: ({ entities, session: source }) => {
-            session.history.do([
-                ...clipboard.clonePresets(
+            session.history.do(
+                clipboard.cloneElements(
                     session,
-                    entities.filter(isPreset),
-                    source
-                ),
-                ...clipboard.cloneInstruments(
-                    session,
-                    entities.filter(isInstrument),
-                    source
-                ),
-                ...clipboard.cloneSamples(
-                    session,
-                    entities.filter(isSample),
+                    {
+                        presets: entities.filter(isPreset),
+                        instruments: entities.filter(isInstrument),
+                        samples: entities.filter(isSample)
+                    },
                     source
                 )
-            ]);
+            );
             toast.success(
                 t("clipboardLocale.copiedToBank", {
                     count: entities.length,

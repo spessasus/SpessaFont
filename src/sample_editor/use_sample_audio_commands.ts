@@ -15,12 +15,14 @@ import {
     getExportChannels
 } from "./sample_audio.ts";
 import type { EqualizerSettings } from "./equalizer/equalizer.ts";
+import { decodeAudioFile } from "../utils/decode_audio_file.ts";
+import { useSampleTools } from "./use_sample_tools.tsx";
 
 /**
- * Normalizing, equalizing, auto looping, replacing and exporting the sample's audio, all but the
- * export undoable. All but replacing also change the other half of a stereo pair. Playback stops
- * first, because the playing buffer is the old audio. The tools read the audio first, so they
- * are async and disabled while one runs.
+ * Normalizing, equalizing, auto looping, trimming, replacing and exporting the sample's audio,
+ * all but the export undoable. All but replacing also change the other half of a stereo pair.
+ * Playback stops first, because the playing buffer is the old audio. The tools read the audio
+ * first, so they are async and disabled while one runs.
  * @param sample the edited sample
  * @param onBeforeChange called before the audio changes
  */
@@ -32,6 +34,7 @@ export function useSampleAudioCommands(
     const { audioEngine } = useAudioEngine();
     const { session, apply } = useBankEditor();
     const [isLoading, setIsLoading] = useState(false);
+    const sampleTools = useSampleTools();
 
     const run = async (task: () => Promise<void>) => {
         setIsLoading(true);
@@ -52,9 +55,10 @@ export function useSampleAudioCommands(
         }
         onBeforeChange();
         await run(async () => {
-            let decoded: AudioBuffer;
+            let decoded;
             try {
-                decoded = await audioEngine.context.decodeAudioData(
+                decoded = await decodeAudioFile(
+                    audioEngine.context,
                     await file.arrayBuffer()
                 );
             } catch (error) {
@@ -115,6 +119,12 @@ export function useSampleAudioCommands(
             apply(actions);
         });
 
+    const removeSilence = () =>
+        run(() => sampleTools.removeSilence([sample], onBeforeChange));
+
+    const trimAfterLoop = () =>
+        run(() => sampleTools.trimAfterLoop([sample], onBeforeChange));
+
     // The original audio and rate, not the playback buffer, which may be resampled
     const exportWav = (isLoopOnly: boolean) =>
         run(async () => {
@@ -133,6 +143,8 @@ export function useSampleAudioCommands(
         normalize,
         equalize,
         autoLoop,
+        removeSilence,
+        trimAfterLoop,
         exportWav
     };
 }

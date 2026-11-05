@@ -19,6 +19,8 @@ export class ReplaceZoneChildAction implements HistoryAction {
     private readonly previous: BasicInstrument | BasicSample;
     private readonly next: BasicInstrument | BasicSample;
 
+    public readonly label = "replaceZoneChild";
+
     public constructor(
         element: BasicPreset | BasicInstrument,
         zone: BasicPresetZone | BasicInstrumentZone,

@@ -4,16 +4,55 @@ import type { BankStore, HistoryState } from "./bank_store.ts";
 import { ChangeSet } from "./change_set.ts";
 
 /**
+ * What an edit does, as the Edit menu names it ("Undo Rename Preset").
+ */
+export type HistoryLabel =
+    | "addInstrument"
+    | "addPreset"
+    | "addSample"
+    | "addZone"
+    | "changeAudio"
+    | "changePatch"
+    | "changeSampleType"
+    | "convertSamples"
+    | "deleteInstrument"
+    | "deletePreset"
+    | "deleteSample"
+    | "deleteZone"
+    | "editBankInfo"
+    | "editDefaultModulators"
+    | "editGenerator"
+    | "editModulators"
+    | "editRange"
+    | "editSample"
+    | "renameInstrument"
+    | "renamePreset"
+    | "renameSample"
+    | "replaceZoneChild"
+    | "splitZones";
+
+/**
  * One undoable edit. Actions mutate the document and record what they touched in the change set.
  * They never talk to React or the synthesizer.
  */
 export interface HistoryAction {
+    /**
+     * A group is named after its last action, the one that finishes it (a paste ends with the
+     * presets, after their instruments and samples).
+     */
+    readonly label: HistoryLabel;
+
     do(document: BankDocument, changes: ChangeSet): void;
 
     undo(document: BankDocument, changes: ChangeSet): void;
 }
 
 export type HistoryActionGroup = HistoryAction[];
+
+/**
+ * How close groups with the same merge key must follow each other to become one undo step.
+ */
+export const MERGE_WINDOW_MS = 500;
 
 /**
  * Runs, undoes and redoes groups of actions on one document,
@@ -29,6 +68,12 @@ export class HistoryManager {
      * The `done` length at the last save. Undefined when that state can no longer be reached.
      */
     private savedPosition: number | undefined = 0;
+
+    /**
+     * The merge key of the last group and when it ran, so quick repeats (wheel notches on one
+     * cell) can join it.
+     */
+    private lastMerge: { key: string; time: number } | undefined;
 
     public constructor(document: BankDocument, store: BankStore) {
         this.document = document;
@@ -73,20 +118,40 @@ export class HistoryManager {
         return {
             canUndo: this.canUndo,
             canRedo: this.canRedo,
-            isDirty: this.isDirty
+            isDirty: this.isDirty,
+            undoLabel: this.done.at(-1)?.at(-1)?.label,
+            redoLabel: this.undone.at(-1)?.at(-1)?.label
         };
     }
 
     /**
      * Runs a new group and records it. Returns the focus hint of the group, if any.
      * If an action throws, the actions already run are undone and the error is rethrown.
+     * @param group the actions
+     * @param mergeKey a group with the same key as the last one, run within `MERGE_WINDOW_MS`
+     * of it, joins it as one undo step. The saved state never merges, so the dirty flag stays
+     * right.
      */
-    public do(group: HistoryActionGroup) {
+    public do(group: HistoryActionGroup, mergeKey?: string) {
         if (group.length === 0) {
             return;
         }
         const changes = new ChangeSet();
         this.run(group, changes);
+        const now = Date.now();
+        const last = this.done.at(-1);
+        const canMerge =
+            mergeKey !== undefined &&
+            last !== undefined &&
+            this.lastMerge?.key === mergeKey &&
+            now - this.lastMerge.time < MERGE_WINDOW_MS &&
+            this.savedPosition !== this.done.length;
+        this.lastMerge =
+            mergeKey === undefined ? undefined : { key: mergeKey, time: now };
+        if (canMerge) {
+            last.push(...group);
+            return this.commit(changes);
+        }
         if (
             this.savedPosition !== undefined &&
             this.savedPosition > this.done.length
@@ -103,6 +168,7 @@ export class HistoryManager {
      * group stays in the history, so the bank is not left half undone and nothing is lost.
      */
     public undo() {
+        this.lastMerge = undefined;
         const group = this.done.pop();
         if (!group) {
             return;
@@ -128,6 +194,7 @@ export class HistoryManager {
     }
 
     public redo() {
+        this.lastMerge = undefined;
         const group = this.undone.pop();
         if (!group) {
             return;
@@ -158,6 +225,7 @@ export class HistoryManager {
      */
     public markSaved(position = this.done.length) {
         this.savedPosition = position;
+        this.lastMerge = undefined;
         this.store.commit(new ChangeSet(), this.state);
     }
 }

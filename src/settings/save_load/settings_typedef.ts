@@ -20,7 +20,18 @@ export interface SavedSettingsType {
 
     voiceCap: number;
     sampleRate: number;
+
+    removeImportSilence: boolean;
+    trimImportAfterLoop: boolean;
 }
+
+/**
+ * The settings that are on or off.
+ */
+export const BOOLEAN_SETTINGS = [
+    "removeImportSilence",
+    "trimImportAfterLoop"
+] as const satisfies readonly (keyof SavedSettingsType)[];
 
 export const UNSET_LANGUAGE = "UNSET";
 export const SPESSAFONT_SETTINGS_KEY = "SPESSAFONT-USER-SETTINGS";
@@ -39,7 +50,10 @@ export const DEFAULT_SETTINGS: SavedSettingsType = {
     delayLevel: 1,
 
     voiceCap: 350,
-    sampleRate: readSampleRateParam()
+    sampleRate: readSampleRateParam(),
+
+    removeImportSilence: false,
+    trimImportAfterLoop: false
 };
 
 type NumericSettingKey = {

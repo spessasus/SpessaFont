@@ -25,6 +25,8 @@ export class SetSampleTypeAction implements HistoryAction {
      * @param sample the sample to change
      * @param after the new linked sample (undefined for mono) and type
      */
+    public readonly label = "changeSampleType";
+
     public constructor(sample: BasicSample, after: SampleLink) {
         this.sample = sample;
         this.after = after;

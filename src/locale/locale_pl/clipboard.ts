@@ -1,14 +1,47 @@
 export const ClipboardLocale = {
-    copiedSamples: "Skopiowano {{count}} próbek.",
-    copiedInstruments: "Skopiowano {{count}} instrumentów.",
-    copiedPresets: "Skopiowano {{count}} presetów.",
-    copiedModulators: "Skopiowano {{count}} modulatorów.",
+    copiedSamples_one: "Skopiowano {{count}} próbkę.",
+    copiedSamples_few: "Skopiowano {{count}} próbki.",
+    copiedSamples_many: "Skopiowano {{count}} próbek.",
+    copiedSamples_other: "Skopiowano {{count}} próbki.",
+    copiedInstruments_one: "Skopiowano {{count}} instrument.",
+    copiedInstruments_few: "Skopiowano {{count}} instrumenty.",
+    copiedInstruments_many: "Skopiowano {{count}} instrumentów.",
+    copiedInstruments_other: "Skopiowano {{count}} instrumentu.",
+    copiedPresets_one: "Skopiowano {{count}} preset.",
+    copiedPresets_few: "Skopiowano {{count}} presety.",
+    copiedPresets_many: "Skopiowano {{count}} presetów.",
+    copiedPresets_other: "Skopiowano {{count}} presetu.",
+    copiedModulators_one: "Skopiowano {{count}} modulator.",
+    copiedModulators_few: "Skopiowano {{count}} modulatory.",
+    copiedModulators_many: "Skopiowano {{count}} modulatorów.",
+    copiedModulators_other: "Skopiowano {{count}} modulatora.",
 
-    pastedSamples: "Wklejono {{count}} próbek.",
-    pastedInstruments: "Wklejono {{count}} instrumentów.",
-    pastedPresets: "Wklejono {{count}} presetów.",
-    movedPresets:
+    pastedSamples_one: "Wklejono {{count}} próbkę.",
+    pastedSamples_few: "Wklejono {{count}} próbki.",
+    pastedSamples_many: "Wklejono {{count}} próbek.",
+    pastedSamples_other: "Wklejono {{count}} próbki.",
+    pastedInstruments_one: "Wklejono {{count}} instrument.",
+    pastedInstruments_few: "Wklejono {{count}} instrumenty.",
+    pastedInstruments_many: "Wklejono {{count}} instrumentów.",
+    pastedInstruments_other: "Wklejono {{count}} instrumentu.",
+    pastedPresets_one: "Wklejono {{count}} preset.",
+    pastedPresets_few: "Wklejono {{count}} presety.",
+    pastedPresets_many: "Wklejono {{count}} presetów.",
+    pastedPresets_other: "Wklejono {{count}} presetu.",
+    movedPresets_one:
+        "{{count}} wklejony preset trafił na następny wolny patch MIDI, bo jego był zajęty.",
+    movedPresets_few:
+        "{{count}} wklejone presety trafiły na następny wolny patch MIDI, bo ich był zajęty.",
+    movedPresets_many:
         "{{count}} wklejonych presetów trafiło na następny wolny patch MIDI, bo ich był zajęty.",
-    pastedModulators: "Wklejono {{count}} modulatorów.",
-    copiedToBank: "Skopiowano {{count}} elementów do {{name}}."
+    movedPresets_other:
+        "{{count}} wklejonego presetu trafiło na następny wolny patch MIDI, bo jego był zajęty.",
+    pastedModulators_one: "Wklejono {{count}} modulator.",
+    pastedModulators_few: "Wklejono {{count}} modulatory.",
+    pastedModulators_many: "Wklejono {{count}} modulatorów.",
+    pastedModulators_other: "Wklejono {{count}} modulatora.",
+    copiedToBank_one: "Skopiowano {{count}} element do {{name}}.",
+    copiedToBank_few: "Skopiowano {{count}} elementy do {{name}}.",
+    copiedToBank_many: "Skopiowano {{count}} elementów do {{name}}.",
+    copiedToBank_other: "Skopiowano {{count}} elementu do {{name}}."
 };
