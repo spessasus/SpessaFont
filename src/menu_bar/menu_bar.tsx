@@ -29,6 +29,10 @@ interface MenuBarProps {
      */
     isEditorCovered: boolean;
     isKeyboardShown: boolean;
+    /**
+     * Receives the place for the shown element's tools menu, which the editor renders.
+     */
+    toolsMenuSlotRef: (node: HTMLDivElement | null) => void;
 }
 
 export function MenuBar({
@@ -41,7 +45,8 @@ export function MenuBar({
     onNewFile,
     onCloseFile,
     isEditorCovered,
-    isKeyboardShown
+    isKeyboardShown,
+    toolsMenuSlotRef
 }: MenuBarProps) {
     const { t } = useTranslation();
     const {
@@ -129,6 +134,7 @@ export function MenuBar({
                     onMergeDuplicateSamples={revealed(mergeDuplicateSamples)}
                 />
             ) : null}
+            <div ref={toolsMenuSlotRef} className={"menu_bar_tools_slot"} />
             {showMIDIPlayer && <MIDIPlayer />}
             <a
                 className={"menu_bar_button"}

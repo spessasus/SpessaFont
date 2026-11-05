@@ -53,6 +53,11 @@ export const MenuBarLocale = {
         autoLinkSamples: "Auto-Link Stereo Samples",
         mergeDuplicateSamples: "Merge Duplicate Samples"
     },
+    tools: {
+        preset: "Preset Tools",
+        instrument: "Instrument Tools",
+        sample: "Sample Tools"
+    },
     history: {
         addInstrument: "Add Instrument",
         addPreset: "Add Preset",

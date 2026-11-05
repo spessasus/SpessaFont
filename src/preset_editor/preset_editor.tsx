@@ -5,6 +5,7 @@ import { GeneratorTable } from "../generator_table/generator_table.tsx";
 import { getObjectId } from "../utils/object_id.ts";
 import { useLinkDropTarget } from "../drag_and_drop/use_link_drop_target.ts";
 import { PRESET_ROWS } from "./preset_rows.ts";
+import { ZoneToolsMenu } from "../generator_table/tools/zone_tools_menu.tsx";
 
 interface PresetEditorProps {
     preset: BasicPreset;
@@ -15,6 +16,7 @@ export function PresetEditor({ preset }: PresetEditorProps) {
     const dropTarget = useLinkDropTarget(preset);
     return (
         <div className={"preset_editor"} {...dropTarget}>
+            <ZoneToolsMenu element={preset} />
             <GeneratorTable
                 key={getObjectId(preset)}
                 rows={PRESET_ROWS}

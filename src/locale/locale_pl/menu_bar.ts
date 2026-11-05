@@ -53,6 +53,11 @@ export const MenuBarLocale = {
         autoLinkSamples: "Automatycznie połącz próbki stereo",
         mergeDuplicateSamples: "Scal powtarzające się próbki"
     },
+    tools: {
+        preset: "Narzędzia presetu",
+        instrument: "Narzędzia instrumentu",
+        sample: "Narzędzia próbki"
+    },
     history: {
         addInstrument: "Dodanie instrumentu",
         addPreset: "Dodanie presetu",

@@ -17,7 +17,6 @@ import {
     findFreePatch,
     getTakenPatches
 } from "../../core_backend/free_patch.ts";
-import { useElementTools } from "../../generator_table/tools/use_element_tools.tsx";
 import { MAX_NAME_LENGTH } from "../../utils/element_name.ts";
 
 interface BottomBarProps {
@@ -31,7 +30,6 @@ export function BottomBar({ preset }: BottomBarProps) {
     const { t } = useTranslation();
     const { session, apply } = useBankEditor();
     const view = usePresetView(session.store, getObjectId(preset));
-    const tools = useElementTools();
     const showScopedToastDialog = useScopedToastDialog();
     // The pane closes when its preset is removed, this only covers the render before
     if (!view) {
@@ -172,15 +170,6 @@ export function BottomBar({ preset }: BottomBarProps) {
                     }
                 />
             </div>
-            {view.zones.length > 0 ? (
-                <button
-                    type={"button"}
-                    className={"plain_button"}
-                    onClick={() => void tools.openKeyCurve([preset])}
-                >
-                    {t("toolsLocale.keyCurve.menu")}
-                </button>
-            ) : null}
             <button
                 type={"button"}
                 className={"plain_button"}

@@ -208,6 +208,12 @@ button.menu_bar_icon {
     text-align: start;
 }
 
+/* The editor's tools menu sits in the bar as if it were the bar's own */
+.menu_bar_tools_slot,
+.tools_menu {
+    display: contents;
+}
+
 .menu_bar_spacer {
     flex: 1;
 }

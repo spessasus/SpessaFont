@@ -32,6 +32,7 @@ import { ErrorBoundary } from "./error_boundary/error_boundary.tsx";
 import { PartErrorFallback } from "./error_boundary/part_error_fallback.tsx";
 import { IS_MAC } from "./utils/environment_detection.ts";
 import { rememberFocus } from "./utils/focus_return.ts";
+import { ToolsMenuSlotContext } from "./menu_bar/tools_menu_slot.ts";
 
 const SOUND_BANK_EXTENSIONS = ACCEPTED_SOUNDBANK_FORMATS.split(",");
 
@@ -72,6 +73,18 @@ export function App() {
         setAreSettingsShown(false);
         restoreSettingsFocus.current?.();
         restoreSettingsFocus.current = null;
+    };
+    // The editor puts its tools menu here, see ToolsMenu
+    const [toolsMenuSlot, setToolsMenuSlot] = useState<HTMLDivElement | null>(
+        null
+    );
+    const toolsMenuContext = {
+        node: toolsMenuSlot,
+        onReveal: () => {
+            if (areSettingsShown) {
+                closeSettings();
+            }
+        }
     };
     const toggleSettings = () => {
         if (areSettingsShown) {
@@ -220,6 +233,7 @@ export function App() {
                 onToggleKeyboard={() => setIsKeyboardShown((shown) => !shown)}
                 isEditorCovered={areSettingsShown}
                 isKeyboardShown={isKeyboardShown}
+                toolsMenuSlotRef={setToolsMenuSlot}
             />
             <div className={"app_body"}>
                 {/* Covered by the settings, nothing in here takes the focus or a click */}
@@ -235,12 +249,14 @@ export function App() {
                             key={activeSession.id}
                             fallback={renderPartError}
                         >
-                            <BankEditor
-                                session={activeSession}
-                                view={activeView}
-                                onViewChange={setActiveView}
-                                isCovered={areSettingsShown}
-                            />
+                            <ToolsMenuSlotContext value={toolsMenuContext}>
+                                <BankEditor
+                                    session={activeSession}
+                                    view={activeView}
+                                    onViewChange={setActiveView}
+                                    isCovered={areSettingsShown}
+                                />
+                            </ToolsMenuSlotContext>
                         </ErrorBoundary>
                     )}
                     {tabs.length === 0 && (

@@ -6,7 +6,7 @@ import { WaveView } from "./wave_view/wave_view.tsx";
 import { WaitingInput } from "../fancy_inputs/waiting_input/waiting_input.tsx";
 import { LinkedInstruments } from "./linked_instruments/linked_instruments.tsx";
 import { getObjectId } from "../utils/object_id.ts";
-import { SampleTools } from "./sample_tools.tsx";
+import { SampleToolsMenu } from "./sample_tools_menu.tsx";
 import { SampleProperties } from "./sample_properties.tsx";
 import { SamplePlayback } from "./sample_playback.tsx";
 import { ZoomSlider } from "./zoom_slider.tsx";
@@ -139,6 +139,16 @@ function SampleEditorPane({
 
     return (
         <div className={"sample_editor"}>
+            <SampleToolsMenu
+                isLoading={audio.isLoading}
+                hasLoop={view.loopEnd > view.loopStart}
+                onExportWav={audio.exportWav}
+                onNormalize={audio.normalize}
+                onAutoLoop={audio.autoLoop}
+                onRemoveSilence={audio.removeSilence}
+                onTrimAfterLoop={audio.trimAfterLoop}
+                onReplaceAudio={audio.replaceAudio}
+            />
             <WaveView
                 zoom={zoom}
                 onLoopStartChange={edits.setLoopStart}
@@ -179,16 +189,6 @@ function SampleEditorPane({
                     partnerName={partnerName}
                     canLink={canLink}
                     edits={edits}
-                />
-                <SampleTools
-                    isLoading={audio.isLoading}
-                    hasLoop={view.loopEnd > view.loopStart}
-                    onExportWav={audio.exportWav}
-                    onNormalize={audio.normalize}
-                    onAutoLoop={audio.autoLoop}
-                    onRemoveSilence={audio.removeSilence}
-                    onTrimAfterLoop={audio.trimAfterLoop}
-                    onReplaceAudio={audio.replaceAudio}
                 />
                 <EqualizerPanel
                     state={equalizer}

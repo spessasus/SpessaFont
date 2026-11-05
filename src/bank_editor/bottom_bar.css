@@ -1,9 +1,9 @@
-/* Wraps on narrow windows and long translations instead of hiding the last items */
+/* One row, which scrolls sideways when a long list of users does not fit */
 .bottom_bar {
     display: flex;
-    flex-wrap: wrap;
-    max-height: 30vh;
-    overflow-y: auto;
+    flex-shrink: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
     border-top: solid 1px var(--track-border-color);
     width: 100%;
     margin-top: auto;
@@ -16,6 +16,7 @@
     padding: 0.3rem 1rem;
     text-align: center;
     white-space: nowrap;
+    flex-shrink: 0;
     border-right: solid 1px var(--track-border-color);
 }
 
