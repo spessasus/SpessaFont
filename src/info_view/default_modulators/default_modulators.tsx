@@ -50,9 +50,6 @@ export function DefaultModulators() {
                     components={{ bank: <i /> }}
                 />
             </h2>
-            <p className={"default_modulators_note"}>
-                {t("bankInfo.defaultModulatorsNote")}
-            </p>
             <ModulatorList
                 modulatorList={defaultModulators}
                 getModulators={getModulators}

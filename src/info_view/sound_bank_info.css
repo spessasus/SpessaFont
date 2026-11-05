@@ -36,13 +36,6 @@
     min-width: 0;
 }
 
-.sound_bank_info .info_field_hint {
-    grid-column: 2;
-    margin: 0;
-    font-size: 0.9rem;
-    opacity: 0.8;
-}
-
 .sound_bank_info span label {
     margin-right: 1rem;
     white-space: nowrap;

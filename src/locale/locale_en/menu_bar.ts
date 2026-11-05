@@ -24,6 +24,12 @@ export const MenuBarLocale = {
         warnDLS:
             "This sound bank has {{losses}}, which DLS files cannot store. " +
             "Saving it as DLS will leave them out. Are you sure you want to continue?",
+        warnSubject:
+            "This sound bank has a subject, which {{format}} files have no place for. " +
+            "Saving it as {{format}} adds the subject to the end of the description. Are you sure you want to continue?",
+        warnDefaultModulators:
+            "This sound bank has edited default modulators. Only players based on SpessaSynth use them, " +
+            "others play it with the standard ones. Are you sure you want to continue?",
         dlsLossStereoLinks: "linked stereo samples",
         dlsLossUnusedInstruments: "instruments no preset uses",
         dlsLossDefaultModulators: "edited default modulators",

@@ -5,8 +5,6 @@ export const BankInfoLocale = {
     product: "Produkt",
     copyright: "Prawa autorskie",
     subject: "Temat",
-    subjectHint:
-        "Pliki SF2, SF3 i SFE nie mają tematu, więc zapis w nich dopisuje go na końcu opisu. DLS go zachowuje.",
     description: "Opis",
 
     stats: "Informacje:",
@@ -25,12 +23,10 @@ export const BankInfoLocale = {
     modulatorCount: "Liczba modulatorów:",
     defaultModulatorsForBank: "Domyślne modulatory dla <bank>{{name}}</bank>:",
     defaultModulators: "Domyślne modulatory:",
-    defaultModulatorsNote:
-        "Używają ich tylko odtwarzacze oparte na SpessaSynth, inne używają domyślnych modulatorów SF2. Zapis DLS ich nie zachowuje.",
     resetDefaultModulators: "Przywróć domyślne",
-    checkButton: "Sprawdzenie banku:",
+    checkButton: "Problemy:",
     check: {
-        title: "Sprawdzenie banku: znaleziono {{count}}",
+        title: "Problemy: {{count}}",
         noIssues: "Nic nie znaleziono. Bank wygląda dobrze.",
         duplicatePatch:
             "Te presety mają ten sam patch {{patch}}, więc gra tylko jeden:",

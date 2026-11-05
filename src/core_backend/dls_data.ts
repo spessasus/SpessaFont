@@ -11,7 +11,7 @@ const STANDARD_MODULATORS = new BasicSoundBank().defaultModulators;
  * Whether the default modulators differ from core's, as core's SF2 writer decides when it
  * writes them.
  */
-function hasCustomDefaultModulators(bank: BasicSoundBank) {
+export function hasCustomDefaultModulators(bank: BasicSoundBank) {
     const modulators = bank.defaultModulators;
     return (
         modulators.length !== STANDARD_MODULATORS.length ||

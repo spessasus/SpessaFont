@@ -8,7 +8,10 @@ import { logError } from "../utils/core_utils.ts";
 import { hasSFEOnlyData } from "../core_backend/sfe_data.ts";
 import { hasBankNumbersLostInSF2 } from "../core_backend/sf2_bank_numbers.ts";
 import { hasTextOutsideLatin1 } from "../core_backend/latin1_text.ts";
-import { getDLSLosses } from "../core_backend/dls_data.ts";
+import {
+    getDLSLosses,
+    hasCustomDefaultModulators
+} from "../core_backend/dls_data.ts";
 
 const FORMAT_NAMES = {
     sf2: "SF2",
@@ -158,6 +161,18 @@ export function useSaveBank() {
                     })
                 );
             }
+        }
+        // SF2 has no subject chunk, core's writer adds the subject to the comment
+        if (target !== "dls" && bank.soundBankInfo.subject?.trim()) {
+            warnings.push(
+                t("menuBarLocale.file.warnSubject", {
+                    format: FORMAT_NAMES[target]
+                })
+            );
+        }
+        // A DLS save leaves them out, which its own warning says
+        if (target !== "dls" && hasCustomDefaultModulators(bank)) {
+            warnings.push(t("menuBarLocale.file.warnDefaultModulators"));
         }
         if (format === "sf2" && session.hasCompressedSamples()) {
             warnings.push(t("menuBarLocale.file.warnSF2"));

@@ -62,4 +62,43 @@ describe("useSaveBank", () => {
         );
         session.close();
     });
+
+    it("warns about a subject on an SF2 save but not on a DLS save, which keeps it", () => {
+        vi.stubGlobal("showSaveFilePicker", () =>
+            Promise.resolve(createHandle("bank"))
+        );
+        const { result } = renderHook(() => useSaveBank());
+        // The questions come one after another, so only the first one shows at once
+        const firstQuestion = (format: "sf2" | "dls") => {
+            const session = createTestSession();
+            session.document.bank.soundBankInfo.subject = "Pianos";
+            vi.mocked(showToastDialog).mockClear();
+            void result.current(session, format);
+            session.close();
+            return vi.mocked(showToastDialog).mock.calls[0]?.[0].content;
+        };
+
+        expect(firstQuestion("sf2")).toBe("menuBarLocale.file.warnSubject");
+        expect(firstQuestion("dls")).not.toBe("menuBarLocale.file.warnSubject");
+    });
+
+    it("warns about edited default modulators on an SF2 save", () => {
+        const session = createTestSession();
+        const { bank } = session.document;
+        bank.defaultModulators = bank.defaultModulators.slice(1);
+        vi.stubGlobal("showSaveFilePicker", () =>
+            Promise.resolve(createHandle("bank.sf2"))
+        );
+        vi.mocked(showToastDialog).mockClear();
+        const { result } = renderHook(() => useSaveBank());
+
+        void result.current(session, "sf2");
+
+        expect(showToastDialog).toHaveBeenCalledWith(
+            expect.objectContaining({
+                content: "menuBarLocale.file.warnDefaultModulators"
+            })
+        );
+        session.close();
+    });
 });

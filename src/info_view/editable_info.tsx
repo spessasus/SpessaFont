@@ -37,19 +37,9 @@ interface InfoTextFieldProps {
     label: string;
     value: string;
     onCommit: (value: string) => void;
-    /**
-     * The id of a hint about the field.
-     */
-    describedBy?: string;
 }
 
-function InfoTextField({
-    id,
-    label,
-    value,
-    onCommit,
-    describedBy
-}: InfoTextFieldProps) {
+function InfoTextField({ id, label, value, onCommit }: InfoTextFieldProps) {
     return (
         <span>
             <label htmlFor={id}>{label}</label>
@@ -57,7 +47,6 @@ function InfoTextField({
                 className={"pretty_input hover_brightness"}
                 id={id}
                 maxLength={INFO_TEXT_LENGTH}
-                aria-describedby={describedBy}
                 onCommit={(v) => {
                     onCommit(v);
                     return v;
@@ -144,15 +133,13 @@ export function EditableInfo() {
     const getTextField = (
         field: "engineer" | "product" | "copyright" | "subject",
         id: string,
-        label: string,
-        describedBy?: string
+        label: string
     ) => (
         <InfoTextField
             id={id}
             label={label}
             value={info[field] ?? ""}
             onCommit={(v) => setInfo(field, v)}
-            describedBy={describedBy}
         />
     );
 
@@ -182,15 +169,7 @@ export function EditableInfo() {
                 />
                 {getTextField("product", "IPRD", t("bankInfo.product"))}
                 {getTextField("copyright", "ICOP", t("bankInfo.copyright"))}
-                {getTextField(
-                    "subject",
-                    "ISBJ",
-                    t("bankInfo.subject"),
-                    "ISBJ_hint"
-                )}
-                <p className={"info_field_hint"} id={"ISBJ_hint"}>
-                    {t("bankInfo.subjectHint")}
-                </p>
+                {getTextField("subject", "ISBJ", t("bankInfo.subject"))}
             </div>
             <div className={"comment"}>
                 <WaitingTextArea

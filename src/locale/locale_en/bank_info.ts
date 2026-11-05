@@ -5,8 +5,6 @@ export const BankInfoLocale = {
     product: "Product",
     copyright: "Copyright",
     subject: "Subject",
-    subjectHint:
-        "SF2, SF3 and SFE files have no subject, so saving in them adds it to the end of the description. DLS keeps it.",
     description: "Description",
 
     stats: "Information:",
@@ -25,12 +23,10 @@ export const BankInfoLocale = {
     modulatorCount: "Modulator Count:",
     defaultModulatorsForBank: "Default Modulators for <bank>{{name}}</bank>:",
     defaultModulators: "Default Modulators:",
-    defaultModulatorsNote:
-        "Only players based on SpessaSynth use these, others use the SF2 defaults. DLS saves do not keep them.",
     resetDefaultModulators: "Reset to Defaults",
-    checkButton: "Bank Check:",
+    checkButton: "Problems:",
     check: {
-        title: "Bank Check: {{count}} found",
+        title: "Problems: {{count}}",
         noIssues: "Nothing found. The bank looks fine.",
         duplicatePatch:
             "These presets share the patch {{patch}}, so only one plays:",

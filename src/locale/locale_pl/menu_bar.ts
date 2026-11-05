@@ -24,6 +24,12 @@ export const MenuBarLocale = {
         warnDLS:
             "Ten bank dźwięków zawiera {{losses}}, których pliki DLS nie mogą przechować. " +
             "Zapis w formacie DLS je pominie. Czy na pewno chcesz kontynuować?",
+        warnSubject:
+            "Ten bank dźwięków ma temat, na który pliki {{format}} nie mają miejsca. " +
+            "Zapis w formacie {{format}} doda temat na końcu opisu. Czy na pewno chcesz kontynuować?",
+        warnDefaultModulators:
+            "Ten bank dźwięków ma zmienione domyślne modulatory. Używają ich tylko odtwarzacze oparte na SpessaSynth, " +
+            "inne odtwarzają go ze standardowymi. Czy na pewno chcesz kontynuować?",
         dlsLossStereoLinks: "połączone próbki stereo",
         dlsLossUnusedInstruments: "instrumenty nieużywane przez żaden preset",
         dlsLossDefaultModulators: "zmienione domyślne modulatory",
