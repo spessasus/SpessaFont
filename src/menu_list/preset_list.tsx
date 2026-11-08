@@ -82,6 +82,7 @@ export function PresetList({
                         : undefined
                 }
                 onPaste={contents.presets > 0 ? commands.paste : undefined}
+                count={presets.length}
             />
             {isOpen ? (
                 <VirtualItemList

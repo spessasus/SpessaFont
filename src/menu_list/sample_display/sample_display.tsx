@@ -5,7 +5,7 @@ import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 import { useSampleView } from "../../hooks/use_sample_view.ts";
 import { useTranslation } from "react-i18next";
 
-interface SampleDisplayProps {
+export interface SampleDisplayProps {
     /**
      * The sample's view id.
      */

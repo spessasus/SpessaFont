@@ -37,6 +37,9 @@ export const PhoneLocale = {
         addBank: "Open or create a sound bank",
         openBanks: "Open sound banks"
     },
+    selection: {
+        select: "Select…"
+    },
     back: {
         pressAgain: "Press back again to leave",
         unsavedBanks_one: "{{count}} bank has unsaved changes",

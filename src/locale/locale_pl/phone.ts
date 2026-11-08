@@ -37,6 +37,9 @@ export const PhoneLocale = {
         addBank: "Otwórz lub utwórz bank dźwięków",
         openBanks: "Otwarte banki dźwięków"
     },
+    selection: {
+        select: "Zaznacz…"
+    },
     back: {
         pressAgain: "Naciśnij wstecz ponownie, aby wyjść",
         unsavedBanks_one: "{{count}} bank ma niezapisane zmiany",

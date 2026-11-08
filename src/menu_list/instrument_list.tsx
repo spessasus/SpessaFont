@@ -85,6 +85,7 @@ export function InstrumentList({
                         : undefined
                 }
                 onPaste={contents.instruments > 0 ? commands.paste : undefined}
+                count={instruments.length}
             />
             {isOpen ? (
                 <VirtualItemList
