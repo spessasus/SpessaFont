@@ -181,6 +181,23 @@ export function MinusIcon() {
     );
 }
 
+/**
+ * A plus over a minus, the sign toggle of a number field.
+ */
+export function PlusMinusIcon() {
+    return (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="currentColor"
+            viewBox="0 0 16 16"
+        >
+            <path d="M8 1.5a.5.5 0 0 1 .5.5v2.5H11a.5.5 0 0 1 0 1H8.5V8a.5.5 0 0 1-1 0V5.5H5a.5.5 0 0 1 0-1h2.5V2a.5.5 0 0 1 .5-.5M4.5 12.5A.5.5 0 0 1 5 12h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5" />
+        </svg>
+    );
+}
+
 export function PinIcon() {
     return (
         <svg

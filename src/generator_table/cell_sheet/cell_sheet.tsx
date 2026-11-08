@@ -1,6 +1,7 @@
 import { useId } from "react";
 import type { MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
+import toast from "react-hot-toast";
 import {
     BasicInstrument,
     type BasicPreset,
@@ -18,7 +19,10 @@ import {
 } from "../../utils/icons/app_icons.tsx";
 import { generatorLocaleMap } from "../../utils/translated_options/generator_to_locale_map.ts";
 import type { CellContext } from "../cell/cell_values.ts";
+import { isRangeGenerator } from "../cell/range_generator.ts";
 import { useCellCommands } from "../cell/use_cell_commands.ts";
+import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
+import { getGeneratorOptions } from "../generator_options.ts";
 import {
     GENERATOR_GROUP_ORDER,
     GROUP_OF_GENERATOR
@@ -26,7 +30,9 @@ import {
 import type { GeneratorRowType } from "../generator_row_type.ts";
 import { GENERATOR_UNITS } from "../generator_unit.ts";
 import { getViewZones, type ZoneColumn } from "../zone_columns.ts";
+import { CellSheetNumberEditor } from "./cell_sheet_number_editor.tsx";
 import { fillBetween, selectAllZones } from "./cell_sheet_selection.ts";
+import { applyCellSheetText } from "./cell_sheet_text.ts";
 import { CellSheetZoneList } from "./cell_sheet_zone_list.tsx";
 import "./cell_sheet_phone.css";
 
@@ -67,6 +73,7 @@ export function CellSheet({
 }: CellSheetProps) {
     const { t } = useTranslation();
     const { openMenu } = useContextMenu();
+    const { apply } = useBankEditor();
     const labelId = useId();
     const { generator } = row;
     const checkedColumns = columns.filter((c) => checkedIds.has(c.zone.id));
@@ -122,6 +129,54 @@ export function CellSheet({
         }
         onCheckedChange(ids);
     };
+
+    const status = t("phoneLocale.cellSheet.checked", {
+        checked: checkedColumns.length,
+        total: columns.length
+    });
+    const isNumberRow =
+        !isRangeGenerator(generator) && !getGeneratorOptions(generator);
+
+    const footerButtons = (
+        <>
+            <button
+                type={"button"}
+                className={"pretty_button cell_sheet_button"}
+                aria-disabled={!first}
+                onClick={() => {
+                    if (first) {
+                        commands.getInputCommands(first).clear();
+                    }
+                }}
+            >
+                {t("phoneLocale.cellSheet.clear")}
+            </button>
+            <button
+                type={"button"}
+                className={"pretty_button cell_sheet_button"}
+                aria-disabled={!first}
+                onClick={() => {
+                    if (first) {
+                        commands.copyCells(first);
+                    }
+                }}
+            >
+                {t("phoneLocale.cellSheet.copy")}
+            </button>
+            <button
+                type={"button"}
+                className={"pretty_button cell_sheet_button"}
+                aria-disabled={!first}
+                onClick={() => {
+                    if (first) {
+                        commands.pasteCells(first);
+                    }
+                }}
+            >
+                {t("phoneLocale.cellSheet.paste")}
+            </button>
+        </>
+    );
 
     return (
         <EditorSheet
@@ -197,50 +252,47 @@ export function CellSheet({
                         {t("phoneLocale.cellSheet.between")}
                     </button>
                 </div>
-                <p className={"cell_sheet_status"}>
-                    {t("phoneLocale.cellSheet.checked", {
-                        checked: checkedColumns.length,
-                        total: columns.length
-                    })}
-                </p>
-                <div className={"cell_sheet_footer"}>
-                    <button
-                        type={"button"}
-                        className={"pretty_button cell_sheet_button"}
-                        aria-disabled={!first}
-                        onClick={() => {
+                {isNumberRow ? (
+                    <CellSheetNumberEditor
+                        // Another row starts with an empty field
+                        key={generator}
+                        unitSuffix={unit ? t(unit.suffix) : undefined}
+                        isDisabled={!first}
+                        status={status}
+                        footer={footerButtons}
+                        onApply={(text) => {
+                            const actions = applyCellSheetText(
+                                context,
+                                checkedColumns,
+                                text
+                            );
+                            if (!actions) {
+                                toast.error(
+                                    t("toolsLocale.cells.invalidText", { text })
+                                );
+                                return false;
+                            }
+                            if (actions.length > 0) {
+                                apply(actions);
+                            }
+                            return true;
+                        }}
+                        onNudge={(direction, steps) => {
                             if (first) {
-                                commands.getInputCommands(first).clear();
+                                commands
+                                    .getInputCommands(first)
+                                    .nudge(direction, steps);
                             }
                         }}
-                    >
-                        {t("phoneLocale.cellSheet.clear")}
-                    </button>
-                    <button
-                        type={"button"}
-                        className={"pretty_button cell_sheet_button"}
-                        aria-disabled={!first}
-                        onClick={() => {
-                            if (first) {
-                                commands.copyCells(first);
-                            }
-                        }}
-                    >
-                        {t("phoneLocale.cellSheet.copy")}
-                    </button>
-                    <button
-                        type={"button"}
-                        className={"pretty_button cell_sheet_button"}
-                        aria-disabled={!first}
-                        onClick={() => {
-                            if (first) {
-                                commands.pasteCells(first);
-                            }
-                        }}
-                    >
-                        {t("phoneLocale.cellSheet.paste")}
-                    </button>
-                </div>
+                    />
+                ) : (
+                    <>
+                        <p className={"cell_sheet_status"}>{status}</p>
+                        <div className={"cell_sheet_footer"}>
+                            {footerButtons}
+                        </div>
+                    </>
+                )}
             </div>
         </EditorSheet>
     );

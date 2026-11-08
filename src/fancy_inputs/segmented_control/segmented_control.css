@@ -1,13 +1,14 @@
 :root[data-layout="phone"] .segmented_control {
     display: flex;
-    min-width: 0;
+    /* Sized by its labels, so it never cuts "Pomnóż" or "Jedna strefa" */
+    flex-shrink: 0;
     border: 1px solid var(--track-border-color);
     border-radius: var(--primary-border-radius);
     overflow: hidden;
 }
 
 :root[data-layout="phone"] .segmented_control_segment {
-    flex: 1;
+    flex: 0 0 auto;
     min-width: var(--phone-touch, 2.75rem);
     min-height: var(--phone-touch, 2.75rem);
     padding: 0 0.5rem;

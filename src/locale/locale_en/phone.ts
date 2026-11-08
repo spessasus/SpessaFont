@@ -119,6 +119,18 @@ export const PhoneLocale = {
         checked: "{{checked}} of {{total}} checked",
         fromGlobal: "(Global)",
         fromDefault: "(default)",
-        stereoValues: "L {{left}} / R {{right}}"
+        stereoValues: "L {{left}} / R {{right}}",
+        mode: "Edit mode",
+        set: "Set",
+        add: "Add",
+        multiply: "Multiply",
+        textMode: "abc",
+        value: "Value",
+        sign: "Change sign",
+        stepDown: "Step down",
+        stepUp: "Step up",
+        times10: "×10",
+        sends: "sends {{text}}",
+        apply: "Apply"
     }
 };

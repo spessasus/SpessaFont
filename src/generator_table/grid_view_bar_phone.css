@@ -13,15 +13,6 @@
     border-bottom: 1px solid var(--track-border-color);
 }
 
-:root[data-layout="phone"] .grid_view_bar .segmented_control {
-    flex-shrink: 0;
-}
-
-/* Equal flex segments squeeze One zone in a bar that sizes the control by its content */
-:root[data-layout="phone"] .grid_view_bar .segmented_control_segment {
-    flex: 0 0 auto;
-}
-
 :root[data-layout="phone"] .grid_view_bar_values {
     flex-shrink: 0;
     margin-inline-start: auto;

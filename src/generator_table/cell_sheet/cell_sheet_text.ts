@@ -2,6 +2,7 @@ import type { ZoneView } from "../../core_backend/entity_views.ts";
 import type { ZoneColumn } from "../zone_columns.ts";
 import {
     type CellContext,
+    createTextEditActions,
     getCellDisplay,
     readViewCell
 } from "../cell/cell_values.ts";
@@ -13,7 +14,8 @@ const RELATIVE_PREFIX = /^[+xX*]/;
 /**
  * The text the cell parser understands for a mode and what was typed, or undefined when there
  * is nothing to send. Set and abc text go as typed, Add and Multiply drop one typed prefix
- * (from a hardware keyboard) and add their own.
+ * (from a hardware keyboard) and add their own. A lone minus (the sign button on an empty
+ * field) counts as empty.
  */
 export function buildCellText(
     mode: CellEditMode,
@@ -21,17 +23,29 @@ export function buildCellText(
     isTextMode: boolean
 ) {
     const trimmed = typed.trim();
-    if (trimmed === "") {
+    if (trimmed === "" || trimmed === "-") {
         return undefined;
     }
     if (isTextMode || mode === "set") {
         return trimmed;
     }
     const rest = trimmed.replace(RELATIVE_PREFIX, "").trim();
-    if (rest === "") {
+    if (rest === "" || rest === "-") {
         return undefined;
     }
     return (mode === "add" ? "+" : "x") + rest;
+}
+
+/**
+ * The actions of the sheet's Apply, each checked column from its own value. Undefined when the
+ * text does not fit one of them.
+ */
+export function applyCellSheetText(
+    context: CellContext,
+    columns: readonly ZoneColumn[],
+    text: string
+) {
+    return createTextEditActions(context, columns, text);
 }
 
 /**
