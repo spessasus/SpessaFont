@@ -75,7 +75,8 @@ export const PhoneLocale = {
         viewMode: "Grid view",
         zonePosition: "{{index}} of {{count}}",
         previousZone: "Previous zone",
-        nextZone: "Next zone"
+        nextZone: "Next zone",
+        zones: "Zones {{count}}"
     },
     groups: {
         rangeTuning: "Range and tuning",
@@ -88,6 +89,14 @@ export const PhoneLocale = {
         vibratoLFO: "Vibrato LFO",
         effects: "Effects and voice",
         sample: "Sample"
+    },
+    zoneSheet: {
+        hint: "tap a zone to go to it",
+        findKey: "Find key (38 or D2) or play it",
+        findKeyPlaceholder: "38 or D2",
+        findKeyNote: "The grid jumps to the zone that plays the key.",
+        noZone: "No zone plays this key",
+        addZone: "Add zone…"
     },
     zoneHeader: {
         title: "Zone {{name}} ({{range}})",

@@ -239,3 +239,10 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+/* A zone the Zones sheet jumps to starts right of the sticky name and Global columns */
+:root[data-layout="phone"] .zone_table .header_cell_name {
+    scroll-margin-inline-start: calc(
+        var(--phone-name-column) + var(--phone-global-column) + 0.5rem
+    );
+}

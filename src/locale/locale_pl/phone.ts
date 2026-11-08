@@ -85,7 +85,8 @@ export const PhoneLocale = {
         viewMode: "Widok siatki",
         zonePosition: "{{index}} z {{count}}",
         previousZone: "Poprzednia strefa",
-        nextZone: "Następna strefa"
+        nextZone: "Następna strefa",
+        zones: "Strefy {{count}}"
     },
     groups: {
         rangeTuning: "Zakres i strojenie",
@@ -98,6 +99,14 @@ export const PhoneLocale = {
         vibratoLFO: "LFO wibrata",
         effects: "Efekty i głos",
         sample: "Próbka"
+    },
+    zoneSheet: {
+        hint: "dotknij strefy, aby do niej przejść",
+        findKey: "Znajdź klawisz (38 lub D2) albo go zagraj",
+        findKeyPlaceholder: "38 lub D2",
+        findKeyNote: "Siatka przechodzi do strefy, która gra ten klawisz.",
+        noZone: "Żadna strefa nie gra tego klawisza",
+        addZone: "Dodaj strefę…"
     },
     zoneHeader: {
         title: "Strefa {{name}} ({{range}})",

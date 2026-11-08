@@ -41,6 +41,7 @@ function renderHeader(layout: LayoutMode) {
     });
     const setView = vi.fn();
     const onEditModulators = vi.fn();
+    const onOpenZoneList = vi.fn();
     const openMenu = vi.fn<ContextMenuAPI["openMenu"]>();
     const dialogs: DialogsAPI = {
         pickElement: () => Promise.resolve(undefined),
@@ -68,6 +69,8 @@ function renderHeader(layout: LayoutMode) {
                                     globalZone={view.globalZone}
                                     activeKey={undefined}
                                     onEditModulators={onEditModulators}
+                                    onOpenZoneList={onOpenZoneList}
+                                    zoneCount={columns.length}
                                 />
                             </thead>
                         </table>
@@ -86,6 +89,8 @@ function renderHeader(layout: LayoutMode) {
         column: columns[0],
         setView,
         onEditModulators,
+        onOpenZoneList,
+        container,
         openMenu,
         nameButton,
         headerCell
@@ -116,6 +121,20 @@ describe("TableHeader", () => {
             "contextMenu.deleteZone"
         ]);
         expect(options).toBeUndefined();
+    });
+
+    it("opens the Zones sheet from the phone's corner cell only", () => {
+        const phone = renderHeader("phone");
+        const button = phone.container.querySelector(".zone_list_button");
+        if (!(button instanceof HTMLElement)) {
+            throw new TypeError("The corner button was not rendered.");
+        }
+        fireEvent.click(button);
+        expect(phone.onOpenZoneList).toHaveBeenCalledTimes(1);
+        cleanup();
+        const desktop = renderHeader("desktop");
+        expect(desktop.container.querySelector(".zone_list_button")).toBeNull();
+        expect(desktop.container.querySelector(".add_zone")).not.toBeNull();
     });
 
     it("opens the zone header sheet on a phone tap", () => {

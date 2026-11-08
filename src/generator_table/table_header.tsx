@@ -9,15 +9,14 @@ import type { ZoneView } from "../core_backend/entity_views.ts";
 import { useContextMenu } from "../context_menu/context_menu_context.ts";
 import type { ZoneColumn } from "./zone_columns.ts";
 import type { MouseEvent } from "react";
+import { formatKeyRange, getColumnKeyRange } from "./zone_finder.ts";
+import { ChevronDownIcon } from "../utils/icons/app_icons.tsx";
 import { getZoneHeaderEntries, useZoneCommands } from "./use_zone_commands.ts";
 import {
     ADD_ZONE_KEY,
     getZoneDeleteKey,
     getZoneNameKey
 } from "./table_navigation.ts";
-
-// An instrument zone with no key range plays the whole keyboard
-const FULL_RANGE = { min: 0, max: 127 };
 
 interface TableHeaderProps {
     /**
@@ -39,6 +38,14 @@ interface TableHeaderProps {
      */
     onEditModulators: (zoneId: number) => void;
     /**
+     * Opens the phone's Zones sheet from the corner cell.
+     */
+    onOpenZoneList: () => void;
+    /**
+     * Every zone of the element, as `columns` holds one only in One zone mode.
+     */
+    zoneCount: number;
+    /**
      * Set in the phone's One zone mode, where `columns` holds the shown zone only.
      */
     oneZone?: {
@@ -55,6 +62,8 @@ export function TableHeader({
     globalZone,
     activeKey,
     onEditModulators,
+    onOpenZoneList,
+    zoneCount,
     oneZone
 }: TableHeaderProps) {
     const { t } = useTranslation();
@@ -62,10 +71,8 @@ export function TableHeader({
     const { openMenu } = useContextMenu();
     const commands = useZoneCommands(element);
     const getTabIndex = (key: string) => (key === activeKey ? 0 : -1);
-    const getRangeText = ({ zone }: ZoneColumn) => {
-        const range = zone.keyRange ?? globalZone.keyRange ?? FULL_RANGE;
-        return `${range.min}-${range.max}`;
-    };
+    const getRangeText = (column: ZoneColumn) =>
+        formatKeyRange(getColumnKeyRange(column, globalZone));
 
     // The phone sheet for a tap or long press on a zone header, with Modulators added
     const openZoneSheet = (e: MouseEvent, column: ZoneColumn) =>
@@ -97,20 +104,31 @@ export function TableHeader({
                         : "preset")
                 }
             >
-                <span className={"header_cell_title"}>
-                    {elementName}
+                {layout === "phone" ? (
                     <button
                         type={"button"}
-                        className={"plain_button add_zone"}
-                        data-grid-key={ADD_ZONE_KEY}
-                        tabIndex={getTabIndex(ADD_ZONE_KEY)}
-                        aria-label={t("soundBankLocale.createNewZone")}
-                        title={t("soundBankLocale.createNewZone")}
-                        onClick={() => void commands.add()}
+                        className={"plain_button zone_list_button"}
+                        onClick={onOpenZoneList}
                     >
-                        +
+                        {t("phoneLocale.grid.zones", { count: zoneCount })}
+                        <ChevronDownIcon />
                     </button>
-                </span>
+                ) : (
+                    <span className={"header_cell_title"}>
+                        {elementName}
+                        <button
+                            type={"button"}
+                            className={"plain_button add_zone"}
+                            data-grid-key={ADD_ZONE_KEY}
+                            tabIndex={getTabIndex(ADD_ZONE_KEY)}
+                            aria-label={t("soundBankLocale.createNewZone")}
+                            title={t("soundBankLocale.createNewZone")}
+                            onClick={() => void commands.add()}
+                        >
+                            +
+                        </button>
+                    </span>
+                )}
             </th>
             <th scope={"col"} className={"header_cell"}>
                 {t("soundBankLocale.globalZone")}

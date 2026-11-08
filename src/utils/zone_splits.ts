@@ -28,7 +28,7 @@ export interface KeySplit {
  * when it has none. The global range never narrows a zone's own range.
  * A range that is not set means every key or velocity.
  */
-function pickRange(
+export function pickRange(
     zoneRange: RangeView | undefined,
     globalRange: RangeView | undefined
 ) {

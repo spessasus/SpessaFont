@@ -75,3 +75,25 @@
     visibility: hidden;
     position: absolute;
 }
+
+/* The corner cell opens the Zones sheet */
+:root[data-layout="phone"] .header_cell .zone_list_button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-height: var(--phone-touch);
+    padding: 0;
+    font-size: var(--phone-text-button);
+    font-weight: 600;
+    text-align: start;
+}
+
+:root[data-layout="phone"] .header_cell .zone_list_button * {
+    font-size: var(--phone-text-button);
+}
+
+:root[data-layout="phone"] .header_cell .zone_list_button svg {
+    width: var(--phone-disclosure-size);
+    height: var(--phone-disclosure-size);
+    flex: none;
+}

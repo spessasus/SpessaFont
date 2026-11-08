@@ -48,6 +48,8 @@ import { AddGeneratorRow } from "./add_generator_row.tsx";
 import { GridViewBar } from "./grid_view_bar.tsx";
 import { clampZoneIndex, getOneZoneColumns } from "./one_zone_columns.ts";
 import { useZoneSwipe } from "./use_zone_swipe.ts";
+import { useZoneCommands } from "./use_zone_commands.ts";
+import { ZoneListSheet } from "./zone_list_sheet/zone_list_sheet.tsx";
 
 /**
  * Cells selected with Ctrl or Shift, all in one generator row.
@@ -141,6 +143,9 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
     // The shown column of the phone's One zone mode. The table remounts per element, so a new
     // element starts at its first zone
     const [zoneIndex, setZoneIndex] = useState(0);
+    const [isZoneSheetOpen, setIsZoneSheetOpen] = useState(false);
+    const tableRef = useRef<HTMLTableElement | null>(null);
+    const zoneCommands = useZoneCommands(element);
     const children: ZoneChildren = isInstrument
         ? { kind: "samples", views: sampleViews }
         : { kind: "instruments", views: instrumentViews };
@@ -311,156 +316,188 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
         );
     };
 
+    const jumpToZone = (column: ZoneColumn) => {
+        if (isOneZone) {
+            setZoneIndex(allZoneColumns.indexOf(column));
+            return;
+        }
+        findGridItem(
+            tableRef.current,
+            getZoneNameKey(column.zone.id)
+        )?.scrollIntoView({ inline: "start", block: "nearest" });
+    };
+
     return (
-        <div className={"zone_table_wrapper"}>
-            {layout === "phone" ? (
-                <GridViewBar
-                    mode={phoneGrid.mode}
-                    onModeChange={phoneGrid.setMode}
-                    isValuesOnly={phoneGrid.isValuesOnly}
-                    onValuesOnlyChange={phoneGrid.setValuesOnly}
-                    areAllCollapsed={areAllCollapsed}
-                    onToggleAll={() =>
-                        phoneGrid.setCollapsed(areAllCollapsed ? [] : rowGroups)
-                    }
+        <>
+            <div className={"zone_table_wrapper"}>
+                {layout === "phone" ? (
+                    <GridViewBar
+                        mode={phoneGrid.mode}
+                        onModeChange={phoneGrid.setMode}
+                        isValuesOnly={phoneGrid.isValuesOnly}
+                        onValuesOnlyChange={phoneGrid.setValuesOnly}
+                        areAllCollapsed={areAllCollapsed}
+                        onToggleAll={() =>
+                            phoneGrid.setCollapsed(
+                                areAllCollapsed ? [] : rowGroups
+                            )
+                        }
+                    />
+                ) : null}
+                <table
+                    ref={(table) => {
+                        tableRef.current = table;
+                        const key = focusOnMountRef.current;
+                        if (!table || key === null) {
+                            return;
+                        }
+
+                        focusOnMountRef.current = null;
+                        findGridItem(table, key)?.focus();
+                    }}
+                    className={"zone_table" + (isOneZone ? " one_zone" : "")}
+                    role={"grid"}
+                    aria-multiselectable={true}
+                    onKeyDown={(e) => handleTableKeyDown(e, handleMove)}
+                    onFocus={(e: React.FocusEvent) => {
+                        const key = getGridKey(e.target);
+                        if (key !== undefined) {
+                            setActiveKey(key);
+                        }
+                    }}
+                >
+                    <thead>
+                        <TableHeader
+                            element={element}
+                            name={view.name}
+                            columns={zoneColumns}
+                            globalZone={view.globalZone}
+                            activeKey={isHeaderKey ? tabKey : undefined}
+                            onEditModulators={setEditedZoneId}
+                            zoneCount={zoneCount}
+                            onOpenZoneList={() => {
+                                setCellSelection(null);
+                                setIsZoneSheetOpen(true);
+                            }}
+                            oneZone={
+                                oneZone
+                                    ? {
+                                          index: oneZone.index,
+                                          count: zoneCount,
+                                          onStep: stepZone
+                                      }
+                                    : undefined
+                            }
+                        />
+                        <ModulatorRow
+                            columns={modulatorColumns}
+                            activeKey={
+                                tabKey.startsWith("modulators:")
+                                    ? tabKey
+                                    : undefined
+                            }
+                            onEditModulators={setEditedZoneId}
+                        />
+                    </thead>
+                    <tbody {...(isOneZone ? swipeHandlers : {})}>
+                        {gridRows.map((gridRow) => {
+                            if (gridRow.type === "group") {
+                                return (
+                                    <GeneratorGroupRow
+                                        key={`group:${gridRow.group}`}
+                                        group={gridRow.group}
+                                        visibleCount={gridRow.visibleCount}
+                                        isCollapsed={gridRow.isCollapsed}
+                                        columnCount={columnCount}
+                                        onToggle={() =>
+                                            phoneGrid.toggleGroup(gridRow.group)
+                                        }
+                                    />
+                                );
+                            }
+                            if (gridRow.type === "addGenerator") {
+                                return (
+                                    <AddGeneratorRow
+                                        key={`add:${gridRow.group}`}
+                                        group={gridRow.group}
+                                        hidden={gridRow.hidden}
+                                        columnCount={columnCount}
+                                        onAdd={(generator) =>
+                                            setCellSelection({
+                                                generator,
+                                                zoneIds: new Set([
+                                                    view.globalZone.id
+                                                ]),
+                                                anchorId: view.globalZone.id
+                                            })
+                                        }
+                                    />
+                                );
+                            }
+                            const { row } = gridRow;
+                            const rowColumns = getRowColumns(row.generator);
+                            return (
+                                <GeneratorRow
+                                    key={row.generator}
+                                    element={element}
+                                    row={row}
+                                    columns={rowColumns}
+                                    globalZone={view.globalZone}
+                                    activeKey={
+                                        parseCellKey(tabKey)?.generator ===
+                                        row.generator
+                                            ? tabKey
+                                            : undefined
+                                    }
+                                    selectedZoneIds={
+                                        cellSelection?.generator ===
+                                        row.generator
+                                            ? cellSelection.zoneIds
+                                            : NO_CELLS
+                                    }
+                                    headerMenu={
+                                        isCurveRow(row) && view.zones.length > 0
+                                            ? [
+                                                  {
+                                                      label: t(
+                                                          "toolsLocale.keyCurve.menu"
+                                                      ),
+                                                      onSelect: () =>
+                                                          void tools.openKeyCurve(
+                                                              [element],
+                                                              row.generator
+                                                          )
+                                                  }
+                                              ]
+                                            : undefined
+                                    }
+                                    onSelectCell={(zoneId, e) =>
+                                        setCellSelection((previous) =>
+                                            getCellSelection(
+                                                previous,
+                                                row.generator,
+                                                rowColumns,
+                                                zoneId,
+                                                e
+                                            )
+                                        )
+                                    }
+                                />
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
+            {layout === "phone" && isZoneSheetOpen ? (
+                <ZoneListSheet
+                    columns={allZoneColumns}
+                    globalZone={view.globalZone}
+                    isInstrument={isInstrument}
+                    onJump={jumpToZone}
+                    onAddZone={() => void zoneCommands.add()}
+                    onClose={() => setIsZoneSheetOpen(false)}
                 />
             ) : null}
-            <table
-                ref={(table) => {
-                    const key = focusOnMountRef.current;
-                    if (!table || key === null) {
-                        return;
-                    }
-
-                    focusOnMountRef.current = null;
-                    findGridItem(table, key)?.focus();
-                }}
-                className={"zone_table" + (isOneZone ? " one_zone" : "")}
-                role={"grid"}
-                aria-multiselectable={true}
-                onKeyDown={(e) => handleTableKeyDown(e, handleMove)}
-                onFocus={(e: React.FocusEvent) => {
-                    const key = getGridKey(e.target);
-                    if (key !== undefined) {
-                        setActiveKey(key);
-                    }
-                }}
-            >
-                <thead>
-                    <TableHeader
-                        element={element}
-                        name={view.name}
-                        columns={zoneColumns}
-                        globalZone={view.globalZone}
-                        activeKey={isHeaderKey ? tabKey : undefined}
-                        onEditModulators={setEditedZoneId}
-                        oneZone={
-                            oneZone
-                                ? {
-                                      index: oneZone.index,
-                                      count: zoneCount,
-                                      onStep: stepZone
-                                  }
-                                : undefined
-                        }
-                    />
-                    <ModulatorRow
-                        columns={modulatorColumns}
-                        activeKey={
-                            tabKey.startsWith("modulators:")
-                                ? tabKey
-                                : undefined
-                        }
-                        onEditModulators={setEditedZoneId}
-                    />
-                </thead>
-                <tbody {...(isOneZone ? swipeHandlers : {})}>
-                    {gridRows.map((gridRow) => {
-                        if (gridRow.type === "group") {
-                            return (
-                                <GeneratorGroupRow
-                                    key={`group:${gridRow.group}`}
-                                    group={gridRow.group}
-                                    visibleCount={gridRow.visibleCount}
-                                    isCollapsed={gridRow.isCollapsed}
-                                    columnCount={columnCount}
-                                    onToggle={() =>
-                                        phoneGrid.toggleGroup(gridRow.group)
-                                    }
-                                />
-                            );
-                        }
-                        if (gridRow.type === "addGenerator") {
-                            return (
-                                <AddGeneratorRow
-                                    key={`add:${gridRow.group}`}
-                                    group={gridRow.group}
-                                    hidden={gridRow.hidden}
-                                    columnCount={columnCount}
-                                    onAdd={(generator) =>
-                                        setCellSelection({
-                                            generator,
-                                            zoneIds: new Set([
-                                                view.globalZone.id
-                                            ]),
-                                            anchorId: view.globalZone.id
-                                        })
-                                    }
-                                />
-                            );
-                        }
-                        const { row } = gridRow;
-                        const rowColumns = getRowColumns(row.generator);
-                        return (
-                            <GeneratorRow
-                                key={row.generator}
-                                element={element}
-                                row={row}
-                                columns={rowColumns}
-                                globalZone={view.globalZone}
-                                activeKey={
-                                    parseCellKey(tabKey)?.generator ===
-                                    row.generator
-                                        ? tabKey
-                                        : undefined
-                                }
-                                selectedZoneIds={
-                                    cellSelection?.generator === row.generator
-                                        ? cellSelection.zoneIds
-                                        : NO_CELLS
-                                }
-                                headerMenu={
-                                    isCurveRow(row) && view.zones.length > 0
-                                        ? [
-                                              {
-                                                  label: t(
-                                                      "toolsLocale.keyCurve.menu"
-                                                  ),
-                                                  onSelect: () =>
-                                                      void tools.openKeyCurve(
-                                                          [element],
-                                                          row.generator
-                                                      )
-                                              }
-                                          ]
-                                        : undefined
-                                }
-                                onSelectCell={(zoneId, e) =>
-                                    setCellSelection((previous) =>
-                                        getCellSelection(
-                                            previous,
-                                            row.generator,
-                                            rowColumns,
-                                            zoneId,
-                                            e
-                                        )
-                                    )
-                                }
-                            />
-                        );
-                    })}
-                </tbody>
-            </table>
-        </div>
+        </>
     );
 }
