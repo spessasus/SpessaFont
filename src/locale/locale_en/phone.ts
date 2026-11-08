@@ -135,6 +135,7 @@ export const PhoneLocale = {
         low: "Low",
         high: "High",
         shift: "Shift",
-        unset: "−"
+        unset: "−",
+        unsetName: "Not set"
     }
 };

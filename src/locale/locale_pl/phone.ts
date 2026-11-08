@@ -147,6 +147,7 @@ export const PhoneLocale = {
         low: "Od",
         high: "Do",
         shift: "Przesuń",
-        unset: "−"
+        unset: "−",
+        unsetName: "Nie ustawiono"
     }
 };

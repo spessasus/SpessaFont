@@ -1,8 +1,10 @@
 import { useTranslation } from "react-i18next";
+import { GeneratorTypes } from "spessasynth_core";
 import type { ZoneView } from "../../core_backend/entity_views.ts";
 import { VirtualItemList } from "../../menu_list/virtual_item_list.tsx";
 import type { CellContext } from "../cell/cell_values.ts";
 import { getGeneratorOptions } from "../generator_options.ts";
+import { getZoneColorVariable } from "../zone_color.ts";
 import type { ZoneColumn } from "../zone_columns.ts";
 import { formatKeyRange, getColumnKeyRange } from "../zone_finder.ts";
 import { describeSheetValue } from "./cell_sheet_text.ts";
@@ -13,6 +15,14 @@ interface CellSheetZoneListProps {
      * The row's columns, the global zone first.
      */
     columns: readonly ZoneColumn[];
+    /**
+     * The row's zone that the list keeps in view, the first checked one.
+     */
+    focusedZone: ZoneView | undefined;
+    /**
+     * The grid's zone columns (never split), which give each zone its header color.
+     */
+    colorColumns: readonly ZoneColumn[];
     globalZone: ZoneView;
     checkedIds: ReadonlySet<number>;
     onToggle: (zoneId: number) => void;
@@ -24,6 +34,8 @@ interface CellSheetZoneListProps {
 export function CellSheetZoneList({
     context,
     columns,
+    focusedZone,
+    colorColumns,
     globalZone,
     checkedIds,
     onToggle
@@ -32,7 +44,7 @@ export function CellSheetZoneList({
     return (
         <VirtualItemList
             items={columns.map((c) => c.zone)}
-            focusedItem={undefined}
+            focusedItem={focusedZone}
             rowEstimate={48}
             renderItem={(zone) => {
                 const column = columnOfZone.get(zone);
@@ -40,6 +52,12 @@ export function CellSheetZoneList({
                     <CellSheetZoneRow
                         context={context}
                         column={column}
+                        colorIndex={colorColumns.findIndex(
+                            (c) =>
+                                c.zone === zone ||
+                                (c.linkedZone !== undefined &&
+                                    c.linkedZone === zone)
+                        )}
                         globalZone={globalZone}
                         isChecked={checkedIds.has(zone.id)}
                         onToggle={() => onToggle(zone.id)}
@@ -53,6 +71,10 @@ export function CellSheetZoneList({
 interface CellSheetZoneRowProps {
     context: CellContext;
     column: ZoneColumn;
+    /**
+     * The zone's number in the grid, -1 for the global zone, which has no color.
+     */
+    colorIndex: number;
     globalZone: ZoneView;
     isChecked: boolean;
     onToggle: () => void;
@@ -61,6 +83,7 @@ interface CellSheetZoneRowProps {
 function CellSheetZoneRow({
     context,
     column,
+    colorIndex,
     globalZone,
     isChecked,
     onToggle
@@ -82,12 +105,25 @@ function CellSheetZoneRow({
                 checked={isChecked}
                 onChange={onToggle}
             />
-            <span className={"cell_sheet_zone_name"}>{column.name}</span>
-            {!isGlobal && context.isInstrument ? (
-                <span className={"cell_sheet_zone_range"}>
-                    {formatKeyRange(getColumnKeyRange(column, globalZone))}
-                </span>
-            ) : null}
+            <span
+                className={"cell_sheet_zone_swatch"}
+                style={
+                    colorIndex === -1
+                        ? undefined
+                        : { background: getZoneColorVariable(colorIndex) }
+                }
+            />
+            <span className={"cell_sheet_zone_text"}>
+                <span className={"cell_sheet_zone_name"}>{column.name}</span>
+                {/* The key range row's values are the ranges already */}
+                {!isGlobal &&
+                context.isInstrument &&
+                context.row.generator !== GeneratorTypes.keyRange ? (
+                    <span className={"cell_sheet_zone_range"}>
+                        {formatKeyRange(getColumnKeyRange(column, globalZone))}
+                    </span>
+                ) : null}
+            </span>
             {value.kind === "inherited" ? (
                 <span className={"cell_sheet_zone_value"}>
                     {format(value.text)}

@@ -129,3 +129,61 @@ describe("ContextMenu", () => {
         expect(document.body.querySelector(".action_sheet_chevron")).toBeNull();
     });
 });
+
+const renderAt = (layout: "phone" | "desktop", entries: ContextMenuEntry[]) =>
+    render(
+        <LayoutContext value={layout}>
+            <BackStackProvider>
+                <ContextMenu x={0} y={0} entries={entries} onClose={vi.fn()} />
+            </BackStackProvider>
+        </LayoutContext>
+    );
+
+describe("phone action sheet markers", () => {
+    let fakeHistory: FakeHistory;
+    beforeEach(() => {
+        // jsdom has no layout, so the current entry's scroll is a stand-in
+        Element.prototype.scrollIntoView = vi.fn();
+        fakeHistory = setUpFakeHistory();
+    });
+    afterEach(() => {
+        cleanup();
+        fakeHistory.restore();
+    });
+
+    it("marks the current entry in the phone sheet only", () => {
+        const entries: ContextMenuEntry[] = [
+            { label: "One", onSelect: vi.fn() },
+            { label: "Two", onSelect: vi.fn(), isCurrent: true }
+        ];
+        const { unmount } = renderAt("phone", entries);
+        expect(
+            screen
+                .getByRole("menuitem", { name: "Two" })
+                .getAttribute("aria-current")
+        ).toBe("true");
+        expect(
+            screen
+                .getByRole("menuitem", { name: "One" })
+                .getAttribute("aria-current")
+        ).toBeNull();
+        unmount();
+        renderAt("desktop", entries);
+        expect(document.body.querySelector("[aria-current]")).toBeNull();
+    });
+
+    it("leaves out the icon slot when no entry has an icon", () => {
+        const { unmount } = renderAt("phone", [
+            { label: "One", onSelect: vi.fn() }
+        ]);
+        expect(document.body.querySelector(".action_sheet_icon")).toBeNull();
+        unmount();
+        renderAt("phone", [
+            { label: "One", onSelect: vi.fn(), icon: "copy" },
+            { label: "Two", onSelect: vi.fn() }
+        ]);
+        expect(
+            document.body.querySelectorAll(".action_sheet_icon")
+        ).toHaveLength(2);
+    });
+});

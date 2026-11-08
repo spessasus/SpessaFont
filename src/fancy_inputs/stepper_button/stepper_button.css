@@ -13,3 +13,8 @@
 :root[data-layout="phone"] .stepper_button[aria-disabled="true"] {
     opacity: 0.4;
 }
+
+:root[data-layout="phone"] .stepper_button svg {
+    width: var(--phone-disclosure-size);
+    height: var(--phone-disclosure-size);
+}

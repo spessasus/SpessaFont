@@ -34,8 +34,16 @@ export function CellSheetOptionEditor({
 }: CellSheetOptionEditorProps) {
     const { t } = useTranslation();
     const entries = [
-        { value: null, label: t("phoneLocale.cellSheet.unset") },
-        ...options.map((o) => ({ value: o.value, label: t(o.label) }))
+        {
+            value: null,
+            label: t("phoneLocale.cellSheet.unset"),
+            name: t("phoneLocale.cellSheet.unsetName")
+        },
+        ...options.map((o) => ({
+            value: o.value,
+            label: t(o.label),
+            name: t(o.label)
+        }))
     ];
     return (
         <>
@@ -47,6 +55,7 @@ export function CellSheetOptionEditor({
                 {entries.map((entry) => (
                     <button
                         key={entry.value ?? "unset"}
+                        aria-label={entry.name}
                         type={"button"}
                         role={"radio"}
                         className={"plain_button cell_sheet_option"}
@@ -58,7 +67,9 @@ export function CellSheetOptionEditor({
                             }
                         }}
                     >
-                        {entry.label}
+                        <span className={"cell_sheet_option_label"}>
+                            {entry.label}
+                        </span>
                     </button>
                 ))}
             </div>

@@ -38,7 +38,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: var(--phone-text-small);
+    font-size: var(--phone-text-secondary);
     color: var(--muted-font-color);
     text-align: start;
 }
@@ -112,8 +112,22 @@
     accent-color: var(--focus-color);
 }
 
-:root[data-layout="phone"] .cell_sheet_zone_name {
+:root[data-layout="phone"] .cell_sheet_zone_swatch {
+    flex: none;
+    width: 0.5rem;
+    height: 1.5rem;
+    border-radius: 0.25rem;
+}
+
+/* The name with its key range under it, so the ranges line up whatever the value is */
+:root[data-layout="phone"] .cell_sheet_zone_text {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+:root[data-layout="phone"] .cell_sheet_zone_name {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -123,9 +137,6 @@
 }
 
 :root[data-layout="phone"] .cell_sheet_zone_range {
-    flex: none;
-    /* Wide enough for 100-127, so the ranges line up */
-    min-width: 3.5rem;
     font-size: var(--phone-text-caption);
     font-variant-numeric: tabular-nums;
     color: var(--muted-font-color);
@@ -164,9 +175,9 @@
 
 :root[data-layout="phone"] .cell_sheet_text_button {
     min-height: var(--phone-touch);
-    padding: 0 0.75rem;
-    font-size: var(--phone-text-small);
-    font-weight: 600;
+    padding: 0 1rem;
+    border-radius: 999px;
+    font-size: var(--phone-text-button);
 }
 
 :root[data-layout="phone"] .cell_sheet_status {
@@ -284,6 +295,11 @@
     color: var(--muted-font-color);
 }
 
+/* .monospaced forces 1rem, the note name takes the unit's size */
+:root[data-layout="phone"] .cell_sheet_field_unit.monospaced {
+    font-size: var(--phone-text-caption);
+}
+
 :root[data-layout="phone"] .cell_sheet_editor .cell_sheet_status {
     display: flex;
     justify-content: space-between;
@@ -332,30 +348,32 @@
     text-align: center;
 }
 
-:root[data-layout="phone"] .cell_sheet_range_field .cell_sheet_field_unit {
-    font-size: var(--phone-text-secondary);
-}
-
 :root[data-layout="phone"] .cell_sheet_options {
-    /* Scrolls before the zone list shrinks below a row and a half */
-    flex: 0 1 auto;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    overflow-y: auto;
+    /* Two columns, so the options never need a scroller of their own */
+    flex: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 :root[data-layout="phone"] .cell_sheet_option {
-    flex: none;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    min-height: var(--phone-row-height);
-    padding: 0 var(--phone-gutter);
+    gap: 0.5rem;
+    min-width: 0;
+    min-height: var(--phone-touch);
+    padding: 0 0.5rem 0 0.75rem;
     font-size: var(--phone-text-body);
     text-align: start;
     border-bottom: 1px solid
         color-mix(in oklch, var(--track-border-color) 45%, transparent);
+}
+
+:root[data-layout="phone"] .cell_sheet_option_label {
+    min-width: 0;
+    /* A long label (Polish) wraps to a second line instead of losing its end */
+    overflow-wrap: anywhere;
+    line-height: 1.2;
+    text-align: start;
 }
 
 /* The radio mark, a ring with a dot when checked */

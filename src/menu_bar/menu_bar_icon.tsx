@@ -26,6 +26,7 @@ export function MenuBarIcon({
     if (layout === "phone") {
         return (
             <ActionSheetItem
+                hasIconSlot={true}
                 item={{
                     label: text,
                     description: title,

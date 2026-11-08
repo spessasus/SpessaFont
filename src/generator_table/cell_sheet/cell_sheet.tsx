@@ -37,8 +37,8 @@ import { CellSheetNumberEditor } from "./cell_sheet_number_editor.tsx";
 import { fillBetween, selectAllZones } from "./cell_sheet_selection.ts";
 import {
     applyCellSheetText,
-    getRangeFields,
-    getSharedOption
+    getSharedOption,
+    getSharedRangeFields
 } from "./cell_sheet_text.ts";
 import { CellSheetZoneList } from "./cell_sheet_zone_list.tsx";
 import "./cell_sheet_phone.css";
@@ -54,6 +54,10 @@ interface CellSheetProps {
      * Every column of the row (the pan row splits stereo pairs), also in One zone mode.
      */
     columns: readonly ZoneColumn[];
+    /**
+     * The grid's zone columns without the global zone, for the zone colors.
+     */
+    colorColumns: readonly ZoneColumn[];
     globalZone: ZoneView;
     checkedIds: ReadonlySet<number>;
     onCheckedChange: (ids: ReadonlySet<number>) => void;
@@ -71,6 +75,7 @@ export function CellSheet({
     rows,
     row,
     columns,
+    colorColumns,
     globalZone,
     checkedIds,
     onCheckedChange,
@@ -120,6 +125,7 @@ export function CellSheet({
             for (const groupRow of groupRows) {
                 entries.push({
                     label: t(generatorLocaleMap[groupRow.generator]),
+                    isCurrent: groupRow.generator === generator,
                     onSelect: () => onRowChange(groupRow.generator)
                 });
             }
@@ -144,8 +150,10 @@ export function CellSheet({
         total: columns.length
     });
     const options = getGeneratorOptions(generator);
-    const { low, high } = getRangeFields(
-        first ? readViewCell(first.zone, generator) : null
+    const sharedRange = getSharedRangeFields(
+        checkedColumns.flatMap((c) =>
+            getViewZones(c).map((zone) => readViewCell(zone, generator))
+        )
     );
 
     const isTextApplied = (text: string) => {
@@ -246,6 +254,8 @@ export function CellSheet({
                 <CellSheetZoneList
                     context={context}
                     columns={columns}
+                    focusedZone={first?.zone}
+                    colorColumns={colorColumns}
                     globalZone={globalZone}
                     checkedIds={checkedIds}
                     onToggle={toggle}
@@ -277,11 +287,11 @@ export function CellSheet({
                 </div>
                 {isRangeGenerator(generator) ? (
                     <CellSheetRangeEditor
-                        // The fields follow the first cell's range, also after an apply or an undo
-                        key={`${generator}-${first?.zone.id}-${low}-${high}`}
+                        // The fields follow the checked cells' shared range, also after an apply
+                        // or an undo
+                        key={`${generator}-${first?.zone.id}-${sharedRange ? `${sharedRange.low}-${sharedRange.high}` : "mixed"}`}
                         isKeyRange={generator === GeneratorTypes.keyRange}
-                        initialLow={low}
-                        initialHigh={high}
+                        initialRange={sharedRange}
                         mode={rangeMode}
                         onModeChange={setRangeMode}
                         isDisabled={!first}

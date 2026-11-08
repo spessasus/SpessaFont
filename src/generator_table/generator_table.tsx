@@ -16,7 +16,7 @@ import { TableHeader } from "./table_header.tsx";
 import { GeneratorRow } from "./generator_row.tsx";
 import "./generator_table.css";
 import "./generator_table_phone.css";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ModulatorRow } from "./modulator_row.tsx";
 import { ModulatorEditor } from "./modulator_edit/modulator_editor.tsx";
@@ -122,6 +122,33 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
             )
         );
     const swipeHandlers = useZoneSwipe(stepZone);
+    const wrapperRef = useRef<HTMLDivElement>(null);
+    // The first checked zone's cell, which the grid keeps in view
+    const [firstCheckedId] = cellSelection?.zoneIds ?? NO_CELLS;
+    const revealKey =
+        cellSelection && firstCheckedId !== undefined
+            ? getCellKey(cellSelection.generator, firstCheckedId)
+            : null;
+    useEffect(() => {
+        if (layout !== "phone" || revealKey === null) {
+            return;
+        }
+        const reveal = () =>
+            findGridItem(tableRef.current, revealKey)?.scrollIntoView({
+                block: "nearest",
+                inline: "nearest"
+            });
+        reveal();
+        const wrapper = wrapperRef.current;
+        if (!wrapper || typeof ResizeObserver === "undefined") {
+            return;
+        }
+        // The sheet, the drawer and the keyboard change the grid's height, which can push the
+        // checked cells out of view
+        const observer = new ResizeObserver(reveal);
+        observer.observe(wrapper);
+        return () => observer.disconnect();
+    }, [layout, revealKey]);
     // The pane closes when its element is removed, this only covers the render before
     if (!view) {
         return null;
@@ -298,6 +325,7 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
     return (
         <>
             <div
+                ref={wrapperRef}
                 className={"zone_table_wrapper"}
                 // A tap outside the cells dismisses the phone selection
                 onClick={
@@ -486,6 +514,7 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
                     rows={rows}
                     row={sheetRow}
                     columns={getAllRowColumns(cellSelection.generator)}
+                    colorColumns={allZoneColumns}
                     globalZone={view.globalZone}
                     checkedIds={cellSelection.zoneIds}
                     onCheckedChange={(ids) =>

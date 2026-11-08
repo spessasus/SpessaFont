@@ -13,6 +13,12 @@ interface ActionSheetProps {
  * The phone's context menu, a bottom sheet of 48 px items.
  */
 export function ActionSheet({ title, entries, onClose }: ActionSheetProps) {
+    // Without any icon the labels start at the gutter instead of after an empty slot
+    const hasIcons = entries.some(
+        (entry) =>
+            entry !== "separator" &&
+            (entry.icon !== undefined || entry.iconNode !== undefined)
+    );
     return (
         <BottomSheet title={title} onClose={onClose}>
             <div
@@ -32,6 +38,7 @@ export function ActionSheet({ title, entries, onClose }: ActionSheetProps) {
                         <ActionSheetItem
                             key={entry.label}
                             item={entry}
+                            hasIconSlot={hasIcons}
                             onClose={onClose}
                         />
                     )

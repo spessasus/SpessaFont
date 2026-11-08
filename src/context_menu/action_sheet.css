@@ -22,6 +22,14 @@
     outline: none;
 }
 
+/* The current choice, like the navigator's current row */
+:root[data-layout="phone"]
+    .action_sheet
+    .action_sheet_item[aria-current="true"] {
+    background: var(--phone-pressed-color);
+    box-shadow: inset 3px 0 0 var(--focus-color);
+}
+
 :root[data-layout="phone"] .action_sheet .action_sheet_item:disabled {
     cursor: default;
     color: var(--muted-font-color);

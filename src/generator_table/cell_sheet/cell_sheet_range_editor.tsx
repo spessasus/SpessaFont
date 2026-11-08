@@ -8,8 +8,10 @@ import { buildRangeText } from "./cell_sheet_text.ts";
 
 interface CellSheetRangeEditorProps {
     isKeyRange: boolean;
-    initialLow: number;
-    initialHigh: number;
+    /**
+     * The checked cells' shared range, undefined when they differ and the fields start empty.
+     */
+    initialRange: { low: number; high: number } | undefined;
     mode: "set" | "shift";
     onModeChange: (mode: "set" | "shift") => void;
     /**
@@ -41,12 +43,11 @@ function readNote(text: string) {
 
 /**
  * The cell sheet's editor for key and velocity range rows: set Low and High, or shift both
- * ends. The fields start with the first checked cell's range.
+ * ends. The fields start with the checked cells' range, empty when they differ.
  */
 export function CellSheetRangeEditor({
     isKeyRange,
-    initialLow,
-    initialHigh,
+    initialRange,
     mode,
     onModeChange,
     isDisabled,
@@ -55,8 +56,12 @@ export function CellSheetRangeEditor({
     onApply
 }: CellSheetRangeEditorProps) {
     const { t } = useTranslation();
-    const [low, setLow] = useState(String(initialLow));
-    const [high, setHigh] = useState(String(initialHigh));
+    const [low, setLow] = useState(
+        initialRange ? String(initialRange.low) : ""
+    );
+    const [high, setHigh] = useState(
+        initialRange ? String(initialRange.high) : ""
+    );
     const [shift, setShift] = useState("");
     const lowValue = readNote(low);
     const highValue = readNote(high);
@@ -106,7 +111,7 @@ export function CellSheetRangeEditor({
                     inputMode={"numeric"}
                     enterKeyHint={"done"}
                     autoComplete={"off"}
-                    aria-invalid={parsed === undefined}
+                    aria-invalid={value !== "" && parsed === undefined}
                     value={value}
                     onChange={(event) => onChange(event.target.value)}
                 />

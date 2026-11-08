@@ -70,6 +70,20 @@ export function getRangeFields(value: CellValue) {
 }
 
 /**
+ * The Low and High the range editor starts with for the checked cells, undefined when their
+ * ranges differ (the fields stay empty then, like the number field).
+ */
+export function getSharedRangeFields(values: readonly CellValue[]) {
+    const [first, ...rest] = values.map((v) => getRangeFields(v));
+    if (!first) {
+        return getRangeFields(null);
+    }
+    return rest.every((r) => r.low === first.low && r.high === first.high)
+        ? first
+        : undefined;
+}
+
+/**
  * The option every value shares (null when all are unset), or undefined when they differ or
  * there are none.
  */

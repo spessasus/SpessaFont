@@ -10,7 +10,8 @@ import {
     buildRangeText,
     describeSheetValue,
     getRangeFields,
-    getSharedOption
+    getSharedOption,
+    getSharedRangeFields
 } from "./cell_sheet_text.ts";
 import { parseCellText } from "../cell/parse_generator_text.ts";
 import {
@@ -169,6 +170,30 @@ describe("range and option editor values", () => {
             high: 69
         });
         expect(getRangeFields(null)).toEqual({ low: 0, high: 127 });
+    });
+
+    it("prefills a range only when every checked cell has it", () => {
+        expect(
+            getSharedRangeFields([
+                { min: 48, max: 69 },
+                { min: 48, max: 69 }
+            ])
+        ).toEqual({ low: 48, high: 69 });
+        expect(getSharedRangeFields([null, null])).toEqual({
+            low: 0,
+            high: 127
+        });
+        expect(
+            getSharedRangeFields([
+                { min: 48, max: 69 },
+                { min: 70, max: 90 }
+            ])
+        ).toBeUndefined();
+        expect(getSharedRangeFields([{ min: 0, max: 127 }, null])).toEqual({
+            low: 0,
+            high: 127
+        });
+        expect(getSharedRangeFields([])).toEqual({ low: 0, high: 127 });
     });
 
     it("finds the option all checked cells share", () => {

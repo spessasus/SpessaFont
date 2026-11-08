@@ -33,6 +33,11 @@ export interface ContextMenuItem {
      * The desktop menu ignores it.
      */
     hasSubmenu?: boolean;
+    /**
+     * The entry is the current choice, so the phone action sheet marks it and opens scrolled
+     * to it. The desktop menu ignores it.
+     */
+    isCurrent?: boolean;
 }
 
 export interface ContextMenuOptions {

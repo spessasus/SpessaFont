@@ -254,3 +254,11 @@
         var(--phone-name-column) + var(--phone-global-column) + 0.5rem
     );
 }
+
+/* A cell the cell sheet reveals stays clear of the sticky view bar, header row and name columns */
+:root[data-layout="phone"] .zone_table tbody [data-grid-key] {
+    scroll-margin-top: calc(var(--phone-view-bar-height) + 4.25rem);
+    scroll-margin-inline-start: calc(
+        var(--phone-name-column) + var(--phone-global-column) + 0.5rem
+    );
+}
