@@ -1,0 +1,57 @@
+:root[data-layout="phone"] .octave_button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-width: var(--phone-touch);
+    min-height: var(--phone-touch);
+    padding: 0;
+}
+
+:root[data-layout="phone"] .octave_button svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+:root[data-layout="phone"] .zone_minimap {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    height: 1rem;
+    border-radius: 0.25rem;
+    background: var(--darker-color-start);
+    overflow: hidden;
+    touch-action: none;
+}
+
+:root[data-layout="phone"] .zone_minimap_segment,
+:root[data-layout="phone"] .zone_minimap_window {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--start) / 128 * 100%);
+    width: calc(var(--span) / 128 * 100%);
+}
+
+:root[data-layout="phone"] .zone_minimap_segment[data-color="1"] {
+    background: var(--zone-color-1);
+}
+
+:root[data-layout="phone"] .zone_minimap_segment[data-color="2"] {
+    background: var(--zone-color-2);
+}
+
+:root[data-layout="phone"] .zone_minimap_segment[data-color="3"] {
+    background: var(--zone-color-3);
+}
+
+:root[data-layout="phone"] .zone_minimap_segment[data-color="4"] {
+    background: var(--zone-color-4);
+}
+
+:root[data-layout="phone"] .zone_minimap_window {
+    background: var(--minimap-window-color);
+    border: 1px solid var(--font-color);
+    border-radius: 0.25rem;
+    box-sizing: border-box;
+}

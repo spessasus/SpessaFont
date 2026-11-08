@@ -113,7 +113,11 @@
 }
 
 :root[data-layout="phone"] .drawer_strip {
+    display: flex;
+    align-items: center;
+    gap: var(--flex-gap);
     height: var(--phone-strip-height);
+    padding: 0 var(--flex-gap);
     flex-shrink: 0;
 }
 

@@ -31,6 +31,11 @@
         var(--menu-bar-color) 90%,
         black
     );
+    --minimap-window-color: rgb(0 0 0 / 15%);
+    --zone-color-1: #c0392b;
+    --zone-color-2: #1f6fb2;
+    --zone-color-3: #9a6b00;
+    --zone-color-4: #2e8b57;
     --menu-border-color: #c2417a;
     --primary-color: #f08bb4;
     --border-color: #c2417a;

@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./keyboard_drawer.css";
 import type { BankSession } from "../core_backend/bank_session.ts";
@@ -7,7 +7,9 @@ import { useViewName } from "../hooks/use_view_name.ts";
 import { useEngineStatus } from "../hooks/use_engine_status.ts";
 import { Keyboard } from "../keyboard/keyboard/keyboard.tsx";
 import { useViewSplits } from "../keyboard/use_view_splits.ts";
+import { getScrollForKey, getSplitsCenter } from "./zone_minimap_math.ts";
 import { DrawerHandle, type KeyReadout } from "./drawer_handle.tsx";
+import { OctaveStrip } from "./octave_strip.tsx";
 import { usePhoneShell } from "./phone_shell_context.ts";
 
 interface KeyboardDrawerProps {
@@ -49,6 +51,24 @@ export function KeyboardDrawer({
         () => () => setDownPointers(new Set()),
         []
     );
+    // The keys leave and come back, so the strip gets the element through state
+    const [keyboard, setKeyboard] = useState<HTMLDivElement | null>(null);
+    const centerKeyboard = useEffectEvent((element: HTMLDivElement) => {
+        // Scrolling a scroller is the legitimate DOM exception
+        element.scrollTo({
+            left: getScrollForKey(
+                getSplitsCenter(splits) ?? 60,
+                element.clientWidth,
+                element.scrollWidth
+            )
+        });
+    });
+    // Also on the keys' first show, which would open at C-1 otherwise
+    useEffect(() => {
+        if (keyboard) {
+            centerKeyboard(keyboard);
+        }
+    }, [keyboard, view]);
     const releasePointer = (pointerId: number) =>
         setDownPointers((prev) => {
             if (!prev.has(pointerId)) {
@@ -67,8 +87,9 @@ export function KeyboardDrawer({
             />
             {drawer === "keys" && (
                 <div className={"drawer_keys"}>
-                    {/* The octave strip and zone minimap (Task 18) go in this row */}
-                    <div className={"drawer_strip"} />
+                    <div className={"drawer_strip"}>
+                        <OctaveStrip keyboard={keyboard} splits={splits} />
+                    </div>
                     {isSongPlaying ? (
                         <p className={"drawer_song_note"}>
                             {t("phoneLocale.drawer.songOnChannel")}
@@ -96,6 +117,7 @@ export function KeyboardDrawer({
                             }
                         >
                             <Keyboard
+                                ref={setKeyboard}
                                 splits={splits}
                                 onKeyHover={(midiNote, velocity) =>
                                     setHovered((prev) =>

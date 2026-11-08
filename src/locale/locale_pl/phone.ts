@@ -23,7 +23,10 @@ export const PhoneLocale = {
         controls: "Kontrolery",
         songOnChannel: "Na tym kanale gra utwór",
         pause: "Pauza",
-        resume: "Wznów"
+        resume: "Wznów",
+        octaveDown: "Oktawa w dół",
+        octaveUp: "Oktawa w górę",
+        minimap: "Widoczne klawisze"
     },
     back: {
         pressAgain: "Naciśnij wstecz ponownie, aby wyjść",
