@@ -1,33 +1,17 @@
+import { getZoneColorNumber } from "../generator_table/zone_color.ts";
 import type { KeySplit } from "../utils/zone_splits.ts";
 
 const KEY_COUNT = 128;
 
-function getZoneColor(index: number) {
-    switch (index % 4) {
-        case 0: {
-            return 1;
-        }
-        case 1: {
-            return 2;
-        }
-        case 2: {
-            return 3;
-        }
-        default: {
-            return 4;
-        }
-    }
-}
-
 /**
- * The keys of each split as a colored segment. Colors cycle in the splits' order, which is the
- * zone column order.
+ * The keys of each split as a colored segment, in the color of the split's zone column like the
+ * grid's header bar. A split without a column cycles by its position.
  */
 export function getMinimapSegments(splits: readonly KeySplit[]) {
     return splits.map((split, index) => ({
         start: split.keys.min,
         end: split.keys.max,
-        color: getZoneColor(index)
+        color: getZoneColorNumber(split.columnIndex ?? index)
     }));
 }
 

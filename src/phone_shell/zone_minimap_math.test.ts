@@ -27,6 +27,15 @@ describe("zone minimap", () => {
         expect(segments[1]).toEqual({ start: 11, end: 20, color: 2 });
     });
 
+    it("colors a split by its zone column, so preset splits share their zone's color", () => {
+        const segments = getMinimapSegments([
+            { ...split(0, 10), columnIndex: 1 },
+            { ...split(11, 20), columnIndex: 1 },
+            { ...split(21, 30), columnIndex: 4 }
+        ]);
+        expect(segments.map((s) => s.color)).toEqual([2, 2, 1]);
+    });
+
     it("maps the scroll position to keys and back", () => {
         expect(getVisibleKeys(0, 350, 1280)).toEqual({ first: 0, last: 34 });
         expect(getScrollForKey(64, 350, 1280)).toBe(470);

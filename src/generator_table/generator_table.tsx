@@ -374,7 +374,6 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
                             globalZone={view.globalZone}
                             activeKey={isHeaderKey ? tabKey : undefined}
                             onEditModulators={setEditedZoneId}
-                            zoneCount={zoneCount}
                             onOpenZoneList={() => {
                                 setCellSelection(null);
                                 setIsZoneSheetOpen(true);

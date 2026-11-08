@@ -12,7 +12,6 @@
 }
 
 :root[data-layout="phone"] .editor_sheet_title:has(.zone_list_title) {
-    min-height: var(--phone-row-height);
     display: flex;
     align-items: center;
     flex-wrap: wrap;
@@ -30,7 +29,7 @@
     flex: none;
     display: flex;
     gap: var(--flex-gap);
-    padding: 0 var(--phone-gutter);
+    padding: 0.5rem var(--phone-gutter) 0;
 }
 
 :root[data-layout="phone"] .zone_list_find_input {

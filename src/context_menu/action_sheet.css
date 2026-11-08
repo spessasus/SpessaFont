@@ -70,8 +70,8 @@
 }
 
 :root[data-layout="phone"] .action_sheet_chevron svg {
-    width: 1rem;
-    height: 1rem;
+    width: var(--phone-disclosure-size);
+    height: var(--phone-disclosure-size);
 }
 
 :root[data-layout="phone"] .action_sheet_label {

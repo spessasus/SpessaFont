@@ -1,5 +1,7 @@
 :root[data-layout="phone"] .bank_editor_content {
     flex-direction: column;
+    /* The desktop gap would show the page between the element bar and the view bar */
+    gap: 0;
     padding: 0;
 }
 

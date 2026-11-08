@@ -19,7 +19,7 @@ function getLabels(entries: readonly ContextMenuEntry[]) {
     return entries.map((e) => (e === "separator" ? e : e.label));
 }
 
-function renderHeader(layout: LayoutMode) {
+function renderHeader(layout: LayoutMode, activeKey?: string) {
     const session = createTestSession();
     const { document } = session;
     const [instrument] = document.instruments;
@@ -67,10 +67,9 @@ function renderHeader(layout: LayoutMode) {
                                     name={view.name}
                                     columns={columns}
                                     globalZone={view.globalZone}
-                                    activeKey={undefined}
+                                    activeKey={activeKey}
                                     onEditModulators={onEditModulators}
                                     onOpenZoneList={onOpenZoneList}
-                                    zoneCount={columns.length}
                                 />
                             </thead>
                         </table>
@@ -135,6 +134,28 @@ describe("TableHeader", () => {
         const desktop = renderHeader("desktop");
         expect(desktop.container.querySelector(".zone_list_button")).toBeNull();
         expect(desktop.container.querySelector(".add_zone")).not.toBeNull();
+    });
+
+    it("gives the phone's corner button the Tab stop key the desktop add button has", () => {
+        const phone = renderHeader("phone");
+        const button = phone.container.querySelector(".zone_list_button");
+        if (!(button instanceof HTMLElement)) {
+            throw new TypeError("The corner button was not rendered.");
+        }
+        expect(button.dataset.gridKey).toBe("add");
+        expect(button.tabIndex).toBe(-1);
+        expect(
+            button.querySelector("svg")?.closest("[aria-hidden]")
+        ).not.toBeNull();
+    });
+
+    it("makes the phone's corner button the Tab stop when its key is active", () => {
+        const phone = renderHeader("phone", "add");
+        const button = phone.container.querySelector(".zone_list_button");
+        if (!(button instanceof HTMLElement)) {
+            throw new TypeError("The corner button was not rendered.");
+        }
+        expect(button.tabIndex).toBe(0);
     });
 
     it("opens the zone header sheet on a phone tap", () => {

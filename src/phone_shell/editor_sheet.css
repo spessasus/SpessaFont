@@ -35,7 +35,9 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    min-height: var(--phone-row-height, 3rem);
     padding: 0 0.5rem 0 1rem;
+    border-bottom: 1px solid var(--track-border-color);
 }
 
 :root[data-layout="phone"] .editor_sheet_title {

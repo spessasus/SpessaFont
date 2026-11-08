@@ -23,7 +23,7 @@ export function useNextPlayedKeys(
             return;
         }
         const played = keys.current;
-        keys.current = [];
+        keys.current = new Array<number>();
         onPlayed(played);
     });
 }

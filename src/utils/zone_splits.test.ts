@@ -41,8 +41,14 @@ describe("getViewSplits", () => {
         // One split per instrument zone, the sample instrument has two
         const full = { min: 0, max: 127 };
         const split = { keys: full, velocities: full };
-        expect(splitsOf(session, presets[0])).toEqual([split, split]);
-        expect(splitsOf(session, instruments[0])).toEqual([split, split]);
+        expect(splitsOf(session, presets[0])).toEqual([
+            { ...split, columnIndex: 0 },
+            { ...split, columnIndex: 0 }
+        ]);
+        expect(splitsOf(session, instruments[0])).toEqual([
+            { ...split, columnIndex: 0 },
+            { ...split, columnIndex: 1 }
+        ]);
     });
 
     it("uses a zone range when the global range is not set", () => {

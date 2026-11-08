@@ -10,6 +10,7 @@ import { useContextMenu } from "../context_menu/context_menu_context.ts";
 import type { ZoneColumn } from "./zone_columns.ts";
 import type { MouseEvent } from "react";
 import { formatKeyRange, getColumnKeyRange } from "./zone_finder.ts";
+import { MENU_ICON_NAMES } from "../context_menu/menu_icon_name.ts";
 import { ChevronDownIcon } from "../utils/icons/app_icons.tsx";
 import { getZoneHeaderEntries, useZoneCommands } from "./use_zone_commands.ts";
 import {
@@ -42,10 +43,6 @@ interface TableHeaderProps {
      */
     onOpenZoneList: () => void;
     /**
-     * Every zone of the element, as `columns` holds one only in One zone mode.
-     */
-    zoneCount: number;
-    /**
      * Set in the phone's One zone mode, where `columns` holds the shown zone only.
      */
     oneZone?: {
@@ -63,7 +60,6 @@ export function TableHeader({
     activeKey,
     onEditModulators,
     onOpenZoneList,
-    zoneCount,
     oneZone
 }: TableHeaderProps) {
     const { t } = useTranslation();
@@ -82,6 +78,7 @@ export function TableHeader({
                 label: t("phoneLocale.zoneHeader.modulators", {
                     count: column.zone.modulators.length
                 }),
+                icon: MENU_ICON_NAMES.edit,
                 hasSubmenu: true,
                 onSelect: () => onEditModulators(column.zone.id)
             }),
@@ -108,10 +105,16 @@ export function TableHeader({
                     <button
                         type={"button"}
                         className={"plain_button zone_list_button"}
+                        data-grid-key={ADD_ZONE_KEY}
+                        tabIndex={getTabIndex(ADD_ZONE_KEY)}
                         onClick={onOpenZoneList}
                     >
-                        {t("phoneLocale.grid.zones", { count: zoneCount })}
-                        <ChevronDownIcon />
+                        {t("phoneLocale.grid.zones", {
+                            count: oneZone?.count ?? columns.length
+                        })}
+                        <span aria-hidden={"true"}>
+                            <ChevronDownIcon />
+                        </span>
                     </button>
                 ) : (
                     <span className={"header_cell_title"}>

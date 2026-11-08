@@ -45,12 +45,16 @@ export function ZoneListSheet({
     const labelId = useId();
     const [text, setText] = useState("");
     const [isInvalid, setIsInvalid] = useState(false);
-    // Undefined until a key was looked up, then the columns that play it
-    const [found, setFound] = useState<readonly ZoneColumn[]>();
+    // Undefined until a key was looked up, then the ids of the zones that play it. Ids, as an
+    // edit makes new columns
+    const [foundIds, setFoundIds] = useState<readonly number[]>();
+    const found = foundIds
+        ? columns.filter((column) => foundIds.includes(column.zone.id))
+        : undefined;
 
     const find = (key: number) => {
         const matches = findColumnsForKey(columns, globalZone, key);
-        setFound(matches);
+        setFoundIds(matches.map((column) => column.zone.id));
         if (matches.length > 0) {
             onJump(matches[0]);
         }
@@ -67,7 +71,7 @@ export function ZoneListSheet({
         const key = parseKeyText(text);
         setIsInvalid(key === undefined);
         if (key === undefined) {
-            setFound(undefined);
+            setFoundIds(undefined);
         } else {
             find(key);
         }

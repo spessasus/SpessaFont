@@ -224,6 +224,7 @@ export function useZoneCommands(element: BasicInstrument | BasicPreset) {
                 label: isInstrument
                     ? t("contextMenu.replaceSample")
                     : t("contextMenu.replaceInstrument"),
+                icon: MENU_ICON_NAMES.link,
                 description: t(
                     isInstrument
                         ? "phoneLocale.zoneHeader.replaceSample"
@@ -239,10 +240,12 @@ export function useZoneCommands(element: BasicInstrument | BasicPreset) {
             "separator",
             {
                 label: t("toolsLocale.split.byKeyMenu"),
+                icon: MENU_ICON_NAMES.cut,
                 onSelect: () => splitByKey(column)
             },
             {
                 label: t("toolsLocale.split.byVelocityMenu"),
+                icon: MENU_ICON_NAMES.cut,
                 onSelect: () => splitByVelocity(column)
             },
             "separator",
