@@ -75,7 +75,14 @@ export const PhoneLocale = {
         leave: "Wyjdź"
     },
     grid: {
-        stereoPair: "L+P"
+        stereoPair: "L+P",
+        addGenerator: "Dodaj generator…",
+        grid: "Siatka",
+        oneZone: "Jedna strefa",
+        valuesOnly: "Tylko wartości",
+        collapseAll: "Zwiń wszystko",
+        expandAll: "Rozwiń wszystko",
+        viewMode: "Widok siatki"
     },
     groups: {
         rangeTuning: "Zakres i strojenie",

@@ -36,6 +36,16 @@ import {
 } from "./table_navigation.ts";
 import { useElementTools } from "./tools/use_element_tools.tsx";
 import { isCurveRow } from "./tools/key_curve_actions.ts";
+import { useLayout } from "../layout/layout_context.ts";
+import { usePhoneGridSettings } from "./use_phone_grid_settings.ts";
+import { getGridRows, type GridRow, hasStoredValue } from "./grid_rows.ts";
+import {
+    GENERATOR_GROUP_ORDER,
+    GROUP_OF_GENERATOR
+} from "./generator_groups.ts";
+import { GeneratorGroupRow } from "./generator_group_row.tsx";
+import { AddGeneratorRow } from "./add_generator_row.tsx";
+import { GridViewBar } from "./grid_view_bar.tsx";
 
 /**
  * Cells selected with Ctrl or Shift, all in one generator row.
@@ -124,6 +134,8 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
     const [activeKey, setActiveKey] = useState<string | null>(null);
     // Focused when the table comes back after the modulator editor
     const focusOnMountRef = useRef<string | null>(null);
+    const layout = useLayout();
+    const phoneGrid = usePhoneGridSettings();
     // The pane closes when its element is removed, this only covers the render before
     if (!view) {
         return null;
@@ -178,6 +190,28 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
         );
     }
 
+    const gridRows: GridRow[] =
+        layout === "phone"
+            ? getGridRows(rows, {
+                  hasValue: (r) =>
+                      hasStoredValue(getRowColumns(r.generator), r.generator),
+                  isValuesOnly: phoneGrid.isValuesOnly,
+                  collapsed: phoneGrid.collapsed,
+                  keptGenerator: cellSelection?.generator
+              })
+            : rows.map((row) => ({ type: "generator", row }));
+    const shownRows = gridRows.flatMap((r) =>
+        r.type === "generator" ? [r.row] : []
+    );
+    const columnCount =
+        1 + columns.reduce((sum, column) => sum + column.colSpan, 0);
+    const rowGroups = GENERATOR_GROUP_ORDER.filter((group) =>
+        rows.some((r) => GROUP_OF_GENERATOR.get(r.generator) === group)
+    );
+    const areAllCollapsed = rowGroups.every((group) =>
+        phoneGrid.collapsed.has(group)
+    );
+
     // The Tab stop falls back to the first cell when its item is gone (a deleted zone)
     const shownKeys = new Set<string>([ADD_ZONE_KEY]);
     for (const { zone } of zoneColumns) {
@@ -187,14 +221,14 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
     for (const { zone } of modulatorColumns) {
         shownKeys.add(getModulatorKey(zone.id));
     }
-    for (const { generator } of rows) {
+    for (const { generator } of shownRows) {
         for (const { zone } of getRowColumns(generator)) {
             shownKeys.add(getCellKey(generator, zone.id));
         }
     }
     const firstKey =
-        rows.length > 0
-            ? getCellKey(rows[0].generator, view.globalZone.id)
+        shownRows.length > 0
+            ? getCellKey(shownRows[0].generator, view.globalZone.id)
             : ADD_ZONE_KEY;
     const tabKey =
         activeKey !== null && shownKeys.has(activeKey) ? activeKey : firstKey;
@@ -243,6 +277,18 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
 
     return (
         <div className={"zone_table_wrapper"}>
+            {layout === "phone" ? (
+                <GridViewBar
+                    mode={phoneGrid.mode}
+                    onModeChange={phoneGrid.setMode}
+                    isValuesOnly={phoneGrid.isValuesOnly}
+                    onValuesOnlyChange={phoneGrid.setValuesOnly}
+                    areAllCollapsed={areAllCollapsed}
+                    onToggleAll={() =>
+                        phoneGrid.setCollapsed(areAllCollapsed ? [] : rowGroups)
+                    }
+                />
+            ) : null}
             <table
                 ref={(table) => {
                     const key = focusOnMountRef.current;
@@ -283,7 +329,41 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
                     />
                 </thead>
                 <tbody>
-                    {rows.map((row) => {
+                    {gridRows.map((gridRow) => {
+                        if (gridRow.type === "group") {
+                            return (
+                                <GeneratorGroupRow
+                                    key={`group:${gridRow.group}`}
+                                    group={gridRow.group}
+                                    visibleCount={gridRow.visibleCount}
+                                    isCollapsed={gridRow.isCollapsed}
+                                    columnCount={columnCount}
+                                    onToggle={() =>
+                                        phoneGrid.toggleGroup(gridRow.group)
+                                    }
+                                />
+                            );
+                        }
+                        if (gridRow.type === "addGenerator") {
+                            return (
+                                <AddGeneratorRow
+                                    key={`add:${gridRow.group}`}
+                                    group={gridRow.group}
+                                    hidden={gridRow.hidden}
+                                    columnCount={columnCount}
+                                    onAdd={(generator) =>
+                                        setCellSelection({
+                                            generator,
+                                            zoneIds: new Set([
+                                                view.globalZone.id
+                                            ]),
+                                            anchorId: view.globalZone.id
+                                        })
+                                    }
+                                />
+                            );
+                        }
+                        const { row } = gridRow;
                         const rowColumns = getRowColumns(row.generator);
                         return (
                             <GeneratorRow

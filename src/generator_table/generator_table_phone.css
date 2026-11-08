@@ -94,3 +94,77 @@
     cursor: default;
     color: var(--muted-font-color);
 }
+
+/* The view bar sits above the header row in the same scroller */
+:root[data-layout="phone"] .zone_table thead tr:first-child th {
+    top: var(--phone-view-bar-height);
+}
+
+:root[data-layout="phone"] .zone_table .generator_group_row th,
+:root[data-layout="phone"] .zone_table .add_generator_row td {
+    position: static;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    height: var(--phone-row-height);
+    padding: 0;
+    outline: none;
+    box-shadow: none;
+    text-align: start;
+}
+
+:root[data-layout="phone"] .zone_table .generator_group_row th {
+    background: var(--grid-group-color);
+}
+
+:root[data-layout="phone"] .zone_table .add_generator_row td {
+    background: var(--darker-color-end);
+}
+
+/* The rows span the whole table, so their content sticks to the start of the visible part */
+:root[data-layout="phone"] .generator_group_button,
+:root[data-layout="phone"] .add_generator_button {
+    position: sticky;
+    left: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: var(--phone-row-height);
+    padding: 0 var(--phone-gutter);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .generator_group_chevron {
+    display: inline-flex;
+}
+
+:root[data-layout="phone"] .generator_group_chevron svg {
+    width: var(--phone-disclosure-size);
+    height: var(--phone-disclosure-size);
+}
+
+:root[data-layout="phone"] .zone_table .generator_group_name {
+    font-size: var(--phone-text-button);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+:root[data-layout="phone"] .zone_table .generator_group_count {
+    font-size: var(--phone-text-small);
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .add_generator_button * {
+    color: var(--focus-color);
+}
+
+:root[data-layout="phone"] .add_generator_button svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+:root[data-layout="phone"] .zone_table .add_generator_label,
+:root[data-layout="phone"] .zone_table .add_generator_count {
+    font-size: var(--phone-text-button);
+    white-space: nowrap;
+}

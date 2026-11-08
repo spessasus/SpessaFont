@@ -65,7 +65,14 @@ export const PhoneLocale = {
         leave: "Leave"
     },
     grid: {
-        stereoPair: "L+R"
+        stereoPair: "L+R",
+        addGenerator: "Add generator…",
+        grid: "Grid",
+        oneZone: "One zone",
+        valuesOnly: "Values only",
+        collapseAll: "Collapse all",
+        expandAll: "Expand all",
+        viewMode: "Grid view"
     },
     groups: {
         rangeTuning: "Range and tuning",
