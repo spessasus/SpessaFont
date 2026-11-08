@@ -1,0 +1,15 @@
+:root[data-layout="phone"] .stepper_button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--phone-touch);
+    height: var(--phone-touch);
+    padding: 0;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+:root[data-layout="phone"] .stepper_button[aria-disabled="true"] {
+    opacity: 0.4;
+}
