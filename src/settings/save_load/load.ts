@@ -13,6 +13,11 @@ import { isTheme } from "../../themes/theme_list.ts";
 import { takeSampleRateParam } from "../../utils/sample_rate_param.ts";
 import { saveSettings } from "./save.ts";
 import { isRecord } from "../../utils/is_record.ts";
+import {
+    type GeneratorGroup,
+    isGeneratorGroup,
+    isPhoneGridMode
+} from "../../generator_table/generator_groups.ts";
 import { isLayoutSetting } from "../../layout/layout_setting.ts";
 
 const INTERPOLATIONS = new Set<unknown>(Object.values(InterpolationTypes));
@@ -33,7 +38,10 @@ function isInRange(value: unknown, key: keyof typeof SETTING_LIMITS) {
  * so older saves and hand-edited data never break the app.
  */
 export function parseSettings(data: unknown): SavedSettingsType {
-    const settings = { ...DEFAULT_SETTINGS };
+    const settings = {
+        ...DEFAULT_SETTINGS,
+        phoneCollapsedGroups: new Array<GeneratorGroup>()
+    };
     if (!isRecord(data)) {
         return settings;
     }
@@ -53,6 +61,13 @@ export function parseSettings(data: unknown): SavedSettingsType {
     }
     if (isLayoutSetting(data.layout)) {
         settings.layout = data.layout;
+    }
+    if (isPhoneGridMode(data.phoneGridMode)) {
+        settings.phoneGridMode = data.phoneGridMode;
+    }
+    if (Array.isArray(data.phoneCollapsedGroups)) {
+        settings.phoneCollapsedGroups =
+            data.phoneCollapsedGroups.filter(isGeneratorGroup);
     }
     if (INTERPOLATIONS.has(interpolation)) {
         settings.interpolation = interpolation as InterpolationType;

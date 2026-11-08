@@ -63,5 +63,17 @@ export const PhoneLocale = {
         unsavedBanks_other: "{{count}} banks have unsaved changes",
         stay: "Stay",
         leave: "Leave"
+    },
+    groups: {
+        rangeTuning: "Range and tuning",
+        volume: "Volume",
+        filter: "Filter",
+        volumeEnvelope: "Volume envelope",
+        modulationEnvelope: "Modulation envelope",
+        modulationEnvelope2: "Modulation envelope 2",
+        modulationLFO: "Modulation LFO",
+        vibratoLFO: "Vibrato LFO",
+        effects: "Effects and voice",
+        sample: "Sample"
     }
 };
