@@ -1,22 +1,13 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, cleanup, render } from "@testing-library/react";
+import { cleanup, render } from "@testing-library/react";
 import { useBackHandler } from "../hooks/use_back_handler.ts";
 import { LayoutContext } from "../layout/layout_context.ts";
 import { BACK_LEVELS } from "../phone_shell/back_stack.ts";
 import { BackStackProvider } from "../phone_shell/back_stack_provider.tsx";
+import { setUpFakeHistory } from "../test_utils/fake_history.ts";
+import type { FakeHistory } from "../test_utils/fake_history.ts";
 import { ModalDialog } from "./modal_dialog.tsx";
-
-const fakeHistory: { state: unknown } = { state: null };
-
-function pressBack() {
-    act(() => {
-        // jsdom has no PointerEvent, the listener only needs the type
-        dispatchEvent(new MouseEvent("pointerup"));
-        fakeHistory.state = null;
-        dispatchEvent(new PopStateEvent("popstate"));
-    });
-}
 
 function LowerLevel({ onBack }: { onBack: () => boolean }) {
     useBackHandler(true, BACK_LEVELS.closeNavigator, onBack);
@@ -24,21 +15,15 @@ function LowerLevel({ onBack }: { onBack: () => boolean }) {
 }
 
 describe("ModalDialog back handling", () => {
+    let fakeHistory: FakeHistory;
     beforeEach(() => {
-        fakeHistory.state = null;
         HTMLDialogElement.prototype.showModal = vi.fn();
         HTMLDialogElement.prototype.close = vi.fn();
-        vi.spyOn(history, "pushState").mockImplementation((state: unknown) => {
-            fakeHistory.state = state;
-        });
-        vi.spyOn(history, "state", "get").mockImplementation(
-            () => fakeHistory.state
-        );
-        vi.spyOn(history, "back").mockImplementation(() => undefined);
+        fakeHistory = setUpFakeHistory();
     });
     afterEach(() => {
         cleanup();
-        vi.restoreAllMocks();
+        fakeHistory.restore();
     });
 
     it("cancels a modal dialog on back", () => {
@@ -56,11 +41,11 @@ describe("ModalDialog back handling", () => {
                 </BackStackProvider>
             </LayoutContext>
         );
-        pressBack();
+        fakeHistory.pressBack();
         expect(onCancel).toHaveBeenCalledTimes(1);
     });
 
-    it("leaves doesLowerHandle levels alone when a dialog takes the back press", () => {
+    it("leaves lower levels alone when a dialog takes the back press", () => {
         const onCancel = vi.fn();
         const doesLowerHandle = vi.fn(() => true);
         render(
@@ -77,7 +62,7 @@ describe("ModalDialog back handling", () => {
                 </BackStackProvider>
             </LayoutContext>
         );
-        pressBack();
+        fakeHistory.pressBack();
         expect(onCancel).toHaveBeenCalledTimes(1);
         expect(doesLowerHandle).not.toHaveBeenCalled();
     });

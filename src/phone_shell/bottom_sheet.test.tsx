@@ -1,17 +1,11 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-    act,
-    cleanup,
-    fireEvent,
-    render,
-    screen
-} from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { LayoutContext } from "../layout/layout_context.ts";
+import { setUpFakeHistory } from "../test_utils/fake_history.ts";
+import type { FakeHistory } from "../test_utils/fake_history.ts";
 import { BackStackProvider } from "./back_stack_provider.tsx";
 import { BottomSheet } from "./bottom_sheet.tsx";
-
-const fakeHistory: { state: unknown } = { state: null };
 
 function renderSheet(onClose: () => void) {
     return render(
@@ -27,19 +21,13 @@ function renderSheet(onClose: () => void) {
 }
 
 describe("BottomSheet", () => {
+    let fakeHistory: FakeHistory;
     beforeEach(() => {
-        fakeHistory.state = null;
-        vi.spyOn(history, "pushState").mockImplementation((state: unknown) => {
-            fakeHistory.state = state;
-        });
-        vi.spyOn(history, "state", "get").mockImplementation(
-            () => fakeHistory.state
-        );
-        vi.spyOn(history, "back").mockImplementation(() => undefined);
+        fakeHistory = setUpFakeHistory();
     });
     afterEach(() => {
         cleanup();
-        vi.restoreAllMocks();
+        fakeHistory.restore();
     });
 
     it("closes on the scrim, the close button, Escape and back", () => {
@@ -59,13 +47,7 @@ describe("BottomSheet", () => {
         fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
         expect(onClose).toHaveBeenCalledTimes(3);
 
-        act(() => {
-            dispatchEvent(new MouseEvent("pointerup"));
-        });
-        act(() => {
-            fakeHistory.state = null;
-            dispatchEvent(new PopStateEvent("popstate"));
-        });
+        fakeHistory.pressBack();
         expect(onClose).toHaveBeenCalledTimes(4);
     });
 

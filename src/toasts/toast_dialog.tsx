@@ -15,6 +15,11 @@ interface ToastDialogProps {
      * the safe choice there.
      */
     buttons: ToastDialogButton[];
+    /**
+     * False once dismissed. The toast stays mounted for its exit animation, and back must not
+     * reach it then. Asking again with the same id makes it visible again.
+     */
+    isVisible: boolean;
     onDismiss: () => void;
 }
 
@@ -25,6 +30,7 @@ interface ToastDialogProps {
 export function ToastDialog({
     children,
     buttons,
+    isVisible,
     onDismiss
 }: ToastDialogProps) {
     const labelId = useId();
@@ -52,13 +58,17 @@ export function ToastDialog({
     };
 
     const safeButton = buttons.at(-1);
-    useBackHandler(safeButton !== undefined, BACK_LEVELS.transient, () => {
-        if (!safeButton) {
-            return false;
+    useBackHandler(
+        safeButton !== undefined && isVisible,
+        BACK_LEVELS.transient,
+        () => {
+            if (!safeButton) {
+                return false;
+            }
+            answer(safeButton);
+            return true;
         }
-        answer(safeButton);
-        return true;
-    });
+    );
     return (
         <div
             ref={dialogRef}

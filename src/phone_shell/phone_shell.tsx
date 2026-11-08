@@ -20,6 +20,7 @@ import {
 } from "./phone_shell_state.ts";
 import { PhoneShellContext } from "./phone_shell_context.ts";
 import { PhoneSettingsLayer } from "./phone_settings_layer.tsx";
+import { useLeaveFlow } from "./use_leave_flow.ts";
 
 interface PhoneShellProps {
     bankTabs: BankTabs;
@@ -120,6 +121,7 @@ export function PhoneShell({
         dispatch({ type: "drillBack", tabId: activeId });
         return true;
     });
+    useLeaveFlow(tabs);
 
     const isKeysShown = state.drawer === "keys";
 
