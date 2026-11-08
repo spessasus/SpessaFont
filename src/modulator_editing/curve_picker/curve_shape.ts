@@ -6,6 +6,17 @@ export interface SpessaFontModulatorCurveType {
     positive: boolean;
 }
 
+export const ALL_CURVE_TYPES: readonly SpessaFontModulatorCurveType[] =
+    Object.values(ModulatorCurveTypes).flatMap((curveType) => [
+        { curveType, positive: true, bipolar: false },
+        { curveType, positive: false, bipolar: false },
+        { curveType, positive: true, bipolar: true },
+        { curveType, positive: false, bipolar: true }
+    ]);
+
+export const curveKey = (c: SpessaFontModulatorCurveType) =>
+    `${c.curveType}-${c.bipolar}-${c.positive}`;
+
 /**
  * The picture is drawn in a 100 by 100 view box.
  */
