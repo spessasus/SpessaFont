@@ -10,6 +10,7 @@ import { BankEditorWindow } from "./bank_editor_window.tsx";
 import { usePhoneShell } from "../phone_shell/phone_shell_context.ts";
 import { useBackHandler } from "../hooks/use_back_handler.ts";
 import { BACK_LEVELS } from "../phone_shell/back_stack.ts";
+import { ElementBar } from "../phone_shell/element_bar.tsx";
 import { getDrillTo } from "../phone_shell/drill_to.ts";
 
 interface PhoneBankEditorProps extends BankEditorProps {
@@ -56,6 +57,7 @@ export function PhoneBankEditor({
     return (
         <BankEditorContext value={context}>
             <div className={"bank_editor_content"}>
+                <ElementBar view={view} />
                 <BankEditorWindow model={model} />
             </div>
             <div

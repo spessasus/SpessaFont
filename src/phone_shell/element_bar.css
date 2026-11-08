@@ -1,0 +1,83 @@
+:root[data-layout="phone"] .element_bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: none;
+    width: 100%;
+    height: var(--phone-element-bar-height);
+    padding: 0 var(--phone-gutter);
+    border: none;
+    border-bottom: solid 1px var(--track-border-color);
+    background: var(--lighter-color-end);
+    color: var(--font-color);
+    font: inherit;
+    text-align: start;
+}
+
+:root[data-layout="phone"] .element_bar_static {
+    cursor: default;
+}
+
+:root[data-layout="phone"] .element_bar_glyph {
+    flex: none;
+    min-width: 1.5rem;
+    text-align: center;
+    color: var(--font-color);
+}
+
+:root[data-layout="phone"] .element_bar_name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: start;
+    font-weight: 600;
+}
+
+:root[data-layout="phone"] .element_bar_detail {
+    flex: none;
+    max-width: 55%;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    opacity: 0.75;
+}
+
+:root[data-layout="phone"] .element_bar_used_by {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+:root[data-layout="phone"] .element_bar_more {
+    flex: none;
+}
+
+:root[data-layout="phone"] .element_bar_chevron {
+    flex: none;
+    opacity: 0.75;
+}
+
+:root[data-layout="phone"] .element_bar_preset {
+    color: var(--preset-item-color);
+}
+
+:root[data-layout="phone"] .element_bar_instrument {
+    color: var(--instrument-item-color);
+}
+
+:root[data-layout="phone"] .element_bar_sample {
+    color: var(--sample-item-color);
+}
+
+:root[data-layout="phone"] .element_bar_glyph svg {
+    display: block;
+}
+
+/* The app sets a color on every element, which would hide the glyph's own */
+:root[data-layout="phone"] .element_bar_glyph * {
+    color: inherit;
+}

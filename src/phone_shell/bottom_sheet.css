@@ -78,3 +78,11 @@
     overscroll-behavior: contain;
     padding-bottom: env(safe-area-inset-bottom);
 }
+
+/* The sheet is portaled outside the app, so its controls need the app font */
+:root[data-layout="phone"] .bottom_sheet input,
+:root[data-layout="phone"] .bottom_sheet select,
+:root[data-layout="phone"] .bottom_sheet button,
+:root[data-layout="phone"] .bottom_sheet textarea {
+    font-family: inherit;
+}

@@ -1,5 +1,6 @@
 import type { BasicInstrument } from "spessasynth_core";
 import "../../bank_editor/bottom_bar.css";
+import "../../bank_editor/bottom_bar_phone.css";
 import { useTranslation } from "react-i18next";
 import { DeleteInstrumentAction } from "./delete_instrument_action.ts";
 import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";

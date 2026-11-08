@@ -4,6 +4,7 @@ import {
     MIDIPatchTools
 } from "spessasynth_core";
 import "../../bank_editor/bottom_bar.css";
+import "../../bank_editor/bottom_bar_phone.css";
 import { useTranslation } from "react-i18next";
 import { DeletePresetAction } from "./delete_preset_action.ts";
 import { WaitingInput } from "../../fancy_inputs/waiting_input/waiting_input.tsx";
@@ -132,6 +133,7 @@ export function BottomBar({ preset }: BottomBarProps) {
                 <span>{t("presetLocale.bankLSB")}</span>
                 <WaitingInput
                     type={"number"}
+                    inputMode={"numeric"}
                     min={0}
                     max={127}
                     value={view.bankLSB}
@@ -142,6 +144,7 @@ export function BottomBar({ preset }: BottomBarProps) {
                 <span>{t("presetLocale.bankMSB")}</span>
                 <WaitingInput
                     type={"number"}
+                    inputMode={"numeric"}
                     min={0}
                     max={127}
                     value={view.bankMSB}
@@ -153,6 +156,7 @@ export function BottomBar({ preset }: BottomBarProps) {
                 <span>{t("presetLocale.programNumber")}</span>
                 <WaitingInput
                     type={"number"}
+                    inputMode={"numeric"}
                     min={0}
                     max={127}
                     value={view.program}
