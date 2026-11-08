@@ -7,6 +7,8 @@ import {
     resolveLocale
 } from "./settings/save_load/get_user_locale.ts";
 import { applyTheme } from "./settings/apply_theme.ts";
+import { applyLayout } from "./layout/apply_layout.ts";
+import { PHONE_LAYOUT_QUERY, resolveLayout } from "./layout/layout_setting.ts";
 import { IS_ELECTRON } from "./utils/environment_detection.ts";
 import { logError, logInfo } from "./utils/core_utils.ts";
 import { syncElectronUnloadPrompt } from "./utils/electron_unload_prompt.ts";
@@ -74,6 +76,9 @@ async function getControllingWorker() {
 export async function init() {
     const settings = loadSettings();
     applyTheme(settings.theme);
+    applyLayout(
+        resolveLayout(settings.layout, matchMedia(PHONE_LAYOUT_QUERY).matches)
+    );
     // Screen readers, translation offers and CJK glyphs follow the page's language
     i18next.on("languageChanged", (locale) => {
         document.documentElement.lang = locale;
