@@ -18,6 +18,14 @@
     --phone-edge-dead-zone: 1.875rem;
     --phone-sheet-height: 50dvh;
     --phone-navigator-width: 90%;
+    --phone-text-heading: 1.25rem;
+    --phone-text-title: 1.125rem;
+    --phone-text-sheet-title: 1.0625rem;
+    --phone-text-body: 1rem;
+    --phone-text-button: 0.9375rem;
+    --phone-text-small: 0.875rem;
+    --phone-text-secondary: 0.8125rem;
+    --phone-text-caption: 0.75rem;
 }
 
 /* The page never scrolls, and dvh follows the address bar and the soft keyboard */

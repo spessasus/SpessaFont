@@ -16,6 +16,7 @@ import { usePresetView } from "../hooks/use_preset_view.ts";
 import { useSampleView } from "../hooks/use_sample_view.ts";
 import { BottomBar } from "../preset_editor/bottom_bar/bottom_bar.tsx";
 import { LinkedPresets } from "../instrument_editor/linked_presets/linked_presets.tsx";
+import { ChevronRightIcon } from "../utils/icons/app_icons.tsx";
 import { InfoIcon } from "../utils/icons/file_icons.tsx";
 import { SpeakerIcon } from "../utils/icons/player_icons.tsx";
 import { getObjectId } from "../utils/object_id.ts";
@@ -51,7 +52,7 @@ function BarButton({
             <span className={"element_bar_name"}>{name}</span>
             <span className={"element_bar_detail"}>{detail}</span>
             <span className={"element_bar_chevron"} aria-hidden={true}>
-                ›
+                <ChevronRightIcon />
             </span>
         </button>
     );
@@ -77,7 +78,10 @@ function UsedBy({
     return (
         <>
             <span className={"element_bar_used_by"}>
-                {label} {names.get(users[0])?.name}
+                {label}{" "}
+                <span className={"element_bar_target"}>
+                    {names.get(users[0])?.name}
+                </span>
             </span>
             {users.length > 1 ? (
                 <span className={"element_bar_more"}>+{users.length - 1}</span>

@@ -53,16 +53,33 @@
 
 :root[data-layout="phone"] .action_sheet_text {
     display: flex;
+    flex: 1;
     flex-direction: column;
     min-width: 0;
 }
 
+:root[data-layout="phone"] .action_sheet_chevron {
+    flex: none;
+    display: flex;
+    color: var(--muted-font-color);
+}
+
+/* The app sets a color on every path, so the chevron's own would not show */
+:root[data-layout="phone"] .action_sheet_chevron * {
+    color: inherit;
+}
+
+:root[data-layout="phone"] .action_sheet_chevron svg {
+    width: 1rem;
+    height: 1rem;
+}
+
 :root[data-layout="phone"] .action_sheet_label {
-    font-size: 1rem;
+    font-size: var(--phone-text-body);
 }
 
 :root[data-layout="phone"] .action_sheet_second {
-    font-size: 0.8rem;
+    font-size: var(--phone-text-secondary);
     color: var(--muted-font-color);
 }
 

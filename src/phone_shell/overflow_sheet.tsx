@@ -177,6 +177,7 @@ export function OverflowSheet({
                       {
                           label: t("phoneLocale.overflow.saveAs"),
                           icon: "save",
+                          hasSubmenu: true,
                           // The item closes the sheet first, so the later state wins
                           onSelect: () => setSheet("saveAs")
                       },
@@ -192,6 +193,7 @@ export function OverflowSheet({
                       {
                           label: t("phoneLocale.overflow.edit"),
                           icon: "edit",
+                          hasSubmenu: true,
                           onSelect: () => setSheet("edit")
                       },
                       {

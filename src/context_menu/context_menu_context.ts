@@ -28,6 +28,11 @@ export interface ContextMenuItem {
      */
     iconNode?: ReactNode;
     isDestructive?: boolean;
+    /**
+     * The entry opens another sheet, so the phone action sheet ends its row with a chevron.
+     * The desktop menu ignores it.
+     */
+    hasSubmenu?: boolean;
 }
 
 export interface ContextMenuOptions {

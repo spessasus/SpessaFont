@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import "./phone_settings_layer.css";
+import { CloseIcon } from "../utils/icons/app_icons.tsx";
 import type { BankSession } from "../core_backend/bank_session.ts";
 import { Settings } from "../settings/settings.tsx";
 import { ErrorBoundary } from "../error_boundary/error_boundary.tsx";
@@ -28,7 +29,7 @@ export function PhoneSettingsLayer({
                     onClick={onClose}
                     aria-label={t("settingsLocale.closeSettings")}
                 >
-                    &times;
+                    <CloseIcon />
                 </button>
                 <h2>{t("settingsLocale.settings")}</h2>
             </div>

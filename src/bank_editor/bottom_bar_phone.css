@@ -59,6 +59,7 @@
     max-width: none;
     min-height: var(--phone-touch);
     padding: 0 0.5rem;
+    text-align: start;
     color: inherit;
     border: solid 1px var(--track-border-color);
     border-radius: 0.375rem;

@@ -18,16 +18,18 @@
 
 :root[data-layout="phone"] .drawer_toggle {
     height: var(--phone-touch);
+    min-width: var(--phone-touch);
     padding: 0 0.75rem;
-    border: none;
-    border-bottom: solid 2px transparent;
-    border-radius: 1rem;
+    border: 1px solid var(--track-border-color);
+    border-radius: var(--primary-border-radius);
     background: transparent;
+    font-size: var(--phone-text-button);
 }
 
 :root[data-layout="phone"] .drawer_toggle[aria-pressed="true"] {
-    border-bottom-color: var(--focus-color);
-    background: color-mix(in oklab, var(--font-color) 15%, transparent);
+    background: var(--primary-color);
+    font-weight: 600;
+    box-shadow: inset 0 -3px 0 var(--focus-color);
 }
 
 :root[data-layout="phone"] .drawer_name {
@@ -36,7 +38,9 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    text-align: center;
+    text-align: end;
+    font-size: var(--phone-text-small);
+    color: var(--muted-font-color);
 }
 
 :root[data-layout="phone"] .drawer_name[hidden] {
@@ -45,7 +49,7 @@
 
 :root[data-layout="phone"] .drawer_voices {
     flex-shrink: 0;
-    font-size: 0.8rem;
+    font-size: var(--phone-text-small);
     color: var(--muted-font-color);
 }
 
@@ -57,24 +61,49 @@
     flex: 1;
 }
 
+:root[data-layout="phone"] .drawer_song_icon {
+    flex: none;
+    display: flex;
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .drawer_song_icon * {
+    color: inherit;
+}
+
+:root[data-layout="phone"] .drawer_song_icon svg {
+    width: 1.125rem;
+    height: 1.125rem;
+}
+
 :root[data-layout="phone"] .drawer_song_name {
     flex: 1;
     min-width: 0;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+    text-align: start;
+    font-size: var(--phone-text-small);
 }
 
 :root[data-layout="phone"] .drawer_song_time {
     flex-shrink: 0;
-    font-size: 0.75rem;
+    font-size: var(--phone-text-small);
 }
 
 :root[data-layout="phone"] .drawer_song_toggle {
     flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: var(--phone-touch);
     height: var(--phone-touch);
     padding: 0;
+}
+
+:root[data-layout="phone"] .drawer_song_toggle svg {
+    width: 1.5rem;
+    height: 1.5rem;
 }
 
 :root[data-layout="phone"] .drawer_keys {

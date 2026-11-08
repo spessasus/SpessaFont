@@ -100,4 +100,32 @@ describe("ContextMenu", () => {
         expect(onClose).toHaveBeenCalledTimes(1);
         expect(onSelect).toHaveBeenCalledTimes(1);
     });
+
+    it("shows the submenu chevron in the phone sheet only", () => {
+        const entries: ContextMenuEntry[] = [
+            { label: "More", onSelect: vi.fn(), hasSubmenu: true }
+        ];
+        const { unmount } = render(
+            <LayoutContext value="phone">
+                <BackStackProvider>
+                    <ContextMenu
+                        x={0}
+                        y={0}
+                        entries={entries}
+                        onClose={vi.fn()}
+                    />
+                </BackStackProvider>
+            </LayoutContext>
+        );
+        expect(
+            document.body.querySelector(".action_sheet_chevron")
+        ).toBeTruthy();
+        unmount();
+        render(
+            <LayoutContext value="desktop">
+                <ContextMenu x={0} y={0} entries={entries} onClose={vi.fn()} />
+            </LayoutContext>
+        );
+        expect(document.body.querySelector(".action_sheet_chevron")).toBeNull();
+    });
 });

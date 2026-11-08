@@ -6,6 +6,7 @@ import {
     LinkIcon,
     PasteIcon,
     RedoIcon,
+    ScissorsIcon,
     UndoIcon
 } from "../utils/icons/edit_icons.tsx";
 import {
@@ -25,11 +26,12 @@ interface MenuIconProps {
 
 export function MenuIcon({ name }: MenuIconProps) {
     switch (name) {
-        // There is no scissors icon, so cut and duplicate draw the copy one
         case "copy":
-        case "cut":
         case "duplicate": {
             return <CopyIcon />;
+        }
+        case "cut": {
+            return <ScissorsIcon />;
         }
         case "paste": {
             return <PasteIcon />;

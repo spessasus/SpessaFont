@@ -1,7 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
 import { useEngineStatus } from "../hooks/use_engine_status.ts";
-import { PauseIcon, PlayIcon } from "../utils/icons/player_icons.tsx";
+import {
+    MIDINameIcon,
+    PauseIcon,
+    PlayIcon
+} from "../utils/icons/player_icons.tsx";
 import { formatTime } from "../utils/format_time.ts";
 
 /**
@@ -20,7 +24,9 @@ export function DrawerSongControls() {
         : t("phoneLocale.drawer.pause");
     return (
         <div className={"drawer_song_controls"}>
-            <span aria-hidden={true}>♪</span>
+            <span className={"drawer_song_icon"} aria-hidden={true}>
+                <MIDINameIcon />
+            </span>
             <span className={"drawer_song_name"} title={name}>
                 {name}
             </span>
@@ -29,7 +35,7 @@ export function DrawerSongControls() {
             </span>
             <button
                 type={"button"}
-                className={"pretty_button drawer_song_toggle"}
+                className={"plain_button drawer_song_toggle"}
                 aria-label={toggleLabel}
                 title={toggleLabel}
                 onClick={() => audioEngine.toggleMIDI()}

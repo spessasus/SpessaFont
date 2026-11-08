@@ -4,7 +4,7 @@
     flex-direction: column;
     height: var(--phone-sheet-height);
     min-height: 0;
-    background: var(--darker-color-start);
+    background: var(--lighter-color-end);
     color: var(--font-color);
     border-top: 1px solid var(--track-border-color);
     border-radius: 1rem 1rem 0 0;
@@ -45,9 +45,16 @@
 
 :root[data-layout="phone"] .editor_sheet_close {
     flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-width: var(--phone-touch, 2.75rem);
     min-height: var(--phone-touch, 2.75rem);
-    font-size: 1.5rem;
+}
+
+:root[data-layout="phone"] .editor_sheet_close svg {
+    width: 1.5rem;
+    height: 1.5rem;
 }
 
 :root[data-layout="phone"] .editor_sheet_body {

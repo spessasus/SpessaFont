@@ -17,11 +17,14 @@
     height: var(--phone-app-bar-height);
     padding-right: var(--phone-gutter);
     background: var(--menu-bar-color);
+    border-bottom: 1px solid var(--menu-border-color);
 }
 
 :root[data-layout="phone"] .phone_settings_header h2 {
     margin: 0;
-    font-size: 1.25rem;
+    font-size: var(--phone-text-title);
+    font-weight: 600;
+    text-align: start;
 }
 
 :root[data-layout="phone"] .phone_settings_close {
@@ -31,6 +34,9 @@
     width: var(--phone-touch);
     height: var(--phone-touch);
     margin-left: calc(var(--phone-gutter) / 2);
-    font-size: 1.75rem;
-    line-height: 1;
+}
+
+:root[data-layout="phone"] .phone_settings_close svg {
+    width: 1.5rem;
+    height: 1.5rem;
 }

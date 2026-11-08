@@ -1,4 +1,5 @@
 import type { ContextMenuItem } from "./context_menu_context.ts";
+import { ChevronRightIcon } from "../utils/icons/app_icons.tsx";
 import { MenuIcon } from "./menu_icon.tsx";
 
 interface ActionSheetItemProps {
@@ -31,6 +32,11 @@ export function ActionSheetItem({ item, onClose }: ActionSheetItemProps) {
                     <span className="action_sheet_second">{secondLine}</span>
                 ) : null}
             </span>
+            {item.hasSubmenu ? (
+                <span className="action_sheet_chevron" aria-hidden="true">
+                    <ChevronRightIcon />
+                </span>
+            ) : null}
         </button>
     );
 }

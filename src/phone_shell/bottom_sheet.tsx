@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useBackHandler } from "../hooks/use_back_handler.ts";
 import { rememberFocus } from "../utils/focus_return.ts";
 import { BACK_LEVELS } from "./back_stack.ts";
+import { CloseIcon } from "../utils/icons/app_icons.tsx";
 import "./bottom_sheet.css";
 
 interface BottomSheetProps {
@@ -66,7 +67,7 @@ export function BottomSheet({ title, onClose, children }: BottomSheetProps) {
                         aria-label={t("menuBarLocale.file.close")}
                         onClick={onClose}
                     >
-                        ×
+                        <CloseIcon />
                     </button>
                 </header>
                 <div ref={bodyRef} className="bottom_sheet_body">

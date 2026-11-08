@@ -6,6 +6,7 @@
     height: var(--phone-app-bar-height);
     padding: 0 var(--flex-gap);
     background: var(--menu-bar-color);
+    border-bottom: 1px solid var(--menu-border-color);
 }
 
 :root[data-layout="phone"] .phone_app_bar_button {
@@ -18,7 +19,7 @@
     background: var(--menu-bar-color);
     border: none;
     color: var(--font-color);
-    font-size: 1rem;
+    font-size: var(--phone-text-body);
     cursor: pointer;
 }
 
@@ -57,10 +58,10 @@
 :root[data-layout="phone"] .phone_app_bar_title_line {
     overflow: hidden;
     height: 2rem;
-    text-align: left;
+    text-align: start;
     line-height: 2rem;
-    font-size: 1.125rem;
-    font-weight: bold;
+    font-size: var(--phone-text-title);
+    font-weight: 600;
     white-space: nowrap;
     text-overflow: ellipsis;
 }
@@ -68,10 +69,10 @@
 :root[data-layout="phone"] .phone_app_bar_subtitle {
     overflow: hidden;
     height: 1.25rem;
-    text-align: left;
+    text-align: start;
     line-height: 1.25rem;
-    font-size: 0.8125rem;
-    opacity: 0.7;
+    font-size: var(--phone-text-caption);
+    color: var(--muted-font-color);
     white-space: nowrap;
     text-overflow: ellipsis;
 }

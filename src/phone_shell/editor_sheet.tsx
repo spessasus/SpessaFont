@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useBackHandler } from "../hooks/use_back_handler.ts";
 import { BACK_LEVELS } from "./back_stack.ts";
 import { getSheetDragResult } from "./editor_sheet_drag.ts";
+import { CloseIcon } from "../utils/icons/app_icons.tsx";
 import "./editor_sheet.css";
 
 interface EditorSheetProps {
@@ -78,11 +79,11 @@ export function EditorSheet({
                 <div className="editor_sheet_title">{header}</div>
                 <button
                     type="button"
-                    className="editor_sheet_close"
+                    className="plain_button editor_sheet_close"
                     aria-label={t("menuBarLocale.file.close")}
                     onClick={onClose}
                 >
-                    ×
+                    <CloseIcon />
                 </button>
             </header>
             <div className="editor_sheet_body">{children}</div>
