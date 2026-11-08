@@ -14,21 +14,21 @@
     flex: none;
     height: var(--phone-touch);
     padding: 0 0 0 1rem;
-    border-radius: calc(var(--phone-touch) / 2);
-    background: var(--lighter-color-end);
+    border-radius: var(--primary-border-radius);
     -webkit-touch-callout: none;
 }
 
 :root[data-layout="phone"] .tab button {
-    border-radius: calc(var(--phone-touch) / 2);
+    border-radius: var(--primary-border-radius);
 }
 
 :root[data-layout="phone"] .tab_select {
     font-size: var(--phone-text-button);
 }
 
+/* The desktop active tab look: bold and the stronger border */
 :root[data-layout="phone"] .tab.active {
-    font-weight: 600;
+    font-weight: bold;
 }
 
 :root[data-layout="phone"] .tab .tab_close {

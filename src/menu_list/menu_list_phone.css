@@ -186,15 +186,6 @@
     height: 1.5rem;
 }
 
-:root[data-layout="phone"]
-    .menu_list_main
-    .list_search_bar
-    button[aria-pressed="true"] {
-    background: var(--primary-color);
-    border-color: var(--focus-color);
-    font-weight: 600;
-}
-
 :root[data-layout="phone"] .menu_list_unused_note {
     flex: none;
     padding: 0 var(--phone-gutter) 0.25rem;

@@ -20,17 +20,12 @@
     height: var(--phone-touch);
     min-width: var(--phone-touch);
     padding: 0 0.75rem;
-    border: 1px solid var(--track-border-color);
-    border-radius: var(--primary-border-radius);
-    background: transparent;
     font-size: var(--phone-text-button);
 }
 
 :root[data-layout="phone"] .drawer_toggle[aria-pressed="true"] {
     background: var(--primary-color);
-    border-color: var(--focus-color);
-    font-weight: 600;
-    box-shadow: inset 0 -3px 0 var(--focus-color);
+    border-color: var(--border-color);
 }
 
 :root[data-layout="phone"] .drawer_name {

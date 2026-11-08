@@ -39,7 +39,7 @@ function ActionButton({
     return (
         <button
             type={"button"}
-            className={"plain_button selection_action"}
+            className={"pretty_button selection_action"}
             data-variant={variant}
             aria-disabled={isDisabled ? true : undefined}
             onClick={isDisabled ? undefined : onClick}
