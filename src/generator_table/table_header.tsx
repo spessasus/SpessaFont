@@ -7,6 +7,10 @@ import {
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import "./header_cell.css";
+import "./header_cell_phone.css";
+import { ZoneHeaderLabel } from "./zone_header_label.tsx";
+import { useLayout } from "../layout/layout_context.ts";
+import type { ZoneView } from "../core_backend/entity_views.ts";
 import { DeleteZoneAction } from "./delete_zone_action.ts";
 import {
     createReplaceSampleActions,
@@ -32,6 +36,9 @@ import {
     getZoneNameKey
 } from "./table_navigation.ts";
 
+// An instrument zone with no key range plays the whole keyboard
+const FULL_RANGE = { min: 0, max: 127 };
+
 interface TableHeaderProps {
     /**
      * The edited element, for the actions.
@@ -39,6 +46,10 @@ interface TableHeaderProps {
     element: BasicInstrument | BasicPreset;
     name: string;
     columns: readonly ZoneColumn[];
+    /**
+     * The element's global zone, whose key range an instrument zone inherits.
+     */
+    globalZone: ZoneView;
     /**
      * The key of the table's Tab stop when it is in this row.
      */
@@ -49,9 +60,11 @@ export function TableHeader({
     element,
     name: elementName,
     columns,
+    globalZone,
     activeKey
 }: TableHeaderProps) {
     const { t } = useTranslation();
+    const layout = useLayout();
     const { session, apply, setView } = useBankEditor();
     const lookup = useEntityLookup(session.store);
     const { openMenu } = useContextMenu();
@@ -227,8 +240,10 @@ export function TableHeader({
             <th scope={"col"} className={"header_cell"}>
                 {t("soundBankLocale.globalZone")}
             </th>
-            {columns.map((column) => {
+            {columns.map((column, index) => {
                 const { zone, name, isStereo } = column;
+                const range =
+                    zone.keyRange ?? globalZone.keyRange ?? FULL_RANGE;
                 const zoneLabel = t("soundBankLocale.deleteZone", { name });
                 return (
                     <th
@@ -291,7 +306,7 @@ export function TableHeader({
                             data-grid-key={getZoneNameKey(zone.id)}
                             tabIndex={getTabIndex(getZoneNameKey(zone.id))}
                             title={
-                                isStereo
+                                isStereo && layout !== "phone"
                                     ? t(
                                           "soundBankLocale.thisIsAStereoSamplePair"
                                       )
@@ -299,7 +314,20 @@ export function TableHeader({
                             }
                             onClick={() => openColumn(column)}
                         >
-                            {name}
+                            {layout === "phone" ? (
+                                <ZoneHeaderLabel
+                                    name={name}
+                                    keyRange={
+                                        element instanceof BasicInstrument
+                                            ? `${range.min}-${range.max}`
+                                            : undefined
+                                    }
+                                    isStereo={isStereo}
+                                    colorIndex={index}
+                                />
+                            ) : (
+                                name
+                            )}
                         </button>
                         <button
                             type={"button"}

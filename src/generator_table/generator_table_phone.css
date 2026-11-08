@@ -1,0 +1,96 @@
+:root[data-layout="phone"] .zone_table_wrapper {
+    padding: 0;
+}
+
+:root[data-layout="phone"] .zone_table {
+    border-radius: 0;
+    overflow: visible;
+}
+
+:root[data-layout="phone"] .zone_table th:first-child,
+:root[data-layout="phone"] .zone_table td:first-child {
+    width: var(--phone-name-column);
+    min-width: var(--phone-name-column);
+    max-width: var(--phone-name-column);
+    box-sizing: border-box;
+    background: var(--lighter-color-end);
+}
+
+/* The Global column stays next to the names so inheritance is visible while zones scroll */
+:root[data-layout="phone"] .zone_table th:nth-child(2),
+:root[data-layout="phone"] .zone_table td:nth-child(2) {
+    position: sticky;
+    left: var(--phone-name-column);
+    z-index: 1;
+    width: var(--phone-global-column);
+    min-width: var(--phone-global-column);
+    max-width: var(--phone-global-column);
+    box-sizing: border-box;
+    background: var(--lighter-color-end);
+    box-shadow: 2px 0 0 var(--border-color);
+}
+
+:root[data-layout="phone"] .zone_table thead tr:first-child th {
+    height: var(--phone-header-height);
+    box-sizing: border-box;
+}
+
+:root[data-layout="phone"]
+    .zone_table
+    thead
+    tr:first-child
+    th:nth-child(-n + 2) {
+    z-index: 2;
+}
+
+:root[data-layout="phone"] .zone_table td {
+    min-width: var(--phone-cell-width);
+    height: var(--phone-cell-height);
+    background: var(--darker-color-end);
+}
+
+:root[data-layout="phone"] .zone_table td:nth-child(2) {
+    background: var(--lighter-color-end);
+}
+
+:root[data-layout="phone"] .zone_table .generator_row_highlight,
+:root[data-layout="phone"] .zone_table .generator_row {
+    background: transparent;
+}
+
+:root[data-layout="phone"] .zone_table .generator_cell_header {
+    padding: 0.25rem 0.5rem;
+    height: var(--phone-cell-height);
+    box-sizing: border-box;
+    text-align: start;
+    font-size: var(--phone-text-secondary);
+    cursor: default;
+}
+
+:root[data-layout="phone"] .zone_table .generator_cell_header > div {
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 0;
+    padding: 0;
+    text-align: start;
+}
+
+:root[data-layout="phone"] .zone_table .generator_cell_header span {
+    white-space: normal;
+    text-align: start;
+    font-size: var(--phone-text-secondary);
+    line-height: 1.15;
+}
+
+:root[data-layout="phone"]
+    .zone_table
+    .generator_cell_header
+    .generator_unit_line {
+    font-size: var(--phone-text-caption);
+    font-style: normal;
+    line-height: 1.15;
+    text-align: start;
+    cursor: default;
+    color: var(--muted-font-color);
+}

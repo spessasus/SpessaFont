@@ -36,6 +36,11 @@
     --zone-color-2: #1f6fb2;
     --zone-color-3: #9a6b00;
     --zone-color-4: #2e8b57;
+    --grid-group-color: color-mix(
+        in oklch,
+        var(--menu-bar-color) 45%,
+        var(--lighter-color-start)
+    );
     --menu-border-color: #00e5ff;
     --primary-color: #ffee00;
     --border-color: #00e5ff;

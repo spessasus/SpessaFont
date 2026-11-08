@@ -1,0 +1,77 @@
+:root[data-layout="phone"] .header_cell {
+    max-width: none;
+    min-width: var(--phone-cell-width);
+    width: auto;
+    padding: 0.5rem 0.5rem 0.25rem;
+    border-radius: 0;
+    color: var(--font-color);
+    font-weight: 600;
+    font-size: var(--phone-text-small);
+    line-height: 1.25;
+    text-align: start;
+    vertical-align: top;
+}
+
+:root[data-layout="phone"] .header_cell.instrument,
+:root[data-layout="phone"] .header_cell.preset {
+    color: var(--font-color);
+    font-weight: 600;
+}
+
+:root[data-layout="phone"] .header_cell:first-child {
+    vertical-align: middle;
+}
+
+:root[data-layout="phone"] .header_cell * {
+    font-size: var(--phone-text-small);
+}
+
+:root[data-layout="phone"] .header_cell .header_cell_name {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    text-align: start;
+    font-style: normal;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+:root[data-layout="phone"] .header_cell .zone_header_name {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    font-size: var(--phone-text-small);
+    font-weight: 600;
+    text-align: start;
+}
+
+:root[data-layout="phone"] .header_cell .zone_header_range,
+:root[data-layout="phone"] .header_cell .zone_header_stereo {
+    display: inline;
+    font-size: var(--phone-text-caption);
+    font-weight: 400;
+    text-align: start;
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .header_cell .zone_header_stereo {
+    margin-inline-start: 0.5rem;
+}
+
+/* The three pixel bar in the zone's color, inset at the top of the header */
+:root[data-layout="phone"] .header_cell .zone_header_color {
+    position: absolute;
+    top: 0;
+    inset-inline: 0.5rem;
+    height: 3px;
+    border-radius: 0 0 2px 2px;
+}
+
+/* Hidden but not display none, the grid keys still find it. Deleting is in the zone header sheet */
+:root[data-layout="phone"] .header_cell .delete_zone {
+    visibility: hidden;
+    position: absolute;
+}

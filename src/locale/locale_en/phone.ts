@@ -64,6 +64,9 @@ export const PhoneLocale = {
         stay: "Stay",
         leave: "Leave"
     },
+    grid: {
+        stereoPair: "L+R"
+    },
     groups: {
         rangeTuning: "Range and tuning",
         volume: "Volume",

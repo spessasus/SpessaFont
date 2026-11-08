@@ -74,6 +74,9 @@ export const PhoneLocale = {
         stay: "Zostań",
         leave: "Wyjdź"
     },
+    grid: {
+        stereoPair: "L+P"
+    },
     groups: {
         rangeTuning: "Zakres i strojenie",
         volume: "Głośność",

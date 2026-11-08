@@ -1,4 +1,6 @@
 import "./cell/generator_cell.css";
+import "./cell/generator_cell_phone.css";
+import { useLayout } from "../layout/layout_context.ts";
 import type * as React from "react";
 import { BasicInstrument, type BasicPreset } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
@@ -56,6 +58,7 @@ export function GeneratorRow({
 }: GeneratorRowProps) {
     const { t } = useTranslation();
     const { openMenu } = useContextMenu();
+    const layout = useLayout();
     const { generator } = row;
     const name = t(generatorLocaleMap[generator]);
     const unit = row.unit ? GENERATOR_UNITS[row.unit] : undefined;
@@ -84,7 +87,15 @@ export function GeneratorRow({
             >
                 <div>
                     <span>{name}</span>
-                    {unit ? <i title={t(unit.full)}>{t(unit.suffix)}</i> : null}
+                    {unit ? (
+                        layout === "phone" ? (
+                            <i className={"generator_unit_line"}>
+                                {t(unit.suffix)}
+                            </i>
+                        ) : (
+                            <i title={t(unit.full)}>{t(unit.suffix)}</i>
+                        )
+                    ) : null}
                 </div>
             </th>
             {columns.map((column) => {

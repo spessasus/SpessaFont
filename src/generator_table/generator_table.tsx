@@ -9,6 +9,7 @@ import type { GeneratorRowType } from "./generator_row_type.ts";
 import { TableHeader } from "./table_header.tsx";
 import { GeneratorRow } from "./generator_row.tsx";
 import "./generator_table.css";
+import "./generator_table_phone.css";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ModulatorRow } from "./modulator_row.tsx";
@@ -268,6 +269,7 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
                         element={element}
                         name={view.name}
                         columns={zoneColumns}
+                        globalZone={view.globalZone}
                         activeKey={isHeaderKey ? tabKey : undefined}
                     />
                     <ModulatorRow
