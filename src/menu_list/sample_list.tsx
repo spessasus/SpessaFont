@@ -11,7 +11,6 @@ import { SampleDisplay } from "./sample_display/sample_display.tsx";
 import { pickFiles } from "../utils/pick_file.ts";
 import { useSampleImport } from "./use_sample_import.ts";
 import { type FocusRequest, VirtualItemList } from "./virtual_item_list.tsx";
-import { useSectionOpen } from "./use_list_state.ts";
 import { useSelectionCommands } from "./use_selection_commands.ts";
 import { logError } from "../utils/core_utils.ts";
 
@@ -26,6 +25,12 @@ interface SampleListProps {
     focusRequest: FocusRequest | null;
     onItemClick: (sample: BasicSample, event: MouseEvent) => void;
     onItemContextMenu: (sample: BasicSample, event: MouseEvent) => void;
+    isOpen: boolean;
+    onOpenChange: (isOpen: boolean) => void;
+    /**
+     * The estimated row height in pixels, for the virtual list.
+     */
+    rowEstimate?: number;
     onItemPointerDown: (sample: BasicSample, event: PointerEvent) => void;
 }
 
@@ -37,17 +42,16 @@ export function SampleList({
     focusRequest,
     onItemClick,
     onItemContextMenu,
-    onItemPointerDown
+    onItemPointerDown,
+    isOpen,
+    onOpenChange,
+    rowEstimate
 }: SampleListProps) {
     const { t } = useTranslation();
     const importSamples = useSampleImport();
     const { session, apply, playSample } = useBankEditor();
     const { contents } = useClipboard();
     const commands = useSelectionCommands();
-    const [isOpen, setIsOpen] = useSectionOpen(
-        view,
-        view instanceof BasicSample
-    );
     const [isImporting, setIsImporting] = useState(false);
 
     // One import at a time, a second one would race the first for the free names
@@ -59,7 +63,7 @@ export function SampleList({
         setIsImporting(true);
         try {
             if ((await importSamples(files, session.document, apply)) > 0) {
-                setIsOpen(true);
+                onOpenChange(true);
             }
         } catch (error) {
             logError("Failed to import the audio files.", error);
@@ -74,7 +78,7 @@ export function SampleList({
             <DropdownHeader
                 text={t("presetList.samples")}
                 isOpen={isOpen}
-                onToggle={() => setIsOpen((open) => !open)}
+                onToggle={() => onOpenChange(!isOpen)}
                 addLabel={t("presetList.importSamples")}
                 onAdd={isImporting ? undefined : () => void addSamples()}
                 onCopy={
@@ -91,6 +95,7 @@ export function SampleList({
                         cursor instanceof BasicSample ? cursor : undefined
                     }
                     focusRequest={focusRequest}
+                    rowEstimate={rowEstimate}
                     renderItem={(sample) => (
                         <SampleDisplay
                             sampleId={getObjectId(sample)}

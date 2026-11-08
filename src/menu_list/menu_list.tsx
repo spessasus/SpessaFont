@@ -31,6 +31,8 @@ import { useDragSource } from "../drag_and_drop/drag_context.ts";
 import { getObjectId } from "../utils/object_id.ts";
 import type { FocusRequest } from "./virtual_item_list.tsx";
 import { ListSearchBar } from "./list_search_bar.tsx";
+import { useSectionsOpen } from "./use_list_state.ts";
+import { useLayout } from "../layout/layout_context.ts";
 
 interface MenuListProps {
     view: BankEditView;
@@ -47,6 +49,9 @@ export function MenuList({ view, isCovered }: MenuListProps) {
     const instruments = useBankSnapshot(session.store, (s) => s.instruments);
     const presets = useBankSnapshot(session.store, (s) => s.presets);
     const [isOpen, setIsOpen] = useState(true);
+    const layout = useLayout();
+    const sections = useSectionsOpen(view, layout === "phone");
+    const rowEstimate = layout === "phone" ? 48 : undefined;
     const [searchQuery, setSearchQuery] = useState("");
     const [isUnusedOnly, setIsUnusedOnly] = useState(false);
     const searchRef = useRef<HTMLInputElement>(null);
@@ -278,6 +283,9 @@ export function MenuList({ view, isCovered }: MenuListProps) {
             </div>
 
             <SampleList
+                isOpen={sections.isOpen("samples")}
+                onOpenChange={(open) => sections.setOpen("samples", open)}
+                rowEstimate={rowEstimate}
                 samples={filtered.samples}
                 view={view}
                 selected={selectedSamples}
@@ -296,6 +304,9 @@ export function MenuList({ view, isCovered }: MenuListProps) {
             />
 
             <InstrumentList
+                isOpen={sections.isOpen("instruments")}
+                onOpenChange={(open) => sections.setOpen("instruments", open)}
+                rowEstimate={rowEstimate}
                 instruments={filtered.instruments}
                 view={view}
                 selected={selectedInstruments}
@@ -315,6 +326,9 @@ export function MenuList({ view, isCovered }: MenuListProps) {
             />
 
             <PresetList
+                isOpen={sections.isOpen("presets")}
+                onOpenChange={(open) => sections.setOpen("presets", open)}
+                rowEstimate={rowEstimate}
                 presets={filtered.presets}
                 view={view}
                 selected={selectedPresets}

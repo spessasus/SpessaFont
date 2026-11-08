@@ -8,7 +8,7 @@ import { DropdownHeader } from "./dropdown_header/dropdown_header.tsx";
 import { InstrumentDisplay } from "./instrument_display/instrument_display.tsx";
 import { getObjectId } from "../utils/object_id.ts";
 import { type FocusRequest, VirtualItemList } from "./virtual_item_list.tsx";
-import { useExpandedItems, useSectionOpen } from "./use_list_state.ts";
+import { useExpandedItems } from "./use_list_state.ts";
 import { useSelectionCommands } from "./use_selection_commands.ts";
 import {
     createInstrumentFromSamples,
@@ -27,6 +27,12 @@ interface InstrumentListProps {
     focusRequest: FocusRequest | null;
     onItemClick: (instrument: BasicInstrument, event: MouseEvent) => void;
     onItemContextMenu: (entity: BankEntity, event: MouseEvent) => void;
+    isOpen: boolean;
+    onOpenChange: (isOpen: boolean) => void;
+    /**
+     * The estimated row height in pixels, for the virtual list.
+     */
+    rowEstimate?: number;
     onItemPointerDown: (
         instrument: BasicInstrument,
         event: PointerEvent
@@ -42,16 +48,15 @@ export function InstrumentList({
     focusRequest,
     onItemClick,
     onItemContextMenu,
-    onItemPointerDown
+    onItemPointerDown,
+    isOpen,
+    onOpenChange,
+    rowEstimate
 }: InstrumentListProps) {
     const { t } = useTranslation();
     const { session, apply } = useBankEditor();
     const { contents } = useClipboard();
     const commands = useSelectionCommands();
-    const [isOpen, setIsOpen] = useSectionOpen(
-        view,
-        view instanceof BasicInstrument
-    );
     const { isExpanded, toggle } = useExpandedItems();
 
     const canLink = selectedSamples.size > 0;
@@ -60,7 +65,7 @@ export function InstrumentList({
             <DropdownHeader
                 text={t("presetList.instruments")}
                 isOpen={isOpen}
-                onToggle={() => setIsOpen((open) => !open)}
+                onToggle={() => onOpenChange(!isOpen)}
                 addLabel={t("contextMenu.newInstrument")}
                 addHint={t("presetList.newInstrumentHint")}
                 onAdd={
@@ -88,6 +93,7 @@ export function InstrumentList({
                         cursor instanceof BasicInstrument ? cursor : undefined
                     }
                     focusRequest={focusRequest}
+                    rowEstimate={rowEstimate}
                     renderItem={(instrument) => {
                         const key = String(getObjectId(instrument));
                         return (

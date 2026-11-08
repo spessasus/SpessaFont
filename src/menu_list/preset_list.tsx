@@ -9,7 +9,7 @@ import { PresetDisplay } from "./preset_display/preset_display.tsx";
 import { getObjectId } from "../utils/object_id.ts";
 import { type FocusRequest, VirtualItemList } from "./virtual_item_list.tsx";
 import { useSelectionCommands } from "./use_selection_commands.ts";
-import { useExpandedItems, useSectionOpen } from "./use_list_state.ts";
+import { useExpandedItems } from "./use_list_state.ts";
 import {
     createInstrumentLinkActions,
     createPresetFromInstruments
@@ -27,6 +27,12 @@ interface PresetListProps {
     focusRequest: FocusRequest | null;
     onItemClick: (preset: BasicPreset, event: MouseEvent) => void;
     onItemContextMenu: (entity: BankEntity, event: MouseEvent) => void;
+    isOpen: boolean;
+    onOpenChange: (isOpen: boolean) => void;
+    /**
+     * The estimated row height in pixels, for the virtual list.
+     */
+    rowEstimate?: number;
     onItemPointerDown: (preset: BasicPreset, event: PointerEvent) => void;
 }
 
@@ -39,16 +45,15 @@ export function PresetList({
     focusRequest,
     onItemClick,
     onItemContextMenu,
-    onItemPointerDown
+    onItemPointerDown,
+    isOpen,
+    onOpenChange,
+    rowEstimate
 }: PresetListProps) {
     const { t } = useTranslation();
     const { session, apply } = useBankEditor();
     const { contents } = useClipboard();
     const commands = useSelectionCommands();
-    const [isOpen, setIsOpen] = useSectionOpen(
-        view,
-        view instanceof BasicPreset
-    );
     const { isExpanded, toggle } = useExpandedItems();
 
     const canLink = selectedInstruments.size > 0;
@@ -57,7 +62,7 @@ export function PresetList({
             <DropdownHeader
                 text={t("presetList.presets")}
                 isOpen={isOpen}
-                onToggle={() => setIsOpen((open) => !open)}
+                onToggle={() => onOpenChange(!isOpen)}
                 addLabel={t("contextMenu.newPreset")}
                 addHint={t("presetList.newPresetHint")}
                 onAdd={
@@ -85,6 +90,7 @@ export function PresetList({
                         cursor instanceof BasicPreset ? cursor : undefined
                     }
                     focusRequest={focusRequest}
+                    rowEstimate={rowEstimate}
                     renderItem={(preset) => {
                         const key = String(getObjectId(preset));
                         const instrumentKey = (instrumentId: number) =>
