@@ -87,9 +87,11 @@ export const PhoneLocale = {
         sample: "Sample"
     },
     zoneHeader: {
+        title: "Zone {{name}} ({{range}})",
         openSample: "Shows the sample {{name}}",
         openInstrument: "Shows the instrument {{name}}",
         replaceSample: "Pick another sample for this zone",
-        replaceInstrument: "Pick another instrument for this zone"
+        replaceInstrument: "Pick another instrument for this zone",
+        modulators: "Modulators ({{count}})"
     }
 };

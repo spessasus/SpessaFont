@@ -317,6 +317,7 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
                         columns={zoneColumns}
                         globalZone={view.globalZone}
                         activeKey={isHeaderKey ? tabKey : undefined}
+                        onEditModulators={setEditedZoneId}
                     />
                     <ModulatorRow
                         columns={modulatorColumns}

@@ -10,7 +10,11 @@ import {
     createReplaceSampleActions,
     ReplaceZoneChildAction
 } from "./replace_zone_child_action.ts";
-import type { ContextMenuEntry } from "../context_menu/context_menu_context.ts";
+import type {
+    ContextMenuEntry,
+    ContextMenuItem
+} from "../context_menu/context_menu_context.ts";
+import { MENU_ICON_NAMES } from "../context_menu/menu_icon_name.ts";
 import { useDialogs } from "../dialogs/dialogs_context.ts";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useEntityLookup } from "../hooks/use_entity_lookup.ts";
@@ -27,6 +31,20 @@ import {
     focusNeighborColumn,
     getZoneDeleteKey
 } from "./table_navigation.ts";
+
+/**
+ * The phone zone header sheet's entries: the menu entries with Modulators added to the group
+ * before Delete.
+ */
+export function getZoneHeaderEntries(
+    entries: readonly ContextMenuEntry[],
+    modulators: ContextMenuItem
+) {
+    const index = entries.lastIndexOf("separator");
+    return index === -1
+        ? [...entries, modulators]
+        : entries.toSpliced(index, 0, modulators);
+}
 
 /**
  * The commands of a zone column (open, replace, duplicate, split, remove) and of the table's
@@ -193,6 +211,7 @@ export function useZoneCommands(element: BasicInstrument | BasicPreset) {
         return [
             {
                 label: t("contextMenu.open"),
+                icon: MENU_ICON_NAMES.open,
                 description: t(
                     isInstrument
                         ? "phoneLocale.zoneHeader.openSample"
@@ -214,6 +233,7 @@ export function useZoneCommands(element: BasicInstrument | BasicPreset) {
             },
             {
                 label: t("contextMenu.duplicateZone"),
+                icon: MENU_ICON_NAMES.duplicate,
                 onSelect: () => duplicate(column)
             },
             "separator",
@@ -228,6 +248,7 @@ export function useZoneCommands(element: BasicInstrument | BasicPreset) {
             "separator",
             {
                 label: t("contextMenu.deleteZone"),
+                icon: MENU_ICON_NAMES.delete,
                 isDestructive: true,
                 onSelect: () => remove(column)
             }

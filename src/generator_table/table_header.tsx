@@ -7,7 +7,8 @@ import { useLayout } from "../layout/layout_context.ts";
 import type { ZoneView } from "../core_backend/entity_views.ts";
 import { useContextMenu } from "../context_menu/context_menu_context.ts";
 import type { ZoneColumn } from "./zone_columns.ts";
-import { useZoneCommands } from "./use_zone_commands.ts";
+import type { MouseEvent } from "react";
+import { getZoneHeaderEntries, useZoneCommands } from "./use_zone_commands.ts";
 import {
     ADD_ZONE_KEY,
     getZoneDeleteKey,
@@ -32,6 +33,10 @@ interface TableHeaderProps {
      * The key of the table's Tab stop when it is in this row.
      */
     activeKey: string | undefined;
+    /**
+     * Opens the modulator editor of a zone, from the phone zone header sheet.
+     */
+    onEditModulators: (zoneId: number) => void;
 }
 
 export function TableHeader({
@@ -39,13 +44,37 @@ export function TableHeader({
     name: elementName,
     columns,
     globalZone,
-    activeKey
+    activeKey,
+    onEditModulators
 }: TableHeaderProps) {
     const { t } = useTranslation();
     const layout = useLayout();
     const { openMenu } = useContextMenu();
     const commands = useZoneCommands(element);
     const getTabIndex = (key: string) => (key === activeKey ? 0 : -1);
+    const getRangeText = ({ zone }: ZoneColumn) => {
+        const range = zone.keyRange ?? globalZone.keyRange ?? FULL_RANGE;
+        return `${range.min}-${range.max}`;
+    };
+
+    // The phone sheet for a tap or long press on a zone header, with Modulators added
+    const openZoneSheet = (e: MouseEvent, column: ZoneColumn) =>
+        openMenu(
+            e,
+            getZoneHeaderEntries(commands.getMenuEntries(column), {
+                label: t("phoneLocale.zoneHeader.modulators", {
+                    count: column.zone.modulators.length
+                }),
+                hasSubmenu: true,
+                onSelect: () => onEditModulators(column.zone.id)
+            }),
+            {
+                title: t("phoneLocale.zoneHeader.title", {
+                    name: column.name,
+                    range: getRangeText(column)
+                })
+            }
+        );
 
     return (
         <tr className={"generator_table_header_row"}>
@@ -78,8 +107,6 @@ export function TableHeader({
             </th>
             {columns.map((column, index) => {
                 const { zone, name, isStereo } = column;
-                const range =
-                    zone.keyRange ?? globalZone.keyRange ?? FULL_RANGE;
                 const zoneLabel = t("soundBankLocale.deleteZone", { name });
                 return (
                     <th
@@ -88,8 +115,14 @@ export function TableHeader({
                         className={"header_cell " + (isStereo ? "stereo" : "")}
                         key={zone.id}
                         // The name button inside gets the keyboard menu key
-                        onContextMenu={(e) =>
-                            openMenu(e, commands.getMenuEntries(column))
+                        onContextMenu={
+                            layout === "phone"
+                                ? (e) => openZoneSheet(e, column)
+                                : (e) =>
+                                      openMenu(
+                                          e,
+                                          commands.getMenuEntries(column)
+                                      )
                         }
                     >
                         <button
@@ -104,14 +137,18 @@ export function TableHeader({
                                       )
                                     : undefined
                             }
-                            onClick={() => commands.open(column)}
+                            onClick={
+                                layout === "phone"
+                                    ? (e) => openZoneSheet(e, column)
+                                    : () => commands.open(column)
+                            }
                         >
                             {layout === "phone" ? (
                                 <ZoneHeaderLabel
                                     name={name}
                                     keyRange={
                                         element instanceof BasicInstrument
-                                            ? `${range.min}-${range.max}`
+                                            ? getRangeText(column)
                                             : undefined
                                     }
                                     isStereo={isStereo}
