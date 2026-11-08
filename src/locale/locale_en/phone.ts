@@ -106,6 +106,9 @@ export const PhoneLocale = {
         replaceInstrument: "Pick another instrument for this zone",
         modulators: "Modulators ({{count}})"
     },
+    modulators: {
+        overrides: "overrides a default modulator"
+    },
     cellSheet: {
         pickGenerator: "Choose generator",
         modulatedBy_one: "Modulated by {{count}} modulator",

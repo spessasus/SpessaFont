@@ -3,6 +3,7 @@ import type { ModulatorView as ModulatorData } from "../../core_backend/entity_v
 import type * as React from "react";
 import type { Ref } from "react";
 import "./modulator.css";
+import "./modulator_phone.css";
 import { useTranslation } from "react-i18next";
 import {
     SourcePicker,
@@ -14,6 +15,7 @@ import { ModulatorDiagram } from "../modulator_diagram.tsx";
 import { DestinationPicker } from "../destination_picker.tsx";
 import { ModulatorHeader } from "./modulator_header.tsx";
 import { ModulatorTransform } from "./modulator_transform.tsx";
+import { useLayout } from "../../layout/layout_context.ts";
 
 export type ModulatorSourceSlot = "primary" | "secondary";
 
@@ -40,6 +42,58 @@ interface ModulatorCardProps {
     onSelect: (e: React.MouseEvent) => void;
 }
 
+interface ModulatorFieldLabelsProps {
+    isOverridingDefault: boolean;
+}
+
+/**
+ * The visible labels of the phone form, whose controls carry their own accessible names.
+ */
+function ModulatorFieldLabels({
+    isOverridingDefault
+}: ModulatorFieldLabelsProps) {
+    const { t } = useTranslation();
+    return (
+        <>
+            <span
+                aria-hidden={true}
+                className="modulator_field_label modulator_label_source"
+            >
+                {t("modulatorLocale.primarySource")}
+            </span>
+            <span
+                aria-hidden={true}
+                className="modulator_field_label modulator_label_secondary"
+            >
+                {t("modulatorLocale.secondarySource")}
+            </span>
+            <span
+                aria-hidden={true}
+                className="modulator_field_label modulator_label_amount"
+            >
+                {t("modulatorLocale.amount")}
+            </span>
+            <span
+                aria-hidden={true}
+                className="modulator_field_label modulator_label_transform"
+            >
+                {t("modulatorLocale.transform")}
+            </span>
+            <span
+                aria-hidden={true}
+                className="modulator_field_label modulator_label_destination"
+            >
+                {t("modulatorLocale.destination")}
+            </span>
+            {isOverridingDefault ? (
+                <span className="modulator_overrides_note">
+                    {t("phoneLocale.modulators.overrides")}
+                </span>
+            ) : null}
+        </>
+    );
+}
+
 export function ModulatorCard({
     ref,
     mod,
@@ -53,6 +107,7 @@ export function ModulatorCard({
     onSelect
 }: ModulatorCardProps) {
     const { t } = useTranslation();
+    const layout = useLayout();
 
     const update = onChange;
 
@@ -113,6 +168,11 @@ export function ModulatorCard({
                 onSelect={onSelect}
                 onDelete={onDelete}
             />
+            {layout === "phone" ? (
+                <ModulatorFieldLabels
+                    isOverridingDefault={isOverridingDefault}
+                />
+            ) : null}
             <div className={"source_pair"}>
                 {sources.map(({ slot, source, sourceLabel }) => (
                     <SourcePicker
@@ -144,7 +204,7 @@ export function ModulatorCard({
                     />
                 ))}
             </div>
-            <ModulatorDiagram />
+            {layout === "phone" ? null : <ModulatorDiagram />}
             <ModulatorTransform
                 amount={mod.transformAmount}
                 transformType={mod.transformType}

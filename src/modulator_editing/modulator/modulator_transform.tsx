@@ -29,6 +29,7 @@ export function ModulatorTransform({
             <span aria-hidden={true}>×</span>
             <WaitingInput
                 type={"text"}
+                inputMode={"text"}
                 className={"modulator_amount_input monospaced"}
                 aria-label={t("modulatorLocale.amount")}
                 placeholder={t("modulatorLocale.amount")}

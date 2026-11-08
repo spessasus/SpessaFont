@@ -1,0 +1,176 @@
+:root[data-layout="phone"] .modulator_main {
+    display: grid;
+    grid-template-columns: 7.5rem 1fr auto;
+    grid-template-areas:
+        "number note delete"
+        "srcLabel src srcCurve"
+        "secLabel sec secCurve"
+        "amtLabel amount amount"
+        "trLabel transform transform"
+        "dstLabel dest dest";
+    align-items: center;
+    column-gap: 0.5rem;
+    row-gap: 0;
+    margin: 0;
+    padding: 0.25rem var(--phone-gutter);
+    box-sizing: border-box;
+    width: 100%;
+}
+
+:root[data-layout="phone"] .modulator_main .modulator_title_left,
+:root[data-layout="phone"] .modulator_main .modulator_title_right {
+    position: static;
+    grid-row: 1;
+    min-height: var(--phone-row-height);
+}
+
+:root[data-layout="phone"] .modulator_main .modulator_title_left {
+    grid-area: number;
+    justify-self: start;
+    min-width: var(--phone-touch);
+    text-align: start;
+    font-size: var(--phone-text-body);
+}
+
+:root[data-layout="phone"] .modulator_main .modulator_title_right {
+    grid-area: delete;
+    width: var(--phone-touch);
+    height: var(--phone-touch);
+    min-height: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+:root[data-layout="phone"] .modulator_main .modulator_overrides_note {
+    grid-area: note;
+    min-width: 0;
+    text-align: start;
+    font-size: var(--phone-text-secondary);
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .modulator_main .modulator_field_label {
+    min-height: var(--phone-row-height);
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    text-align: start;
+    font-size: var(--phone-text-secondary);
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .modulator_label_source {
+    grid-area: srcLabel;
+}
+
+:root[data-layout="phone"] .modulator_label_secondary {
+    grid-area: secLabel;
+}
+
+:root[data-layout="phone"] .modulator_label_amount {
+    grid-area: amtLabel;
+}
+
+:root[data-layout="phone"] .modulator_label_transform {
+    grid-area: trLabel;
+}
+
+:root[data-layout="phone"] .modulator_label_destination {
+    grid-area: dstLabel;
+}
+
+:root[data-layout="phone"] .modulator_main .source_pair,
+:root[data-layout="phone"] .modulator_main .pretty_input {
+    display: contents;
+}
+
+:root[data-layout="phone"] .modulator_main .pretty_input > span {
+    display: none;
+}
+
+:root[data-layout="phone"]
+    .modulator_main
+    .source_pair:nth-of-type(1)
+    > :nth-child(1) {
+    grid-area: src;
+}
+
+:root[data-layout="phone"]
+    .modulator_main
+    .source_pair:nth-of-type(1)
+    > :nth-child(2) {
+    grid-area: sec;
+}
+
+:root[data-layout="phone"]
+    .modulator_main
+    .source_pair:nth-of-type(2)
+    > :nth-child(1) {
+    grid-area: srcCurve;
+}
+
+:root[data-layout="phone"]
+    .modulator_main
+    .source_pair:nth-of-type(2)
+    > :nth-child(2) {
+    grid-area: secCurve;
+}
+
+:root[data-layout="phone"] .modulator_main .modulator_amount_input {
+    grid-area: amount;
+}
+
+:root[data-layout="phone"] .modulator_main .transform_selector {
+    grid-area: transform;
+}
+
+:root[data-layout="phone"] .modulator_main .destination_picker {
+    grid-area: dest;
+}
+
+:root[data-layout="phone"] .modulator_main .source_picker,
+:root[data-layout="phone"] .modulator_main .transform_selector,
+:root[data-layout="phone"] .modulator_main .destination_picker,
+:root[data-layout="phone"] .modulator_main .modulator_amount_input {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: var(--phone-touch);
+    font-size: var(--phone-text-body);
+}
+
+:root[data-layout="phone"] .modulator_main .modulator_amount_input {
+    text-align: end;
+}
+
+:root[data-layout="phone"] .modulator_main .modulator_curve_picker {
+    display: flex;
+    justify-content: center;
+}
+
+:root[data-layout="phone"] .modulator_main .modulator_curve_picker > button {
+    width: var(--phone-touch);
+    height: var(--phone-touch);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+/* The wrapper has no box of its own here, so the fields carry its desktop look */
+:root[data-layout="phone"] .modulator_main .pretty_input select,
+:root[data-layout="phone"] .modulator_main .pretty_input input {
+    background: var(--lighter-color-end);
+    border: 1px solid var(--track-border-color);
+    border-radius: var(--primary-border-radius);
+    color: var(--font-color);
+    padding: 0.3rem;
+}
+
+:root[data-layout="phone"] .modulator_main .transform_selector,
+:root[data-layout="phone"] .modulator_main .destination_picker {
+    text-align: start;
+    text-align-last: start;
+}

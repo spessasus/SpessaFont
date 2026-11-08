@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import "./modulator_list_phone.css";
 
 const BUTTON_CLASS = "modulator_main modulator_list_button hover_brightness";
 
@@ -30,7 +31,11 @@ export function ModulatorListActions({
             <span className={"modulator_main modulator_list_button"}>
                 {t("modulatorLocale.modulatorCount", { count })}
             </span>
-            <button type={"button"} onClick={onAdd} className={BUTTON_CLASS}>
+            <button
+                type={"button"}
+                onClick={onAdd}
+                className={`${BUTTON_CLASS} modulator_new_button`}
+            >
                 {t("modulatorLocale.newModulator")}
             </button>
             {canPaste ? (

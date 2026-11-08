@@ -1,0 +1,3 @@
+:root[data-layout="phone"] .modulator_list .action_buttons button {
+    min-height: var(--phone-touch);
+}

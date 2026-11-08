@@ -116,6 +116,9 @@ export const PhoneLocale = {
         replaceInstrument: "Wybierz inny instrument dla tej strefy",
         modulators: "Modulatory ({{count}})"
     },
+    modulators: {
+        overrides: "nadpisuje domyślny modulator"
+    },
     cellSheet: {
         pickGenerator: "Wybierz generator",
         modulatedBy_one: "Modulowany przez {{count}} modulator",
