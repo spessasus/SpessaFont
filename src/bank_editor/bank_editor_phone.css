@@ -9,39 +9,3 @@
     flex: 1;
     overflow: auto;
 }
-
-/*
- * Holds the desktop lists until the navigator replaces it. A closed layer keeps its layout,
- * so the lists keep measuring and their scroll positions
- */
-:root[data-layout="phone"] .phone_shell .phone_lists_layer {
-    position: absolute;
-    inset: 0 auto 0 0;
-    z-index: 2;
-    width: var(--phone-navigator-width);
-    display: flex;
-    flex-direction: column;
-    gap: var(--flex-gap);
-    padding: var(--flex-gap) 0 0;
-    background: var(--darker-color-start);
-    border-right: solid 1px var(--track-border-color);
-    transform: translateX(-100%);
-    visibility: hidden;
-    transition:
-        transform 0.2s ease,
-        visibility 0s linear 0.2s;
-}
-
-:root[data-layout="phone"] .phone_shell .phone_lists_layer[data-open="true"] {
-    transform: none;
-    visibility: visible;
-    transition: transform 0.2s ease;
-}
-
-:root[data-layout="phone"] .phone_lists_layer .menu_list_main {
-    width: auto;
-    min-width: 0;
-    flex: 1;
-    min-height: 0;
-    resize: none;
-}

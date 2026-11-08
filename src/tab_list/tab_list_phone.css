@@ -1,0 +1,45 @@
+/* One row of chips that scrolls sideways, next to the navigator's add button */
+:root[data-layout="phone"] .tab_list {
+    flex: 1;
+    min-width: 0;
+    align-items: center;
+    height: var(--phone-touch);
+    min-height: var(--phone-touch);
+    padding: 0;
+    border-bottom: none;
+    scrollbar-width: none;
+}
+
+:root[data-layout="phone"] .tab {
+    flex: none;
+    height: var(--phone-touch);
+    padding: 0 0 0 1rem;
+    border-radius: calc(var(--phone-touch) / 2);
+    background: var(--lighter-color-end);
+    -webkit-touch-callout: none;
+}
+
+:root[data-layout="phone"] .tab button {
+    border-radius: calc(var(--phone-touch) / 2);
+}
+
+:root[data-layout="phone"] .tab_select {
+    font-size: var(--phone-text-button);
+}
+
+:root[data-layout="phone"] .tab.active {
+    font-weight: 600;
+}
+
+:root[data-layout="phone"] .tab .tab_close {
+    min-width: var(--phone-touch);
+    width: var(--phone-touch);
+    /* Over the chip's border, so the hit area is the full touch size */
+    height: var(--phone-touch);
+    margin: -1px -1px -1px 0;
+}
+
+:root[data-layout="phone"] .tab .tab_close svg {
+    width: 1.125rem;
+    height: 1.125rem;
+}

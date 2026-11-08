@@ -1,0 +1,58 @@
+:root[data-layout="phone"] .item_group_header {
+    flex: none;
+    height: var(--phone-row-height);
+    margin: 0;
+    border: none;
+    border-bottom: solid 1px var(--track-border-color);
+    border-radius: 0;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+:root[data-layout="phone"] .item_group_header:active {
+    background: var(--selection-color);
+}
+
+:root[data-layout="phone"] .item_group_header h2 {
+    height: 100%;
+}
+
+:root[data-layout="phone"] .item_group_title {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 6rem 0 var(--phone-gutter);
+    text-align: start;
+    font-size: var(--phone-text-sheet-title);
+    font-weight: 600;
+}
+
+/* The add button and the triangle sit at the end, copy and paste wait for the section menu */
+:root[data-layout="phone"] .item_group_header .left_buttons {
+    left: auto;
+    right: var(--phone-touch);
+}
+
+:root[data-layout="phone"] .item_group_header .left_buttons > *,
+:root[data-layout="phone"] .item_group_header .right_buttons > * {
+    min-width: var(--phone-touch);
+    padding: 0;
+    border: none;
+}
+
+:root[data-layout="phone"] .item_group_header .dropdown_triangle {
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .item_group_header .copy,
+:root[data-layout="phone"]
+    .item_group_header
+    .right_buttons
+    > :not(.dropdown_triangle) {
+    visibility: hidden;
+    position: absolute;
+}
+
+:root[data-layout="phone"] .item_group_header button:disabled {
+    opacity: 0.4;
+}

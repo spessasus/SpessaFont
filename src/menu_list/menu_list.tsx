@@ -1,7 +1,8 @@
-import type { MouseEvent, PointerEvent } from "react";
+import type { MouseEvent, PointerEvent, ReactNode } from "react";
 import { useDeferredValue, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./menu_list.css";
+import "./menu_list_phone.css";
 import type { BankEditView, BankEntity } from "../core_backend/bank_view.ts";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
@@ -40,11 +41,26 @@ interface MenuListProps {
      * Whether the settings cover the editor, which turns the list shortcuts off.
      */
     isCovered: boolean;
+    /**
+     * Replaces the Overview header and its collapse button.
+     */
+    header?: ReactNode;
+    /**
+     * Shows an element while browsing (the list keys, a row's menu) without counting as a pick,
+     * so the phone navigator stays open. Falls back to the context's `setView`.
+     */
+    onPreview?: (entity: BankEntity) => void;
 }
 
-export function MenuList({ view, isCovered }: MenuListProps) {
+export function MenuList({
+    view,
+    isCovered,
+    header,
+    onPreview
+}: MenuListProps) {
     const { t } = useTranslation();
     const { session, setView } = useBankEditor();
+    const preview = onPreview ?? setView;
     const samples = useBankSnapshot(session.store, (s) => s.samples);
     const instruments = useBankSnapshot(session.store, (s) => s.instruments);
     const presets = useBankSnapshot(session.store, (s) => s.presets);
@@ -128,6 +144,10 @@ export function MenuList({ view, isCovered }: MenuListProps) {
         setMultiSelection(null);
         setView(entity);
     };
+    const showPreview = (entity: BankEntity) => {
+        setMultiSelection(null);
+        preview(entity);
+    };
 
     useEventListener(document, "keydown", (e) => {
         if (isCovered) {
@@ -161,7 +181,7 @@ export function MenuList({ view, isCovered }: MenuListProps) {
         }
         e.preventDefault();
         if (result.type === "show") {
-            show(result.entity);
+            showPreview(result.entity);
             setFocusRequest({ item: result.entity });
         } else if (result.type === "select") {
             setMultiSelection(result.selection);
@@ -212,7 +232,7 @@ export function MenuList({ view, isCovered }: MenuListProps) {
             return;
         }
         if (first !== cursor) {
-            show(first);
+            showPreview(first);
         }
         setFocusRequest({ item: first });
     };
@@ -223,7 +243,7 @@ export function MenuList({ view, isCovered }: MenuListProps) {
         let target = selection;
         if (!selection.has(item)) {
             target = new Set([item]);
-            show(item);
+            showPreview(item);
         }
         openMenu(event, getMenuEntries(target));
     };
@@ -257,30 +277,32 @@ export function MenuList({ view, isCovered }: MenuListProps) {
     return (
         // Focusable, so the focus has somewhere to go when the focused row is deleted
         <div className={`menu_list_main`} {...ELEMENT_LIST_SCOPE} tabIndex={-1}>
-            <div
-                className={`item_group_header hover_brightness ${view === "info" ? "opened" : ""}`}
-            >
-                <h2>
-                    <button
-                        type={"button"}
-                        className={"plain_button item_group_title"}
-                        onClick={() => setView("info")}
-                    >
-                        {t("presetList.overview")}
-                    </button>
-                </h2>
-                <div className={"right_buttons"}>
-                    <button
-                        type={"button"}
-                        className={"plain_button dropdown_triangle"}
-                        aria-label={t("collapse")}
-                        title={t("collapse")}
-                        onClick={() => setIsOpen(false)}
-                    >
-                        {"\u{25C0}"}
-                    </button>
+            {header ?? (
+                <div
+                    className={`item_group_header hover_brightness ${view === "info" ? "opened" : ""}`}
+                >
+                    <h2>
+                        <button
+                            type={"button"}
+                            className={"plain_button item_group_title"}
+                            onClick={() => setView("info")}
+                        >
+                            {t("presetList.overview")}
+                        </button>
+                    </h2>
+                    <div className={"right_buttons"}>
+                        <button
+                            type={"button"}
+                            className={"plain_button dropdown_triangle"}
+                            aria-label={t("collapse")}
+                            title={t("collapse")}
+                            onClick={() => setIsOpen(false)}
+                        >
+                            {"\u{25C0}"}
+                        </button>
+                    </div>
                 </div>
-            </div>
+            )}
 
             <SampleList
                 isOpen={sections.isOpen("samples")}
@@ -361,6 +383,11 @@ export function MenuList({ view, isCovered }: MenuListProps) {
                 onToggleUnusedOnly={() => setIsUnusedOnly((only) => !only)}
                 onFocusResults={focusResults}
             />
+            {layout === "phone" && isUnusedOnly ? (
+                <p className={"menu_list_unused_note"}>
+                    {t("phoneLocale.navigator.unusedNote")}
+                </p>
+            ) : null}
         </div>
     );
 }

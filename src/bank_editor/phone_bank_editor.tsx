@@ -1,8 +1,6 @@
 import type { ReactNode } from "react";
-import { MenuList } from "../menu_list/menu_list.tsx";
 import "./bank_editor.css";
 import "./bank_editor_phone.css";
-import type { BankEditView } from "../core_backend/bank_view.ts";
 import type { BankEditorProps } from "./bank_editor.tsx";
 import { BankEditorContext } from "./bank_editor_context.ts";
 import { useBankEditorModel } from "./use_bank_editor_model.ts";
@@ -12,12 +10,15 @@ import { useBackHandler } from "../hooks/use_back_handler.ts";
 import { BACK_LEVELS } from "../phone_shell/back_stack.ts";
 import { ElementBar } from "../phone_shell/element_bar.tsx";
 import { getDrillTo } from "../phone_shell/drill_to.ts";
+import { NavigatorLayer } from "../phone_shell/navigator_layer.tsx";
 
 interface PhoneBankEditorProps extends BankEditorProps {
     /**
      * The open banks, shown above the lists.
      */
     tabList: ReactNode;
+    onOpenFile: () => void;
+    onNewFile: () => void;
 }
 
 export function PhoneBankEditor({
@@ -25,7 +26,9 @@ export function PhoneBankEditor({
     view: selectedView,
     onViewChange,
     isCovered,
-    tabList
+    tabList,
+    onOpenFile,
+    onNewFile
 }: PhoneBankEditorProps) {
     const { state, dispatch } = usePhoneShell();
     const drillTo = getDrillTo(
@@ -35,15 +38,7 @@ export function PhoneBankEditor({
         dispatch
     );
     const model = useBankEditorModel(session, selectedView, drillTo);
-    const { view, context, infoPanel, setInfoPanel } = model;
-    // A pick in the lists starts a new path, so back goes to the lists from there
-    const listContext = {
-        ...context,
-        setView: (picked: BankEditView) => {
-            onViewChange(picked);
-            dispatch({ type: "navigatorPick", tabId: session.id });
-        }
-    };
+    const { view, context, infoPanel, setInfoPanel, startPlaying } = model;
 
     useBackHandler(
         view === "info" && infoPanel !== "info",
@@ -56,24 +51,23 @@ export function PhoneBankEditor({
 
     return (
         <BankEditorContext value={context}>
-            <div className={"bank_editor_content"}>
+            {/* The open navigator covers the editor */}
+            <div
+                className={"bank_editor_content"}
+                inert={state.isNavigatorOpen}
+            >
                 <ElementBar view={view} />
                 <BankEditorWindow model={model} />
             </div>
-            <div
-                className={"phone_lists_layer"}
-                data-open={state.isNavigatorOpen}
-                inert={!state.isNavigatorOpen}
-            >
-                {tabList}
-                <BankEditorContext value={listContext}>
-                    {/* The closed lists must not act on keys either */}
-                    <MenuList
-                        view={view}
-                        isCovered={isCovered || !state.isNavigatorOpen}
-                    />
-                </BankEditorContext>
-            </div>
+            <NavigatorLayer
+                view={view}
+                tabList={tabList}
+                isCovered={isCovered}
+                onViewChange={onViewChange}
+                onPlay={startPlaying}
+                onOpenFile={onOpenFile}
+                onNewFile={onNewFile}
+            />
         </BankEditorContext>
     );
 }

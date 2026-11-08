@@ -28,6 +28,15 @@ export const PhoneLocale = {
         octaveUp: "Oktawa w górę",
         minimap: "Widoczne klawisze"
     },
+    navigator: {
+        title: "Listy",
+        close: "Zamknij listy",
+        keepOpen: "Nie zamykaj",
+        overview: "Przegląd",
+        unusedNote: "Pokazano elementy, których nic nie używa",
+        addBank: "Otwórz lub utwórz bank dźwięków",
+        openBanks: "Otwarte banki dźwięków"
+    },
     back: {
         pressAgain: "Naciśnij wstecz ponownie, aby wyjść",
         unsavedBanks_one: "{{count}} bank ma niezapisane zmiany",

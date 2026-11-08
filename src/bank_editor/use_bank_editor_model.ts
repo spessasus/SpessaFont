@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BasicInstrument, BasicPreset, BasicSample } from "spessasynth_core";
 import type { InfoPanel } from "../info_view/info_panel.ts";
@@ -66,6 +66,11 @@ export function useBankEditorModel(
     const [playRequest, setPlayRequest] = useState(0);
     const [equalizer, setEqualizer] = useState(DEFAULT_EQUALIZER_STATE);
     const [infoPanel, setInfoPanel] = useState<InfoPanel>("info");
+    // The context below depends on it, so it keeps its identity
+    const startPlaying = useCallback(() => {
+        setSamplePlayerState("playing");
+        setPlayRequest((r) => r + 1);
+    }, []);
 
     const context: BankEditorContextType = useMemo(
         () => ({
@@ -79,11 +84,10 @@ export function useBankEditorModel(
             },
             playSample: (sample: BasicSample) => {
                 onViewChange(sample);
-                setSamplePlayerState("playing");
-                setPlayRequest((r) => r + 1);
+                startPlaying();
             }
         }),
-        [session, onViewChange]
+        [session, onViewChange, startPlaying]
     );
 
     return {
@@ -95,7 +99,8 @@ export function useBankEditorModel(
         equalizer,
         setEqualizer,
         infoPanel,
-        setInfoPanel
+        setInfoPanel,
+        startPlaying
     };
 }
 

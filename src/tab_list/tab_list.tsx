@@ -1,4 +1,5 @@
 import "./tab_list.css";
+import "./tab_list_phone.css";
 import { useTranslation } from "react-i18next";
 import type { BankSession } from "../core_backend/bank_session.ts";
 import { useHistoryState } from "../hooks/use_history_state.ts";
@@ -11,6 +12,8 @@ import {
     isPreset,
     isSample
 } from "../menu_list/menu_selection.ts";
+import { useLayout } from "../layout/layout_context.ts";
+import { CloseIcon } from "../utils/icons/app_icons.tsx";
 
 export interface TabListProps {
     tabs: readonly BankSession[];
@@ -28,6 +31,7 @@ interface TabProps {
 
 function Tab({ session, isActive, onSelect, onClose }: TabProps) {
     const { t } = useTranslation();
+    const layout = useLayout();
     const { isDirty } = useHistoryState(session.store);
     const name = useBankSnapshot(session.store, (s) => s.info.name);
     const displayName = name.length > 0 ? name : t("bankInfo.unnamed");
@@ -86,7 +90,7 @@ function Tab({ session, isActive, onSelect, onClose }: TabProps) {
                 title={t("closeTab", { name: displayName })}
                 onClick={() => onClose(session)}
             >
-                ×
+                {layout === "phone" ? <CloseIcon /> : "×"}
             </button>
         </div>
     );

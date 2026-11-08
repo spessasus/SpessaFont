@@ -28,6 +28,15 @@ export const PhoneLocale = {
         octaveUp: "Octave up",
         minimap: "Visible keys"
     },
+    navigator: {
+        title: "Lists",
+        close: "Close lists",
+        keepOpen: "Keep open",
+        overview: "Overview",
+        unusedNote: "Showing elements nothing uses",
+        addBank: "Open or create a sound bank",
+        openBanks: "Open sound banks"
+    },
     back: {
         pressAgain: "Press back again to leave",
         unsavedBanks_one: "{{count}} bank has unsaved changes",

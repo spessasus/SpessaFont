@@ -154,7 +154,11 @@ export function PhoneShell({
                                 : setActiveView
                         }
                         toolsSlotRef={setToolsMenuSlot}
-                        isCovered={areSettingsShown}
+                        isCovered={
+                            areSettingsShown ||
+                            (activeSession !== undefined &&
+                                state.isNavigatorOpen)
+                        }
                         overflow={
                             <OverflowSheet
                                 session={activeSession}
@@ -180,6 +184,8 @@ export function PhoneShell({
                                         view={activeView}
                                         onViewChange={setActiveView}
                                         isCovered={areSettingsShown}
+                                        onOpenFile={onOpenFile}
+                                        onNewFile={onNewFile}
                                         tabList={
                                             <TabList
                                                 activeId={activeId}
