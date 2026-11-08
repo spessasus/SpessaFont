@@ -10,15 +10,10 @@ import {
 } from "../utils/icons/player_icons.tsx";
 import { useAudioEngine } from "../core_backend/audio_engine_context.ts";
 import { useEngineStatus } from "../hooks/use_engine_status.ts";
+import { formatTime } from "../utils/format_time.ts";
 import { usePlayMIDIFile } from "./use_play_midi_file.ts";
 
 const MAX_NAME_LENGTH = 10;
-
-function formatTime(seconds: number) {
-    const min = Math.floor(seconds / 60);
-    const sec = Math.floor(seconds % 60);
-    return `${min}:${sec.toString().padStart(2, "0")}`;
-}
 
 function TimeDisplay() {
     const { t } = useTranslation();

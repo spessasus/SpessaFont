@@ -1,11 +1,9 @@
 import { useMemo, useReducer, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { Toaster } from "react-hot-toast";
 import "./phone_shell.css";
 import type { BankTabs } from "../tab_list/use_bank_tabs.ts";
 import { TabList } from "../tab_list/tab_list.tsx";
 import { Welcome } from "../welcome/welcome.tsx";
-import { KeyboardController } from "../keyboard/keyboard_controller.tsx";
 import { PhoneBankEditor } from "../bank_editor/phone_bank_editor.tsx";
 import { ErrorBoundary } from "../error_boundary/error_boundary.tsx";
 import { renderPartError } from "../error_boundary/render_part_error.tsx";
@@ -22,6 +20,8 @@ import { PhoneAppBar } from "./phone_app_bar.tsx";
 import { OverflowSheet } from "./overflow_sheet.tsx";
 import { getDrillTo } from "./drill_to.ts";
 import { PhoneSettingsLayer } from "./phone_settings_layer.tsx";
+import { KeyboardDrawer } from "./keyboard_drawer.tsx";
+import { getDrawerOffset } from "./drawer_offset.ts";
 import { useLeaveFlow } from "./use_leave_flow.ts";
 
 interface PhoneShellProps {
@@ -50,7 +50,6 @@ export function PhoneShell({
     onNewFile,
     onCloseFile
 }: PhoneShellProps) {
-    const { t } = useTranslation();
     const {
         tabs,
         activeSession,
@@ -88,7 +87,6 @@ export function PhoneShell({
         }
     }
 
-    const isEditorShown = activeSession !== undefined && !areSettingsShown;
     const drillDepth =
         activeId === undefined ? 0 : getDrillDepth(state, activeId);
 
@@ -126,13 +124,19 @@ export function PhoneShell({
     });
     useLeaveFlow(tabs);
 
-    const isKeysShown = state.drawer === "keys";
+    const drawerOffset = getDrawerOffset(state.drawer);
 
     return (
         <PhoneShellContext value={shellContext}>
-            <div className={"spessafont_main phone_shell"}>
+            <div
+                className={"spessafont_main phone_shell"}
+                style={{ "--phone-drawer-offset": drawerOffset }}
+            >
                 <Toaster
                     position={"bottom-center"}
+                    containerStyle={{
+                        bottom: "calc(var(--phone-drawer-offset) + var(--flex-gap))"
+                    }}
                     toastOptions={{ className: "toasts" }}
                 />
                 <div className={"phone_upper"}>
@@ -202,37 +206,13 @@ export function PhoneShell({
                     )}
                 </div>
                 {activeSession && (
-                    <div className={"phone_drawer_placeholder"}>
-                        <div className={"phone_drawer_handle"}>
-                            <button
-                                type={"button"}
-                                className={"pretty_button phone_drawer_toggle"}
-                                aria-pressed={isKeysShown}
-                                onClick={() =>
-                                    dispatch({
-                                        type: "setDrawer",
-                                        drawer: isKeysShown
-                                            ? "collapsed"
-                                            : "keys"
-                                    })
-                                }
-                            >
-                                {t("keyboard")}
-                            </button>
-                        </div>
-                        {isKeysShown && (
-                            <ErrorBoundary fallback={renderPartError}>
-                                <KeyboardController
-                                    session={
-                                        isEditorShown
-                                            ? activeSession
-                                            : undefined
-                                    }
-                                    view={activeView}
-                                />
-                            </ErrorBoundary>
-                        )}
-                    </div>
+                    <ErrorBoundary fallback={renderPartError}>
+                        <KeyboardDrawer
+                            session={activeSession}
+                            view={activeView}
+                            isCovered={areSettingsShown}
+                        />
+                    </ErrorBoundary>
                 )}
             </div>
         </PhoneShellContext>

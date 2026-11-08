@@ -16,28 +16,3 @@
     flex: 1;
     min-height: 0;
 }
-
-:root[data-layout="phone"] .phone_drawer_placeholder {
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    border-top: solid 1px var(--track-border-color);
-}
-
-:root[data-layout="phone"] .phone_drawer_handle {
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-    height: var(--phone-handle-height);
-    padding: 0 var(--flex-gap);
-}
-
-:root[data-layout="phone"] .phone_drawer_toggle {
-    height: var(--phone-touch);
-    padding: 0 var(--phone-gutter);
-}
-
-:root[data-layout="phone"] .phone_drawer_toggle[aria-pressed="true"] {
-    border-color: var(--border-color);
-    background: var(--primary-color);
-}

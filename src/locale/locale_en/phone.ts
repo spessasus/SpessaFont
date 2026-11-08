@@ -18,6 +18,13 @@ export const PhoneLocale = {
         fullscreen: "Fullscreen",
         about: "About"
     },
+    drawer: {
+        keys: "Keys",
+        controls: "Controls",
+        songOnChannel: "The song is playing on this channel",
+        pause: "Pause",
+        resume: "Resume"
+    },
     back: {
         pressAgain: "Press back again to leave",
         unsavedBanks_one: "{{count}} bank has unsaved changes",

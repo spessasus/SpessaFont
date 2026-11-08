@@ -3,14 +3,13 @@ import { useTranslation } from "react-i18next";
 import "./phone_app_bar.css";
 import type { BankSession } from "../core_backend/bank_session.ts";
 import type { BankEditView } from "../core_backend/bank_view.ts";
-import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
+import { useViewName } from "../hooks/use_view_name.ts";
 import { useBankDisplayName } from "../hooks/use_bank_display_name.ts";
 import { useHistoryState } from "../hooks/use_history_state.ts";
 import { HISTORY_LABEL_KEYS } from "../menu_bar/history_label_keys.ts";
 import { useBankCommands } from "../menu_bar/use_bank_commands.ts";
 import { ListIcon } from "../utils/icons/app_icons.tsx";
 import { RedoIcon, UndoIcon } from "../utils/icons/edit_icons.tsx";
-import { getObjectId } from "../utils/object_id.ts";
 import { usePhoneShell } from "./phone_shell_context.ts";
 
 interface PhoneAppBarProps {
@@ -41,16 +40,7 @@ interface SessionProps {
 function TitleButton({ session, view }: SessionProps & { view: BankEditView }) {
     const { t } = useTranslation();
     const { dispatch } = usePhoneShell();
-    const viewId = view === "info" ? undefined : getObjectId(view);
-    const title = useBankSnapshot(session.store, (s) =>
-        viewId === undefined
-            ? undefined
-            : (
-                  s.views.presets.get(viewId) ??
-                  s.views.instruments.get(viewId) ??
-                  s.views.samples.get(viewId)
-              )?.name
-    );
+    const title = useViewName(session, view);
     const bankName = useBankDisplayName(session.store);
     const { isDirty } = useHistoryState(session.store);
 

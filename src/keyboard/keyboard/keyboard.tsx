@@ -2,6 +2,7 @@ import type * as React from "react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./keyboard.css";
+import "./keyboard_phone.css";
 import { KEYBOARD_TARGET_CHANNEL } from "../target_channel.ts";
 import { useAudioEngine } from "../../core_backend/audio_engine_context.ts";
 import { useEventListener } from "../../hooks/use_event_listener.ts";

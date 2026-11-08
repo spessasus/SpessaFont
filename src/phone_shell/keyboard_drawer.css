@@ -1,0 +1,108 @@
+:root[data-layout="phone"] .keyboard_drawer {
+    min-width: 0;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    border-top: solid 1px var(--track-border-color);
+}
+
+:root[data-layout="phone"] .drawer_handle {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: var(--flex-gap);
+    height: var(--phone-handle-height);
+    padding: 0 var(--flex-gap);
+    background: var(--drawer-handle-color);
+}
+
+:root[data-layout="phone"] .drawer_toggle {
+    height: var(--phone-touch);
+    padding: 0 0.75rem;
+    border: none;
+    border-bottom: solid 2px transparent;
+    border-radius: 1rem;
+    background: transparent;
+}
+
+:root[data-layout="phone"] .drawer_toggle[aria-pressed="true"] {
+    border-bottom-color: var(--focus-color);
+    background: color-mix(in oklab, var(--font-color) 15%, transparent);
+}
+
+:root[data-layout="phone"] .drawer_name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-align: center;
+}
+
+:root[data-layout="phone"] .drawer_name[hidden] {
+    display: none;
+}
+
+:root[data-layout="phone"] .drawer_voices {
+    flex-shrink: 0;
+    font-size: 0.8rem;
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .drawer_song_controls {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-width: 0;
+    flex: 1;
+}
+
+:root[data-layout="phone"] .drawer_song_name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+:root[data-layout="phone"] .drawer_song_time {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+}
+
+:root[data-layout="phone"] .drawer_song_toggle {
+    flex-shrink: 0;
+    width: var(--phone-touch);
+    height: var(--phone-touch);
+    padding: 0;
+}
+
+:root[data-layout="phone"] .drawer_keys {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+:root[data-layout="phone"] .drawer_strip {
+    height: var(--phone-strip-height);
+    flex-shrink: 0;
+}
+
+:root[data-layout="phone"] .drawer_song_note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--phone-keys-height);
+    margin: 0;
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .drawer_controls {
+    height: 55dvh;
+    overflow-y: auto;
+}
+
+:root[data-layout="phone"] .drawer_keyboard {
+    display: flex;
+    min-width: 0;
+}

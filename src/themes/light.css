@@ -26,6 +26,11 @@
 
     /* accents */
     --menu-bar-color: #5f93ff;
+    --drawer-handle-color: color-mix(
+        in oklab,
+        var(--menu-bar-color) 90%,
+        black
+    );
     --menu-border-color: #0023c9;
     --primary-color: #5f93ff;
     --border-color: #0023c9;
