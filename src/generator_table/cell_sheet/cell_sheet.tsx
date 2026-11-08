@@ -1,0 +1,247 @@
+import { useId } from "react";
+import type { MouseEvent } from "react";
+import { useTranslation } from "react-i18next";
+import {
+    BasicInstrument,
+    type BasicPreset,
+    type GeneratorType
+} from "spessasynth_core";
+import type { ZoneView } from "../../core_backend/entity_views.ts";
+import {
+    type ContextMenuEntry,
+    useContextMenu
+} from "../../context_menu/context_menu_context.ts";
+import { EditorSheet } from "../../phone_shell/editor_sheet.tsx";
+import {
+    ChevronDownIcon,
+    ChevronRightIcon
+} from "../../utils/icons/app_icons.tsx";
+import { generatorLocaleMap } from "../../utils/translated_options/generator_to_locale_map.ts";
+import type { CellContext } from "../cell/cell_values.ts";
+import { useCellCommands } from "../cell/use_cell_commands.ts";
+import {
+    GENERATOR_GROUP_ORDER,
+    GROUP_OF_GENERATOR
+} from "../generator_groups.ts";
+import type { GeneratorRowType } from "../generator_row_type.ts";
+import { GENERATOR_UNITS } from "../generator_unit.ts";
+import { getViewZones, type ZoneColumn } from "../zone_columns.ts";
+import { fillBetween, selectAllZones } from "./cell_sheet_selection.ts";
+import { CellSheetZoneList } from "./cell_sheet_zone_list.tsx";
+import "./cell_sheet_phone.css";
+
+interface CellSheetProps {
+    element: BasicPreset | BasicInstrument;
+    /**
+     * Every row of the element, which the generator picker offers.
+     */
+    rows: readonly GeneratorRowType[];
+    row: GeneratorRowType;
+    /**
+     * Every column of the row (the pan row splits stereo pairs), also in One zone mode.
+     */
+    columns: readonly ZoneColumn[];
+    globalZone: ZoneView;
+    checkedIds: ReadonlySet<number>;
+    onCheckedChange: (ids: ReadonlySet<number>) => void;
+    onRowChange: (generator: GeneratorType) => void;
+    onEditModulators: (zoneId: number) => void;
+    onClose: () => void;
+}
+
+/**
+ * The phone's cell sheet, docked under the grid while cells are selected. It edits the checked
+ * zones of one row and lists every zone with its value.
+ */
+export function CellSheet({
+    element,
+    rows,
+    row,
+    columns,
+    globalZone,
+    checkedIds,
+    onCheckedChange,
+    onRowChange,
+    onEditModulators,
+    onClose
+}: CellSheetProps) {
+    const { t } = useTranslation();
+    const { openMenu } = useContextMenu();
+    const labelId = useId();
+    const { generator } = row;
+    const checkedColumns = columns.filter((c) => checkedIds.has(c.zone.id));
+    const commands = useCellCommands(element, row, columns, checkedColumns);
+    const context: CellContext = {
+        element,
+        row,
+        isInstrument: element instanceof BasicInstrument
+    };
+    const [first] = checkedColumns;
+    const unit = row.unit ? GENERATOR_UNITS[row.unit] : undefined;
+
+    const countModulators = (column: ZoneColumn) =>
+        Math.max(
+            ...getViewZones(column).map(
+                (zone) =>
+                    zone.modulators.filter((m) => m.destination === generator)
+                        .length
+            )
+        );
+    const modulatedColumn = checkedColumns.find((c) => countModulators(c) > 0);
+
+    const handlePickGenerator = (event: MouseEvent) => {
+        const entries = new Array<ContextMenuEntry>();
+        for (const group of GENERATOR_GROUP_ORDER) {
+            const groupRows = rows.filter(
+                (r) => GROUP_OF_GENERATOR.get(r.generator) === group
+            );
+            if (groupRows.length === 0) {
+                continue;
+            }
+            if (entries.length > 0) {
+                entries.push("separator");
+            }
+            for (const groupRow of groupRows) {
+                entries.push({
+                    label: t(generatorLocaleMap[groupRow.generator]),
+                    onSelect: () => onRowChange(groupRow.generator)
+                });
+            }
+        }
+        openMenu(event, entries, {
+            title: t("phoneLocale.cellSheet.pickGenerator")
+        });
+    };
+
+    const toggle = (zoneId: number) => {
+        const ids = new Set(checkedIds);
+        if (ids.has(zoneId)) {
+            ids.delete(zoneId);
+        } else {
+            ids.add(zoneId);
+        }
+        onCheckedChange(ids);
+    };
+
+    return (
+        <EditorSheet
+            labelId={labelId}
+            onClose={onClose}
+            header={
+                <>
+                    <button
+                        type={"button"}
+                        className={"plain_button cell_sheet_picker"}
+                        aria-haspopup={"menu"}
+                        onClick={handlePickGenerator}
+                    >
+                        <span id={labelId} className={"cell_sheet_title"}>
+                            {t(generatorLocaleMap[generator])}
+                        </span>
+                        <ChevronDownIcon />
+                    </button>
+                    {unit ? (
+                        <span className={"cell_sheet_unit"}>
+                            {`${t(unit.suffix)} (${t(unit.full)})`}
+                        </span>
+                    ) : null}
+                </>
+            }
+        >
+            <div className={"cell_sheet"}>
+                {modulatedColumn ? (
+                    <button
+                        type={"button"}
+                        className={"plain_button cell_sheet_modulated"}
+                        onClick={() =>
+                            onEditModulators(modulatedColumn.zone.id)
+                        }
+                    >
+                        <span>
+                            {t("phoneLocale.cellSheet.modulatedBy", {
+                                count: countModulators(modulatedColumn)
+                            })}
+                        </span>
+                        <ChevronRightIcon />
+                    </button>
+                ) : null}
+                <CellSheetZoneList
+                    context={context}
+                    columns={columns}
+                    globalZone={globalZone}
+                    checkedIds={checkedIds}
+                    onToggle={toggle}
+                />
+                <div className={"cell_sheet_bar"}>
+                    <button
+                        type={"button"}
+                        className={"pretty_button cell_sheet_text_button"}
+                        onClick={() => onCheckedChange(selectAllZones(columns))}
+                    >
+                        {t("phoneLocale.cellSheet.all")}
+                    </button>
+                    <button
+                        type={"button"}
+                        className={"pretty_button cell_sheet_text_button"}
+                        onClick={() => onCheckedChange(new Set<number>())}
+                    >
+                        {t("phoneLocale.cellSheet.none")}
+                    </button>
+                    <button
+                        type={"button"}
+                        className={"pretty_button cell_sheet_text_button"}
+                        onClick={() =>
+                            onCheckedChange(fillBetween(checkedIds, columns))
+                        }
+                    >
+                        {t("phoneLocale.cellSheet.between")}
+                    </button>
+                </div>
+                <p className={"cell_sheet_status"}>
+                    {t("phoneLocale.cellSheet.checked", {
+                        checked: checkedColumns.length,
+                        total: columns.length
+                    })}
+                </p>
+                <div className={"cell_sheet_footer"}>
+                    <button
+                        type={"button"}
+                        className={"pretty_button cell_sheet_button"}
+                        aria-disabled={!first}
+                        onClick={() => {
+                            if (first) {
+                                commands.getInputCommands(first).clear();
+                            }
+                        }}
+                    >
+                        {t("phoneLocale.cellSheet.clear")}
+                    </button>
+                    <button
+                        type={"button"}
+                        className={"pretty_button cell_sheet_button"}
+                        aria-disabled={!first}
+                        onClick={() => {
+                            if (first) {
+                                commands.copyCells(first);
+                            }
+                        }}
+                    >
+                        {t("phoneLocale.cellSheet.copy")}
+                    </button>
+                    <button
+                        type={"button"}
+                        className={"pretty_button cell_sheet_button"}
+                        aria-disabled={!first}
+                        onClick={() => {
+                            if (first) {
+                                commands.pasteCells(first);
+                            }
+                        }}
+                    >
+                        {t("phoneLocale.cellSheet.paste")}
+                    </button>
+                </div>
+            </div>
+        </EditorSheet>
+    );
+}

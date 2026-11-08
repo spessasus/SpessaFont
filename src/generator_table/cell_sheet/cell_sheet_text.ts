@@ -1,3 +1,11 @@
+import type { ZoneView } from "../../core_backend/entity_views.ts";
+import type { ZoneColumn } from "../zone_columns.ts";
+import {
+    type CellContext,
+    getCellDisplay,
+    readViewCell
+} from "../cell/cell_values.ts";
+
 export type CellEditMode = "set" | "add" | "multiply";
 
 const RELATIVE_PREFIX = /^[+xX*]/;
@@ -35,4 +43,39 @@ export function buildRangeText(
         | { kind: "shift"; by: number }
 ) {
     return edit.kind === "set" ? `${edit.low}-${edit.high}` : `+${edit.by}`;
+}
+
+/**
+ * What the cell sheet's zone list shows for a column: its own value, both values of a stereo
+ * pair that differ, or the value an unset cell plays with and where it comes from.
+ */
+export type SheetValue =
+    | { kind: "own"; text: string }
+    | { kind: "mixed"; left: string; right: string }
+    | { kind: "inherited"; text: string; source: "global" | "default" };
+
+/**
+ * The zone list's value of a column. For rendering.
+ */
+export function describeSheetValue(
+    context: CellContext,
+    column: ZoneColumn,
+    globalZone: ZoneView
+): SheetValue {
+    const display = getCellDisplay(context, column, globalZone);
+    if (display.isMixed) {
+        const [left, right] = display.parts;
+        return { kind: "mixed", left, right };
+    }
+    if (display.text !== "") {
+        return { kind: "own", text: display.text };
+    }
+    const isFromGlobal =
+        column.zone.id !== globalZone.id &&
+        readViewCell(globalZone, context.row.generator) !== null;
+    return {
+        kind: "inherited",
+        text: display.placeholder,
+        source: isFromGlobal ? "global" : "default"
+    };
 }

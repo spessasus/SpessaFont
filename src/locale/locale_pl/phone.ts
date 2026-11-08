@@ -115,5 +115,22 @@ export const PhoneLocale = {
         replaceSample: "Wybierz inną próbkę dla tej strefy",
         replaceInstrument: "Wybierz inny instrument dla tej strefy",
         modulators: "Modulatory ({{count}})"
+    },
+    cellSheet: {
+        pickGenerator: "Wybierz generator",
+        modulatedBy_one: "Modulowany przez {{count}} modulator",
+        modulatedBy_few: "Modulowany przez {{count}} modulatory",
+        modulatedBy_many: "Modulowany przez {{count}} modulatorów",
+        modulatedBy_other: "Modulowany przez {{count}} modulatora",
+        all: "Wszystkie",
+        none: "Żadne",
+        between: "Pomiędzy",
+        clear: "Wyczyść",
+        copy: "Kopiuj",
+        paste: "Wklej",
+        checked: "Zaznaczono {{checked}} z {{total}}",
+        fromGlobal: "(globalna)",
+        fromDefault: "(domyślna)",
+        stereoValues: "L {{left}} / P {{right}}"
     }
 };

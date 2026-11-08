@@ -105,5 +105,20 @@ export const PhoneLocale = {
         replaceSample: "Pick another sample for this zone",
         replaceInstrument: "Pick another instrument for this zone",
         modulators: "Modulators ({{count}})"
+    },
+    cellSheet: {
+        pickGenerator: "Choose generator",
+        modulatedBy_one: "Modulated by {{count}} modulator",
+        modulatedBy_other: "Modulated by {{count}} modulators",
+        all: "All",
+        none: "None",
+        between: "Between",
+        clear: "Clear",
+        copy: "Copy",
+        paste: "Paste",
+        checked: "{{checked}} of {{total}} checked",
+        fromGlobal: "(Global)",
+        fromDefault: "(default)",
+        stereoValues: "L {{left}} / R {{right}}"
     }
 };

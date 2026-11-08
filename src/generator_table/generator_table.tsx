@@ -56,6 +56,8 @@ import { clampZoneIndex, getOneZoneColumns } from "./one_zone_columns.ts";
 import { useZoneSwipe } from "./use_zone_swipe.ts";
 import { useZoneCommands } from "./use_zone_commands.ts";
 import { ZoneListSheet } from "./zone_list_sheet/zone_list_sheet.tsx";
+import { CellSheet } from "./cell_sheet/cell_sheet.tsx";
+import { mapSelectionToRow } from "./cell_sheet/cell_sheet_selection.ts";
 
 const NO_CELLS = new Set<number>();
 
@@ -159,6 +161,9 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
     const modulatorColumns = oneZone?.modulatorColumns ?? allModulatorColumns;
     const getRowColumns = (generator: GeneratorType) =>
         generator === GeneratorTypes.pan ? splitColumns : columns;
+    // The cell sheet lists every zone, also when One zone mode shows one
+    const getAllRowColumns = (generator: GeneratorType) =>
+        generator === GeneratorTypes.pan ? allSplitColumns : allColumns;
 
     // The edited zone may be gone after an undo, which closes the editor. A zone of a split
     // pair stays open on its own when an edit gives it the same modulators as its partner.
@@ -276,6 +281,8 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
             )
         );
     };
+
+    const sheetRow = rows.find((r) => r.generator === cellSelection?.generator);
 
     const jumpToZone = (column: ZoneColumn) => {
         if (isOneZone) {
@@ -473,6 +480,32 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
                     </tbody>
                 </table>
             </div>
+            {layout === "phone" && cellSelection && sheetRow ? (
+                <CellSheet
+                    element={element}
+                    rows={rows}
+                    row={sheetRow}
+                    columns={getAllRowColumns(cellSelection.generator)}
+                    globalZone={view.globalZone}
+                    checkedIds={cellSelection.zoneIds}
+                    onCheckedChange={(ids) =>
+                        setCellSelection({ ...cellSelection, zoneIds: ids })
+                    }
+                    onRowChange={(generator) =>
+                        setCellSelection({
+                            generator,
+                            zoneIds: mapSelectionToRow(
+                                cellSelection.zoneIds,
+                                getAllRowColumns(cellSelection.generator),
+                                getAllRowColumns(generator)
+                            ),
+                            anchorId: cellSelection.anchorId
+                        })
+                    }
+                    onEditModulators={setEditedZoneId}
+                    onClose={() => setCellSelection(null)}
+                />
+            ) : null}
             {layout === "phone" && isZoneSheetOpen ? (
                 <ZoneListSheet
                     columns={allZoneColumns}

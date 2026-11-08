@@ -1,0 +1,194 @@
+:root[data-layout="phone"] .editor_sheet_title:has(.cell_sheet_picker) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    overflow: hidden;
+}
+
+:root[data-layout="phone"] .cell_sheet_picker {
+    display: inline-flex;
+    /* The name keeps its width, the unit gives way first */
+    flex: none;
+    max-width: 75%;
+    align-items: center;
+    gap: 0.25rem;
+    min-width: 0;
+    min-height: var(--phone-touch);
+}
+
+:root[data-layout="phone"] .cell_sheet_title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--phone-text-sheet-title);
+    font-weight: 600;
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet_picker svg {
+    flex: none;
+    width: var(--phone-disclosure-size);
+    height: var(--phone-disclosure-size);
+}
+
+:root[data-layout="phone"] .cell_sheet_unit {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--phone-text-small);
+    color: var(--muted-font-color);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+:root[data-layout="phone"] .cell_sheet_modulated {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-height: var(--phone-touch);
+    padding: 0 var(--phone-gutter);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet_modulated * {
+    color: var(--focus-color);
+}
+
+:root[data-layout="phone"] .cell_sheet_modulated span {
+    font-size: var(--phone-text-small);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet_modulated svg {
+    width: var(--phone-disclosure-size);
+    height: var(--phone-disclosure-size);
+}
+
+/* The list sits on the grid's color, the sheet's own is lighter */
+:root[data-layout="phone"] .cell_sheet .menu_list_scrollable {
+    flex: 1;
+    min-height: 0;
+    background: var(--darker-color-end);
+    border-top: 1px solid var(--track-border-color);
+    border-bottom: 1px solid var(--track-border-color);
+}
+
+:root[data-layout="phone"] .cell_sheet_zone_row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    min-height: var(--phone-row-height);
+    box-sizing: border-box;
+    padding: 0 var(--phone-gutter);
+    border-bottom: 1px solid
+        color-mix(in oklch, var(--track-border-color) 45%, transparent);
+}
+
+:root[data-layout="phone"] .cell_sheet_zone_row[data-checked="true"] {
+    background: var(--cell-selection-color);
+}
+
+:root[data-layout="phone"] .cell_sheet_zone_row:has(:focus-visible) {
+    outline: 2px solid var(--light-primary-color);
+    outline-offset: -2px;
+}
+
+:root[data-layout="phone"] .cell_sheet_checkbox {
+    flex: none;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin: 0;
+    accent-color: var(--focus-color);
+}
+
+:root[data-layout="phone"] .cell_sheet_zone_name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--phone-text-body);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet_zone_range {
+    flex: none;
+    /* Wide enough for 100-127, so the ranges line up */
+    min-width: 3.5rem;
+    font-size: var(--phone-text-caption);
+    font-variant-numeric: tabular-nums;
+    color: var(--muted-font-color);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet_zone_value {
+    flex: none;
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem;
+    font-size: var(--phone-text-body);
+    font-variant-numeric: tabular-nums;
+    color: var(--muted-font-color);
+    text-align: end;
+    white-space: nowrap;
+}
+
+:root[data-layout="phone"] .cell_sheet_zone_value[data-own="true"] {
+    font-weight: 600;
+    color: var(--font-color);
+}
+
+:root[data-layout="phone"] .cell_sheet_zone_source {
+    font-size: var(--phone-text-caption);
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .cell_sheet_bar,
+:root[data-layout="phone"] .cell_sheet_footer {
+    flex: none;
+    display: flex;
+    gap: var(--flex-gap);
+    padding: 0.25rem var(--flex-gap);
+}
+
+:root[data-layout="phone"] .cell_sheet_text_button {
+    min-height: var(--phone-touch);
+    padding: 0 0.75rem;
+    font-size: var(--phone-text-small);
+    font-weight: 600;
+}
+
+:root[data-layout="phone"] .cell_sheet_status {
+    flex: none;
+    margin: 0;
+    padding: 0 var(--phone-gutter);
+    font-size: var(--phone-text-caption);
+    color: var(--muted-font-color);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet_footer {
+    border-top: 1px solid var(--track-border-color);
+    margin-top: 0.25rem;
+}
+
+:root[data-layout="phone"] .cell_sheet_button {
+    min-height: var(--phone-touch);
+    padding: 0 0.75rem;
+    font-size: var(--phone-text-button);
+}
+
+:root[data-layout="phone"] .cell_sheet_button[aria-disabled="true"] {
+    opacity: 0.4;
+}
