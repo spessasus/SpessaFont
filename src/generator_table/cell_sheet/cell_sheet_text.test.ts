@@ -8,7 +8,9 @@ import {
 import {
     buildCellText,
     buildRangeText,
-    describeSheetValue
+    describeSheetValue,
+    getRangeFields,
+    getSharedOption
 } from "./cell_sheet_text.ts";
 import { parseCellText } from "../cell/parse_generator_text.ts";
 import {
@@ -157,6 +159,23 @@ describe("describeSheetValue", () => {
         expect(
             describeSheetValue(attenuation, next.columns[0], next.globalZone)
         ).toEqual({ kind: "own", text: "0.00" });
+    });
+});
+
+describe("range and option editor values", () => {
+    it("prefills range fields from a range or the full keyboard", () => {
+        expect(getRangeFields({ min: 48, max: 69 })).toEqual({
+            low: 48,
+            high: 69
+        });
+        expect(getRangeFields(null)).toEqual({ low: 0, high: 127 });
+    });
+
+    it("finds the option all checked cells share", () => {
+        expect(getSharedOption([1, 1])).toBe(1);
+        expect(getSharedOption([null, null])).toBeNull();
+        expect(getSharedOption([1, 3])).toBeUndefined();
+        expect(getSharedOption([])).toBeUndefined();
     });
 });
 

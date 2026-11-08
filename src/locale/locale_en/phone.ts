@@ -131,6 +131,10 @@ export const PhoneLocale = {
         stepUp: "Step up",
         times10: "×10",
         sends: "sends {{text}}",
-        apply: "Apply"
+        apply: "Apply",
+        low: "Low",
+        high: "High",
+        shift: "Shift",
+        unset: "−"
     }
 };

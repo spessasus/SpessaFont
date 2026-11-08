@@ -39,3 +39,10 @@ function hasOptions(
 export function getGeneratorOptions(generator: GeneratorType) {
     return hasOptions(generator) ? GENERATOR_OPTIONS[generator] : undefined;
 }
+
+/**
+ * The options of a generator that picks one of a few values.
+ */
+export type GeneratorOptions = NonNullable<
+    ReturnType<typeof getGeneratorOptions>
+>;

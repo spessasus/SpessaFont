@@ -3,6 +3,7 @@ import type { ZoneColumn } from "../zone_columns.ts";
 import {
     type CellContext,
     createTextEditActions,
+    type CellValue,
     getCellDisplay,
     readViewCell
 } from "../cell/cell_values.ts";
@@ -57,6 +58,27 @@ export function buildRangeText(
         | { kind: "shift"; by: number }
 ) {
     return edit.kind === "set" ? `${edit.low}-${edit.high}` : `+${edit.by}`;
+}
+
+/**
+ * The Low and High a range editor starts with, the full keyboard for an unset range.
+ */
+export function getRangeFields(value: CellValue) {
+    return value !== null && typeof value === "object"
+        ? { low: value.min, high: value.max }
+        : { low: 0, high: 127 };
+}
+
+/**
+ * The option every value shares (null when all are unset), or undefined when they differ or
+ * there are none.
+ */
+export function getSharedOption(values: readonly CellValue[]) {
+    const [first, ...rest] = values;
+    if (first === undefined || (typeof first === "object" && first !== null)) {
+        return undefined;
+    }
+    return rest.every((v) => v === first) ? first : undefined;
 }
 
 /**

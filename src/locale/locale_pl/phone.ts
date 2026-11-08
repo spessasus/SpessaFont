@@ -143,6 +143,10 @@ export const PhoneLocale = {
         stepUp: "Zwiększ o krok",
         times10: "×10",
         sends: "wysyła {{text}}",
-        apply: "Zastosuj"
+        apply: "Zastosuj",
+        low: "Od",
+        high: "Do",
+        shift: "Przesuń",
+        unset: "−"
     }
 };

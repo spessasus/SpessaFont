@@ -1,11 +1,12 @@
-import { useId } from "react";
+import { useId, useState } from "react";
 import type { MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import {
     BasicInstrument,
     type BasicPreset,
-    type GeneratorType
+    type GeneratorType,
+    GeneratorTypes
 } from "spessasynth_core";
 import type { ZoneView } from "../../core_backend/entity_views.ts";
 import {
@@ -18,7 +19,7 @@ import {
     ChevronRightIcon
 } from "../../utils/icons/app_icons.tsx";
 import { generatorLocaleMap } from "../../utils/translated_options/generator_to_locale_map.ts";
-import type { CellContext } from "../cell/cell_values.ts";
+import { type CellContext, readViewCell } from "../cell/cell_values.ts";
 import { isRangeGenerator } from "../cell/range_generator.ts";
 import { useCellCommands } from "../cell/use_cell_commands.ts";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
@@ -30,9 +31,15 @@ import {
 import type { GeneratorRowType } from "../generator_row_type.ts";
 import { GENERATOR_UNITS } from "../generator_unit.ts";
 import { getViewZones, type ZoneColumn } from "../zone_columns.ts";
+import { CellSheetOptionEditor } from "./cell_sheet_option_editor.tsx";
+import { CellSheetRangeEditor } from "./cell_sheet_range_editor.tsx";
 import { CellSheetNumberEditor } from "./cell_sheet_number_editor.tsx";
 import { fillBetween, selectAllZones } from "./cell_sheet_selection.ts";
-import { applyCellSheetText } from "./cell_sheet_text.ts";
+import {
+    applyCellSheetText,
+    getRangeFields,
+    getSharedOption
+} from "./cell_sheet_text.ts";
 import { CellSheetZoneList } from "./cell_sheet_zone_list.tsx";
 import "./cell_sheet_phone.css";
 
@@ -75,6 +82,8 @@ export function CellSheet({
     const { openMenu } = useContextMenu();
     const { apply } = useBankEditor();
     const labelId = useId();
+    // Lives here so the editor can remount on a changed range and keep its mode
+    const [rangeMode, setRangeMode] = useState<"set" | "shift">("set");
     const { generator } = row;
     const checkedColumns = columns.filter((c) => checkedIds.has(c.zone.id));
     const commands = useCellCommands(element, row, columns, checkedColumns);
@@ -134,8 +143,22 @@ export function CellSheet({
         checked: checkedColumns.length,
         total: columns.length
     });
-    const isNumberRow =
-        !isRangeGenerator(generator) && !getGeneratorOptions(generator);
+    const options = getGeneratorOptions(generator);
+    const { low, high } = getRangeFields(
+        first ? readViewCell(first.zone, generator) : null
+    );
+
+    const isTextApplied = (text: string) => {
+        const actions = applyCellSheetText(context, checkedColumns, text);
+        if (!actions) {
+            toast.error(t("toolsLocale.cells.invalidText", { text }));
+            return false;
+        }
+        if (actions.length > 0) {
+            apply(actions);
+        }
+        return true;
+    };
 
     const footerButtons = (
         <>
@@ -252,7 +275,40 @@ export function CellSheet({
                         {t("phoneLocale.cellSheet.between")}
                     </button>
                 </div>
-                {isNumberRow ? (
+                {isRangeGenerator(generator) ? (
+                    <CellSheetRangeEditor
+                        // The fields follow the first cell's range, also after an apply or an undo
+                        key={`${generator}-${first?.zone.id}-${low}-${high}`}
+                        isKeyRange={generator === GeneratorTypes.keyRange}
+                        initialLow={low}
+                        initialHigh={high}
+                        mode={rangeMode}
+                        onModeChange={setRangeMode}
+                        isDisabled={!first}
+                        status={status}
+                        footer={footerButtons}
+                        onApply={isTextApplied}
+                    />
+                ) : options ? (
+                    <CellSheetOptionEditor
+                        options={options}
+                        value={getSharedOption(
+                            checkedColumns.flatMap((c) =>
+                                getViewZones(c).map((zone) =>
+                                    readViewCell(zone, generator)
+                                )
+                            )
+                        )}
+                        isDisabled={!first}
+                        status={status}
+                        footer={footerButtons}
+                        onPick={(value) => {
+                            if (first) {
+                                commands.pick(first, value);
+                            }
+                        }}
+                    />
+                ) : (
                     <CellSheetNumberEditor
                         // Another row starts with an empty field
                         key={generator}
@@ -260,23 +316,7 @@ export function CellSheet({
                         isDisabled={!first}
                         status={status}
                         footer={footerButtons}
-                        onApply={(text) => {
-                            const actions = applyCellSheetText(
-                                context,
-                                checkedColumns,
-                                text
-                            );
-                            if (!actions) {
-                                toast.error(
-                                    t("toolsLocale.cells.invalidText", { text })
-                                );
-                                return false;
-                            }
-                            if (actions.length > 0) {
-                                apply(actions);
-                            }
-                            return true;
-                        }}
+                        onApply={isTextApplied}
                         onNudge={(direction, steps) => {
                             if (first) {
                                 commands
@@ -285,13 +325,6 @@ export function CellSheet({
                             }
                         }}
                     />
-                ) : (
-                    <>
-                        <p className={"cell_sheet_status"}>{status}</p>
-                        <div className={"cell_sheet_footer"}>
-                            {footerButtons}
-                        </div>
-                    </>
                 )}
             </div>
         </EditorSheet>
