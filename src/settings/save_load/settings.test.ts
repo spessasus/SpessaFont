@@ -171,3 +171,13 @@ describe("parseSettings", () => {
         expect(parseSettings(valid)).toEqual(valid);
     });
 });
+
+describe("layout setting", () => {
+    it("keeps a valid layout", () => {
+        expect(parseSettings({ layout: "phone" }).layout).toBe("phone");
+    });
+
+    it("falls back to auto", () => {
+        expect(parseSettings({ layout: "tablet" }).layout).toBe("auto");
+    });
+});

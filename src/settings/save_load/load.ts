@@ -13,6 +13,7 @@ import { isTheme } from "../../themes/theme_list.ts";
 import { takeSampleRateParam } from "../../utils/sample_rate_param.ts";
 import { saveSettings } from "./save.ts";
 import { isRecord } from "../../utils/is_record.ts";
+import { isLayoutSetting } from "../../layout/layout_setting.ts";
 
 const INTERPOLATIONS = new Set<unknown>(Object.values(InterpolationTypes));
 
@@ -49,6 +50,9 @@ export function parseSettings(data: unknown): SavedSettingsType {
     }
     if (typeof midiInputId === "string") {
         settings.midiInputId = midiInputId;
+    }
+    if (isLayoutSetting(data.layout)) {
+        settings.layout = data.layout;
     }
     if (INTERPOLATIONS.has(interpolation)) {
         settings.interpolation = interpolation as InterpolationType;

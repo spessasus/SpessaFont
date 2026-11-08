@@ -4,6 +4,7 @@ import {
     SAMPLE_RATE_LIMITS
 } from "../../utils/sample_rate_param.ts";
 import type { ThemeType } from "../../themes/theme_list.ts";
+import type { LayoutSetting } from "../../layout/layout_setting.ts";
 
 export interface SavedSettingsType {
     lang: string;
@@ -28,6 +29,11 @@ export interface SavedSettingsType {
      * The MIDI input to listen to, selected again when it is plugged in. Empty for none.
      */
     midiInputId: string;
+
+    /**
+     * Which layout to use, automatic picks the phone layout on a phone.
+     */
+    layout: LayoutSetting;
 }
 
 /**
@@ -60,7 +66,9 @@ export const DEFAULT_SETTINGS: SavedSettingsType = {
     removeImportSilence: false,
     trimImportAfterLoop: false,
 
-    midiInputId: ""
+    midiInputId: "",
+
+    layout: "auto"
 };
 
 type NumericSettingKey = {
