@@ -131,6 +131,18 @@
     height: 1.125rem;
 }
 
+/* The disclosure chevron is muted, the row's own kind color stays off it */
+:root[data-layout="phone"] .menu_list_main .triangle,
+:root[data-layout="phone"] .menu_list_main .triangle_glyph,
+:root[data-layout="phone"] .menu_list_main .triangle_glyph * {
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .menu_list_main .triangle svg {
+    width: var(--phone-disclosure-size);
+    height: var(--phone-disclosure-size);
+}
+
 /* The search bar stays at the bottom, above the drawer and the soft keyboard */
 :root[data-layout="phone"] .menu_list_main .list_search_bar {
     flex: none;
@@ -153,6 +165,25 @@
     min-width: var(--phone-touch);
     padding: 0 0.75rem;
     font-size: var(--phone-text-button);
+}
+
+/* The clear button is a plain icon button like the other closes */
+:root[data-layout="phone"] .menu_list_main .list_search_bar .list_search_clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    background: none;
+}
+
+:root[data-layout="phone"]
+    .menu_list_main
+    .list_search_bar
+    .list_search_clear
+    svg {
+    width: 1.5rem;
+    height: 1.5rem;
 }
 
 :root[data-layout="phone"]

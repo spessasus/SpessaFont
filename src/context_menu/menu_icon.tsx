@@ -18,7 +18,7 @@ import {
     SaveFileIcon
 } from "../utils/icons/file_icons.tsx";
 import { PlayIcon } from "../utils/icons/player_icons.tsx";
-import { Gear } from "../utils/icons/app_icons.tsx";
+import { Gear, PlusIcon } from "../utils/icons/app_icons.tsx";
 
 interface MenuIconProps {
     name: MenuIconName;
@@ -41,6 +41,9 @@ export function MenuIcon({ name }: MenuIconProps) {
         }
         case "link": {
             return <LinkIcon />;
+        }
+        case "add": {
+            return <PlusIcon />;
         }
         case "edit": {
             return <EditIcon />;

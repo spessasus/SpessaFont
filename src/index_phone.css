@@ -18,6 +18,12 @@
     --phone-edge-dead-zone: 1.875rem;
     --phone-sheet-height: 50dvh;
     --phone-navigator-width: 90%;
+    --phone-pressed-color: color-mix(
+        in oklch,
+        var(--focus-color) 18%,
+        var(--lighter-color-end)
+    );
+    --phone-disclosure-size: 1.25rem;
     --phone-text-heading: 1.25rem;
     --phone-text-title: 1.125rem;
     --phone-text-sheet-title: 1.0625rem;

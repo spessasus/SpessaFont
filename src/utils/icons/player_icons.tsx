@@ -98,6 +98,21 @@ export function SpeakerIcon() {
     );
 }
 
+export function InstrumentIcon() {
+    return (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="currentColor"
+            fillRule="evenodd"
+            viewBox="0 0 16 16"
+        >
+            <path d="M3 3h10a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1M3 4v8h10V4zm2 0h1.5v4H5zm4.5 0H11v4H9.5zM7.25 8.5h1.5V12h-1.5z" />
+        </svg>
+    );
+}
+
 export function StopIcon() {
     return (
         <svg

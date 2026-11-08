@@ -112,7 +112,7 @@
     justify-content: center;
     flex: none;
     gap: 0.25rem;
-    min-width: 0;
+    min-width: var(--phone-touch);
     min-height: var(--phone-touch);
     padding: 0 0.375rem;
     border: solid 1px var(--track-border-color);
@@ -149,4 +149,14 @@
     .selection_action_label {
     white-space: normal;
     font-weight: 600;
+}
+
+/* On the narrowest phones the labels need the room, so the plain commands drop their icons */
+@media (max-width: 24rem) {
+    :root[data-layout="phone"] .selection_action:not([data-variant]) svg,
+    :root[data-layout="phone"]
+        .selection_action[data-variant="destructive"]
+        svg {
+        display: none;
+    }
 }

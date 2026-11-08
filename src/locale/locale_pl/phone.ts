@@ -13,6 +13,7 @@ export const PhoneLocale = {
         closeBank: "Zamknij bank",
         edit: "Edytuj",
         forward: "Dalej",
+        noForward: "Nie ma dokąd iść dalej",
         playMIDI: "Odtwórz plik MIDI…",
         settings: "Ustawienia",
         fullscreen: "Pełny ekran",
@@ -59,6 +60,9 @@ export const PhoneLocale = {
         between: "Pomiędzy",
         newInstrument: "Nowy instrument",
         newPreset: "Nowy preset",
+        noInstruments: "Bank nie ma instrumentów",
+        noPresets: "Bank nie ma presetów",
+        selectTwo: "Zaznacz co najmniej dwie próbki",
         exit: "Zakończ zaznaczanie"
     },
     back: {

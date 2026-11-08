@@ -18,7 +18,7 @@
     .action_sheet
     .action_sheet_item:active:not(:disabled),
 :root[data-layout="phone"] .action_sheet .action_sheet_item:focus-visible {
-    background: var(--selection-color);
+    background: var(--phone-pressed-color);
     outline: none;
 }
 

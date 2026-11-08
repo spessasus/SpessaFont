@@ -14,7 +14,11 @@ import {
     createInstrumentFromSamples,
     createPresetFromInstruments
 } from "../link_actions.ts";
-import { CopyIcon } from "../../utils/icons/edit_icons.tsx";
+import {
+    CopyIcon,
+    DeleteIcon,
+    ScissorsIcon
+} from "../../utils/icons/edit_icons.tsx";
 import { PlusIcon } from "../../utils/icons/app_icons.tsx";
 
 interface ActionButtonProps {
@@ -99,16 +103,19 @@ export function SelectionActionBar({ selection }: SelectionActionBarProps) {
     return (
         <div className={"selection_action_bar"}>
             <ActionButton
+                icon={<CopyIcon />}
                 label={t("contextMenu.copy")}
                 isDisabled={isEmpty}
                 onClick={() => commands.copy(selection)}
             />
             <ActionButton
+                icon={<ScissorsIcon />}
                 label={t("contextMenu.cut")}
                 isDisabled={isEmpty}
                 onClick={() => commands.cut(selection)}
             />
             <ActionButton
+                icon={<DeleteIcon />}
                 label={t("contextMenu.delete")}
                 isDisabled={isEmpty}
                 variant={"destructive"}

@@ -52,8 +52,8 @@
 }
 
 :root[data-layout="phone"] .phone_sample_play svg {
-    width: 1.25rem;
-    height: 1.25rem;
+    width: 1.125rem;
+    height: 1.125rem;
     margin: 0;
 }
 

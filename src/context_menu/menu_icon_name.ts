@@ -5,6 +5,7 @@ export const MENU_ICON_NAMES = {
     delete: "delete",
     duplicate: "duplicate",
     link: "link",
+    add: "add",
     edit: "edit",
     open: "open",
     new: "new",

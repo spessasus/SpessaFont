@@ -57,7 +57,7 @@
 
 :root[data-layout="phone"] .element_bar_target {
     color: var(--font-color);
-    font-weight: 500;
+    font-weight: 600;
 }
 
 :root[data-layout="phone"] .element_bar_more {
@@ -76,8 +76,8 @@
 }
 
 :root[data-layout="phone"] .element_bar_chevron svg {
-    width: 1rem;
-    height: 1rem;
+    width: var(--phone-disclosure-size);
+    height: var(--phone-disclosure-size);
 }
 
 :root[data-layout="phone"] .element_bar_preset {
@@ -94,6 +94,26 @@
 
 :root[data-layout="phone"] .element_bar_glyph svg {
     display: block;
+    width: 1.125rem;
+    height: 1.125rem;
+}
+
+/* The patch keeps the list's size and its muted zero parts */
+:root[data-layout="phone"] .element_bar_glyph .preset_item_patch,
+:root[data-layout="phone"] .element_bar_glyph .preset_item_patch span {
+    font-size: var(--phone-text-secondary);
+}
+
+:root[data-layout="phone"] .element_bar_glyph .preset_item_patch,
+:root[data-layout="phone"] .element_bar_glyph .preset_item_patch * {
+    color: var(--font-color);
+}
+
+:root[data-layout="phone"]
+    .element_bar_glyph
+    .preset_item_patch
+    .patch_number_zero {
+    color: var(--muted-font-color);
 }
 
 /* The app sets a color on every element, which would hide the glyph's own */

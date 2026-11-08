@@ -200,6 +200,7 @@ export function OverflowSheet({
                           label: t("phoneLocale.overflow.forward"),
                           icon: "redo",
                           isDisabled: !bankTabs.canGoForward,
+                          disabledReason: t("phoneLocale.overflow.noForward"),
                           onSelect: () => {
                               bankTabs.goForward();
                               // Forward steps into an element again, which back must undo

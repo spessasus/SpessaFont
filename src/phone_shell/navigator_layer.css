@@ -42,7 +42,7 @@
     flex: none;
     gap: var(--flex-gap);
     height: var(--phone-row-height);
-    padding: 0 0.25rem;
+    padding: 0 var(--flex-gap);
     background: var(--menu-bar-color);
     border-bottom: solid 1px var(--menu-border-color);
 }
@@ -75,7 +75,9 @@
 
 :root[data-layout="phone"] .navigator_button[aria-pressed="true"] {
     background: var(--primary-color);
-    box-shadow: inset 0 -3px 0 var(--focus-color);
+    box-shadow:
+        inset 0 0 0 1px var(--focus-color),
+        inset 0 -3px 0 var(--focus-color);
 }
 
 :root[data-layout="phone"] .navigator_tabs {
@@ -104,10 +106,12 @@
 }
 
 :root[data-layout="phone"] .navigator_overview:active {
-    background: var(--selection-color);
+    background: var(--phone-pressed-color);
 }
 
+/* --selection-color equals the header fill in the original themes, so the current row has its own */
 :root[data-layout="phone"] .navigator_overview[aria-current="true"] {
+    background: var(--phone-pressed-color);
     box-shadow: inset 3px 0 0 var(--focus-color);
 }
 
@@ -118,8 +122,8 @@
 }
 
 :root[data-layout="phone"] .navigator_overview svg:last-child {
-    width: 1.125rem;
-    height: 1.125rem;
+    width: var(--phone-disclosure-size);
+    height: var(--phone-disclosure-size);
 }
 
 :root[data-layout="phone"] .navigator_overview_label {

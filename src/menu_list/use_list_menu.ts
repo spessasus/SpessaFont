@@ -69,14 +69,17 @@ export function useListMenu() {
     ): ContextMenuEntry[] => [
         {
             label: t("toolsLocale.keyCurve.menu"),
+            icon: "edit",
             onSelect: () => void elementTools.openKeyCurve(elements)
         },
         {
             label: t("toolsLocale.attenuation.menu"),
+            icon: "edit",
             onSelect: () => void elementTools.openAttenuation(elements)
         },
         {
             label: t("toolsLocale.split.menu"),
+            icon: "edit",
             onSelect: () => void elementTools.openSplitZones(elements)
         }
     ];
@@ -284,6 +287,7 @@ export function useListMenu() {
                 icon: "paste",
                 onSelect: commands.paste,
                 isDisabled: !hasClipboard,
+                disabledReason: t("presetList.pasteHint"),
                 shortcut: shortcutText("V")
             },
             {
@@ -318,48 +322,60 @@ export function useListMenu() {
                 "separator",
                 {
                     label: t("contextMenu.addToInstrument"),
+                    icon: "link",
                     onSelect: () => void addSamplesToInstrument(samples),
-                    isDisabled: document.instruments.length === 0
+                    isDisabled: document.instruments.length === 0,
+                    disabledReason: t("phoneLocale.selection.noInstruments")
                 },
                 {
                     label: t("contextMenu.newInstrument"),
+                    icon: "add",
                     onSelect: () =>
                         create([createInstrumentFromSamples(document, samples)])
                 },
                 "separator",
                 {
                     label: t("contextMenu.normalize"),
+                    icon: "edit",
                     onSelect: () => void normalize(samples)
                 },
                 {
                     label: t("contextMenu.autoLoop"),
+                    icon: "edit",
                     onSelect: () => void autoLoop(samples)
                 },
                 {
                     label: t("contextMenu.gain"),
+                    icon: "edit",
                     onSelect: () => void changeGain(samples)
                 },
                 {
                     label: t("contextMenu.rootKeysFromNames"),
+                    icon: "edit",
                     onSelect: () => setRootKeysFromNames(samples)
                 },
                 {
                     label: t("toolsLocale.shift.menu"),
+                    icon: "edit",
                     onSelect: () => void sampleTools.shift(samples)
                 },
                 "separator",
                 {
                     label: t("toolsLocale.trim.removeSilence"),
+                    icon: "edit",
                     onSelect: () => void sampleTools.removeSilence(samples)
                 },
                 {
                     label: t("toolsLocale.trim.trimAfterLoop"),
+                    icon: "edit",
                     onSelect: () => void sampleTools.trimAfterLoop(samples)
                 },
                 {
                     label: t("toolsLocale.merge.menuSelection"),
+                    icon: "edit",
                     onSelect: () => void sampleTools.mergeDuplicates(samples),
-                    isDisabled: samples.size < 2
+                    isDisabled: samples.size < 2,
+                    disabledReason: t("phoneLocale.selection.selectTwo")
                 }
             ];
         }
@@ -370,11 +386,14 @@ export function useListMenu() {
                 "separator",
                 {
                     label: t("contextMenu.addToPreset"),
+                    icon: "link",
                     onSelect: () => void addInstrumentsToPreset(instruments),
-                    isDisabled: document.presets.length === 0
+                    isDisabled: document.presets.length === 0,
+                    disabledReason: t("phoneLocale.selection.noPresets")
                 },
                 {
                     label: t("contextMenu.newPreset"),
+                    icon: "add",
                     onSelect: () =>
                         create([
                             createPresetFromInstruments(document, instruments)
@@ -383,21 +402,25 @@ export function useListMenu() {
                 "separator",
                 {
                     label: t("contextMenu.spreadSamples"),
+                    icon: "edit",
                     onSelect: () => elementTools.spread([...instruments])
                 },
                 ...getZoneToolEntries([...instruments]),
                 {
                     label: t("toolsLocale.naturalRelease.menu"),
+                    icon: "edit",
                     onSelect: () =>
                         void elementTools.openNaturalRelease([...instruments])
                 },
                 {
                     label: t("contextMenu.drumMap"),
+                    icon: "edit",
                     onSelect: () =>
                         void elementTools.openDrumMap([...instruments])
                 },
                 {
                     label: t("contextMenu.batchGenerator"),
+                    icon: "edit",
                     onSelect: () => void editGenerator(instruments)
                 }
             ];
@@ -410,6 +433,7 @@ export function useListMenu() {
                   ...getZoneToolEntries([...presets]),
                   {
                       label: t("contextMenu.batchGenerator"),
+                      icon: "edit",
                       onSelect: () => void editGenerator(presets)
                   }
               ]

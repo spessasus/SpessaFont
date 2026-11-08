@@ -1,5 +1,10 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { useLayout } from "../layout/layout_context.ts";
+import {
+    ChevronDownIcon,
+    ChevronRightIcon
+} from "../utils/icons/app_icons.tsx";
 
 interface ExpandButtonProps {
     isOpen: boolean;
@@ -20,7 +25,20 @@ export function ExpandButton({
     children
 }: ExpandButtonProps) {
     const { t } = useTranslation();
-    const triangle = isOpen ? "\u{25BC}" : "\u{25B6}";
+    const layout = useLayout();
+    // The phone draws the disclosure as a muted chevron icon
+    const triangle =
+        layout === "phone" ? (
+            isOpen ? (
+                <ChevronDownIcon />
+            ) : (
+                <ChevronRightIcon />
+            )
+        ) : isOpen ? (
+            "\u{25BC}"
+        ) : (
+            "\u{25B6}"
+        );
     return (
         <button
             type={"button"}

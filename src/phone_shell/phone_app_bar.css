@@ -51,6 +51,11 @@
     font: inherit;
 }
 
+/* Without the navigator button the text still starts at the gutter */
+:root[data-layout="phone"] .phone_app_bar_title:first-child {
+    padding-inline-start: calc(var(--phone-gutter) - var(--flex-gap));
+}
+
 :root[data-layout="phone"] button.phone_app_bar_title {
     cursor: pointer;
 }

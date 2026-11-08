@@ -35,6 +35,8 @@
 
 :root[data-layout="phone"] .bottom_sheet .bottom_bar label > span {
     text-align: start;
+    font-size: var(--phone-text-secondary);
+    color: var(--muted-font-color);
 }
 
 :root[data-layout="phone"] .bottom_sheet .bottom_bar > div,
@@ -62,7 +64,7 @@
     text-align: start;
     color: inherit;
     border: solid 1px var(--track-border-color);
-    border-radius: 0.375rem;
+    border-radius: var(--primary-border-radius);
 }
 
 :root[data-layout="phone"] .bottom_sheet .bottom_bar .drums_toggle {
@@ -72,6 +74,26 @@
     min-height: var(--phone-touch);
 }
 
+/* The switch goes to the end of the row, with a hit area of the touch size */
+:root[data-layout="phone"]
+    .bottom_sheet
+    .bottom_bar
+    .drums_toggle
+    .controller_switch_wrapper {
+    flex: none;
+}
+
+:root[data-layout="phone"]
+    .bottom_sheet
+    .bottom_bar
+    .drums_toggle
+    .controller_switch::after {
+    content: "";
+    position: absolute;
+    inset: calc((var(--track-height) - var(--phone-touch)) / 2)
+        calc((var(--track-width) - var(--phone-touch)) / 2);
+}
+
 /* Used by is a wrapping list of buttons, and Delete is set apart at the end */
 :root[data-layout="phone"] .bottom_sheet .bottom_bar > button {
     display: flex;
@@ -79,15 +101,20 @@
     min-height: var(--phone-touch);
     padding: 0 0.75rem;
     border: solid 1px var(--track-border-color);
-    border-radius: 0.375rem;
+    border-radius: var(--primary-border-radius);
 }
 
 :root[data-layout="phone"] .bottom_sheet .bottom_bar > button:has(.warning) {
     flex: 1 1 100%;
-    justify-content: center;
+    justify-content: flex-start;
     margin-top: 0.5rem;
 }
 
+/*
+ * The global .warning rule is !important, so this one is too and wins by its specificity
+ * (the same destructive color and weight as Delete in the selection bar)
+ */
 :root[data-layout="phone"] .bottom_sheet .bottom_bar .warning {
-    color: var(--destructive-color);
+    color: var(--destructive-color) !important;
+    font-weight: 400;
 }

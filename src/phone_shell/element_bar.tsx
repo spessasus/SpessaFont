@@ -1,12 +1,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import {
-    BasicInstrument,
-    BasicPreset,
-    BasicSample,
-    MIDIPatchTools
-} from "spessasynth_core";
+import { BasicInstrument, BasicPreset, BasicSample } from "spessasynth_core";
 import "./element_bar.css";
 import type { BankEditView } from "../core_backend/bank_view.ts";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
@@ -18,8 +13,9 @@ import { BottomBar } from "../preset_editor/bottom_bar/bottom_bar.tsx";
 import { LinkedPresets } from "../instrument_editor/linked_presets/linked_presets.tsx";
 import { ChevronRightIcon } from "../utils/icons/app_icons.tsx";
 import { InfoIcon } from "../utils/icons/file_icons.tsx";
-import { SpeakerIcon } from "../utils/icons/player_icons.tsx";
+import { InstrumentIcon, SpeakerIcon } from "../utils/icons/player_icons.tsx";
 import { getObjectId } from "../utils/object_id.ts";
+import { PresetPatch } from "../menu_list/preset_display/preset_patch.tsx";
 import { PropertiesSheet } from "./properties_sheet.tsx";
 
 interface ElementBarProps {
@@ -102,13 +98,7 @@ function PresetBar({ preset }: { preset: BasicPreset }) {
         <>
             <BarButton
                 glyphClass={"element_bar_preset"}
-                glyph={
-                    <span className={"monospaced"}>
-                        {view.isGMGSDrum
-                            ? t("presetLocale.drums")
-                            : MIDIPatchTools.toMIDIString(view)}
-                    </span>
-                }
+                glyph={<PresetPatch patch={view} />}
                 name={view.name}
                 detail={t("phoneLocale.overflow.edit")}
                 onClick={() => setIsOpen(true)}
@@ -137,7 +127,7 @@ function InstrumentBar({ instrument }: { instrument: BasicInstrument }) {
     return (
         <>
             <BarButton
-                glyph={"▶"}
+                glyph={<InstrumentIcon />}
                 glyphClass={"element_bar_instrument"}
                 name={view.name}
                 detail={
