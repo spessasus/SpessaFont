@@ -1,0 +1,44 @@
+:root[data-layout="phone"] .segmented_control {
+    display: flex;
+    min-width: 0;
+    border: 1px solid var(--track-border-color);
+    border-radius: var(--primary-border-radius);
+    overflow: hidden;
+}
+
+:root[data-layout="phone"] .segmented_control_segment {
+    flex: 1;
+    min-width: var(--phone-touch, 2.75rem);
+    min-height: var(--phone-touch, 2.75rem);
+    padding: 0 0.5rem;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    font-family: inherit;
+    font-size: var(--phone-text-button);
+    font-weight: 400;
+    text-align: center;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+:root[data-layout="phone"]
+    .segmented_control_segment
+    + .segmented_control_segment {
+    border-inline-start: 1px solid var(--track-border-color);
+}
+
+:root[data-layout="phone"] .segmented_control_segment[aria-checked="true"] {
+    background: var(--primary-color);
+    font-weight: 600;
+    box-shadow: inset 0 -3px 0 var(--focus-color);
+}
+
+:root[data-layout="phone"] .segmented_control_segment[aria-disabled="true"] {
+    opacity: 0.4;
+}
+
+:root[data-layout="phone"] .segmented_control_segment:focus-visible {
+    outline: 2px solid var(--light-primary-color);
+    outline-offset: -2px;
+}
