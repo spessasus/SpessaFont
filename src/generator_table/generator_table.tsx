@@ -17,6 +17,7 @@ import { GeneratorRow } from "./generator_row.tsx";
 import "./generator_table.css";
 import "./generator_table_phone.css";
 import { useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { ModulatorRow } from "./modulator_row.tsx";
 import { ModulatorEditor } from "./modulator_edit/modulator_editor.tsx";
@@ -201,7 +202,7 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
     if (editedZoneId !== null && !editedColumn) {
         setEditedZoneId(null);
     }
-    if (editedColumn) {
+    if (editedColumn && layout !== "phone") {
         return (
             <ModulatorEditor
                 name={editedColumn.name}
@@ -217,6 +218,14 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
             />
         );
     }
+
+    // Clears the cell selection first, so the cell sheet's back handler cannot outrank the
+    // phone's modulator layer
+    const openModulators = (zoneId: number) => {
+        setCellSelection(null);
+        setIsZoneSheetOpen(false);
+        setEditedZoneId(zoneId);
+    };
 
     const gridRows: GridRow[] =
         layout === "phone"
@@ -327,6 +336,9 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
             <div
                 ref={wrapperRef}
                 className={"zone_table_wrapper"}
+                // The phone's modulator layer covers the grid, which keeps its scroll position
+                inert={layout === "phone" && editedColumn !== undefined}
+                data-covered={layout === "phone" ? !!editedColumn : undefined}
                 // A tap outside the cells dismisses the phone selection
                 onClick={
                     layout === "phone"
@@ -381,7 +393,7 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
                             columns={zoneColumns}
                             globalZone={view.globalZone}
                             activeKey={isHeaderKey ? tabKey : undefined}
-                            onEditModulators={setEditedZoneId}
+                            onEditModulators={openModulators}
                             onOpenZoneList={() => {
                                 setCellSelection(null);
                                 setIsZoneSheetOpen(true);
@@ -403,7 +415,7 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
                                     ? tabKey
                                     : undefined
                             }
-                            onEditModulators={setEditedZoneId}
+                            onEditModulators={openModulators}
                         />
                     </thead>
                     <tbody {...(isOneZone ? swipeHandlers : {})}>
@@ -531,7 +543,7 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
                             anchorId: cellSelection.anchorId
                         })
                     }
-                    onEditModulators={setEditedZoneId}
+                    onEditModulators={openModulators}
                     onClose={() => setCellSelection(null)}
                 />
             ) : null}
@@ -544,6 +556,29 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
                     onAddZone={() => void zoneCommands.add()}
                     onClose={() => setIsZoneSheetOpen(false)}
                 />
+            ) : null}
+            {editedColumn ? (
+                <div className={"modulator_layer"}>
+                    <ModulatorEditor
+                        name={editedColumn.name}
+                        column={editedColumn}
+                        onClose={() => {
+                            const key = getModulatorKey(editedColumn.zone.id);
+                            // The grid is inert until it renders without the layer
+                            flushSync(() => {
+                                setActiveKey(key);
+                                setEditedZoneId(null);
+                            });
+                            findGridItem(tableRef.current, key)?.focus({
+                                preventScroll: true
+                            });
+                        }}
+                        element={element}
+                        defaultModulators={
+                            isInstrument ? defaultModulators : []
+                        }
+                    />
+                </div>
             ) : null}
         </>
     );

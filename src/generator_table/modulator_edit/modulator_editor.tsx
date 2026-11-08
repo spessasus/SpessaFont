@@ -11,6 +11,8 @@ import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 import type { ModulatorView } from "../../core_backend/entity_views.ts";
 import type { ZoneColumn } from "../zone_columns.ts";
 import { findZone, getColumnZones } from "../cell/column_zones.ts";
+import { useLayout } from "../../layout/layout_context.ts";
+import { ModulatorLayerHeader } from "./modulator_layer_header.tsx";
 
 interface ModulatorEditorProps {
     name: string;
@@ -32,6 +34,7 @@ export function ModulatorEditor({
 }: ModulatorEditorProps) {
     const { t } = useTranslation();
     const { apply } = useBankEditor();
+    const layout = useLayout();
 
     // A column has a stereo partner only while both zones have the same modulators (the
     // table splits the pair otherwise), so the partner gets copies of the same list
@@ -49,22 +52,34 @@ export function ModulatorEditor({
 
     return (
         <div className={"zone_modulators"}>
-            <h2>
-                {t("modulatorLocale.editingModulators", {
-                    name
-                })}
-            </h2>
-            <button
-                type={"button"}
-                // The table and the button that opened the editor are gone
-                autoFocus
-                onClick={onClose}
-                className={"plain_button close"}
-                aria-label={t("modulatorLocale.closeEditor")}
-                title={t("modulatorLocale.closeEditor")}
-            >
-                &times;
-            </button>
+            {layout === "phone" ? (
+                <ModulatorLayerHeader
+                    title={t("phoneLocale.modulators.title", {
+                        zone: name,
+                        count: column.zone.modulators.length
+                    })}
+                    onBack={onClose}
+                />
+            ) : (
+                <>
+                    <h2>
+                        {t("modulatorLocale.editingModulators", {
+                            name
+                        })}
+                    </h2>
+                    <button
+                        type={"button"}
+                        // The table and the button that opened the editor are gone
+                        autoFocus
+                        onClick={onClose}
+                        className={"plain_button close"}
+                        aria-label={t("modulatorLocale.closeEditor")}
+                        title={t("modulatorLocale.closeEditor")}
+                    >
+                        &times;
+                    </button>
+                </>
+            )}
             <ModulatorList
                 modulatorList={column.zone.modulators}
                 getModulators={() =>

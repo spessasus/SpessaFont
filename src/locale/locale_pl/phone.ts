@@ -117,7 +117,9 @@ export const PhoneLocale = {
         modulators: "Modulatory ({{count}})"
     },
     modulators: {
-        overrides: "nadpisuje domyślny modulator"
+        overrides: "nadpisuje domyślny modulator",
+        title: "Modulatory: {{zone}} ({{count}})",
+        back: "Wróć do generatorów"
     },
     cellSheet: {
         pickGenerator: "Wybierz generator",

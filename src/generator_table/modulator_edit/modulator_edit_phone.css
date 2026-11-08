@@ -1,0 +1,90 @@
+/* The modulator layer covers the grid, which keeps its layout and scroll position under it */
+:root[data-layout="phone"] [data-covered="true"] {
+    visibility: hidden;
+}
+
+:root[data-layout="phone"] .modulator_layer {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+    background: var(--darker-color-start);
+}
+
+/*
+ * The list scrolls inside the layer, so the header and New (placed against .zone_modulators)
+ * stay in view with many modulators
+ */
+:root[data-layout="phone"] .modulator_layer .zone_modulators {
+    align-items: stretch;
+    gap: 0;
+    min-height: 0;
+}
+
+:root[data-layout="phone"] .modulator_layer .modulator_list {
+    min-height: 0;
+}
+
+:root[data-layout="phone"] .modulator_layer_header {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: var(--flex-gap);
+    height: var(--phone-app-bar-height);
+    box-sizing: border-box;
+    /* Room for New, which the action bar places over the header's end */
+    padding-right: calc(var(--phone-gutter) + 4.5rem);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--menu-bar-color);
+    border-bottom: 1px solid var(--menu-border-color);
+}
+
+:root[data-layout="phone"] .modulator_layer_header h2 {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    /* The navigator header's size, so the zone name fits next to New */
+    font-size: var(--phone-text-body);
+    font-weight: 600;
+    text-align: start;
+}
+
+:root[data-layout="phone"] .modulator_layer_back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-width: var(--phone-touch);
+    min-height: var(--phone-touch);
+    margin-left: calc(var(--phone-gutter) / 2);
+}
+
+:root[data-layout="phone"] .modulator_layer_back svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+/* New moves up into the header row, the rest of the action bar stays where it is */
+:root[data-layout="phone"] .modulator_layer .modulator_new_button {
+    position: absolute;
+    top: 0.375rem;
+    right: var(--phone-gutter);
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    height: var(--phone-touch);
+    min-width: var(--phone-touch);
+    box-sizing: border-box;
+    padding: 0 0.75rem;
+    font-size: var(--phone-text-button);
+}

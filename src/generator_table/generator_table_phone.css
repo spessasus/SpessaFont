@@ -1,3 +1,9 @@
+/* The modulator layer is placed against the editor around the table */
+:root[data-layout="phone"] .preset_editor,
+:root[data-layout="phone"] .instrument_editor {
+    position: relative;
+}
+
 :root[data-layout="phone"] .zone_table_wrapper {
     padding: 0;
 }
