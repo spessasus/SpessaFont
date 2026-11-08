@@ -1,0 +1,75 @@
+:root[data-layout="phone"] .action_sheet {
+    display: flex;
+    flex-direction: column;
+    padding: 0.25rem 0;
+}
+
+:root[data-layout="phone"] .action_sheet .action_sheet_item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-height: 3rem;
+    padding: 0.25rem var(--phone-gutter);
+    text-align: start;
+    color: var(--font-color);
+}
+
+:root[data-layout="phone"]
+    .action_sheet
+    .action_sheet_item:active:not(:disabled),
+:root[data-layout="phone"] .action_sheet .action_sheet_item:focus-visible {
+    background: var(--selection-color);
+    outline: none;
+}
+
+:root[data-layout="phone"] .action_sheet .action_sheet_item:disabled {
+    cursor: default;
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .action_sheet .action_sheet_item[data-destructive] {
+    color: var(--destructive-color);
+}
+
+:root[data-layout="phone"]
+    .action_sheet
+    .action_sheet_item:disabled[data-destructive] {
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .action_sheet_icon {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+:root[data-layout="phone"] .action_sheet_icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+:root[data-layout="phone"] .action_sheet_text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+:root[data-layout="phone"] .action_sheet_label {
+    font-size: 1rem;
+}
+
+:root[data-layout="phone"] .action_sheet_second {
+    font-size: 0.8rem;
+    color: var(--muted-font-color);
+}
+
+/* Separators are a plain gap on a phone */
+:root[data-layout="phone"] .action_sheet .action_sheet_gap {
+    flex: none;
+    height: 0.75rem;
+    margin: 0;
+    border: none;
+}

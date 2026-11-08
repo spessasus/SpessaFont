@@ -62,7 +62,7 @@ export function BottomSheet({ title, onClose, children }: BottomSheetProps) {
                     <button
                         ref={closeRef}
                         type="button"
-                        className="bottom_sheet_close"
+                        className="plain_button bottom_sheet_close"
                         aria-label={t("menuBarLocale.file.close")}
                         onClick={onClose}
                     >

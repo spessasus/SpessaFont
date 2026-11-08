@@ -14,6 +14,7 @@
     max-height: 85dvh;
     background: var(--darker-color-start);
     color: var(--font-color);
+    font-family: var(--main-font);
     border: 1px solid var(--track-border-color);
     border-bottom: none;
     border-radius: 1rem 1rem 0 0;
@@ -59,6 +60,9 @@
 
 :root[data-layout="phone"] .bottom_sheet_close {
     flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-width: var(--phone-touch, 2.75rem);
     min-height: var(--phone-touch, 2.75rem);
     font-size: 1.5rem;

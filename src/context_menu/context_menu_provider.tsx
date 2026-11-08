@@ -11,6 +11,7 @@ interface OpenMenu {
     x: number;
     y: number;
     entries: readonly ContextMenuEntry[];
+    title?: string;
     /**
      * Gives the focus back to the opener when the menu closes, or to the list around it when
      * the chosen entry removed it.
@@ -26,7 +27,7 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
     const [menu, setMenu] = useState<OpenMenu | null>(null);
     const api: ContextMenuAPI = useMemo(
         () => ({
-            openMenu: (event, entries) => {
+            openMenu: (event, entries, options) => {
                 event.preventDefault();
                 event.stopPropagation();
                 // A row passes the event of the button inside it, which is the one to refocus
@@ -51,6 +52,7 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
                     x,
                     y,
                     entries,
+                    title: options?.title,
                     restoreFocus: rememberFocus(opener)
                 });
             }
@@ -71,6 +73,7 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
                     x={menu.x}
                     y={menu.y}
                     entries={menu.entries}
+                    title={menu.title}
                     onClose={close}
                 />
             ) : null}

@@ -73,4 +73,5 @@
 
     /* sheets */
     --sheet-scrim-color: rgb(0 0 0 / 30%);
+    --destructive-color: #c62828;
 }
