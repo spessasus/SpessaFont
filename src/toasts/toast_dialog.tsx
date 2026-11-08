@@ -1,4 +1,6 @@
 import { type ReactNode, useEffect, useId, useRef } from "react";
+import { useBackHandler } from "../hooks/use_back_handler.ts";
+import { BACK_LEVELS } from "../phone_shell/back_stack.ts";
 import { rememberFocus } from "../utils/focus_return.ts";
 
 export interface ToastDialogButton {
@@ -50,6 +52,13 @@ export function ToastDialog({
     };
 
     const safeButton = buttons.at(-1);
+    useBackHandler(safeButton !== undefined, BACK_LEVELS.transient, () => {
+        if (!safeButton) {
+            return false;
+        }
+        answer(safeButton);
+        return true;
+    });
     return (
         <div
             ref={dialogRef}

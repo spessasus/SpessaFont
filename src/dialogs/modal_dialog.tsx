@@ -1,5 +1,7 @@
 import "./dialogs.css";
 import { type MouseEvent, type ReactNode, useEffect, useRef } from "react";
+import { useBackHandler } from "../hooks/use_back_handler.ts";
+import { BACK_LEVELS } from "../phone_shell/back_stack.ts";
 import { rememberFocus } from "../utils/focus_return.ts";
 
 interface ModalDialogProps {
@@ -41,6 +43,10 @@ export function ModalDialog({
 }: ModalDialogProps) {
     const dialogRef = useRef<HTMLDialogElement>(null);
     const backdropPress = useRef(false);
+    useBackHandler(true, BACK_LEVELS.transient, () => {
+        onCancel();
+        return true;
+    });
     useEffect(() => {
         const dialog = dialogRef.current;
         // The browser would return the focus itself, but React removes the dialog first
