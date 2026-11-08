@@ -48,7 +48,12 @@ import { useElementTools } from "../generator_table/tools/use_element_tools.tsx"
  */
 export function useListMenu() {
     const { t } = useTranslation();
-    const { session, apply, playSample } = useBankEditor();
+    const {
+        session,
+        apply,
+        applyCreate: create = apply,
+        playSample
+    } = useBankEditor();
     const { contents } = useClipboard();
     const { pickElement, askNumber } = useDialogs();
     const commands = useSelectionCommands();
@@ -264,27 +269,33 @@ export function useListMenu() {
         const editEntries: ContextMenuEntry[] = [
             {
                 label: t("contextMenu.copy"),
+                icon: "copy",
                 onSelect: () => commands.copy(selection),
                 shortcut: shortcutText("C")
             },
             {
                 label: t("contextMenu.cut"),
+                icon: "cut",
                 onSelect: () => commands.cut(selection),
                 shortcut: shortcutText("X")
             },
             {
                 label: t("contextMenu.paste"),
+                icon: "paste",
                 onSelect: commands.paste,
                 isDisabled: !hasClipboard,
                 shortcut: shortcutText("V")
             },
             {
                 label: t("contextMenu.duplicate"),
+                icon: "duplicate",
                 onSelect: () => commands.duplicate(selection),
                 shortcut: shortcutText("D")
             },
             {
                 label: t("contextMenu.delete"),
+                icon: "delete",
+                isDestructive: true,
                 onSelect: () => commands.remove(selection),
                 shortcut: DELETE_KEY_TEXT
             }
@@ -297,6 +308,7 @@ export function useListMenu() {
                     ? [
                           {
                               label: t("contextMenu.play"),
+                              icon: "play" as const,
                               onSelect: () => playSample(first)
                           },
                           "separator" as const
@@ -312,7 +324,7 @@ export function useListMenu() {
                 {
                     label: t("contextMenu.newInstrument"),
                     onSelect: () =>
-                        apply([createInstrumentFromSamples(document, samples)])
+                        create([createInstrumentFromSamples(document, samples)])
                 },
                 "separator",
                 {
@@ -364,7 +376,7 @@ export function useListMenu() {
                 {
                     label: t("contextMenu.newPreset"),
                     onSelect: () =>
-                        apply([
+                        create([
                             createPresetFromInstruments(document, instruments)
                         ])
                 },

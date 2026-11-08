@@ -30,6 +30,14 @@ interface SampleListProps {
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
     /**
+     * Enters selection mode from the section menu's Select….
+     */
+    onStartSelection: () => void;
+    /**
+     * Whether the phone's selection mode is on, which shows a checkbox on each row.
+     */
+    isSelecting: boolean;
+    /**
      * The estimated row height in pixels, for the virtual list.
      */
     rowEstimate?: number;
@@ -47,6 +55,8 @@ export function SampleList({
     onItemPointerDown,
     isOpen,
     onOpenChange,
+    onStartSelection,
+    isSelecting,
     rowEstimate
 }: SampleListProps) {
     const { t } = useTranslation();
@@ -90,6 +100,7 @@ export function SampleList({
                         : undefined
                 }
                 onPaste={contents.samples > 0 ? commands.paste : undefined}
+                onSelect={onStartSelection}
                 count={samples.length}
             />
             {isOpen ? (
@@ -114,6 +125,7 @@ export function SampleList({
                         return layout === "phone" ? (
                             <PhoneSampleRow
                                 {...rowProps}
+                                isSelecting={isSelecting}
                                 onPlay={() => playSample(sample)}
                             />
                         ) : (

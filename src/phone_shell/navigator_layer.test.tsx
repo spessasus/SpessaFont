@@ -15,6 +15,22 @@ import { PhoneShellContext } from "./phone_shell_context.ts";
 import { INITIAL_PHONE_SHELL_STATE } from "./phone_shell_state.ts";
 import { NavigatorLayer } from "./navigator_layer.tsx";
 
+// The virtualizer renders no rows in jsdom
+vi.mock("../menu_list/virtual_item_list.tsx", () => ({
+    VirtualItemList: ({
+        items,
+        renderItem
+    }: {
+        items: readonly object[];
+        renderItem: (item: never) => React.ReactNode;
+    }) => (
+        <>
+            {items.map((item, index) => (
+                <div key={index}>{renderItem(item as never)}</div>
+            ))}
+        </>
+    )
+}));
 // Importing audio needs the engine and the settings, which this test does not open
 vi.mock("../menu_list/use_sample_import.ts", () => ({
     useSampleImport: () => () => Promise.resolve(0)
@@ -26,8 +42,9 @@ const DIALOGS: DialogsAPI = {
     openDialog: () => Promise.resolve(undefined)
 };
 
-function renderLayer(isOpen: boolean) {
+function renderLayer(isOpen: boolean, isFirstSampleShown = false) {
     const session = createTestSession();
+    const view = isFirstSampleShown ? session.document.samples[0] : "info";
     const dispatch = vi.fn();
     const onViewChange = vi.fn();
     const state = { ...INITIAL_PHONE_SHELL_STATE, isNavigatorOpen: isOpen };
@@ -49,7 +66,7 @@ function renderLayer(isOpen: boolean) {
                                         }}
                                     >
                                         <NavigatorLayer
-                                            view={"info"}
+                                            view={view}
                                             tabList={null}
                                             isCovered={false}
                                             onViewChange={onViewChange}
@@ -96,6 +113,35 @@ describe("NavigatorLayer", () => {
                 .getByRole("button", { name: "phoneLocale.navigator.keepOpen" })
                 .getAttribute("aria-pressed")
         ).toBe("false");
+        session.close();
+    });
+
+    it("picks the instrument made from a selection, the long press itself picks nothing", () => {
+        const { session, dispatch, onViewChange } = renderLayer(true, true);
+        const before = new Set(session.document.instruments);
+        const row = document.querySelector(".sample_display");
+        if (!row) {
+            throw new Error("The sample row did not render.");
+        }
+        fireEvent.contextMenu(row);
+        expect(dispatch).not.toHaveBeenCalled();
+        fireEvent.click(
+            screen.getByRole("button", { name: "phoneLocale.selection.all" })
+        );
+        fireEvent.click(
+            screen.getByRole("button", {
+                name: "phoneLocale.selection.newInstrument"
+            })
+        );
+        const created = session.document.instruments.find(
+            (instrument) => !before.has(instrument)
+        );
+        expect(created).toBeDefined();
+        expect(onViewChange).toHaveBeenLastCalledWith(created);
+        expect(dispatch).toHaveBeenCalledWith({
+            type: "navigatorPick",
+            tabId: session.id
+        });
         session.close();
     });
 

@@ -34,6 +34,23 @@ import type { FocusRequest } from "./virtual_item_list.tsx";
 import { ListSearchBar } from "./list_search_bar.tsx";
 import { useSectionsOpen } from "./use_list_state.ts";
 import { useLayout } from "../layout/layout_context.ts";
+import { useBackHandler } from "../hooks/use_back_handler.ts";
+import { BACK_LEVELS } from "../phone_shell/back_stack.ts";
+import {
+    getBetweenResult,
+    getSelectAllResult,
+    getTapModifiers,
+    type SelectionMode,
+    startSelection
+} from "./selection_mode/selection_mode.ts";
+import { SelectionBar } from "./selection_mode/selection_bar.tsx";
+import { SelectionActionBar } from "./selection_mode/selection_action_bar.tsx";
+
+/**
+ * How long after a phone long press its row ignores a click. Android sends one when the finger
+ * lifts, which would toggle the row the long press just selected.
+ */
+const LONG_PRESS_CLICK_GUARD = 500;
 
 interface MenuListProps {
     view: BankEditView;
@@ -41,6 +58,10 @@ interface MenuListProps {
      * Whether the settings cover the editor, which turns the list shortcuts off.
      */
     isCovered: boolean;
+    /**
+     * The bar above the header, which the selection bar replaces in selection mode.
+     */
+    titleBar?: ReactNode;
     /**
      * Replaces the Overview header and its collapse button.
      */
@@ -55,6 +76,7 @@ interface MenuListProps {
 export function MenuList({
     view,
     isCovered,
+    titleBar,
     header,
     onPreview
 }: MenuListProps) {
@@ -75,12 +97,17 @@ export function MenuList({
         null
     );
     const [focusRequest, setFocusRequest] = useState<FocusRequest | null>(null);
+    const [mode, setMode] = useState<SelectionMode>("off");
+    const isSelecting = mode !== "off";
+    // The row and time of the long press that began selection, for LONG_PRESS_CLICK_GUARD
+    const longPress = useRef<{ item: BankEntity; time: number } | null>(null);
     // A multi selection belongs to the view it was made for, so it is dropped when another
     // element is shown, and does not come back with its anchor later
     const [selectionView, setSelectionView] = useState(view);
     if (view !== selectionView) {
         setSelectionView(view);
         setMultiSelection(null);
+        setMode("off");
     }
 
     // Filtering thousands of elements must not delay typing
@@ -124,11 +151,15 @@ export function MenuList({
     const listed = multiSelection
         ? new Set<BankEntity>(listOf(multiSelection.anchor))
         : undefined;
-    const selection = getSelection(
-        view,
-        multiSelection,
-        (e) => listed?.has(e) ?? false
-    );
+    // Select… starts with nothing selected, the first tap picks the kind
+    const selection =
+        mode === "waiting"
+            ? new Set<BankEntity>()
+            : getSelection(
+                  view,
+                  multiSelection,
+                  (e) => listed?.has(e) ?? false
+              );
     const selectedPresets = selectionOf(selection, isPreset);
     const selectedInstruments = selectionOf(selection, isInstrument);
     const selectedSamples = selectionOf(selection, isSample);
@@ -142,12 +173,28 @@ export function MenuList({
 
     const show = (entity: BankEntity) => {
         setMultiSelection(null);
+        setMode("off");
         setView(entity);
     };
     const showPreview = (entity: BankEntity) => {
         setMultiSelection(null);
         preview(entity);
     };
+    // The row shows behind the open navigator, so the selection applies to its list
+    const beginSelection = (item: BankEntity) => {
+        setSelectionView(item);
+        setMultiSelection(startSelection(item));
+        setMode("selecting");
+        preview(item);
+    };
+    const endSelection = () => {
+        setMode("off");
+        setMultiSelection(null);
+    };
+    useBackHandler(isSelecting, BACK_LEVELS.selection, () => {
+        endSelection();
+        return true;
+    });
 
     useEventListener(document, "keydown", (e) => {
         if (isCovered) {
@@ -200,7 +247,27 @@ export function MenuList({
         item: T,
         event: MouseEvent
     ) {
-        const result = getClickResult(items, item, view, selected, event);
+        if (layout === "phone") {
+            const pressed = longPress.current;
+            longPress.current = null;
+            if (
+                pressed?.item === item &&
+                performance.now() - pressed.time < LONG_PRESS_CLICK_GUARD
+            ) {
+                return;
+            }
+            if (mode === "waiting") {
+                beginSelection(item);
+                return;
+            }
+        }
+        const result = getClickResult(
+            items,
+            item,
+            view,
+            selected,
+            getTapModifiers(layout, mode, event)
+        );
         if (result.type === "show") {
             show(result.entity);
         } else {
@@ -238,8 +305,18 @@ export function MenuList({
     };
 
     // Like a file manager, the menu acts on the selection when the item is in it,
-    // and otherwise shows the item first and acts on it alone
+    // and otherwise shows the item first and acts on it alone. A long press on a phone
+    // (Android sends contextmenu) starts selection mode instead, and in it the click that
+    // follows toggles the row like a tap.
     const handleItemContextMenu = (item: BankEntity, event: MouseEvent) => {
+        if (layout === "phone") {
+            event.preventDefault();
+            if (mode !== "selecting") {
+                longPress.current = { item, time: performance.now() };
+                beginSelection(item);
+            }
+            return;
+        }
         let target = selection;
         if (!selection.has(item)) {
             target = new Set([item]);
@@ -248,19 +325,64 @@ export function MenuList({
         openMenu(event, getMenuEntries(target));
     };
 
+    // Read from the views when the user acts, like in render
+    const getName = (entity: BankEntity) => {
+        const current = session.store.getSnapshot().views;
+        return (
+            (isPreset(entity)
+                ? current.presets
+                : isInstrument(entity)
+                  ? current.instruments
+                  : current.samples
+            ).get(getObjectId(entity))?.name ?? ""
+        );
+    };
+
+    const handleSelectionMenu = (event: MouseEvent) => {
+        const [first] = selection;
+        const count = selection.size;
+        const title =
+            count === 1
+                ? getName(first)
+                : isPreset(first)
+                  ? t("phoneLocale.selection.selectedPresets", { count })
+                  : isInstrument(first)
+                    ? t("phoneLocale.selection.selectedInstruments", { count })
+                    : t("phoneLocale.selection.selectedSamples", { count });
+        openMenu(event, getMenuEntries(selection), { title });
+    };
+
+    const selectAll = () => {
+        if (view === "info") {
+            return;
+        }
+        const result = getSelectAllResult(listOf(view), view, multiSelection);
+        if (result?.type === "select") {
+            setMultiSelection(result.selection);
+        }
+    };
+
+    const selectBetween = () => {
+        if (view === "info" || !cursor) {
+            return;
+        }
+        const result = getBetweenResult(listOf(view), cursor, view, selection);
+        if (result.type === "select") {
+            setMultiSelection(result.selection);
+        }
+    };
+
+    const startWaiting = () => {
+        setMultiSelection(null);
+        setMode("waiting");
+    };
+
     // Dragging an item of the selection drags the whole selection
     const handleItemPointerDown = (item: BankEntity, event: PointerEvent) => {
         const entities = selection.has(item) ? [...selection] : [item];
-        // The label is the name when the drag starts, read from the views like in render
+        // The label is the name when the drag starts
         const [first] = entities;
-        const current = session.store.getSnapshot().views;
-        const name =
-            (isPreset(first)
-                ? current.presets
-                : isInstrument(first)
-                  ? current.instruments
-                  : current.samples
-            ).get(getObjectId(first))?.name ?? "";
+        const name = getName(first);
         startDrag(event, {
             session,
             entities,
@@ -276,7 +398,23 @@ export function MenuList({
         0;
     return (
         // Focusable, so the focus has somewhere to go when the focused row is deleted
-        <div className={`menu_list_main`} {...ELEMENT_LIST_SCOPE} tabIndex={-1}>
+        <div
+            className={`menu_list_main`}
+            {...ELEMENT_LIST_SCOPE}
+            tabIndex={-1}
+            data-selecting={isSelecting ? true : undefined}
+        >
+            {isSelecting ? (
+                <SelectionBar
+                    count={selection.size}
+                    onExit={endSelection}
+                    onAll={selectAll}
+                    onBetween={selectBetween}
+                    onMenu={handleSelectionMenu}
+                />
+            ) : (
+                titleBar
+            )}
             {header ?? (
                 <div
                     className={`item_group_header hover_brightness ${view === "info" ? "opened" : ""}`}
@@ -307,6 +445,8 @@ export function MenuList({
             <SampleList
                 isOpen={sections.isOpen("samples")}
                 onOpenChange={(open) => sections.setOpen("samples", open)}
+                onStartSelection={startWaiting}
+                isSelecting={isSelecting}
                 rowEstimate={rowEstimate}
                 samples={filtered.samples}
                 view={view}
@@ -328,6 +468,8 @@ export function MenuList({
             <InstrumentList
                 isOpen={sections.isOpen("instruments")}
                 onOpenChange={(open) => sections.setOpen("instruments", open)}
+                onStartSelection={startWaiting}
+                isSelecting={isSelecting}
                 rowEstimate={rowEstimate}
                 instruments={filtered.instruments}
                 view={view}
@@ -350,6 +492,8 @@ export function MenuList({
             <PresetList
                 isOpen={sections.isOpen("presets")}
                 onOpenChange={(open) => sections.setOpen("presets", open)}
+                onStartSelection={startWaiting}
+                isSelecting={isSelecting}
                 rowEstimate={rowEstimate}
                 presets={filtered.presets}
                 view={view}
@@ -375,15 +519,19 @@ export function MenuList({
                         : t("contextMenu.noMatches")}
                 </p>
             ) : null}
-            <ListSearchBar
-                inputRef={searchRef}
-                query={searchQuery}
-                onQueryChange={setSearchQuery}
-                isUnusedOnly={isUnusedOnly}
-                onToggleUnusedOnly={() => setIsUnusedOnly((only) => !only)}
-                onFocusResults={focusResults}
-            />
-            {layout === "phone" && isUnusedOnly ? (
+            {isSelecting ? (
+                <SelectionActionBar selection={selection} />
+            ) : (
+                <ListSearchBar
+                    inputRef={searchRef}
+                    query={searchQuery}
+                    onQueryChange={setSearchQuery}
+                    isUnusedOnly={isUnusedOnly}
+                    onToggleUnusedOnly={() => setIsUnusedOnly((only) => !only)}
+                    onFocusResults={focusResults}
+                />
+            )}
+            {layout === "phone" && isUnusedOnly && !isSelecting ? (
                 <p className={"menu_list_unused_note"}>
                     {t("phoneLocale.navigator.unusedNote")}
                 </p>

@@ -30,6 +30,14 @@ interface InstrumentListProps {
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
     /**
+     * Enters selection mode from the section menu's Select….
+     */
+    onStartSelection: () => void;
+    /**
+     * Whether the phone's selection mode is on, which shows a checkbox on each row.
+     */
+    isSelecting: boolean;
+    /**
      * The estimated row height in pixels, for the virtual list.
      */
     rowEstimate?: number;
@@ -51,10 +59,12 @@ export function InstrumentList({
     onItemPointerDown,
     isOpen,
     onOpenChange,
+    onStartSelection,
+    isSelecting,
     rowEstimate
 }: InstrumentListProps) {
     const { t } = useTranslation();
-    const { session, apply } = useBankEditor();
+    const { session, apply, applyCreate: create = apply } = useBankEditor();
     const { contents } = useClipboard();
     const commands = useSelectionCommands();
     const { isExpanded, toggle } = useExpandedItems();
@@ -71,7 +81,7 @@ export function InstrumentList({
                 onAdd={
                     canLink
                         ? () =>
-                              apply([
+                              create([
                                   createInstrumentFromSamples(
                                       session.document,
                                       selectedSamples
@@ -85,6 +95,7 @@ export function InstrumentList({
                         : undefined
                 }
                 onPaste={contents.instruments > 0 ? commands.paste : undefined}
+                onSelect={onStartSelection}
                 count={instruments.length}
             />
             {isOpen ? (
@@ -102,6 +113,7 @@ export function InstrumentList({
                                 instrumentId={getObjectId(instrument)}
                                 view={view}
                                 isSelected={selected.has(instrument)}
+                                isSelecting={isSelecting}
                                 isShown={view === instrument}
                                 isOpen={isExpanded(key)}
                                 onToggle={() => toggle(key)}

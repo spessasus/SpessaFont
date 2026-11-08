@@ -30,6 +30,14 @@ interface PresetListProps {
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
     /**
+     * Enters selection mode from the section menu's Select….
+     */
+    onStartSelection: () => void;
+    /**
+     * Whether the phone's selection mode is on, which shows a checkbox on each row.
+     */
+    isSelecting: boolean;
+    /**
      * The estimated row height in pixels, for the virtual list.
      */
     rowEstimate?: number;
@@ -48,10 +56,12 @@ export function PresetList({
     onItemPointerDown,
     isOpen,
     onOpenChange,
+    onStartSelection,
+    isSelecting,
     rowEstimate
 }: PresetListProps) {
     const { t } = useTranslation();
-    const { session, apply } = useBankEditor();
+    const { session, apply, applyCreate: create = apply } = useBankEditor();
     const { contents } = useClipboard();
     const commands = useSelectionCommands();
     const { isExpanded, toggle } = useExpandedItems();
@@ -68,7 +78,7 @@ export function PresetList({
                 onAdd={
                     canLink
                         ? () =>
-                              apply([
+                              create([
                                   createPresetFromInstruments(
                                       session.document,
                                       selectedInstruments
@@ -82,6 +92,7 @@ export function PresetList({
                         : undefined
                 }
                 onPaste={contents.presets > 0 ? commands.paste : undefined}
+                onSelect={onStartSelection}
                 count={presets.length}
             />
             {isOpen ? (
@@ -101,6 +112,7 @@ export function PresetList({
                                 preset={preset}
                                 view={view}
                                 isSelected={selected.has(preset)}
+                                isSelecting={isSelecting}
                                 isShown={view === preset}
                                 isOpen={isExpanded(key)}
                                 onToggle={() => toggle(key)}

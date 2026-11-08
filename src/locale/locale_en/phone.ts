@@ -38,7 +38,20 @@ export const PhoneLocale = {
         openBanks: "Open sound banks"
     },
     selection: {
-        select: "Select…"
+        select: "Select…",
+        selected_one: "{{count}} selected",
+        selected_other: "{{count}} selected",
+        selectedSamples_one: "{{count}} sample",
+        selectedSamples_other: "{{count}} samples",
+        selectedInstruments_one: "{{count}} instrument",
+        selectedInstruments_other: "{{count}} instruments",
+        selectedPresets_one: "{{count}} preset",
+        selectedPresets_other: "{{count}} presets",
+        all: "All",
+        between: "Between",
+        newInstrument: "New instrument",
+        newPreset: "New preset",
+        exit: "End selection"
     },
     back: {
         pressAgain: "Press back again to leave",

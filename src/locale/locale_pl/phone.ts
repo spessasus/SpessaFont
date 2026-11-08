@@ -38,7 +38,28 @@ export const PhoneLocale = {
         openBanks: "Otwarte banki dźwięków"
     },
     selection: {
-        select: "Zaznacz…"
+        select: "Zaznacz…",
+        selected_one: "{{count}} zaznaczony",
+        selected_few: "{{count}} zaznaczone",
+        selected_many: "{{count}} zaznaczonych",
+        selected_other: "{{count}} zaznaczonych",
+        selectedSamples_one: "{{count}} próbka",
+        selectedSamples_few: "{{count}} próbki",
+        selectedSamples_many: "{{count}} próbek",
+        selectedSamples_other: "{{count}} próbek",
+        selectedInstruments_one: "{{count}} instrument",
+        selectedInstruments_few: "{{count}} instrumenty",
+        selectedInstruments_many: "{{count}} instrumentów",
+        selectedInstruments_other: "{{count}} instrumentów",
+        selectedPresets_one: "{{count}} preset",
+        selectedPresets_few: "{{count}} presety",
+        selectedPresets_many: "{{count}} presetów",
+        selectedPresets_other: "{{count}} presetów",
+        all: "Wszystkie",
+        between: "Pomiędzy",
+        newInstrument: "Nowy instrument",
+        newPreset: "Nowy preset",
+        exit: "Zakończ zaznaczanie"
     },
     back: {
         pressAgain: "Naciśnij wstecz ponownie, aby wyjść",

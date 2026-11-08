@@ -60,6 +60,8 @@ function renderList(layout: LayoutMode) {
                             onItemPointerDown={vi.fn()}
                             isOpen={true}
                             onOpenChange={vi.fn()}
+                            onStartSelection={vi.fn()}
+                            isSelecting={false}
                         />
                     </BankEditorContext>
                 </ClipboardProvider>

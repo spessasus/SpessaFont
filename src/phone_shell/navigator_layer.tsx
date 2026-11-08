@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { BasicSample } from "spessasynth_core";
 import "./navigator_layer.css";
 import type { BankEditView } from "../core_backend/bank_view.ts";
+import type { HistoryActionGroup } from "../core_backend/history.ts";
 import {
     BankEditorContext,
     useBankEditor
@@ -69,6 +70,12 @@ export function NavigatorLayer({
     const listContext = {
         ...context,
         setView: pick,
+        applyCreate: (actions: HistoryActionGroup) => {
+            const focus = context.session.history.do(actions);
+            if (focus) {
+                pick(focus);
+            }
+        },
         // Playing auditions the sample, so the lists stay open and back has no new step
         playSample: (sample: BasicSample) => {
             onViewChange(sample);
@@ -76,80 +83,90 @@ export function NavigatorLayer({
         }
     };
 
+    // The selection bar takes the place of this bar in selection mode
+    const titleBar = (
+        <div className={"navigator_header"}>
+            <button
+                type={"button"}
+                className={"plain_button navigator_button"}
+                aria-label={t("phoneLocale.navigator.close")}
+                onClick={close}
+            >
+                <CloseIcon />
+            </button>
+            <h2 className={"navigator_title"}>
+                {t("phoneLocale.navigator.title")}
+            </h2>
+            <button
+                type={"button"}
+                className={"plain_button navigator_button"}
+                aria-label={t("phoneLocale.navigator.keepOpen")}
+                aria-pressed={state.isNavigatorPinned}
+                onClick={() => dispatch({ type: "togglePinned" })}
+            >
+                <PinIcon />
+            </button>
+        </div>
+    );
+    const header = (
+        <>
+            <div className={"navigator_tabs"}>
+                {tabList}
+                <button
+                    type={"button"}
+                    className={"plain_button navigator_button"}
+                    aria-label={t("phoneLocale.navigator.addBank")}
+                    aria-haspopup={"dialog"}
+                    onClick={(e) =>
+                        openMenu(
+                            e,
+                            [
+                                {
+                                    label: t("phoneLocale.overflow.open"),
+                                    icon: "open",
+                                    onSelect: onOpenFile
+                                },
+                                {
+                                    label: t("phoneLocale.overflow.new"),
+                                    icon: "new",
+                                    onSelect: onNewFile
+                                }
+                            ],
+                            {
+                                title: t("phoneLocale.navigator.openBanks")
+                            }
+                        )
+                    }
+                >
+                    <PlusIcon />
+                </button>
+            </div>
+            <button
+                type={"button"}
+                className={"plain_button navigator_overview"}
+                aria-current={view === "info"}
+                onClick={() => pick("info")}
+            >
+                <InfoIcon />
+                <span className={"navigator_overview_label"}>
+                    {t("phoneLocale.navigator.overview")}
+                </span>
+                <ChevronRightIcon />
+            </button>
+        </>
+    );
+
     return (
         <div className={"navigator_layer"} data-open={isOpen} inert={!isOpen}>
             <div className={"navigator_panel"}>
-                <div className={"navigator_header"}>
-                    <button
-                        type={"button"}
-                        className={"plain_button navigator_button"}
-                        aria-label={t("phoneLocale.navigator.close")}
-                        onClick={close}
-                    >
-                        <CloseIcon />
-                    </button>
-                    <h2 className={"navigator_title"}>
-                        {t("phoneLocale.navigator.title")}
-                    </h2>
-                    <button
-                        type={"button"}
-                        className={"plain_button navigator_button"}
-                        aria-label={t("phoneLocale.navigator.keepOpen")}
-                        aria-pressed={state.isNavigatorPinned}
-                        onClick={() => dispatch({ type: "togglePinned" })}
-                    >
-                        <PinIcon />
-                    </button>
-                </div>
-                <div className={"navigator_tabs"}>
-                    {tabList}
-                    <button
-                        type={"button"}
-                        className={"plain_button navigator_button"}
-                        aria-label={t("phoneLocale.navigator.addBank")}
-                        aria-haspopup={"dialog"}
-                        onClick={(e) =>
-                            openMenu(
-                                e,
-                                [
-                                    {
-                                        label: t("phoneLocale.overflow.open"),
-                                        icon: "open",
-                                        onSelect: onOpenFile
-                                    },
-                                    {
-                                        label: t("phoneLocale.overflow.new"),
-                                        icon: "new",
-                                        onSelect: onNewFile
-                                    }
-                                ],
-                                { title: t("phoneLocale.navigator.openBanks") }
-                            )
-                        }
-                    >
-                        <PlusIcon />
-                    </button>
-                </div>
                 <BankEditorContext value={listContext}>
                     {/* The closed lists must not act on keys either */}
                     <MenuList
                         view={view}
                         isCovered={isCovered || !isOpen}
                         onPreview={onViewChange}
-                        header={
-                            <button
-                                type={"button"}
-                                className={"plain_button navigator_overview"}
-                                aria-current={view === "info"}
-                                onClick={() => pick("info")}
-                            >
-                                <InfoIcon />
-                                <span className={"navigator_overview_label"}>
-                                    {t("phoneLocale.navigator.overview")}
-                                </span>
-                                <ChevronRightIcon />
-                            </button>
-                        }
+                        titleBar={titleBar}
+                        header={header}
                     />
                 </BankEditorContext>
             </div>
