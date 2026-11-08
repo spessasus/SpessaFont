@@ -1,0 +1,78 @@
+import type { ReactNode } from "react";
+import { MenuList } from "../menu_list/menu_list.tsx";
+import "./bank_editor.css";
+import "./bank_editor_phone.css";
+import type { BankEditView } from "../core_backend/bank_view.ts";
+import type { BankEditorProps } from "./bank_editor.tsx";
+import { BankEditorContext } from "./bank_editor_context.ts";
+import { useBankEditorModel } from "./use_bank_editor_model.ts";
+import { BankEditorWindow } from "./bank_editor_window.tsx";
+import { usePhoneShell } from "../phone_shell/phone_shell_context.ts";
+import { useBackHandler } from "../hooks/use_back_handler.ts";
+import { BACK_LEVELS } from "../phone_shell/back_stack.ts";
+
+interface PhoneBankEditorProps extends BankEditorProps {
+    /**
+     * The open banks, shown above the lists.
+     */
+    tabList: ReactNode;
+}
+
+export function PhoneBankEditor({
+    session,
+    view: selectedView,
+    onViewChange,
+    isCovered,
+    tabList
+}: PhoneBankEditorProps) {
+    const { state, dispatch } = usePhoneShell();
+    // An element opened from inside the editor is one more step for back to undo.
+    // Showing the same element again adds no step to the tab's trail, so it adds none here
+    const drillTo = (view: BankEditView) => {
+        onViewChange(view);
+        if (view !== selectedView) {
+            dispatch({ type: "editorChange", tabId: session.id });
+        }
+    };
+    const model = useBankEditorModel(session, selectedView, drillTo);
+    const { view, context, infoPanel, setInfoPanel } = model;
+    // A pick in the lists starts a new path, so back goes to the lists from there
+    const listContext = {
+        ...context,
+        setView: (picked: BankEditView) => {
+            onViewChange(picked);
+            dispatch({ type: "navigatorPick", tabId: session.id });
+        }
+    };
+
+    useBackHandler(
+        view === "info" && infoPanel !== "info",
+        BACK_LEVELS.overviewPanel,
+        () => {
+            setInfoPanel("info");
+            return true;
+        }
+    );
+
+    return (
+        <BankEditorContext value={context}>
+            <div className={"bank_editor_content"}>
+                <BankEditorWindow model={model} />
+            </div>
+            <div
+                className={"phone_lists_layer"}
+                data-open={state.isNavigatorOpen}
+                inert={!state.isNavigatorOpen}
+            >
+                {tabList}
+                <BankEditorContext value={listContext}>
+                    {/* The closed lists must not act on keys either */}
+                    <MenuList
+                        view={view}
+                        isCovered={isCovered || !state.isNavigatorOpen}
+                    />
+                </BankEditorContext>
+            </div>
+        </BankEditorContext>
+    );
+}

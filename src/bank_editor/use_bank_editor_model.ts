@@ -98,3 +98,5 @@ export function useBankEditorModel(
         setInfoPanel
     };
 }
+
+export type BankEditorModel = ReturnType<typeof useBankEditorModel>;

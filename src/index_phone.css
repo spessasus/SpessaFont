@@ -1,0 +1,32 @@
+:root[data-layout="phone"] {
+    --phone-app-bar-height: 3.5rem;
+    --phone-element-bar-height: 2.75rem;
+    --phone-view-bar-height: 3rem;
+    --phone-touch: 2.75rem;
+    --phone-row-height: 3rem;
+    --phone-child-row-height: 2.5rem;
+    --phone-gutter: 1rem;
+    --phone-handle-height: 2.75rem;
+    --phone-strip-height: 2.75rem;
+    --phone-keys-height: 7rem;
+    --phone-key-width: calc(1.5625rem * 7 / 12);
+    --phone-name-column: 7.5rem;
+    --phone-global-column: 4.5rem;
+    --phone-cell-width: 5rem;
+    --phone-cell-height: 2.75rem;
+    --phone-header-height: 4rem;
+    --phone-edge-dead-zone: 1.875rem;
+    --phone-sheet-height: 50dvh;
+    --phone-navigator-width: 90%;
+}
+
+/* The page never scrolls, and dvh follows the address bar and the soft keyboard */
+:root[data-layout="phone"] #root {
+    height: 100dvh;
+    overflow: hidden;
+}
+
+/* Only the sheets, the navigator and the drawer move on a phone */
+:root[data-layout="phone"] .spessafont_main * {
+    transition: none;
+}

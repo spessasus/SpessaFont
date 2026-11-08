@@ -6,8 +6,8 @@ import { writeFileSync } from "node:fs";
 import path from "node:path";
 
 // The app and spessasynth_core chunks load at startup, and the Worker carries its own core.
-// The app is the largest, a bit under 870 kB with the React Compiler's caches
-const CHUNK_SIZE_LIMIT_KB = 870;
+// The app is the largest, about 875 kB with the React Compiler's caches
+const CHUNK_SIZE_LIMIT_KB = 880;
 
 /**
  * The folders the app is built from. The dev server watches only these and the files in the

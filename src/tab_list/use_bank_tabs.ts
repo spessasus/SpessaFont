@@ -158,3 +158,5 @@ export function useBankTabs() {
         setSessionView
     };
 }
+
+export type BankTabs = ReturnType<typeof useBankTabs>;

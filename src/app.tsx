@@ -29,17 +29,14 @@ import { getFileName } from "./utils/file_path.ts";
 import { useFileDrop } from "./hooks/use_file_drop.ts";
 import { useSampleImport } from "./menu_list/use_sample_import.ts";
 import { ErrorBoundary } from "./error_boundary/error_boundary.tsx";
-import { PartErrorFallback } from "./error_boundary/part_error_fallback.tsx";
+import { renderPartError } from "./error_boundary/render_part_error.tsx";
 import { IS_MAC } from "./utils/environment_detection.ts";
 import { rememberFocus } from "./utils/focus_return.ts";
 import { ToolsMenuSlotContext } from "./menu_bar/tools_menu_slot.ts";
+import { useLayout } from "./layout/layout_context.ts";
+import { PhoneShell } from "./phone_shell/phone_shell.tsx";
 
 const SOUND_BANK_EXTENSIONS = ACCEPTED_SOUNDBANK_FORMATS.split(",");
-
-// A failing tab, keyboard or settings page keeps the other tabs and their unsaved edits
-function renderPartError(error: unknown, reset: () => void) {
-    return <PartErrorFallback error={error} onRetry={reset} />;
-}
 
 function isSoundBankFile(file: File) {
     const name = file.name.toLowerCase();
@@ -49,8 +46,10 @@ function isSoundBankFile(file: File) {
 export function App() {
     const { t } = useTranslation();
     const { audioEngine } = useAudioEngine();
+    const layout = useLayout();
     useUncaughtErrorToasts();
     useMIDIInput();
+    const bankTabs = useBankTabs();
     const {
         tabs,
         activeSession,
@@ -62,7 +61,7 @@ export function App() {
         setSessionView,
         goBack,
         goForward
-    } = useBankTabs();
+    } = bankTabs;
     const importSamples = useSampleImport();
     const [isKeyboardShown, setIsKeyboardShown] = useState(false);
     const [areSettingsShown, setAreSettingsShown] = useState(false);
@@ -153,6 +152,13 @@ export function App() {
         }
     };
 
+    const handleCloseFile = () => {
+        if (!activeSession) return;
+        // The tab that closes should be the one on screen
+        setAreSettingsShown(false);
+        requestClose(activeSession);
+    };
+
     const isEditorShown = activeSession !== undefined && !areSettingsShown;
 
     // Alt+Left and Right, and the mouse's side buttons, go back and forward between elements.
@@ -214,6 +220,20 @@ export function App() {
         closeSettings();
     });
 
+    if (layout === "phone") {
+        return (
+            <PhoneShell
+                bankTabs={bankTabs}
+                areSettingsShown={areSettingsShown}
+                onToggleSettings={toggleSettings}
+                onCloseSettings={closeSettings}
+                onOpenFile={() => void handleOpenFile()}
+                onNewFile={() => void openBankFile()}
+                onCloseFile={handleCloseFile}
+            />
+        );
+    }
+
     return (
         <div className={`spessafont_main`}>
             <Toaster toastOptions={{ className: "toasts" }} />
@@ -222,12 +242,7 @@ export function App() {
                 onToggleSettings={toggleSettings}
                 onOpenFile={() => void handleOpenFile()}
                 onNewFile={() => void openBankFile()}
-                onCloseFile={() => {
-                    if (!activeSession) return;
-                    // The tab that closes should be the one on screen
-                    setAreSettingsShown(false);
-                    requestClose(activeSession);
-                }}
+                onCloseFile={handleCloseFile}
                 session={activeSession}
                 onViewChange={setActiveView}
                 onToggleKeyboard={() => setIsKeyboardShown((shown) => !shown)}

@@ -13,6 +13,7 @@ import { PresetLocale } from "./preset.ts";
 import { ClipboardLocale } from "./clipboard.ts";
 import { ContextMenuLocale } from "./context_menu.ts";
 import { ToolsLocale } from "./tools.ts";
+import { PhoneLocale } from "./phone.ts";
 
 /**
  *
@@ -125,5 +126,6 @@ export const localePolish = {
     soundBankLocale: SoundBankLocale,
     clipboardLocale: ClipboardLocale,
     contextMenu: ContextMenuLocale,
-    toolsLocale: ToolsLocale
+    toolsLocale: ToolsLocale,
+    phoneLocale: PhoneLocale
 };
