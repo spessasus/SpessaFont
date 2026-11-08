@@ -59,4 +59,7 @@
     /* extras */
     --scrollbar-colors: #cdbc94 #f3ead9;
     --main-font: Georgia, "Noto Serif", "Times New Roman", serif;
+
+    /* sheets */
+    --sheet-scrim-color: rgb(0 0 0 / 30%);
 }

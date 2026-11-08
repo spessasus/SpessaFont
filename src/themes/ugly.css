@@ -59,4 +59,7 @@
     /* extras */
     --scrollbar-colors: #00ff00 #ff00ff;
     --main-font: "Comic Sans MS", "Comic Neue", cursive;
+
+    /* sheets */
+    --sheet-scrim-color: rgb(0 0 0 / 30%);
 }

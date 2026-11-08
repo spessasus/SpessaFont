@@ -55,4 +55,7 @@
     --piano-white-key: linear-gradient(90deg, #bbb, #fff);
     --piano-black-key: linear-gradient(140deg, #222, #000);
     --piano-disabled-key: linear-gradient(65deg, #333, #888);
+
+    /* sheets */
+    --sheet-scrim-color: rgb(0 0 0 / 30%);
 }

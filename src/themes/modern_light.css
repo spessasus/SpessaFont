@@ -70,4 +70,7 @@
 
     /* extras */
     --scrollbar-colors: oklch(82% 0.01 255) transparent;
+
+    /* sheets */
+    --sheet-scrim-color: rgb(0 0 0 / 30%);
 }

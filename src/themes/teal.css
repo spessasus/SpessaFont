@@ -58,4 +58,7 @@
 
     /* extras */
     --scrollbar-colors: #1f6f78 #02060c;
+
+    /* sheets */
+    --sheet-scrim-color: rgb(0 0 0 / 50%);
 }

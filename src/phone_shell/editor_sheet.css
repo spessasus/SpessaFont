@@ -1,0 +1,58 @@
+:root[data-layout="phone"] .editor_sheet {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    height: var(--phone-sheet-height);
+    min-height: 0;
+    background: var(--darker-color-start);
+    color: var(--font-color);
+    border-top: 1px solid var(--track-border-color);
+    border-radius: 1rem 1rem 0 0;
+}
+
+:root[data-layout="phone"] .editor_sheet[data-full="true"] {
+    height: 100%;
+}
+
+:root[data-layout="phone"] .editor_sheet_grab {
+    flex: none;
+    display: flex;
+    justify-content: center;
+    padding: 0.5rem 0 0.25rem;
+    touch-action: none;
+    cursor: grab;
+}
+
+:root[data-layout="phone"] .editor_sheet_grab_bar {
+    width: 2.5rem;
+    height: 0.25rem;
+    border-radius: 0.125rem;
+    background: var(--track-border-color);
+}
+
+:root[data-layout="phone"] .editor_sheet_header {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 0.5rem 0 1rem;
+}
+
+:root[data-layout="phone"] .editor_sheet_title {
+    flex: 1;
+    min-width: 0;
+}
+
+:root[data-layout="phone"] .editor_sheet_close {
+    flex: none;
+    min-width: var(--phone-touch, 2.75rem);
+    min-height: var(--phone-touch, 2.75rem);
+    font-size: 1.5rem;
+}
+
+:root[data-layout="phone"] .editor_sheet_body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}

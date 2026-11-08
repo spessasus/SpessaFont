@@ -59,4 +59,7 @@
     /* extras */
     --scrollbar-colors: #1a6b33 #000;
     --main-font: "JetBrains Mono", "Monospaced", monospace;
+
+    /* sheets */
+    --sheet-scrim-color: rgb(0 0 0 / 50%);
 }
