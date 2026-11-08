@@ -1,0 +1,85 @@
+:root[data-layout="phone"] .phone_app_bar {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: var(--flex-gap);
+    height: var(--phone-app-bar-height);
+    padding: 0 var(--flex-gap);
+    background: var(--menu-bar-color);
+}
+
+:root[data-layout="phone"] .phone_app_bar_button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--phone-touch);
+    height: var(--phone-touch);
+    padding: 0;
+    background: var(--menu-bar-color);
+    border: none;
+    color: var(--font-color);
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+:root[data-layout="phone"] .phone_app_bar_tools_slot {
+    display: contents;
+}
+
+:root[data-layout="phone"] .phone_app_bar_button svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+:root[data-layout="phone"] .phone_app_bar_button[aria-disabled="true"] {
+    opacity: 0.4;
+}
+
+:root[data-layout="phone"] .phone_app_bar_title {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    min-width: 0;
+    height: var(--phone-app-bar-height);
+    padding: 0;
+    background: var(--menu-bar-color);
+    border: none;
+    color: var(--font-color);
+    font: inherit;
+}
+
+:root[data-layout="phone"] button.phone_app_bar_title {
+    cursor: pointer;
+}
+
+:root[data-layout="phone"] .phone_app_bar_title_line {
+    overflow: hidden;
+    height: 2rem;
+    text-align: left;
+    line-height: 2rem;
+    font-size: 1.125rem;
+    font-weight: bold;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+:root[data-layout="phone"] .phone_app_bar_subtitle {
+    overflow: hidden;
+    height: 1.25rem;
+    text-align: left;
+    line-height: 1.25rem;
+    font-size: 0.8125rem;
+    opacity: 0.7;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+:root[data-layout="phone"] .phone_app_bar_hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+}

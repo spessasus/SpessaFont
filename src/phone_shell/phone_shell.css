@@ -10,37 +10,6 @@
     flex-direction: column;
 }
 
-:root[data-layout="phone"] .phone_app_bar {
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-    gap: var(--flex-gap);
-    height: var(--phone-app-bar-height);
-    padding: 0 var(--flex-gap);
-    background: var(--menu-bar-color);
-}
-
-:root[data-layout="phone"] .phone_app_bar_button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: var(--phone-touch);
-    height: var(--phone-touch);
-    padding: 0 var(--flex-gap);
-    background: var(--menu-bar-color);
-    border: none;
-    font-size: 1rem;
-    cursor: pointer;
-}
-
-:root[data-layout="phone"] .phone_app_bar_spacer {
-    flex: 1;
-}
-
-:root[data-layout="phone"] .phone_app_bar_tools_slot {
-    display: contents;
-}
-
 :root[data-layout="phone"] .phone_covered {
     display: flex;
     flex-direction: column;

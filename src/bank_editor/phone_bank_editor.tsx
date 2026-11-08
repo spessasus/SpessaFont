@@ -10,6 +10,7 @@ import { BankEditorWindow } from "./bank_editor_window.tsx";
 import { usePhoneShell } from "../phone_shell/phone_shell_context.ts";
 import { useBackHandler } from "../hooks/use_back_handler.ts";
 import { BACK_LEVELS } from "../phone_shell/back_stack.ts";
+import { getDrillTo } from "../phone_shell/drill_to.ts";
 
 interface PhoneBankEditorProps extends BankEditorProps {
     /**
@@ -26,14 +27,12 @@ export function PhoneBankEditor({
     tabList
 }: PhoneBankEditorProps) {
     const { state, dispatch } = usePhoneShell();
-    // An element opened from inside the editor is one more step for back to undo.
-    // Showing the same element again adds no step to the tab's trail, so it adds none here
-    const drillTo = (view: BankEditView) => {
-        onViewChange(view);
-        if (view !== selectedView) {
-            dispatch({ type: "editorChange", tabId: session.id });
-        }
-    };
+    const drillTo = getDrillTo(
+        session.id,
+        selectedView,
+        onViewChange,
+        dispatch
+    );
     const model = useBankEditorModel(session, selectedView, drillTo);
     const { view, context, infoPanel, setInfoPanel } = model;
     // A pick in the lists starts a new path, so back goes to the lists from there

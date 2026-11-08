@@ -19,6 +19,8 @@ import {
     phoneShellReducer
 } from "./phone_shell_state.ts";
 import { PhoneShellContext } from "./phone_shell_context.ts";
+import { PhoneAppBar } from "./phone_app_bar.tsx";
+import { getDrillTo } from "./drill_to.ts";
 import { PhoneSettingsLayer } from "./phone_settings_layer.tsx";
 import { useLeaveFlow } from "./use_leave_flow.ts";
 
@@ -133,36 +135,34 @@ export function PhoneShell({
                     toastOptions={{ className: "toasts" }}
                 />
                 <div className={"phone_upper"}>
-                    <header
-                        className={"phone_app_bar"}
-                        inert={areSettingsShown}
-                    >
-                        {activeSession && (
+                    <PhoneAppBar
+                        session={activeSession}
+                        view={activeView}
+                        onViewChange={
+                            activeSession
+                                ? getDrillTo(
+                                      activeSession.id,
+                                      activeView,
+                                      setActiveView,
+                                      dispatch
+                                  )
+                                : setActiveView
+                        }
+                        toolsSlotRef={setToolsMenuSlot}
+                        isCovered={areSettingsShown}
+                        // Task 15's overflow sheet takes this place, until then the button opens the settings
+                        overflow={
                             <button
                                 type={"button"}
                                 className={"phone_app_bar_button"}
-                                onClick={() =>
-                                    dispatch({ type: "openNavigator" })
-                                }
+                                aria-pressed={areSettingsShown}
+                                onClick={onToggleSettings}
+                                aria-label={t("settingsLocale.settings")}
                             >
-                                {t("phoneLocale.appBar.openLists")}
+                                <Gear />
                             </button>
-                        )}
-                        <div className={"phone_app_bar_spacer"} />
-                        <div
-                            ref={setToolsMenuSlot}
-                            className={"phone_app_bar_tools_slot"}
-                        />
-                        <button
-                            type={"button"}
-                            className={"phone_app_bar_button"}
-                            aria-pressed={areSettingsShown}
-                            onClick={onToggleSettings}
-                            aria-label={t("settingsLocale.settings")}
-                        >
-                            <Gear />
-                        </button>
-                    </header>
+                        }
+                    />
                     {/* Covered by the settings, nothing in here takes the focus or a click */}
                     <div className={"phone_covered"} inert={areSettingsShown}>
                         {activeSession ? (

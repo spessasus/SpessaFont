@@ -1,6 +1,9 @@
 export const PhoneLocale = {
     appBar: {
-        openLists: "Open lists"
+        openLists: "Open lists",
+        tools: "Tools",
+        more: "More",
+        unsaved: "unsaved changes"
     },
     back: {
         pressAgain: "Press back again to leave",
