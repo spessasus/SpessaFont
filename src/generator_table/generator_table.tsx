@@ -5,6 +5,12 @@ import {
     type GeneratorType,
     GeneratorTypes
 } from "spessasynth_core";
+import {
+    type CellSelection,
+    getCellSelection,
+    getTapModifiers,
+    shouldClearCellSelection
+} from "./cell_selection.ts";
 import type { GeneratorRowType } from "./generator_row_type.ts";
 import { TableHeader } from "./table_header.tsx";
 import { GeneratorRow } from "./generator_row.tsx";
@@ -51,54 +57,7 @@ import { useZoneSwipe } from "./use_zone_swipe.ts";
 import { useZoneCommands } from "./use_zone_commands.ts";
 import { ZoneListSheet } from "./zone_list_sheet/zone_list_sheet.tsx";
 
-/**
- * Cells selected with Ctrl or Shift, all in one generator row.
- */
-interface CellSelection {
-    generator: GeneratorType;
-    zoneIds: ReadonlySet<number>;
-    anchorId: number;
-}
-
-interface SelectionModifiers {
-    ctrlKey: boolean;
-    metaKey: boolean;
-    shiftKey: boolean;
-}
-
 const NO_CELLS = new Set<number>();
-
-/**
- * The selection after a click on a cell: Ctrl toggles the cell, Shift selects the cells from the
- * last clicked one, a plain click selects nothing. A click in another row starts over there.
- */
-function getCellSelection(
-    previous: CellSelection | null,
-    generator: GeneratorType,
-    columns: readonly ZoneColumn[],
-    zoneId: number,
-    { ctrlKey, metaKey, shiftKey }: SelectionModifiers
-) {
-    const isSameRow = previous?.generator === generator;
-    const ids = columns.map((c) => c.zone.id);
-    // The anchor's zone may be gone after an undo, then Shift starts over
-    if (shiftKey && isSameRow && ids.includes(previous.anchorId)) {
-        const from = ids.indexOf(previous.anchorId);
-        const to = ids.indexOf(zoneId);
-        const range = ids.slice(Math.min(from, to), Math.max(from, to) + 1);
-        return { ...previous, zoneIds: new Set(range) };
-    }
-    if (ctrlKey || metaKey || shiftKey) {
-        const zoneIds = new Set(isSameRow ? previous.zoneIds : []);
-        if (zoneIds.has(zoneId)) {
-            zoneIds.delete(zoneId);
-        } else {
-            zoneIds.add(zoneId);
-        }
-        return { generator, zoneIds, anchorId: zoneId };
-    }
-    return null;
-}
 
 interface GeneratorTableProps {
     /**
@@ -145,6 +104,8 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
     const [zoneIndex, setZoneIndex] = useState(0);
     const [isZoneSheetOpen, setIsZoneSheetOpen] = useState(false);
     const tableRef = useRef<HTMLTableElement | null>(null);
+    // The zone of the last phone tap, which a generator added right after it starts on
+    const lastTappedZoneIdRef = useRef<number | null>(null);
     const zoneCommands = useZoneCommands(element);
     const children: ZoneChildren = isInstrument
         ? { kind: "samples", views: sampleViews }
@@ -329,7 +290,19 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
 
     return (
         <>
-            <div className={"zone_table_wrapper"}>
+            <div
+                className={"zone_table_wrapper"}
+                // A tap outside the cells dismisses the phone selection
+                onClick={
+                    layout === "phone"
+                        ? (e) => {
+                              if (shouldClearCellSelection(e.target)) {
+                                  setCellSelection(null);
+                              }
+                          }
+                        : undefined
+                }
+            >
                 {layout === "phone" ? (
                     <GridViewBar
                         mode={phoneGrid.mode}
@@ -421,15 +394,23 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
                                         group={gridRow.group}
                                         hidden={gridRow.hidden}
                                         columnCount={columnCount}
-                                        onAdd={(generator) =>
+                                        onAdd={(generator) => {
+                                            const tappedId =
+                                                lastTappedZoneIdRef.current;
+                                            const zoneId =
+                                                tappedId !== null &&
+                                                getRowColumns(generator).some(
+                                                    (c) =>
+                                                        c.zone.id === tappedId
+                                                )
+                                                    ? tappedId
+                                                    : view.globalZone.id;
                                             setCellSelection({
                                                 generator,
-                                                zoneIds: new Set([
-                                                    view.globalZone.id
-                                                ]),
-                                                anchorId: view.globalZone.id
-                                            })
-                                        }
+                                                zoneIds: new Set([zoneId]),
+                                                anchorId: zoneId
+                                            });
+                                        }}
                                     />
                                 );
                             }
@@ -470,17 +451,22 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
                                               ]
                                             : undefined
                                     }
-                                    onSelectCell={(zoneId, e) =>
+                                    onSelectCell={(zoneId, e) => {
+                                        if (layout === "phone") {
+                                            lastTappedZoneIdRef.current =
+                                                zoneId;
+                                            setIsZoneSheetOpen(false);
+                                        }
                                         setCellSelection((previous) =>
                                             getCellSelection(
                                                 previous,
                                                 row.generator,
                                                 rowColumns,
                                                 zoneId,
-                                                e
+                                                getTapModifiers(layout, e)
                                             )
-                                        )
-                                    }
+                                        );
+                                    }}
                                 />
                             );
                         })}

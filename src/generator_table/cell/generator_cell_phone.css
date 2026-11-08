@@ -3,8 +3,7 @@
     padding: 0;
 }
 
-:root[data-layout="phone"] .generator_cell input,
-:root[data-layout="phone"] .generator_cell select {
+:root[data-layout="phone"] .generator_cell input {
     min-height: var(--phone-cell-height);
     padding: 0 0.5rem;
     box-sizing: border-box;
@@ -21,25 +20,17 @@
     color: var(--muted-font-color);
 }
 
-:root[data-layout="phone"] .generator_cell select {
-    text-align: end;
-    text-overflow: ellipsis;
-}
-
-:root[data-layout="phone"] .generator_cell.modulated input,
-:root[data-layout="phone"] .generator_cell.modulated select {
+:root[data-layout="phone"] .generator_cell.modulated input {
     outline: 1px solid var(--focus-color);
     outline-offset: -1px;
 }
 
-:root[data-layout="phone"] .generator_cell input:focus,
-:root[data-layout="phone"] .generator_cell select:focus {
+:root[data-layout="phone"] .generator_cell input:focus {
     outline: 2px solid var(--light-primary-color);
     outline-offset: -2px;
 }
 
-:root[data-layout="phone"] .generator_cell.selected input,
-:root[data-layout="phone"] .generator_cell.selected select {
+:root[data-layout="phone"] .generator_cell.selected input {
     background: var(--cell-selection-color);
 }
 

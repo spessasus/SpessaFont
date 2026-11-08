@@ -206,7 +206,7 @@ export function useCellCommands(
      * shortcuts act on the cell like the menu does.
      */
     const handleSelectKeyDown = (
-        e: React.KeyboardEvent<HTMLSelectElement>,
+        e: React.KeyboardEvent<HTMLElement>,
         column: ZoneColumn
     ) => {
         if (e.key === "Delete" || e.key === "Backspace") {

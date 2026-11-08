@@ -3,10 +3,12 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { GeneratorType } from "spessasynth_core";
 import { useWheelStep } from "../../hooks/use_wheel_step.ts";
+import { useLayout } from "../../layout/layout_context.ts";
 import { logInfo } from "../../utils/core_utils.ts";
 import type { getGeneratorOptions } from "../generator_options.ts";
 import { getViewZones, type ZoneColumn } from "../zone_columns.ts";
 import { readViewCell } from "./cell_values.ts";
+import "./select_cell_phone.css";
 
 interface SelectCellProps {
     column: ZoneColumn;
@@ -21,7 +23,7 @@ interface SelectCellProps {
     /**
      * Delete and the clipboard shortcuts, which act on the cell.
      */
-    onCellKeyDown: (e: React.KeyboardEvent<HTMLSelectElement>) => void;
+    onCellKeyDown: (e: React.KeyboardEvent<HTMLElement>) => void;
     onClick: (e: React.MouseEvent) => void;
     onContextMenu: (e: React.MouseEvent) => void;
 }
@@ -46,6 +48,7 @@ export function SelectCell({
     onContextMenu
 }: SelectCellProps) {
     const { t } = useTranslation();
+    const layout = useLayout();
     const [isOpen, setIsOpen] = useState(false);
     const wheelRef = useWheelStep<HTMLSelectElement>(onNudge);
     const zones = getViewZones(column);
@@ -104,38 +107,52 @@ export function SelectCell({
             aria-selected={isSelected}
             onContextMenu={onContextMenu}
         >
-            <select
-                ref={wheelRef}
-                data-grid-key={gridKey}
-                tabIndex={isActive ? 0 : -1}
-                aria-label={label}
-                title={isMixed ? mixedText : undefined}
-                value={isMixed ? "mixed" : (value ?? "null")}
-                onMouseDown={() => setIsOpen(true)}
-                onClick={onClick}
-                onBlur={() => setIsOpen(false)}
-                onKeyDown={handleKeyDown}
-                onChange={(e) => {
-                    setIsOpen(false);
-                    onPick(
-                        e.target.value === "null"
-                            ? null
-                            : Number(e.target.value)
-                    );
-                }}
-            >
-                {isMixed ? (
-                    <option value={"mixed"} disabled>
-                        {mixedText}
-                    </option>
-                ) : null}
-                <option value={"null"}>{"-"}</option>
-                {options.map((option) => (
-                    <option value={option.value} key={option.value}>
-                        {t(option.label)}
-                    </option>
-                ))}
-            </select>
+            {layout === "phone" ? (
+                <button
+                    type={"button"}
+                    className={"select_cell_button"}
+                    data-grid-key={gridKey}
+                    tabIndex={isActive ? 0 : -1}
+                    aria-label={label}
+                    onClick={onClick}
+                    onKeyDown={onCellKeyDown}
+                >
+                    {mixedText}
+                </button>
+            ) : (
+                <select
+                    ref={wheelRef}
+                    data-grid-key={gridKey}
+                    tabIndex={isActive ? 0 : -1}
+                    aria-label={label}
+                    title={isMixed ? mixedText : undefined}
+                    value={isMixed ? "mixed" : (value ?? "null")}
+                    onMouseDown={() => setIsOpen(true)}
+                    onClick={onClick}
+                    onBlur={() => setIsOpen(false)}
+                    onKeyDown={handleKeyDown}
+                    onChange={(e) => {
+                        setIsOpen(false);
+                        onPick(
+                            e.target.value === "null"
+                                ? null
+                                : Number(e.target.value)
+                        );
+                    }}
+                >
+                    {isMixed ? (
+                        <option value={"mixed"} disabled>
+                            {mixedText}
+                        </option>
+                    ) : null}
+                    <option value={"null"}>{"-"}</option>
+                    {options.map((option) => (
+                        <option value={option.value} key={option.value}>
+                            {t(option.label)}
+                        </option>
+                    ))}
+                </select>
+            )}
         </td>
     );
 }
