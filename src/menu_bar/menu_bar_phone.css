@@ -1,0 +1,17 @@
+:root[data-layout="phone"] .menu_sheet_button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--phone-touch);
+    height: var(--phone-touch);
+    padding: 0;
+    background: var(--menu-bar-color);
+    border: none;
+    color: var(--font-color);
+    cursor: pointer;
+}
+
+:root[data-layout="phone"] .menu_sheet_button svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}

@@ -7,6 +7,8 @@ import {
     useRef,
     useState
 } from "react";
+import { useLayout } from "../layout/layout_context.ts";
+import { MenuSheetButton } from "./menu_sheet_button.tsx";
 
 interface MenuBarDropdownProps {
     main: string;
@@ -14,11 +16,23 @@ interface MenuBarDropdownProps {
 }
 
 /**
- * A menu bar menu. It shows on hover, and opens on a click, Enter or the down arrow.
+ * A menu bar menu. On a phone it is a button that opens its items as a sheet.
+ */
+export function MenuBarDropdown({ main, children }: MenuBarDropdownProps) {
+    const layout = useLayout();
+    return layout === "phone" ? (
+        <MenuSheetButton main={main}>{children}</MenuSheetButton>
+    ) : (
+        <DesktopMenuBarDropdown main={main}>{children}</DesktopMenuBarDropdown>
+    );
+}
+
+/**
+ * The desktop menu bar menu. It shows on hover, and opens on a click, Enter or the down arrow.
  * The arrow keys move between its items. Escape, Tab, a click outside and running an item
  * close it.
  */
-export function MenuBarDropdown({ main, children }: MenuBarDropdownProps) {
+function DesktopMenuBarDropdown({ main, children }: MenuBarDropdownProps) {
     // Hovering shows a closed menu too, unless it was just used ("used" hides it until the
     // pointer leaves, so a clicked item does not leave it open)
     const [state, setState] = useState<"open" | "closed" | "used">("closed");

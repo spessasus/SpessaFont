@@ -1,4 +1,9 @@
-import { createContext, type MouseEvent, useContext } from "react";
+import {
+    createContext,
+    type MouseEvent,
+    type ReactNode,
+    useContext
+} from "react";
 import type { MenuIconName } from "./menu_icon_name.ts";
 
 export interface ContextMenuItem {
@@ -18,6 +23,10 @@ export interface ContextMenuItem {
      */
     disabledReason?: string;
     icon?: MenuIconName;
+    /**
+     * A ready-made icon, shown when there is no named one.
+     */
+    iconNode?: ReactNode;
     isDestructive?: boolean;
 }
 

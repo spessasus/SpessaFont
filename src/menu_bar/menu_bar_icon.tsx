@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { ActionSheetItem } from "../context_menu/action_sheet_item.tsx";
+import { useLayout } from "../layout/layout_context.ts";
 
 interface MenuBarIconProps {
     text: string;
@@ -20,6 +22,21 @@ export function MenuBarIcon({
     isDisabled = false,
     children
 }: MenuBarIconProps) {
+    const layout = useLayout();
+    if (layout === "phone") {
+        return (
+            <ActionSheetItem
+                item={{
+                    label: text,
+                    description: title,
+                    shortcut,
+                    isDisabled,
+                    iconNode: children,
+                    onSelect: () => onClick?.()
+                }}
+            />
+        );
+    }
     return (
         <button
             type={"button"}

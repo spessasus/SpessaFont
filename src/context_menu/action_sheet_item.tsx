@@ -3,7 +3,7 @@ import { MenuIcon } from "./menu_icon.tsx";
 
 interface ActionSheetItemProps {
     item: ContextMenuItem;
-    onClose: () => void;
+    onClose?: () => void;
 }
 
 export function ActionSheetItem({ item, onClose }: ActionSheetItemProps) {
@@ -18,12 +18,12 @@ export function ActionSheetItem({ item, onClose }: ActionSheetItemProps) {
             data-destructive={item.isDestructive ? "" : undefined}
             disabled={item.isDisabled}
             onClick={() => {
-                onClose();
+                onClose?.();
                 item.onSelect();
             }}
         >
             <span className="action_sheet_icon" aria-hidden="true">
-                {item.icon ? <MenuIcon name={item.icon} /> : null}
+                {item.icon ? <MenuIcon name={item.icon} /> : item.iconNode}
             </span>
             <span className="action_sheet_text">
                 <span className="action_sheet_label">{item.label}</span>

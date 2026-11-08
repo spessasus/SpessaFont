@@ -73,3 +73,10 @@
     margin: 0;
     border: none;
 }
+
+/* The global reset centers every element's text, so the text spans say start themselves */
+:root[data-layout="phone"] .action_sheet .action_sheet_text,
+:root[data-layout="phone"] .action_sheet .action_sheet_label,
+:root[data-layout="phone"] .action_sheet .action_sheet_second {
+    text-align: start;
+}
