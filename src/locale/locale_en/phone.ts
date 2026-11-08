@@ -72,7 +72,10 @@ export const PhoneLocale = {
         valuesOnly: "Values only",
         collapseAll: "Collapse all",
         expandAll: "Expand all",
-        viewMode: "Grid view"
+        viewMode: "Grid view",
+        zonePosition: "{{index}} of {{count}}",
+        previousZone: "Previous zone",
+        nextZone: "Next zone"
     },
     groups: {
         rangeTuning: "Range and tuning",

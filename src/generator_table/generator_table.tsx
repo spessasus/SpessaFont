@@ -46,6 +46,8 @@ import {
 import { GeneratorGroupRow } from "./generator_group_row.tsx";
 import { AddGeneratorRow } from "./add_generator_row.tsx";
 import { GridViewBar } from "./grid_view_bar.tsx";
+import { clampZoneIndex, getOneZoneColumns } from "./one_zone_columns.ts";
+import { useZoneSwipe } from "./use_zone_swipe.ts";
 
 /**
  * Cells selected with Ctrl or Shift, all in one generator row.
@@ -136,13 +138,26 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
     const focusOnMountRef = useRef<string | null>(null);
     const layout = useLayout();
     const phoneGrid = usePhoneGridSettings();
+    // The shown column of the phone's One zone mode. The table remounts per element, so a new
+    // element starts at its first zone
+    const [zoneIndex, setZoneIndex] = useState(0);
+    const children: ZoneChildren = isInstrument
+        ? { kind: "samples", views: sampleViews }
+        : { kind: "instruments", views: instrumentViews };
+    const allZoneColumns = view ? getZoneColumns(view.zones, children) : [];
+    const zoneCount = allZoneColumns.length;
+    const stepZone = (direction: 1 | -1) =>
+        setZoneIndex((previous) =>
+            clampZoneIndex(
+                clampZoneIndex(previous, zoneCount) + direction,
+                zoneCount
+            )
+        );
+    const swipeHandlers = useZoneSwipe(stepZone);
     // The pane closes when its element is removed, this only covers the render before
     if (!view) {
         return null;
     }
-    const children: ZoneChildren = isInstrument
-        ? { kind: "samples", views: sampleViews }
-        : { kind: "instruments", views: instrumentViews };
 
     const globalColumn: ZoneColumn = {
         zone: view.globalZone,
@@ -153,23 +168,38 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
         sample: undefined,
         linkedSample: undefined
     };
-    const zoneColumns = getZoneColumns(view.zones, children);
-    const columns = [globalColumn, ...zoneColumns];
+    const allColumns = [globalColumn, ...allZoneColumns];
     // Pan differs between the left and right sample, so stereo pairs are edited separately
-    const splitColumns = [
+    const allSplitColumns = [
         globalColumn,
         ...getZoneColumns(view.zones, children, true)
     ];
+    const allModulatorColumns = getModulatorColumns(
+        allColumns,
+        allSplitColumns
+    );
+    const isOneZone = layout === "phone" && phoneGrid.mode === "oneZone";
+    const oneZone = isOneZone
+        ? getOneZoneColumns(
+              allZoneColumns,
+              allSplitColumns,
+              allModulatorColumns,
+              zoneIndex
+          )
+        : undefined;
+    const zoneColumns = oneZone?.zoneColumns ?? allZoneColumns;
+    const columns = [globalColumn, ...zoneColumns];
+    const splitColumns = oneZone?.splitColumns ?? allSplitColumns;
+    const modulatorColumns = oneZone?.modulatorColumns ?? allModulatorColumns;
     const getRowColumns = (generator: GeneratorType) =>
         generator === GeneratorTypes.pan ? splitColumns : columns;
-    const modulatorColumns = getModulatorColumns(columns, splitColumns);
 
     // The edited zone may be gone after an undo, which closes the editor. A zone of a split
     // pair stays open on its own when an edit gives it the same modulators as its partner.
     // Forgetting the gone zone keeps a redo from opening the editor again
     const editedColumn =
-        modulatorColumns.find((c) => c.zone.id === editedZoneId) ??
-        splitColumns.find((c) => c.zone.id === editedZoneId);
+        allModulatorColumns.find((c) => c.zone.id === editedZoneId) ??
+        allSplitColumns.find((c) => c.zone.id === editedZoneId);
     if (editedZoneId !== null && !editedColumn) {
         setEditedZoneId(null);
     }
@@ -193,8 +223,14 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
     const gridRows: GridRow[] =
         layout === "phone"
             ? getGridRows(rows, {
+                  // Every zone counts, so One zone mode keeps its rows while stepping
                   hasValue: (r) =>
-                      hasStoredValue(getRowColumns(r.generator), r.generator),
+                      hasStoredValue(
+                          r.generator === GeneratorTypes.pan
+                              ? allSplitColumns
+                              : allColumns,
+                          r.generator
+                      ),
                   isValuesOnly: phoneGrid.isValuesOnly,
                   collapsed: phoneGrid.collapsed,
                   keptGenerator: cellSelection?.generator
@@ -299,7 +335,7 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
                     focusOnMountRef.current = null;
                     findGridItem(table, key)?.focus();
                 }}
-                className={"zone_table"}
+                className={"zone_table" + (isOneZone ? " one_zone" : "")}
                 role={"grid"}
                 aria-multiselectable={true}
                 onKeyDown={(e) => handleTableKeyDown(e, handleMove)}
@@ -318,6 +354,15 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
                         globalZone={view.globalZone}
                         activeKey={isHeaderKey ? tabKey : undefined}
                         onEditModulators={setEditedZoneId}
+                        oneZone={
+                            oneZone
+                                ? {
+                                      index: oneZone.index,
+                                      count: zoneCount,
+                                      onStep: stepZone
+                                  }
+                                : undefined
+                        }
                     />
                     <ModulatorRow
                         columns={modulatorColumns}
@@ -329,7 +374,7 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
                         onEditModulators={setEditedZoneId}
                     />
                 </thead>
-                <tbody>
+                <tbody {...(isOneZone ? swipeHandlers : {})}>
                     {gridRows.map((gridRow) => {
                         if (gridRow.type === "group") {
                             return (

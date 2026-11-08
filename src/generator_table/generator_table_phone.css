@@ -168,3 +168,74 @@
     font-size: var(--phone-text-button);
     white-space: nowrap;
 }
+
+/* One zone mode: Global and one zone column that fills the rest of the width */
+:root[data-layout="phone"] .zone_table.one_zone {
+    width: 100%;
+}
+
+/* Vertical scrolling stays native, horizontal moves are the zone swipe. On the cells, as
+   touch-action does not apply to row groups */
+:root[data-layout="phone"] .zone_table.one_zone tbody td,
+:root[data-layout="phone"] .zone_table.one_zone tbody th {
+    touch-action: pan-y;
+}
+
+:root[data-layout="phone"]
+    .zone_table.one_zone
+    thead
+    tr:first-child
+    th:nth-child(3) {
+    padding: 0;
+    vertical-align: middle;
+}
+
+:root[data-layout="phone"] .zone_stepper {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+:root[data-layout="phone"] .zone_stepper_step {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--phone-touch);
+    min-height: var(--phone-touch);
+}
+
+:root[data-layout="phone"] .zone_stepper_step svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+:root[data-layout="phone"] .zone_stepper_step[aria-disabled="true"] {
+    opacity: 0.4;
+}
+
+:root[data-layout="phone"] .zone_table.one_zone .zone_stepper_name {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: var(--phone-touch);
+    text-align: center;
+}
+
+:root[data-layout="phone"] .zone_table.one_zone .zone_stepper_name span {
+    max-width: 100%;
+    text-align: center;
+}
+
+:root[data-layout="phone"]
+    .zone_table.one_zone
+    .zone_stepper_name
+    .zone_header_range {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

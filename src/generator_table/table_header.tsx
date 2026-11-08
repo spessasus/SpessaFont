@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import "./header_cell.css";
 import "./header_cell_phone.css";
 import { ZoneHeaderLabel } from "./zone_header_label.tsx";
+import { ZoneStepper } from "./zone_stepper.tsx";
 import { useLayout } from "../layout/layout_context.ts";
 import type { ZoneView } from "../core_backend/entity_views.ts";
 import { useContextMenu } from "../context_menu/context_menu_context.ts";
@@ -37,6 +38,14 @@ interface TableHeaderProps {
      * Opens the modulator editor of a zone, from the phone zone header sheet.
      */
     onEditModulators: (zoneId: number) => void;
+    /**
+     * Set in the phone's One zone mode, where `columns` holds the shown zone only.
+     */
+    oneZone?: {
+        index: number;
+        count: number;
+        onStep: (direction: 1 | -1) => void;
+    };
 }
 
 export function TableHeader({
@@ -45,7 +54,8 @@ export function TableHeader({
     columns,
     globalZone,
     activeKey,
-    onEditModulators
+    onEditModulators,
+    oneZone
 }: TableHeaderProps) {
     const { t } = useTranslation();
     const layout = useLayout();
@@ -108,6 +118,10 @@ export function TableHeader({
             {columns.map((column, index) => {
                 const { zone, name, isStereo } = column;
                 const zoneLabel = t("soundBankLocale.deleteZone", { name });
+                const keyRange =
+                    element instanceof BasicInstrument
+                        ? getRangeText(column)
+                        : undefined;
                 return (
                     <th
                         scope={"col"}
@@ -125,39 +139,47 @@ export function TableHeader({
                                       )
                         }
                     >
-                        <button
-                            type={"button"}
-                            className={"plain_button header_cell_name"}
-                            data-grid-key={getZoneNameKey(zone.id)}
-                            tabIndex={getTabIndex(getZoneNameKey(zone.id))}
-                            title={
-                                isStereo && layout !== "phone"
-                                    ? t(
-                                          "soundBankLocale.thisIsAStereoSamplePair"
-                                      )
-                                    : undefined
-                            }
-                            onClick={
-                                layout === "phone"
-                                    ? (e) => openZoneSheet(e, column)
-                                    : () => commands.open(column)
-                            }
-                        >
-                            {layout === "phone" ? (
-                                <ZoneHeaderLabel
-                                    name={name}
-                                    keyRange={
-                                        element instanceof BasicInstrument
-                                            ? getRangeText(column)
-                                            : undefined
-                                    }
-                                    isStereo={isStereo}
-                                    colorIndex={index}
-                                />
-                            ) : (
-                                name
-                            )}
-                        </button>
+                        {oneZone ? (
+                            <ZoneStepper
+                                column={column}
+                                keyRange={keyRange}
+                                index={oneZone.index}
+                                count={oneZone.count}
+                                tabIndex={getTabIndex(getZoneNameKey(zone.id))}
+                                onStep={oneZone.onStep}
+                                onOpen={(e) => openZoneSheet(e, column)}
+                            />
+                        ) : (
+                            <button
+                                type={"button"}
+                                className={"plain_button header_cell_name"}
+                                data-grid-key={getZoneNameKey(zone.id)}
+                                tabIndex={getTabIndex(getZoneNameKey(zone.id))}
+                                title={
+                                    isStereo && layout !== "phone"
+                                        ? t(
+                                              "soundBankLocale.thisIsAStereoSamplePair"
+                                          )
+                                        : undefined
+                                }
+                                onClick={
+                                    layout === "phone"
+                                        ? (e) => openZoneSheet(e, column)
+                                        : () => commands.open(column)
+                                }
+                            >
+                                {layout === "phone" ? (
+                                    <ZoneHeaderLabel
+                                        name={name}
+                                        keyRange={keyRange}
+                                        isStereo={isStereo}
+                                        colorIndex={index}
+                                    />
+                                ) : (
+                                    name
+                                )}
+                            </button>
+                        )}
                         <button
                             type={"button"}
                             className={"plain_button delete_zone"}

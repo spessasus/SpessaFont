@@ -82,7 +82,10 @@ export const PhoneLocale = {
         valuesOnly: "Tylko wartości",
         collapseAll: "Zwiń wszystko",
         expandAll: "Rozwiń wszystko",
-        viewMode: "Widok siatki"
+        viewMode: "Widok siatki",
+        zonePosition: "{{index}} z {{count}}",
+        previousZone: "Poprzednia strefa",
+        nextZone: "Następna strefa"
     },
     groups: {
         rangeTuning: "Zakres i strojenie",
