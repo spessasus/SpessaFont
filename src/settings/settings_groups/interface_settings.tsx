@@ -8,6 +8,10 @@ import {
 } from "../../themes/theme_list.ts";
 import { useTranslation } from "react-i18next";
 import { resolveLocale } from "../save_load/get_user_locale.ts";
+import {
+    isLayoutSetting,
+    LAYOUT_SETTINGS
+} from "../../layout/layout_setting.ts";
 import { UNSET_LANGUAGE } from "../save_load/settings_typedef.ts";
 
 const THEME_ENTRIES = Object.entries(THEME_LIST);
@@ -63,6 +67,28 @@ export function InterfaceSettings({ settings, onChange }: GroupSettingsProps) {
                             ))}
                         </optgroup>
                     ))}
+                </select>
+            </Setting>
+
+            <Setting label={t("settingsLocale.interface.layout")}>
+                <select
+                    onChange={(e) => {
+                        if (isLayoutSetting(e.target.value)) {
+                            onChange({ layout: e.target.value });
+                        }
+                    }}
+                    className={"pretty_input monospaced"}
+                    value={settings.layout}
+                >
+                    <option value={LAYOUT_SETTINGS.auto}>
+                        {t("settingsLocale.interface.layoutAuto")}
+                    </option>
+                    <option value={LAYOUT_SETTINGS.phone}>
+                        {t("settingsLocale.interface.layoutPhone")}
+                    </option>
+                    <option value={LAYOUT_SETTINGS.desktop}>
+                        {t("settingsLocale.interface.layoutDesktop")}
+                    </option>
                 </select>
             </Setting>
         </div>

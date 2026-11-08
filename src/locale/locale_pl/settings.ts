@@ -7,7 +7,11 @@ export const SettingsLocale = {
         browserLanguage: "Język przeglądarki ({{name}})",
         theme: "Motyw",
         dark: "Ciemny",
-        light: "Jasny"
+        light: "Jasny",
+        layout: "Układ",
+        layoutAuto: "Automatyczny",
+        layoutPhone: "Telefon",
+        layoutDesktop: "Komputer"
     },
     audioEngine: {
         title: "Ustawienia silnika audio",

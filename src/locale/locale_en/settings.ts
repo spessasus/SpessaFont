@@ -7,7 +7,11 @@ export const SettingsLocale = {
         browserLanguage: "Browser language ({{name}})",
         theme: "Theme",
         dark: "Dark",
-        light: "Light"
+        light: "Light",
+        layout: "Layout",
+        layoutAuto: "Automatic",
+        layoutPhone: "Phone",
+        layoutDesktop: "Desktop"
     },
     audioEngine: {
         title: "Audio Engine Settings",
