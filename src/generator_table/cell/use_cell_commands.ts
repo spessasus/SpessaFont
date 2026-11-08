@@ -170,10 +170,22 @@ export function useCellCommands(
         nudge: (direction, steps) => nudge(column, direction, steps)
     });
 
+    /**
+     * Copies the cells to the cell clipboard and the system one.
+     */
+    const copyCells = (column: ZoneColumn) =>
+        void writeSystemText(copy(column));
+
+    /**
+     * Pastes the system clipboard's text, or the copied cells, into the cells.
+     */
+    const pasteCells = (column: ZoneColumn) =>
+        void readSystemText().then((text) => paste(column, text));
+
     const getMenuEntries = (column: ZoneColumn): ContextMenuEntry[] => [
         {
             label: t("contextMenu.copy"),
-            onSelect: () => void writeSystemText(copy(column))
+            onSelect: () => copyCells(column)
         },
         {
             label: t("contextMenu.cut"),
@@ -181,8 +193,7 @@ export function useCellCommands(
         },
         {
             label: t("contextMenu.paste"),
-            onSelect: () =>
-                void readSystemText().then((text) => paste(column, text))
+            onSelect: () => pasteCells(column)
         },
         {
             label: t("toolsLocale.cells.clear"),
@@ -209,7 +220,7 @@ export function useCellCommands(
         switch (e.key.toLowerCase()) {
             case "c": {
                 e.preventDefault();
-                void writeSystemText(copy(column));
+                copyCells(column);
                 break;
             }
             case "x": {
@@ -219,11 +230,18 @@ export function useCellCommands(
             }
             case "v": {
                 e.preventDefault();
-                void readSystemText().then((text) => paste(column, text));
+                pasteCells(column);
                 break;
             }
         }
     };
 
-    return { getInputCommands, getMenuEntries, handleSelectKeyDown, pick };
+    return {
+        getInputCommands,
+        getMenuEntries,
+        handleSelectKeyDown,
+        pick,
+        copyCells,
+        pasteCells
+    };
 }

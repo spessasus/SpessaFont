@@ -82,7 +82,9 @@ export function GeneratorRow({
                 className={"generator_cell_header"}
                 scope={"row"}
                 onContextMenu={
-                    headerMenu ? (e) => openMenu(e, headerMenu) : undefined
+                    headerMenu
+                        ? (e) => openMenu(e, headerMenu, { title: name })
+                        : undefined
                 }
             >
                 <div>
@@ -108,7 +110,9 @@ export function GeneratorRow({
                 const onSelect = (e: React.MouseEvent) =>
                     onSelectCell(column.zone.id, e);
                 const onContextMenu = (e: React.MouseEvent) =>
-                    openMenu(e, commands.getMenuEntries(column));
+                    openMenu(e, commands.getMenuEntries(column), {
+                        title: label
+                    });
                 if (options) {
                     return (
                         <SelectCell
