@@ -10,17 +10,9 @@ import {
     SaveFileIcon
 } from "../utils/icons/file_icons.tsx";
 import type { SaveFormat } from "../core_backend/persistence.ts";
-import { showToastDialog } from "../toasts/show_toast_dialog.tsx";
-import { logError } from "../utils/core_utils.ts";
 import { shortcutText } from "../utils/shortcut_text.ts";
-
-async function enterFullscreen() {
-    try {
-        await document.body.requestFullscreen();
-    } catch (error) {
-        logError("Failed to enter fullscreen.", error);
-    }
-}
+import { enterFullscreen } from "./enter_fullscreen.ts";
+import { showAbout } from "./show_about.tsx";
 
 interface FileMenuProps {
     /**
@@ -41,22 +33,6 @@ export function FileMenu({
     onSave
 }: FileMenuProps) {
     const { t } = useTranslation();
-
-    const handleAbout = () => {
-        showToastDialog({
-            id: "about",
-            content: (
-                <>
-                    <span>
-                        <strong>{t("titleMessage")}</strong>
-                    </span>
-                    <span>{t("welcome.copyrightTwo")}</span>
-                    <span>{"v" + __APP_VERSION__}</span>
-                </>
-            ),
-            buttons: [{ label: t("menuBarLocale.file.close") }]
-        });
-    };
 
     return (
         <MenuBarDropdown main={t("menuBarLocale.file.file")}>
@@ -117,7 +93,7 @@ export function FileMenu({
                 <FullscreenIcon />
             </MenuBarIcon>
             <MenuBarIcon
-                onClick={handleAbout}
+                onClick={() => showAbout(t)}
                 text={t("menuBarLocale.file.about")}
             >
                 <InfoIcon />

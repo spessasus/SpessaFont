@@ -4,6 +4,7 @@ import "./phone_app_bar.css";
 import type { BankSession } from "../core_backend/bank_session.ts";
 import type { BankEditView } from "../core_backend/bank_view.ts";
 import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
+import { useBankDisplayName } from "../hooks/use_bank_display_name.ts";
 import { useHistoryState } from "../hooks/use_history_state.ts";
 import { HISTORY_LABEL_KEYS } from "../menu_bar/history_label_keys.ts";
 import { useBankCommands } from "../menu_bar/use_bank_commands.ts";
@@ -50,7 +51,7 @@ function TitleButton({ session, view }: SessionProps & { view: BankEditView }) {
                   s.views.samples.get(viewId)
               )?.name
     );
-    const bankName = useBankSnapshot(session.store, (s) => s.info.name);
+    const bankName = useBankDisplayName(session.store);
     const { isDirty } = useHistoryState(session.store);
 
     return (
@@ -63,7 +64,7 @@ function TitleButton({ session, view }: SessionProps & { view: BankEditView }) {
                 {title ?? t("presetList.overview")}
             </span>
             <span className={"phone_app_bar_subtitle"}>
-                {bankName || t("bankInfo.unnamed")}
+                {bankName}
                 {isDirty ? (
                     <>
                         {" "}

@@ -5,6 +5,19 @@ export const PhoneLocale = {
         more: "More",
         unsaved: "unsaved changes"
     },
+    overflow: {
+        save: "Save",
+        saveAs: "Save as",
+        new: "New",
+        open: "Open",
+        closeBank: "Close bank",
+        edit: "Edit",
+        forward: "Forward",
+        playMIDI: "Play MIDI file…",
+        settings: "Settings",
+        fullscreen: "Fullscreen",
+        about: "About"
+    },
     back: {
         pressAgain: "Press back again to leave",
         unsavedBanks_one: "{{count}} bank has unsaved changes",

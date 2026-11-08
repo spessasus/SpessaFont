@@ -10,7 +10,6 @@ import { PhoneBankEditor } from "../bank_editor/phone_bank_editor.tsx";
 import { ErrorBoundary } from "../error_boundary/error_boundary.tsx";
 import { renderPartError } from "../error_boundary/render_part_error.tsx";
 import { ToolsMenuSlotContext } from "../menu_bar/tools_menu_slot.ts";
-import { Gear } from "../utils/icons/app_icons.tsx";
 import { useBackHandler } from "../hooks/use_back_handler.ts";
 import { BACK_LEVELS, hasBackBehindNavigator } from "./back_stack.ts";
 import {
@@ -20,6 +19,7 @@ import {
 } from "./phone_shell_state.ts";
 import { PhoneShellContext } from "./phone_shell_context.ts";
 import { PhoneAppBar } from "./phone_app_bar.tsx";
+import { OverflowSheet } from "./overflow_sheet.tsx";
 import { getDrillTo } from "./drill_to.ts";
 import { PhoneSettingsLayer } from "./phone_settings_layer.tsx";
 import { useLeaveFlow } from "./use_leave_flow.ts";
@@ -47,7 +47,8 @@ export function PhoneShell({
     onToggleSettings,
     onCloseSettings,
     onOpenFile,
-    onNewFile
+    onNewFile,
+    onCloseFile
 }: PhoneShellProps) {
     const { t } = useTranslation();
     const {
@@ -150,17 +151,16 @@ export function PhoneShell({
                         }
                         toolsSlotRef={setToolsMenuSlot}
                         isCovered={areSettingsShown}
-                        // Task 15's overflow sheet takes this place, until then the button opens the settings
                         overflow={
-                            <button
-                                type={"button"}
-                                className={"phone_app_bar_button"}
-                                aria-pressed={areSettingsShown}
-                                onClick={onToggleSettings}
-                                aria-label={t("settingsLocale.settings")}
-                            >
-                                <Gear />
-                            </button>
+                            <OverflowSheet
+                                session={activeSession}
+                                bankTabs={bankTabs}
+                                onOpenFile={onOpenFile}
+                                onNewFile={onNewFile}
+                                onCloseFile={onCloseFile}
+                                onToggleSettings={onToggleSettings}
+                                onViewChange={setActiveView}
+                            />
                         }
                     />
                     {/* Covered by the settings, nothing in here takes the focus or a click */}
