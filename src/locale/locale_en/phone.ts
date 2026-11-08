@@ -85,5 +85,11 @@ export const PhoneLocale = {
         vibratoLFO: "Vibrato LFO",
         effects: "Effects and voice",
         sample: "Sample"
+    },
+    zoneHeader: {
+        openSample: "Shows the sample {{name}}",
+        openInstrument: "Shows the instrument {{name}}",
+        replaceSample: "Pick another sample for this zone",
+        replaceInstrument: "Pick another instrument for this zone"
     }
 };
