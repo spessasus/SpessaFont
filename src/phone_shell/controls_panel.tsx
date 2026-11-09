@@ -5,6 +5,7 @@ import { OtherControllers } from "../keyboard/controller/other_controllers.tsx";
 import { ControllerKnobs } from "../keyboard/controller/controller_knobs.tsx";
 import { useSynthEvent } from "../hooks/use_synth_event.ts";
 import { KEYBOARD_TARGET_CHANNEL } from "../keyboard/target_channel.ts";
+import { useEngineStatus } from "../hooks/use_engine_status.ts";
 import type { KeyReadout } from "./drawer_handle.tsx";
 
 /**
@@ -14,6 +15,8 @@ import type { KeyReadout } from "./drawer_handle.tsx";
  */
 export function ControlsPanel() {
     const { t } = useTranslation();
+    // A playing song owns the keyboard's channel, so the readout shows its notes too
+    const isSongPlaying = useEngineStatus((s) => s.hasSong && !s.isPaused);
     const [lastNote, setLastNote] = useState<KeyReadout | undefined>(undefined);
     useSynthEvent((event) => {
         if (
@@ -42,6 +45,11 @@ export function ControlsPanel() {
                     {lastNote?.velocity ?? "-"}
                 </span>
             </div>
+            {isSongPlaying ? (
+                <p className={"controls_panel_song_note"}>
+                    {t("phoneLocale.drawer.songOnChannel")}
+                </p>
+            ) : null}
             <div className={"controls_panel_ranges"}>
                 <OtherControllers />
             </div>

@@ -26,3 +26,16 @@
     font-size: var(--phone-text-small);
     text-align: start;
 }
+
+/* Landscape leaves the panel little height, the knob row gets it */
+:root[data-layout="phone"][data-orientation="landscape"] .controls_panel {
+    padding-block: 0.25rem;
+}
+
+/* The song's own note on the keyboard channel, as Keys says it */
+:root[data-layout="phone"] .controls_panel_song_note {
+    margin: 0;
+    text-align: start;
+    font-size: var(--phone-text-secondary);
+    color: var(--muted-font-color);
+}

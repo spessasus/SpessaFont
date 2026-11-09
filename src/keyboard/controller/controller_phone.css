@@ -28,6 +28,14 @@
     order: 0;
 }
 
+/* The short landscape panel shows the knob row first, the last note and the song's note after it */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .controls_panel_readout,
+:root[data-layout="phone"][data-orientation="landscape"]
+    .controls_panel_song_note {
+    order: 1;
+}
+
 /* Pitch wheel and pressure take the full width with their value at the end */
 :root[data-layout="phone"]
     .controls_panel_ranges
@@ -80,10 +88,23 @@
     width: 100%;
 }
 
+/*
+ * Landscape: one row of slots that scrolls sideways, wide enough for the select to name its
+ * controller (nine columns cut it to "CC#")
+ */
+:root[data-layout="phone"][data-orientation="landscape"] .controls_panel_knobs {
+    /* A scroller would otherwise shrink to nothing in the panel's column */
+    flex: none;
+    overflow-x: auto;
+}
+
 :root[data-layout="phone"][data-orientation="landscape"]
     .controls_panel_knobs
     > .controller_row {
-    grid-template-columns: repeat(9, minmax(0, 1fr));
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    grid-auto-columns: 5.5rem;
+    width: max-content;
 }
 
 :root[data-layout="phone"] .controls_panel .controller_wrapper {
@@ -101,11 +122,4 @@
 :root[data-layout="phone"] .controls_panel .controller_knob {
     --controller-size: 3.5rem;
     touch-action: none;
-}
-
-/* Nine slots across in landscape leave little room, the select keeps 1rem text and its arrow */
-:root[data-layout="phone"][data-orientation="landscape"]
-    .controls_panel
-    .controller_select {
-    padding-inline: 0.125rem;
 }

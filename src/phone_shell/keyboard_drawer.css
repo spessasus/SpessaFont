@@ -17,6 +17,8 @@
 }
 
 :root[data-layout="phone"] .drawer_toggle {
+    /* The name gives way first, the toggles keep their labels */
+    flex-shrink: 0;
     height: var(--phone-touch);
     min-width: var(--phone-touch);
     padding: 0 0.75rem;
@@ -92,8 +94,12 @@
     font-size: var(--phone-text-small);
 }
 
+/* A narrow phone gives the time an ellipsis before it runs under the pause button */
 :root[data-layout="phone"] .drawer_song_time {
-    flex-shrink: 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: var(--phone-text-small);
 }
 
@@ -153,7 +159,7 @@
 }
 
 :root[data-layout="phone"][data-orientation="landscape"]
-    .drawer_handle
+    .drawer_handle:has(.zone_minimap)
     .drawer_name {
     flex: 0 1 auto;
 }

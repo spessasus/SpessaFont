@@ -18,6 +18,10 @@ vi.mock("../hooks/use_synth_event.ts", () => ({
 vi.mock("../hooks/use_synth_value.ts", () => ({
     useSynthValue: () => 0
 }));
+const engineStatus = vi.hoisted(() => ({ isSongPlaying: false }));
+vi.mock("../hooks/use_engine_status.ts", () => ({
+    useEngineStatus: () => engineStatus.isSongPlaying
+}));
 vi.mock("../core_backend/audio_engine_context.ts", () => ({
     useAudioEngine: () => ({ audioEngine: {} })
 }));
@@ -42,6 +46,7 @@ function renderPanel() {
 describe("ControlsPanel", () => {
     beforeEach(() => {
         handlers.current = undefined;
+        engineStatus.isSongPlaying = false;
     });
     afterEach(cleanup);
 
@@ -65,4 +70,20 @@ describe("ControlsPanel", () => {
         expect(readout.textContent).toContain("64");
         expect(readout.textContent).not.toContain("50");
     });
+
+    it("says the song owns the channel while one plays", () => {
+        expect(
+            renderPanelText(false).includes("phoneLocale.drawer.songOnChannel")
+        ).toBe(false);
+        cleanup();
+        expect(
+            renderPanelText(true).includes("phoneLocale.drawer.songOnChannel")
+        ).toBe(true);
+    });
 });
+
+function renderPanelText(isSongPlaying: boolean) {
+    engineStatus.isSongPlaying = isSongPlaying;
+    renderPanel();
+    return document.body.textContent ?? "";
+}
