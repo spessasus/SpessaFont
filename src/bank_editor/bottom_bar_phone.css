@@ -1,19 +1,7 @@
 /*
- * The desktop bottom bars are shown in the properties sheet. In the editor they stay mounted
- * but out of sight (never display: none, which would drop their layout and focus handling)
+ * The desktop bottom bars as the properties sheet shows them, the editors leave them out on
+ * phones
  */
-:root[data-layout="phone"] .bank_editor_window .preset_editor > .bottom_bar,
-:root[data-layout="phone"]
-    .bank_editor_window
-    .instrument_editor
-    > .bottom_bar {
-    visibility: hidden;
-    position: absolute;
-    inline-size: 0;
-    block-size: 0;
-    overflow: hidden;
-}
-
 :root[data-layout="phone"] .bottom_sheet .bottom_bar {
     flex-flow: row wrap;
     align-items: stretch;
