@@ -9,6 +9,7 @@ import { BackStackContext } from "../../phone_shell/back_stack_context.ts";
 import { BackStack } from "../../phone_shell/back_stack.ts";
 import { TranslatedOptionsContext } from "../../utils/translated_options/translated_options_context.ts";
 import { ModulatorCard } from "./modulator_card.tsx";
+import { ModulatorSummary } from "./modulator_summary.tsx";
 
 function renderCard(layout: LayoutMode) {
     const mod = buildModulatorView(
@@ -62,9 +63,8 @@ describe("ModulatorCard", () => {
         ).toBe("modulatorLocale.overriding");
     });
 
-    it("shows labels and the override as text on a phone, without the diagram", () => {
+    it("shows labels and the override as text on a phone", () => {
         const { container } = renderCard("phone");
-        expect(container.querySelector(".modulator_diagram")).toBeNull();
         const labels = [
             ...container.querySelectorAll(".modulator_field_label")
         ].map((l) => l.textContent);
@@ -83,5 +83,47 @@ describe("ModulatorCard", () => {
                 .getByRole("textbox", { name: "modulatorLocale.amount" })
                 .getAttribute("inputmode")
         ).toBe("text");
+    });
+
+    it("renders one diagram per card on desktop", () => {
+        const { container } = renderCard("desktop");
+        const diagrams = container.querySelectorAll("svg.modulator_diagram");
+        expect(diagrams).toHaveLength(1);
+        expect(diagrams[0].getAttribute("aria-hidden")).toBe("true");
+    });
+
+    it("renders one diagram in the expanded phone card", () => {
+        const { container } = renderCard("phone");
+        const diagrams = container.querySelectorAll("svg.modulator_diagram");
+        expect(diagrams).toHaveLength(1);
+        expect(diagrams[0].getAttribute("aria-hidden")).toBe("true");
+    });
+
+    it("renders no diagram in the phone summary row", () => {
+        const { container } = render(
+            <LayoutContext value={"phone"}>
+                <TranslatedOptionsContext
+                    value={{ controllers: [], destinations: [] }}
+                >
+                    <ModulatorSummary
+                        mod={buildModulatorView(
+                            new Modulator(
+                                new ModulatorSource(),
+                                new ModulatorSource(),
+                                GeneratorTypes.initialAttenuation,
+                                0,
+                                0
+                            )
+                        )}
+                        modulatorNumber={1}
+                        isSelected={false}
+                        isExpanded={false}
+                        onToggleExpanded={vi.fn()}
+                        onSelect={vi.fn()}
+                    />
+                </TranslatedOptionsContext>
+            </LayoutContext>
+        );
+        expect(container.querySelector(".modulator_diagram")).toBeNull();
     });
 });
