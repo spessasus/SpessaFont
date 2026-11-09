@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { GeneratorTypes } from "spessasynth_core";
 import {
     findGridItem,
     focusNeighborColumn,
+    getTabKey,
     handleTableKeyDown,
     type TableKeyEvent
 } from "./table_navigation.ts";
@@ -200,5 +202,25 @@ describe("focusNeighborColumn", () => {
         );
         focusNeighborColumn(getItem("delete:7"));
         expect(document.activeElement).toBe(getItem("add"));
+    });
+});
+
+describe("getTabKey", () => {
+    const ATT = GeneratorTypes.initialAttenuation;
+    const SHOWN = {
+        zoneIds: [2],
+        modulatorZoneIds: [1, 2],
+        rows: [{ generator: ATT, zoneIds: [1, 2] }],
+        globalZoneId: 1
+    };
+
+    it("keeps the last focused item while it is shown", () => {
+        expect(getTabKey(`cell:${ATT}:2`, SHOWN)).toBe(`cell:${ATT}:2`);
+        expect(getTabKey("name:2", SHOWN)).toBe("name:2");
+    });
+
+    it("falls back to the first global cell, or the add button without rows", () => {
+        expect(getTabKey("name:9", SHOWN)).toBe(`cell:${ATT}:1`);
+        expect(getTabKey(null, { ...SHOWN, rows: [] })).toBe("add");
     });
 });

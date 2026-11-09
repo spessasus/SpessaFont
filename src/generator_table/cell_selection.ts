@@ -1,6 +1,8 @@
 import type { GeneratorType } from "spessasynth_core";
 import type { LayoutMode } from "../layout/layout_setting.ts";
 import type { ZoneColumn } from "./zone_columns.ts";
+import type { GeneratorRowType } from "./generator_row_type.ts";
+import { parseCellKey } from "./table_navigation.ts";
 
 /**
  * Cells selected with Ctrl or Shift, all in one generator row.
@@ -66,6 +68,47 @@ export function getCellSelection(
         return { generator, zoneIds, anchorId: zoneId };
     }
     return null;
+}
+
+/**
+ * The selection after the keyboard moves from one cell to another. Shift and Left or Right
+ * extends the selection, other moves drop it, like a spreadsheet.
+ */
+export function getMovedSelection(
+    previous: CellSelection | null,
+    fromKey: string,
+    toKey: string,
+    isExtending: boolean,
+    rows: readonly GeneratorRowType[],
+    getRowColumns: (generator: GeneratorType) => readonly ZoneColumn[]
+) {
+    const from = parseCellKey(fromKey);
+    const to = parseCellKey(toKey);
+    const generator = rows.find(
+        (r) => r.generator === to?.generator
+    )?.generator;
+    if (
+        !isExtending ||
+        !from ||
+        !to ||
+        generator === undefined ||
+        from.generator !== generator
+    ) {
+        return null;
+    }
+    return getCellSelection(
+        previous?.generator === generator && previous.zoneIds.size > 0
+            ? previous
+            : {
+                  generator,
+                  zoneIds: new Set([from.zoneId]),
+                  anchorId: from.zoneId
+              },
+        generator,
+        getRowColumns(generator),
+        to.zoneId,
+        { ctrlKey: false, metaKey: false, shiftKey: true }
+    );
 }
 
 /**

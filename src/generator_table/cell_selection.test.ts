@@ -4,6 +4,7 @@ import { type GeneratorType, GeneratorTypes } from "spessasynth_core";
 import {
     type CellSelection,
     getCellSelection,
+    getMovedSelection,
     getTapModifiers,
     PHONE_TAP_MODIFIERS,
     shouldClearCellSelection
@@ -97,5 +98,44 @@ describe("shouldClearCellSelection", () => {
     it("clears on a row header", () => {
         const get = build();
         expect(shouldClearCellSelection(get("rowhead"))).toBe(true);
+    });
+
+    describe("keyboard moves", () => {
+        const ROWS = [{ generator: ATT }, { generator: PAN }];
+        const move = (
+            previous: CellSelection | null,
+            from: string,
+            to: string,
+            isExtending: boolean
+        ) =>
+            getMovedSelection(
+                previous,
+                from,
+                to,
+                isExtending,
+                ROWS,
+                () => COLUMNS
+            );
+
+        it("extends from the cell it left with Shift in one row", () => {
+            const selection = move(
+                null,
+                `cell:${ATT}:1`,
+                `cell:${ATT}:2`,
+                true
+            );
+            expect(selection?.generator).toBe(ATT);
+            expect([...(selection?.zoneIds ?? [])]).toEqual([1, 2]);
+        });
+
+        it("drops the selection on a plain move or a move to another row", () => {
+            const previous = move(null, `cell:${ATT}:1`, `cell:${ATT}:2`, true);
+            expect(
+                move(previous, `cell:${ATT}:2`, `cell:${ATT}:3`, false)
+            ).toBeNull();
+            expect(
+                move(previous, `cell:${ATT}:2`, `cell:${PAN}:2`, true)
+            ).toBeNull();
+        });
     });
 });
