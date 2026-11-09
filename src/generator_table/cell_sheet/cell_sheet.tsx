@@ -432,6 +432,8 @@ export function CellSheet({
                                 initialRange={sharedRange}
                                 mode={rangeMode}
                                 onModeChange={setRangeMode}
+                                isPianoBusy={isCapturing}
+                                onCaptureStart={() => setCaptureRow(null)}
                                 isDisabled={!first}
                                 status={status}
                                 footer={footerButtons}

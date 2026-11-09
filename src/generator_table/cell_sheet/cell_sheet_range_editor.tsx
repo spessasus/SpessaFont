@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import type { ReactNode, SubmitEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { SegmentedControl } from "../../fancy_inputs/segmented_control/segmented_control.tsx";
 import { getNoteName } from "../../keyboard/keyboard/piano_keys.ts";
 import { PlusMinusIcon } from "../../utils/icons/app_icons.tsx";
 import { buildRangeText } from "./cell_sheet_text.ts";
+import { PianoCaptureBar } from "../../phone_shell/piano_capture_bar.tsx";
+import { openKeysForCapture } from "../../phone_shell/open_keys_for_capture.ts";
+import { PhoneShellContext } from "../../phone_shell/phone_shell_context.ts";
+import { PianoKeysIcon } from "../../utils/icons/player_icons.tsx";
 
 interface CellSheetRangeEditorProps {
     isKeyRange: boolean;
@@ -14,6 +18,14 @@ interface CellSheetRangeEditorProps {
     initialRange: { low: number; high: number } | undefined;
     mode: "set" | "shift";
     onModeChange: (mode: "set" | "shift") => void;
+    /**
+     * The sheet runs a piano capture of its own, which ends this one: one capture at a time.
+     */
+    isPianoBusy: boolean;
+    /**
+     * Called when this editor starts a capture, so the sheet ends its own.
+     */
+    onCaptureStart: () => void;
     /**
      * Nothing is checked, so Apply does nothing.
      */
@@ -50,6 +62,8 @@ export function CellSheetRangeEditor({
     initialRange,
     mode,
     onModeChange,
+    isPianoBusy,
+    onCaptureStart,
     isDisabled,
     status,
     footer,
@@ -63,6 +77,12 @@ export function CellSheetRangeEditor({
         initialRange ? String(initialRange.high) : ""
     );
     const [shift, setShift] = useState("");
+    const [isCapturing, setIsCapturing] = useState(false);
+    if (isCapturing && isPianoBusy) {
+        setIsCapturing(false);
+    }
+    // Not usePhoneShell, which throws where the editor renders without the shell (its tests)
+    const shell = useContext(PhoneShellContext);
     const lowValue = readNote(low);
     const highValue = readNote(high);
     const trimmedShift = shift.trim().replace(/^\+/, "");
@@ -126,6 +146,19 @@ export function CellSheetRangeEditor({
 
     return (
         <form className={"cell_sheet_editor"} onSubmit={handleSubmit}>
+            {isCapturing ? (
+                <PianoCaptureBar
+                    count={2}
+                    prompt={t("phoneLocale.capture.playLowHigh")}
+                    onDone={([first, second]) => {
+                        setIsCapturing(false);
+                        // Fills the fields only, Apply stays the user's step
+                        setLow(String(Math.min(first, second)));
+                        setHigh(String(Math.max(first, second)));
+                    }}
+                    onCancel={() => setIsCapturing(false)}
+                />
+            ) : null}
             <div className={"cell_sheet_editor_row"}>
                 <SegmentedControl
                     label={t("phoneLocale.cellSheet.mode")}
@@ -137,8 +170,39 @@ export function CellSheetRangeEditor({
                         }
                     ]}
                     value={mode}
-                    onChange={onModeChange}
+                    onChange={(next) => {
+                        // Shift has no Low and High to fill
+                        setIsCapturing(false);
+                        onModeChange(next);
+                    }}
                 />
+                {/* Two played keys make a key span, so velocity ranges have no button */}
+                {isKeyRange && mode === "set" ? (
+                    <button
+                        type={"button"}
+                        className={
+                            "pretty_button cell_sheet_text_button cell_sheet_piano cell_sheet_piano_labelled"
+                        }
+                        aria-pressed={isCapturing}
+                        onClick={() => {
+                            // Only a start shows the keys, a cancel leaves the drawer
+                            if (shell && !isCapturing) {
+                                openKeysForCapture(
+                                    shell.state.drawer,
+                                    shell.dispatch
+                                );
+                            }
+                            if (!isCapturing) {
+                                onCaptureStart();
+                            }
+                            setIsCapturing(!isCapturing);
+                        }}
+                    >
+                        <PianoKeysIcon />
+                        {/* Spelled out, as the zone row's play-two-keys has the same icon */}
+                        <span>{t("phoneLocale.cellSheet.setFromPiano")}</span>
+                    </button>
+                ) : null}
             </div>
             <div className={"cell_sheet_editor_row"}>
                 {mode === "set" ? (

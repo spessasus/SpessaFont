@@ -166,6 +166,7 @@ export const PhoneLocale = {
         unsetName: "Not set",
         keys: "Keys…",
         playKeys: "Play two keys",
+        setFromPiano: "Set from piano",
         keySpanHint:
             "Check every zone whose key range overlaps a span of keys.",
         keySpanLabel: "Keys {{low}} to {{high}}",

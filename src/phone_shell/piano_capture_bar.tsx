@@ -54,7 +54,13 @@ export function PianoCaptureBar({
         onCancel();
     });
     return (
-        <div className={"piano_capture_bar"}>
+        <div
+            className={"piano_capture_bar"}
+            // Starts in view, it may mount below the visible part of a scrolled sheet
+            ref={(bar) => {
+                bar?.scrollIntoView({ block: "nearest" });
+            }}
+        >
             <span className={"piano_capture_icon"} aria-hidden={true}>
                 <PianoKeysIcon />
             </span>

@@ -533,7 +533,7 @@
  * A capture stays in view while the sheet's body scrolls (landscape). The tint is translucent,
  * so the sheet's own color goes under it to hide the rows scrolling past
  */
-:root[data-layout="phone"] .cell_sheet > .piano_capture_bar {
+:root[data-layout="phone"] .cell_sheet .piano_capture_bar {
     position: sticky;
     top: 0;
     z-index: 2;
@@ -543,4 +543,9 @@
             var(--cell-selection-color)
         ),
         var(--lighter-color-end);
+}
+
+/* Set from piano names itself next to its icon */
+:root[data-layout="phone"] .cell_sheet_piano_labelled {
+    gap: var(--flex-gap);
 }

@@ -178,6 +178,7 @@ export const PhoneLocale = {
         unsetName: "Nie ustawiono",
         keys: "Klawisze…",
         playKeys: "Zagraj dwa klawisze",
+        setFromPiano: "Ustaw z klawiatury",
         keySpanHint:
             "Zaznacz każdą strefę, której zakres klawiszy nachodzi na wybrany zakres.",
         keySpanLabel: "Klawisze od {{low}} do {{high}}",
