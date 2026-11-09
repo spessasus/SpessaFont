@@ -142,3 +142,18 @@ export function LoopIcon() {
         </svg>
     );
 }
+
+export function PianoKeysIcon() {
+    return (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="currentColor"
+            className="bi bi-piano-keys"
+            viewBox="0 0 16 16"
+        >
+            <path d="M1.5 2A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2zM1 3.5a.5.5 0 0 1 .5-.5H3v5.5a.5.5 0 0 0 .5.5H4v4H1.5a.5.5 0 0 1-.5-.5zM5 9h.5a.5.5 0 0 0 .5-.5V3h1v5.5a.5.5 0 0 0 .5.5H8v4H5zm4 0h.5a.5.5 0 0 0 .5-.5V3h1v5.5a.5.5 0 0 0 .5.5h.5v4H9zm4 0h.5a.5.5 0 0 0 .5-.5V3h.5a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5H13z" />
+        </svg>
+    );
+}

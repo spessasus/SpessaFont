@@ -38,6 +38,13 @@ export const PhoneLocale = {
         octaveUp: "Oktawa w górę",
         minimap: "Widoczne klawisze"
     },
+    capture: {
+        playTwoKeys: "Zagraj dwa klawisze",
+        playLowHigh: "Zagraj najniższy i najwyższy klawisz",
+        playKey: "Zagraj klawisz",
+        progress: "{{played}} z {{count}}",
+        cancel: "Anuluj"
+    },
     overview: {
         back: "Wróć do przeglądu",
         defaultModulators: "Domyślne modulatory"

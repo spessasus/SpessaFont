@@ -1,0 +1,43 @@
+/* A bar in the sheet that started the capture, until the keys arrive */
+:root[data-layout="phone"] .piano_capture_bar {
+    display: flex;
+    align-items: center;
+    gap: var(--flex-gap);
+    box-sizing: border-box;
+    min-height: var(--phone-row-height);
+    padding: 0 0.25rem 0 var(--phone-gutter);
+    background: var(--cell-selection-color);
+    border-bottom: 1px solid var(--track-border-color);
+}
+
+:root[data-layout="phone"] .piano_capture_icon {
+    display: flex;
+    flex: none;
+}
+
+:root[data-layout="phone"] .piano_capture_icon svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+:root[data-layout="phone"] .piano_capture_prompt {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: start;
+    font-size: var(--phone-text-body);
+}
+
+:root[data-layout="phone"] .piano_capture_progress {
+    flex: none;
+    font-size: var(--phone-text-caption);
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .piano_capture_cancel {
+    flex: none;
+    min-height: var(--phone-touch);
+    font-size: var(--phone-text-button);
+}
