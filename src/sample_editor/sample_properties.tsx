@@ -1,6 +1,7 @@
 import "./sample_properties_phone.css";
 import type { SampleView } from "../core_backend/entity_views.ts";
 import { useTranslation } from "react-i18next";
+import { OriginalKeyFromPiano } from "./original_key_from_piano.tsx";
 import { useLayout } from "../layout/layout_context.ts";
 import { WaitingInput } from "../fancy_inputs/waiting_input/waiting_input.tsx";
 import { TypeSelector } from "./type_selector/type_selector.tsx";
@@ -101,6 +102,9 @@ export function SampleProperties({
                     aria-label={t("sampleLocale.originalKey")}
                 />
             </div>
+            {layout === "phone" ? (
+                <OriginalKeyFromPiano onKey={edits.setOriginalKey} />
+            ) : null}
 
             <div className={"sample_editor_field"}>
                 <span>{t("sampleLocale.centCorrection")}</span>

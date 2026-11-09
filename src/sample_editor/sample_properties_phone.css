@@ -48,3 +48,23 @@
     font-size: var(--phone-text-body);
     text-align: start;
 }
+
+/* Set from piano, under the original key field */
+:root[data-layout="phone"] .original_key_from_piano {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--flex-gap);
+    min-height: var(--phone-touch);
+    font-size: var(--phone-text-button);
+}
+
+:root[data-layout="phone"] .original_key_from_piano svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+:root[data-layout="phone"] .original_key_from_piano[aria-pressed="true"] {
+    background: var(--primary-color);
+    border-color: var(--border-color);
+}
