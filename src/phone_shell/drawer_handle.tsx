@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useEngineStatus } from "../hooks/use_engine_status.ts";
 import { DrawerSongControls } from "./drawer_song_controls.tsx";
@@ -17,6 +18,10 @@ interface DrawerHandleProps {
      * The key under a finger that is down, which replaces the name while it lasts.
      */
     readout: KeyReadout | undefined;
+    /**
+     * Landscape's octave strip, between the toggles and the name.
+     */
+    strip?: ReactNode;
 }
 
 function VoiceCount() {
@@ -29,7 +34,7 @@ function VoiceCount() {
     );
 }
 
-export function DrawerHandle({ name, readout }: DrawerHandleProps) {
+export function DrawerHandle({ name, readout, strip }: DrawerHandleProps) {
     const { t } = useTranslation();
     const {
         state: { drawer },
@@ -52,6 +57,7 @@ export function DrawerHandle({ name, readout }: DrawerHandleProps) {
             >
                 {t("phoneLocale.drawer.keys")}
             </button>
+            {strip}
             <span
                 className={"drawer_name"}
                 hidden={hasSong && readout === undefined}

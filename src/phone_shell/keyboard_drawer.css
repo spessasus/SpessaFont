@@ -130,3 +130,37 @@
     display: flex;
     min-width: 0;
 }
+
+/*
+ * Landscape: the octave strip sits in the handle row between the toggles and the name, which
+ * gives way first. The minimap keeps a width that can still be dragged
+ */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .drawer_handle
+    .zone_minimap {
+    flex: 1 1 auto;
+    min-width: 8rem;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .drawer_handle
+    .drawer_name {
+    flex: 0 1 auto;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .drawer_handle
+    .drawer_voices {
+    /* The row's gap is closed for the strip, the count keeps its own */
+    margin-inline-start: 0.5rem;
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* The strip's buttons carry their own touch padding, so the crowded row closes its gaps */
+:root[data-layout="phone"][data-orientation="landscape"] .drawer_handle {
+    gap: 0.25rem;
+}

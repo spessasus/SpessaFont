@@ -54,4 +54,29 @@ describe("DrawerHandle", () => {
             drawer: "collapsed"
         });
     });
+
+    it("renders the strip slot between the toggles and the name", () => {
+        render(
+            <PhoneShellContext value={createShellContext()}>
+                <DrawerHandle
+                    name={"Piano"}
+                    readout={undefined}
+                    strip={<span>strip</span>}
+                />
+            </PhoneShellContext>
+        );
+        const toggle = screen.getByRole("button", {
+            name: "phoneLocale.drawer.keys"
+        });
+        const strip = screen.getByText("strip");
+        const name = screen.getByText("Piano");
+        expect(
+            toggle.compareDocumentPosition(strip) &
+                Node.DOCUMENT_POSITION_FOLLOWING
+        ).toBeTruthy();
+        expect(
+            strip.compareDocumentPosition(name) &
+                Node.DOCUMENT_POSITION_FOLLOWING
+        ).toBeTruthy();
+    });
 });

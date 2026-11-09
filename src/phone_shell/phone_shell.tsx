@@ -177,7 +177,7 @@ export function PhoneShell({
         ? () => void showInstallPrompt()
         : undefined;
 
-    const drawerOffset = getDrawerOffset(state.drawer);
+    const drawerOffset = getDrawerOffset(state.drawer, isLandscape);
 
     return (
         <PhoneShellContext value={shellContext}>

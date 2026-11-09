@@ -38,7 +38,8 @@ export function KeyboardDrawer({
 }: KeyboardDrawerProps) {
     const { t } = useTranslation();
     const {
-        state: { drawer }
+        state: { drawer },
+        isLandscape
     } = usePhoneShell();
     const splits = useViewSplits(isCovered ? undefined : session, view);
     const views = useBankSnapshot(session.store, (s) => s.views);
@@ -89,17 +90,27 @@ export function KeyboardDrawer({
             return next;
         });
 
+    const octaveStrip = <OctaveStrip keyboard={keyboard} segments={segments} />;
+
     return (
-        <div className={"keyboard_drawer"}>
+        <div
+            className={"keyboard_drawer"}
+            // The landscape settings cover the drawer too (spec 12.4)
+            inert={isCovered && isLandscape}
+        >
             <DrawerHandle
                 name={name ?? t("presetList.overview")}
                 readout={downPointers.size > 0 ? hovered : undefined}
+                strip={
+                    isLandscape && drawer === "keys" ? octaveStrip : undefined
+                }
             />
             {drawer === "keys" && (
                 <div className={"drawer_keys"}>
-                    <div className={"drawer_strip"}>
-                        <OctaveStrip keyboard={keyboard} segments={segments} />
-                    </div>
+                    {/* Landscape moves only the strip, the keyboard keeps its place and scroll */}
+                    {isLandscape ? null : (
+                        <div className={"drawer_strip"}>{octaveStrip}</div>
+                    )}
                     {isSongPlaying ? (
                         <p className={"drawer_song_note"}>
                             {t("phoneLocale.drawer.songOnChannel")}
