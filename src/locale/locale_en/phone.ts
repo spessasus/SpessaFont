@@ -167,6 +167,10 @@ export const PhoneLocale = {
         keys: "Keys…",
         playKeys: "Play two keys",
         setFromPiano: "Set from piano",
+        ignoreGlobal_one: "{{count}} zone has its own value and ignores Global",
+        ignoreGlobal_other:
+            "{{count}} zones have their own value and ignore Global",
+        selectThem: "Select them",
         keySpanHint:
             "Check every zone whose key range overlaps a span of keys.",
         keySpanLabel: "Keys {{low}} to {{high}}",

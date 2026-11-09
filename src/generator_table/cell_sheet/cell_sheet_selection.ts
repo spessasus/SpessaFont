@@ -1,4 +1,6 @@
-import type { ZoneColumn } from "../zone_columns.ts";
+import type { GeneratorType } from "spessasynth_core";
+import { getViewZones, type ZoneColumn } from "../zone_columns.ts";
+import { readViewCell } from "../cell/cell_values.ts";
 
 /**
  * Every zone column checked. The first column is Global, which stays unchecked.
@@ -57,4 +59,21 @@ export function mapSelectionToRow(
             )
             .map((column) => column.zone.id)
     );
+}
+
+/**
+ * The zone columns where a zone stores its own value for the generator, so an edit of Global
+ * does not reach them. The first column is Global, which never counts.
+ */
+export function getColumnsIgnoringGlobal(
+    columns: readonly ZoneColumn[],
+    generator: GeneratorType
+) {
+    return columns
+        .slice(1)
+        .filter((column) =>
+            getViewZones(column).some(
+                (zone) => readViewCell(zone, generator) !== null
+            )
+        );
 }

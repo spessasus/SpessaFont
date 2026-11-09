@@ -549,3 +549,29 @@
 :root[data-layout="phone"] .cell_sheet_piano_labelled {
     gap: var(--flex-gap);
 }
+
+/* Under a Global edit: how many zones keep their own value, and a way to check them too */
+:root[data-layout="phone"] .cell_sheet_ignore_global {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: var(--flex-gap);
+    margin: 0;
+    padding: 0.25rem var(--phone-gutter);
+    font-size: var(--phone-text-secondary);
+    color: var(--muted-font-color);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet_ignore_global > span {
+    flex: 1 1 12rem;
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet_ignore_select {
+    min-height: var(--phone-touch);
+    padding: 0 0.5rem;
+    font-size: var(--phone-text-small);
+    font-weight: 600;
+    color: var(--font-color);
+}

@@ -179,6 +179,15 @@ export const PhoneLocale = {
         keys: "Klawisze…",
         playKeys: "Zagraj dwa klawisze",
         setFromPiano: "Ustaw z klawiatury",
+        ignoreGlobal_one:
+            "{{count}} strefa ma własną wartość i pomija globalną",
+        ignoreGlobal_few:
+            "{{count}} strefy mają własną wartość i pomijają globalną",
+        ignoreGlobal_many:
+            "{{count}} stref ma własną wartość i pomija globalną",
+        ignoreGlobal_other:
+            "{{count}} stref ma własną wartość i pomija globalną",
+        selectThem: "Zaznacz je",
         keySpanHint:
             "Zaznacz każdą strefę, której zakres klawiszy nachodzi na wybrany zakres.",
         keySpanLabel: "Klawisze od {{low}} do {{high}}",

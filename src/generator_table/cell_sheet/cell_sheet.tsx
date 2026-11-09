@@ -34,7 +34,11 @@ import { getViewZones, type ZoneColumn } from "../zone_columns.ts";
 import { CellSheetOptionEditor } from "./cell_sheet_option_editor.tsx";
 import { CellSheetRangeEditor } from "./cell_sheet_range_editor.tsx";
 import { CellSheetNumberEditor } from "./cell_sheet_number_editor.tsx";
-import { fillBetween, selectAllZones } from "./cell_sheet_selection.ts";
+import {
+    fillBetween,
+    getColumnsIgnoringGlobal,
+    selectAllZones
+} from "./cell_sheet_selection.ts";
 import {
     applyCellSheetText,
     getSharedOption,
@@ -205,6 +209,11 @@ export function CellSheet({
         ? getColumnKeyRange(firstZoneColumn, globalZone)
         : undefined;
 
+    // A Global edit does not reach zones with their own value, so the sheet says how many
+    const ignoringGlobal = checkedIds.has(globalZone.id)
+        ? getColumnsIgnoringGlobal(columns, generator)
+        : [];
+
     const status = t("phoneLocale.cellSheet.checked", {
         checked: checkedColumns.length,
         total: columns.length
@@ -353,6 +362,31 @@ export function CellSheet({
                             checkedIds={checkedIds}
                             onToggle={toggle}
                         />
+                        {ignoringGlobal.length > 0 ? (
+                            <p className={"cell_sheet_ignore_global"}>
+                                <span>
+                                    {t("phoneLocale.cellSheet.ignoreGlobal", {
+                                        count: ignoringGlobal.length
+                                    })}
+                                </span>
+                                <button
+                                    type={"button"}
+                                    className={
+                                        "plain_button cell_sheet_ignore_select"
+                                    }
+                                    onClick={() => {
+                                        // Global stays checked, so Set writes one value everywhere
+                                        const next = new Set(checkedIds);
+                                        for (const column of ignoringGlobal) {
+                                            next.add(column.zone.id);
+                                        }
+                                        onCheckedChange(next);
+                                    }}
+                                >
+                                    {t("phoneLocale.cellSheet.selectThem")}
+                                </button>
+                            </p>
+                        ) : null}
                         <div className={"cell_sheet_bar"}>
                             <button
                                 type={"button"}
