@@ -290,40 +290,44 @@ export function ModulatorList({
                 onPaste={paste}
                 onCopy={copySelected}
                 onDelete={deleteSelected}
-            >
-                {/* Shift+click ranges and Ctrl+A have no touch stand-in, these are it */}
-                {layout === "phone" ? (
-                    <>
-                        <button
-                            type={"button"}
-                            className={MODULATOR_LIST_BUTTON_CLASS}
-                            onClick={() =>
-                                setSelectedIds(
-                                    new Set(modulatorList.map((m) => m.id))
-                                )
-                            }
-                        >
-                            {t("phoneLocale.selection.all")}
-                        </button>
-                        <button
-                            type={"button"}
-                            className={MODULATOR_LIST_BUTTON_CLASS}
-                            aria-disabled={selectedCount < 2 ? true : undefined}
-                            onClick={() => {
-                                if (selectedCount >= 2) {
+                selectionActions={
+                    // Shift+click ranges and Ctrl+A have no touch stand-in, these are it
+                    layout === "phone" ? (
+                        <>
+                            <button
+                                type={"button"}
+                                className={MODULATOR_LIST_BUTTON_CLASS}
+                                onClick={() =>
                                     setSelectedIds(
-                                        selectBetween(
-                                            modulatorList.map((m) => m.id),
-                                            selectedIds
-                                        )
-                                    );
+                                        new Set(modulatorList.map((m) => m.id))
+                                    )
                                 }
-                            }}
-                        >
-                            {t("phoneLocale.selection.between")}
-                        </button>
-                    </>
-                ) : null}
+                            >
+                                {t("phoneLocale.selection.all")}
+                            </button>
+                            <button
+                                type={"button"}
+                                className={MODULATOR_LIST_BUTTON_CLASS}
+                                aria-disabled={
+                                    selectedCount < 2 ? true : undefined
+                                }
+                                onClick={() => {
+                                    if (selectedCount >= 2) {
+                                        setSelectedIds(
+                                            selectBetween(
+                                                modulatorList.map((m) => m.id),
+                                                selectedIds
+                                            )
+                                        );
+                                    }
+                                }}
+                            >
+                                {t("phoneLocale.selection.between")}
+                            </button>
+                        </>
+                    ) : null
+                }
+            >
                 {extraActions}
             </ModulatorListActions>
             <div className={"list_contents"}>

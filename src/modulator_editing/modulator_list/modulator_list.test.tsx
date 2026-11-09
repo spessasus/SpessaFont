@@ -111,6 +111,12 @@ function renderInShell(isCoveringEditor: boolean) {
     return { stack, first };
 }
 
+function getActionNames() {
+    return [...document.querySelectorAll(".action_buttons button")].map(
+        (b) => b.textContent
+    );
+}
+
 describe("ModulatorList", () => {
     afterEach(cleanup);
 
@@ -207,6 +213,59 @@ describe("ModulatorList", () => {
             })[0]
         );
         expect(between.getAttribute("aria-disabled")).toBe("true");
+    });
+
+    it("keeps one fixed set of action buttons on a phone", () => {
+        renderList("phone", 3);
+        const before = getActionNames();
+        expect(before).toEqual([
+            // The harness has no layer header, so New stays in the bar
+            "modulatorLocale.newModulator",
+            "phoneLocale.selection.all",
+            "phoneLocale.selection.between",
+            "paste",
+            "copy",
+            "delete"
+        ]);
+        const trashButton = screen.getByRole("button", { name: "delete" });
+        expect(trashButton.getAttribute("aria-disabled")).toBe("true");
+        expect(
+            screen
+                .getByRole("button", { name: "paste" })
+                .getAttribute("aria-disabled")
+        ).toBe("true");
+        fireEvent.click(
+            screen.getAllByRole("button", {
+                name: "modulatorLocale.modulatorNumber"
+            })[0]
+        );
+        // A selection only enables, nothing moves
+        expect(getActionNames()).toEqual(before);
+        expect(trashButton.getAttribute("aria-disabled")).toBeNull();
+    });
+
+    it("shows the form's delete as an icon with no second number on a phone", () => {
+        renderList("phone");
+        const summary = document.querySelector(".modulator_summary_toggle");
+        if (!summary) {
+            throw new Error("No summary row.");
+        }
+        fireEvent.click(summary);
+        expect(
+            screen.getAllByRole("button", {
+                name: "modulatorLocale.modulatorNumber"
+            })
+        ).toHaveLength(1);
+        const trashButton = screen.getByRole("button", {
+            name: "modulatorLocale.deleteModulator"
+        });
+        expect(trashButton.querySelector("svg")).not.toBeNull();
+        expect(trashButton.textContent).toBe("");
+    });
+
+    it("shows Copy and Delete only with a selection on desktop", () => {
+        renderList("desktop", 3);
+        expect(screen.queryByRole("button", { name: "copy" })).toBeNull();
     });
 
     it("shows no All or Between on desktop", () => {

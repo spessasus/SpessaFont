@@ -38,9 +38,11 @@ export function getModulatorSummaryText(
         source: hasSecondary
             ? `${primary} × ${sourceLabel(secondarySource, options, t)}`
             : primary,
-        destination:
+        // The select's monospace font draws -> as an arrow, the row's font does not
+        destination: (
             options.destinations.find((d) => d.value === mod.destination)
-                ?.label ?? String(mod.destination),
+                ?.label ?? String(mod.destination)
+        ).replaceAll(" -> ", " → "),
         amount: `×${mod.transformAmount}`
     };
 }

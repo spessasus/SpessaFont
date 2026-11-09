@@ -3,7 +3,7 @@
     /* Each label sits above its field, so the selects get the whole card width and show their values */
     grid-template-columns: auto minmax(0, 1fr) auto;
     grid-template-areas:
-        "number note delete"
+        "note note delete"
         "srcLabel srcLabel srcCurve"
         "src src src"
         "secLabel secLabel secCurve"
@@ -24,29 +24,26 @@
     width: calc(100% - 2 * var(--phone-gutter));
 }
 
-:root[data-layout="phone"] .modulator_main .modulator_title_left,
 :root[data-layout="phone"] .modulator_main .modulator_title_right {
     position: static;
-    grid-row: 1;
-    min-height: var(--phone-row-height);
-}
-
-:root[data-layout="phone"] .modulator_main .modulator_title_left {
-    grid-area: number;
-    justify-self: start;
-    min-width: var(--phone-touch);
-    text-align: start;
-    font-size: var(--phone-text-body);
-}
-
-:root[data-layout="phone"] .modulator_main .modulator_title_right {
     grid-area: delete;
+    color: var(--destructive-color);
     width: var(--phone-touch);
     height: var(--phone-touch);
     min-height: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+}
+
+:root[data-layout="phone"] .modulator_main .modulator_title_right svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* The global font color rule would paint the icon over the button's color */
+:root[data-layout="phone"] .modulator_main .modulator_title_right * {
+    color: inherit;
 }
 
 :root[data-layout="phone"] .modulator_main .modulator_overrides_note {
@@ -191,8 +188,9 @@
     align-items: stretch;
     box-sizing: border-box;
     min-height: 3.5rem;
-    background: var(--lighter-color-end);
-    border-bottom: 1px solid var(--track-border-color);
+    /* A list row on the pane, like the navigator's */
+    border-bottom: 1px solid
+        color-mix(in oklch, var(--track-border-color) 45%, transparent);
 }
 
 :root[data-layout="phone"] .modulator_summary[data-selected="true"] {
@@ -265,8 +263,9 @@
     display: flex;
     flex-direction: column;
     gap: var(--flex-gap);
-    padding-bottom: var(--flex-gap);
-    border-bottom: 1px solid var(--track-border-color);
+    padding-block: var(--flex-gap);
+    border-bottom: 1px solid
+        color-mix(in oklch, var(--track-border-color) 45%, transparent);
 }
 
 :root[data-layout="phone"] .modulator_summary_done {

@@ -42,11 +42,8 @@ describe("getModulatorSummaryText", () => {
         const text = getModulatorSummaryText(vibratoModulator(), options, t);
         // The select pads the number for its column, the row does not
         expect(text.source).toBe("CC#1 - Modulation Wheel");
-        expect(text.destination).toBe(
-            options.destinations.find(
-                (d) => d.value === GeneratorTypes.vibLfoToPitch
-            )?.label
-        );
+        // The proportional font shows the label's -> as two characters
+        expect(text.destination).toBe("Vib LFO → Pitch");
         expect(text.amount).toBe("×47");
     });
 

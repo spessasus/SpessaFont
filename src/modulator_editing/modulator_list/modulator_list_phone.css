@@ -27,10 +27,15 @@
     margin: 0;
 }
 
-/* Between needs two selected */
+/* Buttons that cannot act yet, as Between below two selected */
 :root[data-layout="phone"]
     .modulator_list
     .action_buttons
     .modulator_list_button[aria-disabled="true"] {
     opacity: 0.4;
+}
+
+/* Rows with dividers, no gaps where the pane shows through */
+:root[data-layout="phone"] .modulator_list .list_contents {
+    gap: 0;
 }
