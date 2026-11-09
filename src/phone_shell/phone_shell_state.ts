@@ -1,4 +1,4 @@
-export type DrawerState = "collapsed" | "keys" | "controls";
+export type DrawerState = "collapsed" | "keys";
 
 export interface PhoneShellState {
     isNavigatorOpen: boolean;

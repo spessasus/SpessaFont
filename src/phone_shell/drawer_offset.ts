@@ -11,8 +11,5 @@ export function getDrawerOffset(drawer: DrawerState) {
         case "keys": {
             return "calc(var(--phone-handle-height) + var(--phone-strip-height) + var(--phone-keys-height))";
         }
-        case "controls": {
-            return "calc(var(--phone-handle-height) + 55dvh)";
-        }
     }
 }

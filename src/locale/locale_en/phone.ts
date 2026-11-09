@@ -27,7 +27,6 @@ export const PhoneLocale = {
     },
     drawer: {
         keys: "Keys",
-        controls: "Controls",
         songOnChannel: "The song is playing on this channel",
         pause: "Pause",
         resume: "Resume",

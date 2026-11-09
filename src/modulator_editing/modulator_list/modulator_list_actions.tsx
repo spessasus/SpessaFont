@@ -1,8 +1,7 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import "./modulator_list_phone.css";
-
-const BUTTON_CLASS = "modulator_main modulator_list_button hover_brightness";
+import { MODULATOR_LIST_BUTTON_CLASS } from "./modulator_list_button.ts";
 
 interface ModulatorListActionsProps {
     count: number;
@@ -39,7 +38,7 @@ export function ModulatorListActions({
                 <button
                     type={"button"}
                     onClick={onPaste}
-                    className={BUTTON_CLASS}
+                    className={MODULATOR_LIST_BUTTON_CLASS}
                 >
                     {t("paste")}
                 </button>
@@ -49,14 +48,14 @@ export function ModulatorListActions({
                     <button
                         type={"button"}
                         onClick={onCopy}
-                        className={BUTTON_CLASS}
+                        className={MODULATOR_LIST_BUTTON_CLASS}
                     >
                         {t("copy")}
                     </button>
                     <button
                         type={"button"}
                         onClick={onDelete}
-                        className={BUTTON_CLASS}
+                        className={MODULATOR_LIST_BUTTON_CLASS}
                     >
                         {t("delete")}
                     </button>

@@ -44,10 +44,10 @@ export function getTapModifiers(
     mode: SelectionMode,
     event: ClickModifiers
 ) {
-    if (layout === "desktop") {
-        return event;
+    if (layout === "phone") {
+        return mode === "selecting" ? SELECTION_TAP : NO_MODIFIERS;
     }
-    return mode === "selecting" ? SELECTION_TAP : NO_MODIFIERS;
+    return event;
 }
 
 /**

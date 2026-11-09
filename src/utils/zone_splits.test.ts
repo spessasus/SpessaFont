@@ -6,6 +6,7 @@ import {
     createTestSession,
     publishSetUp
 } from "../test_utils/bank_fixture.ts";
+import { getObjectId } from "./object_id.ts";
 import { getViewSplits } from "./zone_splits.ts";
 
 /**
@@ -41,14 +42,18 @@ describe("getViewSplits", () => {
         // One split per instrument zone, the sample instrument has two
         const full = { min: 0, max: 127 };
         const split = { keys: full, velocities: full };
+        // A preset split carries its preset zone, which sets its color on the phone minimap
+        const presetZone = getObjectId(presets[0].zones[0]);
         expect(splitsOf(session, presets[0])).toEqual([
-            { ...split, columnIndex: 0 },
-            { ...split, columnIndex: 0 }
+            { ...split, zoneId: presetZone },
+            { ...split, zoneId: presetZone }
         ]);
-        expect(splitsOf(session, instruments[0])).toEqual([
-            { ...split, columnIndex: 0 },
-            { ...split, columnIndex: 1 }
-        ]);
+        expect(splitsOf(session, instruments[0])).toEqual(
+            instruments[0].zones.map((zone) => ({
+                ...split,
+                zoneId: getObjectId(zone)
+            }))
+        );
     });
 
     it("uses a zone range when the global range is not set", () => {

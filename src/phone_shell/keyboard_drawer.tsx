@@ -5,9 +5,15 @@ import type { BankSession } from "../core_backend/bank_session.ts";
 import type { BankEditView } from "../core_backend/bank_view.ts";
 import { useViewName } from "../hooks/use_view_name.ts";
 import { useEngineStatus } from "../hooks/use_engine_status.ts";
+import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
 import { Keyboard } from "../keyboard/keyboard/keyboard.tsx";
 import { useViewSplits } from "../keyboard/use_view_splits.ts";
-import { getScrollForKey, getSplitsCenter } from "./zone_minimap_math.ts";
+import {
+    getMinimapSegments,
+    getScrollForKey,
+    getSplitsCenter,
+    getViewColumnIndexes
+} from "./zone_minimap_math.ts";
 import { DrawerHandle, type KeyReadout } from "./drawer_handle.tsx";
 import { OctaveStrip } from "./octave_strip.tsx";
 import { usePhoneShell } from "./phone_shell_context.ts";
@@ -35,6 +41,10 @@ export function KeyboardDrawer({
         state: { drawer }
     } = usePhoneShell();
     const splits = useViewSplits(isCovered ? undefined : session, view);
+    const views = useBankSnapshot(session.store, (s) => s.views);
+    const segments = splits
+        ? getMinimapSegments(splits, getViewColumnIndexes(view, views))
+        : [];
     const name = useViewName(session, view);
     const isSongPlaying = useEngineStatus((s) => s.hasSong && !s.isPaused);
     const [hovered, setHovered] = useState<KeyReadout>({
@@ -88,7 +98,7 @@ export function KeyboardDrawer({
             {drawer === "keys" && (
                 <div className={"drawer_keys"}>
                     <div className={"drawer_strip"}>
-                        <OctaveStrip keyboard={keyboard} splits={splits} />
+                        <OctaveStrip keyboard={keyboard} segments={segments} />
                     </div>
                     {isSongPlaying ? (
                         <p className={"drawer_song_note"}>
@@ -132,7 +142,6 @@ export function KeyboardDrawer({
                     )}
                 </div>
             )}
-            {drawer === "controls" && <div className={"drawer_controls"} />}
         </div>
     );
 }

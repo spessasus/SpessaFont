@@ -4,21 +4,21 @@ import {
     ChevronLeftIcon,
     ChevronRightIcon
 } from "../utils/icons/app_icons.tsx";
-import type { KeySplit } from "../utils/zone_splits.ts";
 import { ZoneMinimap } from "./zone_minimap.tsx";
+import type { MinimapSegment } from "./zone_minimap_math.ts";
 
 interface OctaveStripProps {
     /**
      * The phone keyboard to scroll. Null while it is not shown.
      */
     keyboard: HTMLDivElement | null;
-    splits: readonly KeySplit[] | undefined;
+    segments: readonly MinimapSegment[];
 }
 
 /**
  * The strip over the phone keys: octave buttons around the zone minimap.
  */
-export function OctaveStrip({ keyboard, splits }: OctaveStripProps) {
+export function OctaveStrip({ keyboard, segments }: OctaveStripProps) {
     const { t } = useTranslation();
 
     // An octave is seven white keys, and the 128 keys share the scroll width
@@ -42,7 +42,7 @@ export function OctaveStrip({ keyboard, splits }: OctaveStripProps) {
             >
                 <ChevronLeftIcon />
             </button>
-            <ZoneMinimap keyboard={keyboard} splits={splits} />
+            <ZoneMinimap keyboard={keyboard} segments={segments} />
             <button
                 type={"button"}
                 className={"plain_button octave_button"}

@@ -11,7 +11,6 @@ import type {
     RangeView,
     ZoneView
 } from "../core_backend/entity_views.ts";
-import { getColumnIndexes } from "../generator_table/zone_columns.ts";
 import { getObjectId } from "./object_id.ts";
 
 const FULL_RANGE: GenericRange = { min: 0, max: 127 };
@@ -23,10 +22,10 @@ export interface KeySplit {
     keys: GenericRange;
     velocities: GenericRange;
     /**
-     * The generator table column of the zone, which sets its color. Preset splits take their
-     * preset zone's column, so one zone has one color everywhere.
+     * The zone the split belongs to. Preset splits take their preset zone, so one zone has one
+     * color everywhere on the phone minimap.
      */
-    columnIndex?: number;
+    zoneId: number;
 }
 
 /**
@@ -58,20 +57,10 @@ function intersectRanges(a: GenericRange, b: GenericRange) {
     return min <= max ? { min, max } : undefined;
 }
 
-/**
- * With `views`, the splits carry their column index. A preset only needs the ranges of its
- * instruments, so it skips that work.
- */
-function getInstrumentSplits(instrument: InstrumentView, views?: BankViews) {
-    const indexes = views
-        ? getColumnIndexes(instrument.zones, {
-              kind: "samples",
-              views: views.samples
-          })
-        : undefined;
+function getInstrumentSplits(instrument: InstrumentView) {
     return instrument.zones.map((zone) => ({
         ...getZoneSplit(zone, instrument.globalZone),
-        columnIndex: indexes?.get(zone.id)
+        zoneId: zone.id
     }));
 }
 
@@ -81,10 +70,6 @@ function getInstrumentSplits(instrument: InstrumentView, views?: BankViews) {
  */
 function getPresetSplits(preset: PresetView, views: BankViews) {
     const splits = new Array<KeySplit>();
-    const indexes = getColumnIndexes(preset.zones, {
-        kind: "instruments",
-        views: views.instruments
-    });
     for (const zone of preset.zones) {
         const instrument =
             zone.childId === undefined
@@ -104,11 +89,7 @@ function getPresetSplits(preset: PresetView, views: BankViews) {
                 instrumentSplit.velocities
             );
             if (keys && velocities) {
-                splits.push({
-                    keys,
-                    velocities,
-                    columnIndex: indexes.get(zone.id)
-                });
+                splits.push({ keys, velocities, zoneId: zone.id });
             }
         }
     }
@@ -134,7 +115,7 @@ export function getViewSplits(
     }
     if (view instanceof BasicInstrument) {
         const instrument = views.instruments.get(id);
-        return instrument ? getInstrumentSplits(instrument, views) : undefined;
+        return instrument ? getInstrumentSplits(instrument) : undefined;
     }
     return undefined;
 }

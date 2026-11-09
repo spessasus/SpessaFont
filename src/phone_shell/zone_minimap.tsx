@@ -2,11 +2,10 @@ import type * as React from "react";
 import { useCallback, useRef, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
 import "./octave_strip.css";
-import type { KeySplit } from "../utils/zone_splits.ts";
 import {
-    getMinimapSegments,
     getScrollForKey,
-    getVisibleKeys
+    getVisibleKeys,
+    type MinimapSegment
 } from "./zone_minimap_math.ts";
 
 const KEY_COUNT = 128;
@@ -16,7 +15,7 @@ interface ZoneMinimapProps {
      * The phone keyboard that the window follows and scrolls. Null while it is not shown.
      */
     keyboard: HTMLDivElement | null;
-    splits: readonly KeySplit[] | undefined;
+    segments: readonly MinimapSegment[];
 }
 
 interface DragStart {
@@ -28,7 +27,7 @@ interface DragStart {
  * All 128 keys as a thin bar with the shown element's key ranges as colored segments and a
  * window over the keys the keyboard shows. Dragging the window scrolls the keyboard.
  */
-export function ZoneMinimap({ keyboard, splits }: ZoneMinimapProps) {
+export function ZoneMinimap({ keyboard, segments }: ZoneMinimapProps) {
     const { t } = useTranslation();
     const drag = useRef<DragStart>(null);
 
@@ -116,7 +115,7 @@ export function ZoneMinimap({ keyboard, splits }: ZoneMinimapProps) {
             onPointerCancel={endDrag}
             onLostPointerCapture={endDrag}
         >
-            {getMinimapSegments(splits ?? []).map((segment, index) => (
+            {segments.map((segment, index) => (
                 <div
                     // Segments follow the zone columns, which are positional
                     key={index}

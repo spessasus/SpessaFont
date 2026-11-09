@@ -7,8 +7,7 @@ describe("getDrawerOffset", () => {
         [
             "keys",
             "calc(var(--phone-handle-height) + var(--phone-strip-height) + var(--phone-keys-height))"
-        ],
-        ["controls", "calc(var(--phone-handle-height) + 55dvh)"]
+        ]
     ] as const)("offsets the toasts by the %s drawer", (drawer, offset) => {
         expect(getDrawerOffset(drawer)).toBe(offset);
     });

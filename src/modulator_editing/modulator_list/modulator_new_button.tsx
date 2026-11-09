@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { MODULATOR_LIST_BUTTON_CLASS } from "./modulator_list_button.ts";
 
 interface ModulatorNewButtonProps {
     onAdd: () => void;
@@ -13,9 +14,7 @@ export function ModulatorNewButton({ onAdd }: ModulatorNewButtonProps) {
         <button
             type={"button"}
             onClick={onAdd}
-            className={
-                "modulator_main modulator_list_button hover_brightness modulator_new_button"
-            }
+            className={`${MODULATOR_LIST_BUTTON_CLASS} modulator_new_button`}
         >
             {t("modulatorLocale.newModulator")}
         </button>

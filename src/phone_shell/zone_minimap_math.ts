@@ -1,17 +1,58 @@
+import { BasicInstrument, BasicPreset } from "spessasynth_core";
+import type { BankEditView } from "../core_backend/bank_view.ts";
+import type { BankViews } from "../core_backend/entity_views.ts";
 import { getZoneColorNumber } from "../generator_table/zone_color.ts";
+import { getColumnIndexes } from "../generator_table/zone_columns.ts";
+import { getObjectId } from "../utils/object_id.ts";
 import type { KeySplit } from "../utils/zone_splits.ts";
 
 const KEY_COUNT = 128;
+
+export interface MinimapSegment {
+    start: number;
+    end: number;
+    /**
+     * The zone color number, 1 to 4.
+     */
+    color: number;
+}
+
+/**
+ * The grid column of each zone id of the shown element, empty when it has no zones.
+ */
+export function getViewColumnIndexes(view: BankEditView, views: BankViews) {
+    if (view instanceof BasicPreset) {
+        const preset = views.presets.get(getObjectId(view));
+        if (preset) {
+            return getColumnIndexes(preset.zones, {
+                kind: "instruments",
+                views: views.instruments
+            });
+        }
+    } else if (view instanceof BasicInstrument) {
+        const instrument = views.instruments.get(getObjectId(view));
+        if (instrument) {
+            return getColumnIndexes(instrument.zones, {
+                kind: "samples",
+                views: views.samples
+            });
+        }
+    }
+    return new Map<number, number>();
+}
 
 /**
  * The keys of each split as a colored segment, in the color of the split's zone column like the
  * grid's header bar. A split without a column cycles by its position.
  */
-export function getMinimapSegments(splits: readonly KeySplit[]) {
+export function getMinimapSegments(
+    splits: readonly KeySplit[],
+    columnIndexes: ReadonlyMap<number, number>
+): MinimapSegment[] {
     return splits.map((split, index) => ({
         start: split.keys.min,
         end: split.keys.max,
-        color: getZoneColorNumber(split.columnIndex ?? index)
+        color: getZoneColorNumber(columnIndexes.get(split.zoneId) ?? index)
     }));
 }
 

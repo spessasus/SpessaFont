@@ -18,11 +18,8 @@ import { useBankFileOpener } from "./hooks/use_bank_file_opener.ts";
 import { useLaunchQueue } from "./hooks/use_launch_queue.ts";
 import { useElectronFileOpen } from "./hooks/use_electron_file_open.ts";
 import { useEventListener } from "./hooks/use_event_listener.ts";
-import {
-    isEditorShortcut,
-    isInModal,
-    isTextField
-} from "./utils/is_editor_shortcut.ts";
+import { isInModal } from "./utils/is_editor_shortcut.ts";
+import { useElementHistoryKeys } from "./hooks/use_element_history_keys.ts";
 import { useUncaughtErrorToasts } from "./hooks/use_uncaught_error_toasts.ts";
 import { pickFile } from "./utils/pick_file.ts";
 import { getFileName } from "./utils/file_path.ts";
@@ -30,7 +27,6 @@ import { useFileDrop } from "./hooks/use_file_drop.ts";
 import { useSampleImport } from "./menu_list/use_sample_import.ts";
 import { ErrorBoundary } from "./error_boundary/error_boundary.tsx";
 import { renderPartError } from "./error_boundary/render_part_error.tsx";
-import { IS_MAC } from "./utils/environment_detection.ts";
 import { rememberFocus } from "./utils/focus_return.ts";
 import { ToolsMenuSlotContext } from "./menu_bar/tools_menu_slot.ts";
 import { useLayout } from "./layout/layout_context.ts";
@@ -161,51 +157,7 @@ export function App() {
 
     const isEditorShown = activeSession !== undefined && !areSettingsShown;
 
-    // Alt+Left and Right, and the mouse's side buttons, go back and forward between elements.
-    // The page has no history of its own, so the browser would leave it instead, even where
-    // the keys do nothing in the app (a field, a dialog, the settings)
-    useEventListener(document, "keydown", (e) => {
-        if (
-            e.defaultPrevented ||
-            !e.altKey ||
-            (e.key !== "ArrowLeft" && e.key !== "ArrowRight")
-        ) {
-            return;
-        }
-        // On macOS Option and an arrow move the cursor by a word
-        if (IS_MAC && isTextField(e.target)) {
-            return;
-        }
-        e.preventDefault();
-        if (!isEditorShown || !isEditorShortcut(e)) {
-            return;
-        }
-        if (e.key === "ArrowLeft") {
-            goBack();
-        } else {
-            goForward();
-        }
-    });
-    useEventListener(document, "mousedown", (e) => {
-        if (e.button === 3 || e.button === 4) {
-            e.preventDefault();
-        }
-    });
-    useEventListener(document, "mouseup", (e) => {
-        if (e.button !== 3 && e.button !== 4) {
-            return;
-        }
-        e.preventDefault();
-        // Nothing changes behind a dialog
-        if (!isEditorShown || isInModal(e.target)) {
-            return;
-        }
-        if (e.button === 3) {
-            goBack();
-        } else {
-            goForward();
-        }
-    });
+    useElementHistoryKeys(isEditorShown, goBack, goForward);
 
     useEventListener(document, "keydown", (e) => {
         if (

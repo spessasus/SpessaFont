@@ -126,11 +126,6 @@
     color: var(--muted-font-color);
 }
 
-:root[data-layout="phone"] .drawer_controls {
-    height: 55dvh;
-    overflow-y: auto;
-}
-
 :root[data-layout="phone"] .drawer_keyboard {
     display: flex;
     min-width: 0;

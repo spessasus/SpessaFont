@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useEngineStatus } from "../hooks/use_engine_status.ts";
 import { DrawerSongControls } from "./drawer_song_controls.tsx";
-import type { DrawerState } from "./phone_shell_state.ts";
 import { usePhoneShell } from "./phone_shell_context.ts";
 
 export interface KeyReadout {
@@ -38,29 +37,20 @@ export function DrawerHandle({ name, readout }: DrawerHandleProps) {
     } = usePhoneShell();
     const hasSong = useEngineStatus((s) => s.hasSong);
 
-    const toggle = (target: DrawerState) =>
-        dispatch({
-            type: "setDrawer",
-            drawer: drawer === target ? "collapsed" : target
-        });
-
     return (
         <div className={"drawer_handle"}>
             <button
                 type={"button"}
                 className={"pretty_button drawer_toggle"}
                 aria-pressed={drawer === "keys"}
-                onClick={() => toggle("keys")}
+                onClick={() =>
+                    dispatch({
+                        type: "setDrawer",
+                        drawer: drawer === "keys" ? "collapsed" : "keys"
+                    })
+                }
             >
                 {t("phoneLocale.drawer.keys")}
-            </button>
-            <button
-                type={"button"}
-                className={"pretty_button drawer_toggle"}
-                aria-pressed={drawer === "controls"}
-                onClick={() => toggle("controls")}
-            >
-                {t("phoneLocale.drawer.controls")}
             </button>
             <span
                 className={"drawer_name"}
