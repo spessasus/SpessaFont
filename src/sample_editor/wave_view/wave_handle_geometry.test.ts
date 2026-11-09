@@ -53,6 +53,16 @@ describe("wave handle geometry", () => {
         expect(right.start).toBeGreaterThanOrEqual(EDGE_INSET);
     });
 
+    it("keeps close points next to an edge at least 16 px apart", () => {
+        // The end is pinned by the right inset, the start is not
+        const right = getHandleLefts(WIDTH - 40, WIDTH - 4, WIDTH, null);
+        expect(right.end).toBe(WIDTH - EDGE_INSET - HANDLE_SIZE);
+        expect(right.end - right.start).toBeGreaterThanOrEqual(16);
+        const left = getHandleLefts(4, 40, WIDTH, null);
+        expect(left.start).toBe(EDGE_INSET);
+        expect(left.end - left.start).toBeGreaterThanOrEqual(16);
+    });
+
     it("puts the last touched handle on top", () => {
         expect(getHandleOffsets(200, 210, "end").top).toBe("end");
         expect(getHandleOffsets(200, 210, "start").top).toBe("start");

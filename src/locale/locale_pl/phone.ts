@@ -222,6 +222,10 @@ export const PhoneLocale = {
             "To pasmo jest powyżej połowy częstotliwości próbkowania",
         name: "Nazwa"
     },
+    wave: {
+        loopStartHandle: "Początek pętli",
+        loopEndHandle: "Koniec pętli"
+    },
     dialogs: {
         invalidNumber: "Wpisz liczbę od {{min}} do {{max}}"
     }

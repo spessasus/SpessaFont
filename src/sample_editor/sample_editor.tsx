@@ -163,9 +163,12 @@ function SampleEditorPane({
 
     const wave = (
         <WaveView
+            sampleId={view.id}
             zoom={zoom}
             onLoopStartChange={edits.setLoopStart}
             onLoopEndChange={edits.setLoopEnd}
+            onStepLoopStart={edits.stepLoopStart}
+            onStepLoopEnd={edits.stepLoopEnd}
             data={data}
             loopStart={view.loopStart}
             loopEnd={view.loopEnd}

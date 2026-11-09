@@ -64,6 +64,13 @@ export function getHandleLefts(
         end = min + HANDLE_SIZE;
     } else if (start === max && end === max) {
         start = max - HANDLE_SIZE;
+    } else if (end - start < 2 * NUDGE) {
+        // The clamp ate the offset of the handle at the edge, so the other one gives way
+        if (end === max) {
+            start = Math.max(min, end - 2 * NUDGE);
+        } else {
+            end = Math.min(max, start + 2 * NUDGE);
+        }
     }
     return { start, end, top: offsets.top };
 }

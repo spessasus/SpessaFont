@@ -9,6 +9,7 @@ import { getWaveClickHandlers } from "./wave_click_handlers.ts";
 import { xToSample } from "./wave_geometry.ts";
 import { WaveformLayer } from "./waveform_layer.tsx";
 import { OverlayLayer } from "./overlay_layer.tsx";
+import { type LoopPreview, WaveTouchLayer } from "./wave_touch_layer.tsx";
 
 /**
  * Shown until the audio is read.
@@ -17,6 +18,10 @@ const NO_AUDIO = new Float32Array(0);
 
 interface WaveViewProps {
     /**
+     * The shown sample's view id. A drag on the phone's loop handles belongs to one sample.
+     */
+    sampleId: number;
+    /**
      * Undefined until the audio is read, the loop points cannot be set before.
      */
     data: Float32Array | undefined;
@@ -24,6 +29,11 @@ interface WaveViewProps {
     loopEnd: number;
     onLoopStartChange: (loopStart: number) => void;
     onLoopEndChange: (loopEnd: number) => void;
+    /**
+     * Steps of the phone's loop handles from the keyboard. A burst is one undo step.
+     */
+    onStepLoopStart: (by: number) => void;
+    onStepLoopEnd: (by: number) => void;
     sampleRate: number;
     playbackStartTime: number;
     playerState: SamplePlayerState;
@@ -33,14 +43,18 @@ interface WaveViewProps {
 
 /**
  * The sample's wave with its loop points. A click sets the loop start and a right click the
- * loop end, as a mouse shortcut for the loop inputs. Zooming keeps the middle of the view.
+ * loop end, as a mouse shortcut for the loop inputs. On a phone the loop lines have handles to
+ * drag instead (`WaveTouchLayer`). Zooming keeps the middle of the view.
  */
 export function WaveView({
+    sampleId,
     data: readData,
     loopStart,
     loopEnd,
     onLoopStartChange,
     onLoopEndChange,
+    onStepLoopStart,
+    onStepLoopEnd,
     sampleRate,
     playbackStartTime,
     playerState,
@@ -52,9 +66,35 @@ export function WaveView({
     const scrollerRef = useRef<HTMLDivElement>(null);
     const [scrollX, setScrollX] = useState(0);
     const [hoveredSample, setHoveredSample] = useState<number | null>(null);
+    // A loop handle drag, kept with its sample so another sample never shows it
+    const [dragPreview, setDragPreview] = useState<
+        (LoopPreview & { sampleId: number }) | null
+    >(null);
+    const [width, setWidth] = useState(0);
     const isLoaded = readData !== undefined;
     const data = readData ?? NO_AUDIO;
     const sampleCount = data.length;
+    const preview = dragPreview?.sampleId === sampleId ? dragPreview : null;
+    const shownStart =
+        preview?.property === "loopStart" ? preview.point : loopStart;
+    const shownEnd = preview?.property === "loopEnd" ? preview.point : loopEnd;
+    const hasHandles = layout === "phone" && isLoaded && width > 0;
+
+    // The handles are placed in pixels, so the phone follows the view's width
+    const measureWidth = (node: HTMLDivElement | null) => {
+        if (!node || layout !== "phone") {
+            return;
+        }
+        if (typeof ResizeObserver === "undefined") {
+            setWidth(node.clientWidth);
+            return;
+        }
+        const observer = new ResizeObserver(([entry]) =>
+            setWidth(entry.contentRect.width)
+        );
+        observer.observe(node);
+        return () => observer.disconnect();
+    };
 
     // The scroll position is in pixels of the zoomed wave, so a new zoom moves it to keep the
     // sample in the middle of the view where it was. The position before the zoom is kept here,
@@ -86,6 +126,7 @@ export function WaveView({
 
     return (
         <div
+            ref={measureWidth}
             className={"wave_view"}
             data-loading={!isLoaded}
             {...getWaveClickHandlers(layout, {
@@ -105,8 +146,8 @@ export function WaveView({
                 <WaveformLayer data={data} zoom={zoom} scrollX={scrollX} />
                 <OverlayLayer
                     data={data}
-                    loopStart={loopStart}
-                    loopEnd={loopEnd}
+                    loopStart={shownStart}
+                    loopEnd={shownEnd}
                     zoom={zoom}
                     scrollX={scrollX}
                     hoveredSample={hoveredSample}
@@ -131,7 +172,7 @@ export function WaveView({
                             </span>
                             <span>
                                 {t("sampleLocale.loopFrames", {
-                                    frames: loopEnd - loopStart
+                                    frames: shownEnd - shownStart
                                 })}
                             </span>
                             <span>
@@ -175,6 +216,23 @@ export function WaveView({
                     style={{ "--wave-zoom": zoom }}
                 />
             </div>
+            {hasHandles ? (
+                <WaveTouchLayer
+                    key={sampleId}
+                    viewport={{ sampleCount, width, zoom, scrollX }}
+                    loopStart={shownStart}
+                    loopEnd={shownEnd}
+                    sampleLength={sampleCount}
+                    sampleRate={sampleRate}
+                    onPreviewChange={(next) =>
+                        setDragPreview(next && { ...next, sampleId })
+                    }
+                    onLoopStartChange={onLoopStartChange}
+                    onLoopEndChange={onLoopEndChange}
+                    onStepLoopStart={onStepLoopStart}
+                    onStepLoopEnd={onStepLoopEnd}
+                />
+            ) : null}
         </div>
     );
 }

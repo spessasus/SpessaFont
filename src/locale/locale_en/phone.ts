@@ -200,6 +200,10 @@ export const PhoneLocale = {
         bandAboveNyquist: "This band is above half the sample rate",
         name: "Name"
     },
+    wave: {
+        loopStartHandle: "Loop start",
+        loopEndHandle: "Loop end"
+    },
     dialogs: {
         invalidNumber: "Enter a number from {{min}} to {{max}}"
     }
