@@ -18,7 +18,8 @@ interface SampleSectionsProps {
 /**
  * The phone sample editor: the wave and its zoom stay pinned, and only the chosen section is
  * mounted, in a scroller of its own. A swipe on the wave pans it sideways, so the column
- * itself does not scroll.
+ * itself does not scroll. Landscape lays the two wrappers out as columns, portrait ignores
+ * them, so a rotation remounts nothing.
  */
 export function SampleSections({
     section,
@@ -39,36 +40,40 @@ export function SampleSections({
     };
     return (
         <>
-            {wave}
-            <div className={"sample_sections_zoom"}>{zoom}</div>
-            <div className={"sample_sections_control"}>
-                <SegmentedControl
-                    label={t("phoneLocale.sample.sections")}
-                    options={[
-                        {
-                            value: SAMPLE_SECTIONS.loop,
-                            label: t("phoneLocale.sample.loop")
-                        },
-                        {
-                            value: SAMPLE_SECTIONS.props,
-                            label: t("phoneLocale.sample.props")
-                        },
-                        {
-                            value: SAMPLE_SECTIONS.eq,
-                            label: t("phoneLocale.sample.eq")
-                        },
-                        {
-                            value: SAMPLE_SECTIONS.usedBy,
-                            label: t("phoneLocale.sample.usedBy")
-                        }
-                    ]}
-                    value={section}
-                    onChange={onSectionChange}
-                />
+            <div className={"sample_sections_wave_column"}>
+                {wave}
+                <div className={"sample_sections_zoom"}>{zoom}</div>
             </div>
-            {/* Keyed, so another section starts at its top */}
-            <div key={section} className={"sample_sections_body"}>
-                {slots[section]}
+            <div className={"sample_sections_section_column"}>
+                <div className={"sample_sections_control"}>
+                    <SegmentedControl
+                        label={t("phoneLocale.sample.sections")}
+                        options={[
+                            {
+                                value: SAMPLE_SECTIONS.loop,
+                                label: t("phoneLocale.sample.loop")
+                            },
+                            {
+                                value: SAMPLE_SECTIONS.props,
+                                label: t("phoneLocale.sample.props")
+                            },
+                            {
+                                value: SAMPLE_SECTIONS.eq,
+                                label: t("phoneLocale.sample.eq")
+                            },
+                            {
+                                value: SAMPLE_SECTIONS.usedBy,
+                                label: t("phoneLocale.sample.usedBy")
+                            }
+                        ]}
+                        value={section}
+                        onChange={onSectionChange}
+                    />
+                </div>
+                {/* Keyed, so another section starts at its top */}
+                <div key={section} className={"sample_sections_body"}>
+                    {slots[section]}
+                </div>
             </div>
         </>
     );
