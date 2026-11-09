@@ -1,6 +1,7 @@
 import { useMemo, useReducer, useState } from "react";
 import { Toaster } from "react-hot-toast";
 import "./phone_shell.css";
+import "../toasts/toasts_phone.css";
 import type { BankTabs } from "../tab_list/use_bank_tabs.ts";
 import { TabList } from "../tab_list/tab_list.tsx";
 import { Welcome } from "../welcome/welcome.tsx";
@@ -163,7 +164,7 @@ export function PhoneShell({
                 <Toaster
                     position={"bottom-center"}
                     containerStyle={{
-                        bottom: "calc(var(--phone-drawer-offset) + var(--flex-gap))"
+                        bottom: "calc(var(--phone-drawer-offset) + 1rem)"
                     }}
                     toastOptions={{ className: "toasts" }}
                 />

@@ -1,0 +1,7 @@
+:root[data-layout="phone"] .toast_button {
+    min-height: var(--phone-touch);
+}
+
+:root[data-layout="phone"] .toasts {
+    max-width: calc(100vw - 2 * var(--phone-gutter));
+}

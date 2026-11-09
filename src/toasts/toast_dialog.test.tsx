@@ -116,6 +116,14 @@ describe("ToastDialog back handling", () => {
         expect(second.doesLowerHandle).toHaveBeenCalledTimes(1);
     });
 
+    it("keeps Escape answering with the safe button", () => {
+        const { leave, stay, onDismiss } = renderQuestion("phone");
+        fireEvent.keyDown(screen.getByRole("alertdialog"), { key: "Escape" });
+        expect(stay).toHaveBeenCalledTimes(1);
+        expect(leave).not.toHaveBeenCalled();
+        expect(onDismiss).toHaveBeenCalledTimes(1);
+    });
+
     it("ignores back on desktop", () => {
         const { leave, stay, onDismiss } = renderQuestion("desktop");
         fakeHistory.pressBack();
