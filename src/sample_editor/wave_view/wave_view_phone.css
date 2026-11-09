@@ -1,0 +1,12 @@
+:root[data-layout="phone"] .wave_view {
+    height: 12.5rem;
+    min-height: 12.5rem;
+    flex-grow: 0;
+    flex-shrink: 0;
+    cursor: default;
+    touch-action: pan-x;
+}
+
+:root[data-layout="phone"] .wave_view_child {
+    touch-action: pan-x;
+}

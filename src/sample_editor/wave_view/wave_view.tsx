@@ -3,6 +3,9 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { SamplePlayerState } from "../use_sample_player.ts";
 import "./wave_view.css";
+import "./wave_view_phone.css";
+import { useLayout } from "../../layout/layout_context.ts";
+import { getWaveClickHandlers } from "./wave_click_handlers.ts";
 import { xToSample } from "./wave_geometry.ts";
 import { WaveformLayer } from "./waveform_layer.tsx";
 import { OverlayLayer } from "./overlay_layer.tsx";
@@ -45,6 +48,7 @@ export function WaveView({
     centCorrection
 }: WaveViewProps) {
     const { t } = useTranslation();
+    const layout = useLayout();
     const scrollerRef = useRef<HTMLDivElement>(null);
     const [scrollX, setScrollX] = useState(0);
     const [hoveredSample, setHoveredSample] = useState<number | null>(null);
@@ -84,17 +88,12 @@ export function WaveView({
         <div
             className={"wave_view"}
             data-loading={!isLoaded}
-            onClick={(e) => {
-                if (isLoaded) {
-                    onLoopStartChange(getSampleAt(e));
-                }
-            }}
-            onContextMenu={(e) => {
-                e.preventDefault();
-                if (isLoaded) {
-                    onLoopEndChange(getSampleAt(e));
-                }
-            }}
+            {...getWaveClickHandlers(layout, {
+                isLoaded,
+                getSampleAt,
+                onLoopStartChange,
+                onLoopEndChange
+            })}
             onPointerMove={(e) => {
                 if (isLoaded) {
                     setHoveredSample(getSampleAt(e));
