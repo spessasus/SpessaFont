@@ -160,3 +160,9 @@
     margin-right: 0;
     margin-bottom: 0.25rem;
 }
+
+/* A loop point keeps room for five digits, the narrow sections column grows for it */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .loop_section_stepper_row {
+    grid-template-columns: auto auto minmax(5rem, 1fr) auto auto;
+}

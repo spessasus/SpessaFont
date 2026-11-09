@@ -285,11 +285,24 @@
 :root[data-layout="phone"][data-orientation="landscape"]
     :has(> .editor_sheet)
     > .zone_table_wrapper {
-    min-height: max(
-        0px,
-        min(
-            4.25rem + var(--phone-cell-height),
-            100% - 1rem - 2 * var(--phone-row-height) - var(--flex-gap)
-        )
+    --grid-floor: min(
+        4.25rem + var(--phone-cell-height),
+        100% - 1rem - 2 * var(--phone-row-height) - var(--flex-gap)
     );
+    min-height: max(0px, var(--grid-floor));
+}
+
+/*
+ * Less than the header row would only show a sliver of it, so the sheet takes that too. A
+ * declaration with var() is never dropped at parse time, so it needs the feature test
+ */
+@supports (min-height: calc(1px * sign(100% - 1px))) {
+    :root[data-layout="phone"][data-orientation="landscape"]
+        :has(> .editor_sheet)
+        > .zone_table_wrapper {
+        min-height: calc(
+            var(--grid-floor) *
+                max(0, sign(var(--grid-floor) - 4.25rem + 0.5px))
+        );
+    }
 }

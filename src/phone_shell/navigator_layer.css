@@ -129,8 +129,8 @@
  * transition, never display: none
  */
 :root[data-layout="phone"][data-orientation="landscape"] .navigator_layer {
-    /* Down over the drawer's rows, which move aside */
-    inset: 0 auto calc(-1 * var(--phone-drawer-offset)) 0;
+    /* Down over the drawer's rows and its top border, which move aside */
+    inset: 0 auto calc(-1 * var(--phone-drawer-offset) - 1px) 0;
     width: var(--phone-dock-width);
     transform: none;
     visibility: visible;
@@ -174,4 +174,30 @@
     width: 1.5rem;
     height: 1.5rem;
     margin-top: calc((var(--phone-touch) - 1.5rem) / 2);
+}
+
+/* The docked header holds the bank tabs, which scroll sideways when there are many */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .navigator_dock_header
+    .navigator_tabs {
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    padding: 0;
+    border-bottom: none;
+}
+
+/* Landscape is short, so the dock's fixed rows take the touch size */
+:root[data-layout="phone"][data-orientation="landscape"] .navigator_overview,
+:root[data-layout="phone"][data-orientation="landscape"]
+    .navigator_layer
+    .item_group_header {
+    height: var(--phone-touch);
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .navigator_layer
+    .list_search_bar {
+    min-height: var(--phone-touch);
+    padding-block: 0;
 }

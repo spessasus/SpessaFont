@@ -76,3 +76,11 @@
     height: auto;
     min-height: calc(1rem + 2 * var(--phone-row-height));
 }
+
+/*
+ * While a sheet is docked in landscape the drawer's keys get shorter, still playable for an
+ * audition, so the sheet's body and the grid above it keep a usable height
+ */
+:root[data-layout="phone"][data-orientation="landscape"]:has(.editor_sheet) {
+    --phone-keys-height: 3.5rem;
+}

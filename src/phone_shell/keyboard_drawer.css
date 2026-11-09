@@ -151,16 +151,32 @@
 :root[data-layout="phone"][data-orientation="landscape"]
     .drawer_handle
     .drawer_voices {
-    /* The row's gap is closed for the strip, the count keeps its own */
+    /* The row's gap is closed for the strip, the count keeps its own and its number */
     margin-inline-start: 0.5rem;
-    flex-shrink: 1;
-    min-width: 0;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    flex-shrink: 0;
+}
+
+/* With the strip in the row a song keeps its time and pause, the name gives way */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .drawer_handle:has(.zone_minimap)
+    .drawer_song_name {
+    display: none;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .drawer_handle:has(.zone_minimap)
+    .drawer_song_controls {
+    flex: none;
 }
 
 /* The strip's buttons carry their own touch padding, so the crowded row closes its gaps */
 :root[data-layout="phone"][data-orientation="landscape"] .drawer_handle {
     gap: 0.25rem;
+}
+
+/* A song's controls need the row too, so the minimap gets narrower (still draggable) */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .drawer_handle:has(.drawer_song_controls)
+    .zone_minimap {
+    min-width: 3.5rem;
 }

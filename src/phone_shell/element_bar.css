@@ -153,3 +153,27 @@
     display: flex;
     flex: none;
 }
+
+/* The grid's view bar takes the end of the landscape row, so the bar's detail gives way */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .element_bar_row:has(.grid_view_bar)
+    .element_bar_detail {
+    display: none;
+}
+
+/* A long patch label (Drums in Polish) gives way before the name */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .element_bar_row
+    .element_bar_glyph {
+    flex-shrink: 1;
+    min-width: 1.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .element_bar_row
+    .element_bar_name {
+    min-width: 5rem;
+}

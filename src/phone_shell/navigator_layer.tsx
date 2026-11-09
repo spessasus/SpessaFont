@@ -85,11 +85,47 @@ export function NavigatorLayer({
         }
     };
 
+    // The open banks and the add button, a row of their own in portrait
+    const tabs = (
+        <div className={"navigator_tabs"}>
+            {tabList}
+            <button
+                type={"button"}
+                className={"plain_button navigator_button"}
+                aria-label={t("phoneLocale.navigator.addBank")}
+                aria-haspopup={"dialog"}
+                onClick={(e) =>
+                    openMenu(
+                        e,
+                        [
+                            {
+                                label: t("phoneLocale.overflow.open"),
+                                icon: "open",
+                                onSelect: onOpenFile
+                            },
+                            {
+                                label: t("phoneLocale.overflow.new"),
+                                icon: "new",
+                                onSelect: onNewFile
+                            }
+                        ],
+                        {
+                            title: t("phoneLocale.navigator.openBanks")
+                        }
+                    )
+                }
+            >
+                <PlusIcon />
+            </button>
+        </div>
+    );
     const toggleCollapsed = () => dispatch({ type: "toggleCollapsed" });
     // The selection bar takes the place of this bar in selection mode. Docked in landscape,
     // the lists cover nothing, so there is nothing to close or keep open
+    // Landscape is short, so the docked header holds the bank tabs instead of a title
     const titleBar = isLandscape ? (
-        <PhoneLayerHeader title={t("phoneLocale.navigator.title")}>
+        <div className={"phone_layer_header navigator_dock_header"}>
+            {tabs}
             <button
                 type={"button"}
                 className={"plain_button navigator_button"}
@@ -98,7 +134,7 @@ export function NavigatorLayer({
             >
                 <SidebarCollapseIcon />
             </button>
-        </PhoneLayerHeader>
+        </div>
     ) : (
         <PhoneLayerHeader
             icon={"close"}
@@ -119,37 +155,7 @@ export function NavigatorLayer({
     );
     const header = (
         <>
-            <div className={"navigator_tabs"}>
-                {tabList}
-                <button
-                    type={"button"}
-                    className={"plain_button navigator_button"}
-                    aria-label={t("phoneLocale.navigator.addBank")}
-                    aria-haspopup={"dialog"}
-                    onClick={(e) =>
-                        openMenu(
-                            e,
-                            [
-                                {
-                                    label: t("phoneLocale.overflow.open"),
-                                    icon: "open",
-                                    onSelect: onOpenFile
-                                },
-                                {
-                                    label: t("phoneLocale.overflow.new"),
-                                    icon: "new",
-                                    onSelect: onNewFile
-                                }
-                            ],
-                            {
-                                title: t("phoneLocale.navigator.openBanks")
-                            }
-                        )
-                    }
-                >
-                    <PlusIcon />
-                </button>
-            </div>
+            {isLandscape ? null : tabs}
             <button
                 type={"button"}
                 className={"plain_button navigator_overview"}
