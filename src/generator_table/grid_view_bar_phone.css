@@ -42,3 +42,13 @@
     width: 1.5rem;
     height: 1.5rem;
 }
+
+/* In the landscape element bar row (view_bar_slot.ts) the bar takes the row's look */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .view_bar_slot
+    .grid_view_bar {
+    position: static;
+    height: var(--phone-element-bar-height);
+    border-bottom: none;
+    background: none;
+}

@@ -40,6 +40,8 @@
     --phone-keys-height: 5.5rem;
     --phone-dock-width: clamp(15rem, 35vw, 20rem);
     --phone-sheet-height: 60dvh;
+    /* The grid's view bar moves into the element bar row, so the grid keeps no room for it */
+    --phone-view-bar-height: 0rem;
 }
 
 /* The page never scrolls, and dvh follows the address bar and the soft keyboard */

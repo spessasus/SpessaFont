@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { BasicInstrument, BasicPreset, BasicSample } from "spessasynth_core";
@@ -21,6 +21,7 @@ import {
     type SampleSection
 } from "../sample_editor/sample_section.ts";
 import { PropertiesSheet } from "./properties_sheet.tsx";
+import { PhoneShellContext } from "./phone_shell_context.ts";
 
 interface ElementBarProps {
     view: BankEditView;
@@ -50,6 +51,9 @@ function BarButton({
     detail,
     onClick
 }: BarButtonProps) {
+    // The landscape row gives the end to the grid's view bar. Not usePhoneShell, which throws
+    // where the bar renders without the shell (its tests)
+    const isLandscape = useContext(PhoneShellContext)?.isLandscape ?? false;
     return (
         <button type={"button"} className={"element_bar"} onClick={onClick}>
             <span
@@ -67,7 +71,9 @@ function BarButton({
             >
                 {name}
             </span>
-            <span className={"element_bar_detail"}>{detail}</span>
+            {isLandscape ? null : (
+                <span className={"element_bar_detail"}>{detail}</span>
+            )}
             <span className={"element_bar_chevron"} aria-hidden={true}>
                 <ChevronRightIcon />
             </span>

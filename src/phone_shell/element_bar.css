@@ -125,3 +125,31 @@
 :root[data-layout="phone"] .element_bar_glyph * {
     color: inherit;
 }
+
+/* Portrait keeps the bar as it was, the empty slot takes no space */
+:root[data-layout="phone"] .element_bar_row {
+    display: contents;
+}
+
+/* Landscape puts the grid's view bar at the end of the row (spec 4.4) */
+:root[data-layout="phone"][data-orientation="landscape"] .element_bar_row {
+    display: flex;
+    align-items: stretch;
+    flex: none;
+    min-width: 0;
+    border-bottom: solid 1px var(--track-border-color);
+    background: var(--lighter-color-end);
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .element_bar_row
+    .element_bar {
+    flex: 1;
+    min-width: 0;
+    border-bottom: none;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"] .view_bar_slot {
+    display: flex;
+    flex: none;
+}

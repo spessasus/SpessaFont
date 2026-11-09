@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import "./bank_editor.css";
 import "./bank_editor_phone.css";
 import type { BankEditorProps } from "./bank_editor.tsx";
@@ -11,6 +11,7 @@ import { BACK_LEVELS } from "../phone_shell/back_stack.ts";
 import { ElementBar } from "../phone_shell/element_bar.tsx";
 import { getDrillTo } from "../phone_shell/drill_to.ts";
 import { NavigatorLayer } from "../phone_shell/navigator_layer.tsx";
+import { ViewBarSlotContext } from "../phone_shell/view_bar_slot.ts";
 
 interface PhoneBankEditorProps extends BankEditorProps {
     /**
@@ -30,7 +31,9 @@ export function PhoneBankEditor({
     onOpenFile,
     onNewFile
 }: PhoneBankEditorProps) {
-    const { dispatch, presence } = usePhoneShell();
+    const { dispatch, presence, isLandscape } = usePhoneShell();
+    // Landscape moves the grid's view bar into the element bar row
+    const [viewBarSlot, setViewBarSlot] = useState<HTMLDivElement | null>(null);
     const drillTo = getDrillTo(
         session.id,
         selectedView,
@@ -56,15 +59,20 @@ export function PhoneBankEditor({
                 className={"bank_editor_content"}
                 inert={presence.isCoveringEditor}
             >
-                <ElementBar
-                    view={view}
-                    onSampleSection={model.setSampleSection}
-                />
-                <BankEditorWindow
-                    model={model}
-                    sampleSection={model.sampleSection}
-                    onSampleSectionChange={model.setSampleSection}
-                />
+                <div className={"element_bar_row"}>
+                    <ElementBar
+                        view={view}
+                        onSampleSection={model.setSampleSection}
+                    />
+                    <div ref={setViewBarSlot} className={"view_bar_slot"} />
+                </div>
+                <ViewBarSlotContext value={isLandscape ? viewBarSlot : null}>
+                    <BankEditorWindow
+                        model={model}
+                        sampleSection={model.sampleSection}
+                        onSampleSectionChange={model.setSampleSection}
+                    />
+                </ViewBarSlotContext>
             </div>
             <NavigatorLayer
                 view={view}

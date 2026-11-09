@@ -15,7 +15,7 @@ import { TableHeader } from "./table_header.tsx";
 import "./generator_table.css";
 import "./generator_table_phone.css";
 import { useRef, useState } from "react";
-import { flushSync } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { ModulatorRow } from "./modulator_row.tsx";
 import { ModulatorEditor } from "./modulator_edit/modulator_editor.tsx";
@@ -45,6 +45,7 @@ import { getOneZoneColumns } from "./one_zone_columns.ts";
 import { useZoneCommands } from "./use_zone_commands.ts";
 import { PhoneGridSheets } from "./phone_grid_sheets.tsx";
 import { GeneratorTableBody } from "./generator_table_body.tsx";
+import { useViewBarSlot } from "../phone_shell/view_bar_slot.ts";
 
 const NO_CELLS = new Set<number>();
 
@@ -86,6 +87,7 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
     // Focused when the table comes back after the modulator editor
     const focusOnMountRef = useRef<string | null>(null);
     const layout = useLayout();
+    const viewBarSlot = useViewBarSlot();
     const zoneCommands = useZoneCommands(element);
     const children: ZoneChildren = isInstrument
         ? { kind: "samples", views: sampleViews }
@@ -231,6 +233,18 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
 
     const sheetRow = rows.find((r) => r.generator === cellSelection?.generator);
 
+    const viewBar =
+        layout === "phone" ? (
+            <GridViewBar
+                mode={phoneGrid.settings.mode}
+                onModeChange={phoneGrid.settings.setMode}
+                isValuesOnly={phoneGrid.settings.isValuesOnly}
+                onValuesOnlyChange={phoneGrid.settings.setValuesOnly}
+                areAllCollapsed={phoneGrid.areAllCollapsed}
+                onToggleAll={phoneGrid.toggleAllGroups}
+            />
+        ) : null;
+
     return (
         <>
             <div
@@ -250,16 +264,15 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
                         : undefined
                 }
             >
-                {layout === "phone" ? (
-                    <GridViewBar
-                        mode={phoneGrid.settings.mode}
-                        onModeChange={phoneGrid.settings.setMode}
-                        isValuesOnly={phoneGrid.settings.isValuesOnly}
-                        onValuesOnlyChange={phoneGrid.settings.setValuesOnly}
-                        areAllCollapsed={phoneGrid.areAllCollapsed}
-                        onToggleAll={phoneGrid.toggleAllGroups}
-                    />
-                ) : null}
+                {/*
+                 * Landscape puts it in the element bar row, a tap there still bubbles here. The
+                 * modulator layer covers the grid, not the row, so the bar leaves with the grid
+                 */}
+                {viewBarSlot
+                    ? editedColumn
+                        ? null
+                        : createPortal(viewBar, viewBarSlot)
+                    : viewBar}
                 <table
                     ref={(table) => {
                         tableRef.current = table;
