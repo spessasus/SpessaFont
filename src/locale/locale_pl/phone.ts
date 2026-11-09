@@ -173,6 +173,7 @@ export const PhoneLocale = {
         stepUp: "Zwiększ o krok",
         times10: "×10",
         sends: "wysyła {{text}}",
+        slider: "Przeciągnij, aby ustawić wartość",
         apply: "Zastosuj",
         low: "Od",
         high: "Do",

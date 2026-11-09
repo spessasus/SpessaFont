@@ -19,7 +19,12 @@ import {
     ChevronRightIcon
 } from "../../utils/icons/app_icons.tsx";
 import { generatorLocaleMap } from "../../utils/translated_options/generator_to_locale_map.ts";
-import { type CellContext, readViewCell } from "../cell/cell_values.ts";
+import {
+    type CellContext,
+    getGlobalCellValue,
+    readPlayedViewCell,
+    readViewCell
+} from "../cell/cell_values.ts";
 import { isRangeGenerator } from "../cell/range_generator.ts";
 import { useCellCommands } from "../cell/use_cell_commands.ts";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
@@ -34,6 +39,7 @@ import { getViewZones, type ZoneColumn } from "../zone_columns.ts";
 import { CellSheetOptionEditor } from "./cell_sheet_option_editor.tsx";
 import { CellSheetRangeEditor } from "./cell_sheet_range_editor.tsx";
 import { CellSheetNumberEditor } from "./cell_sheet_number_editor.tsx";
+import { createSliderActions, getSliderRange } from "./slider_range.ts";
 import {
     fillBetween,
     getColumnsIgnoringGlobal,
@@ -229,6 +235,15 @@ export function CellSheet({
             getViewZones(c).map((zone) => readViewCell(zone, generator))
         )
     );
+
+    const sliderRange = getSliderRange(row, context.isInstrument);
+    const sliderValue = first
+        ? readPlayedViewCell(
+              context,
+              first,
+              getGlobalCellValue(row, globalZone, first)
+          )
+        : null;
 
     const isTextApplied = (text: string) => {
         const actions = applyCellSheetText(context, checkedColumns, text);
@@ -506,6 +521,29 @@ export function CellSheet({
                                 status={status}
                                 footer={footerButtons}
                                 onApply={isTextApplied}
+                                slider={
+                                    sliderRange
+                                        ? {
+                                              row,
+                                              range: sliderRange,
+                                              value:
+                                                  typeof sliderValue ===
+                                                  "number"
+                                                      ? sliderValue
+                                                      : null
+                                          }
+                                        : undefined
+                                }
+                                onSliderCommit={(value) => {
+                                    const actions = createSliderActions(
+                                        context,
+                                        checkedColumns,
+                                        value
+                                    );
+                                    if (actions.length > 0) {
+                                        apply(actions);
+                                    }
+                                }}
                                 onNudge={(direction, steps) => {
                                     if (first) {
                                         commands

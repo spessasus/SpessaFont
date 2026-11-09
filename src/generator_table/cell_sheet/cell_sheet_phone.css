@@ -607,3 +607,45 @@
 :root[data-layout="phone"][data-orientation="landscape"] .cell_sheet_key_hint {
     display: none;
 }
+
+/* The slider under the steppers: the desktop range look (ControllerRange), only the touch area
+   grows to 44 px, and the track is inset so the thumb stays inside the gutter at both ends. Its
+   value sits beside the track, as the sheet has no height to spare at 360 px */
+:root[data-layout="phone"] .cell_sheet_slider {
+    flex: none;
+    padding: 0 var(--flex-gap);
+}
+
+:root[data-layout="phone"] .cell_sheet_slider .controller_range_wrapper {
+    width: 100%;
+    min-height: var(--phone-touch);
+    flex-direction: row;
+    align-items: center;
+}
+
+:root[data-layout="phone"] .cell_sheet_slider .controller_range_wrapper > span {
+    flex: none;
+    min-width: 6.5rem;
+    padding-inline-start: var(--flex-gap);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet_slider .controller_range_visual_wrapper {
+    flex: 1;
+}
+
+:root[data-layout="phone"] .cell_sheet_slider .controller_range_visual_wrapper {
+    margin-inline: 0.75rem;
+}
+
+:root[data-layout="phone"] .cell_sheet_slider .controller_range {
+    height: var(--phone-touch);
+    top: calc((var(--track-height) - var(--phone-touch)) / 2);
+}
+
+/* In portrait the sheet grows by the slider's height, so the editor fits as it did without one
+   and the grid above gives the room */
+:root[data-layout="phone"][data-orientation="portrait"]
+    .editor_sheet:has(.cell_sheet_slider) {
+    height: calc(var(--phone-sheet-height) + var(--phone-touch));
+}

@@ -630,6 +630,21 @@ export function getGlobalCellValue(
 }
 
 /**
+ * What a column's first zone plays: its own value, else what it inherits (see `inheritCell`).
+ * For rendering.
+ */
+export function readPlayedViewCell(
+    context: CellViewContext,
+    column: ZoneColumn,
+    globalValue: CellValue
+) {
+    return (
+        readViewCell(column.zone, context.row.generator) ??
+        inheritCell(context, false, globalValue, column.sample)
+    );
+}
+
+/**
  * What a cell of a column shows. For rendering.
  */
 export function getCellDisplay(

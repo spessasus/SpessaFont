@@ -9,6 +9,9 @@ import {
     PlusMinusIcon
 } from "../../utils/icons/app_icons.tsx";
 import { buildCellText, type CellEditMode } from "./cell_sheet_text.ts";
+import { formatNumberCell } from "../cell/cell_values.ts";
+import type { GeneratorRowType } from "../generator_row_type.ts";
+import { CellSheetSlider } from "./cell_sheet_slider.tsx";
 
 interface CellSheetNumberEditorProps {
     unitSuffix: string | undefined;
@@ -29,11 +32,25 @@ interface CellSheetNumberEditorProps {
      */
     onApply: (text: string) => boolean;
     onNudge: (direction: 1 | -1, steps: number) => void;
+    /**
+     * The slider of a row with a range, undefined for the sample offsets.
+     */
+    slider:
+        | {
+              row: GeneratorRowType;
+              range: { min: number; max: number };
+              value: number | null;
+          }
+        | undefined;
+    /**
+     * Sets a raw value in every checked cell, as one undo step.
+     */
+    onSliderCommit: (value: number) => void;
 }
 
 /**
  * The cell sheet's editor for number and offset rows: a typed value set, added or multiplied,
- * or steps up and down.
+ * steps up and down, or a slider whose release sets its value.
  */
 export function CellSheetNumberEditor({
     unitSuffix,
@@ -41,7 +58,9 @@ export function CellSheetNumberEditor({
     status,
     footer,
     onApply,
-    onNudge
+    onNudge,
+    slider,
+    onSliderCommit
 }: CellSheetNumberEditorProps) {
     const { t } = useTranslation();
     const [mode, setMode] = useState<CellEditMode>("set");
@@ -52,6 +71,12 @@ export function CellSheetNumberEditor({
     const text = buildCellText(mode, typed, isTextMode);
     const canApply = !isDisabled && text !== undefined;
     const steps = isTimes10 ? 10 : 1;
+    // While the slider is dragged, the status line says what its release sets
+    const [sliderDraft, setSliderDraft] = useState<number | null>(null);
+    const sends =
+        slider && sliderDraft !== null
+            ? formatNumberCell(slider.row, sliderDraft)
+            : text;
 
     const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -150,11 +175,21 @@ export function CellSheetNumberEditor({
                     {t("phoneLocale.cellSheet.times10")}
                 </button>
             </div>
+            {slider ? (
+                <CellSheetSlider
+                    row={slider.row}
+                    range={slider.range}
+                    value={slider.value}
+                    isDisabled={isDisabled}
+                    onDraftChange={setSliderDraft}
+                    onCommit={onSliderCommit}
+                />
+            ) : null}
             <p className={"cell_sheet_status"}>
                 <span>{status}</span>
-                {text === undefined ? null : (
+                {sends === undefined ? null : (
                     <span className={"cell_sheet_sends"}>
-                        {t("phoneLocale.cellSheet.sends", { text })}
+                        {t("phoneLocale.cellSheet.sends", { text: sends })}
                     </span>
                 )}
             </p>

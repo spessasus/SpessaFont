@@ -1,7 +1,14 @@
 // @vitest-environment jsdom
 import type { ReactNode } from "react";
-import { describe, expect, it } from "vitest";
-import { act, renderHook } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
+import {
+    act,
+    cleanup,
+    fireEvent,
+    render,
+    renderHook,
+    screen
+} from "@testing-library/react";
 import {
     type BasicInstrument,
     EmptySample,
@@ -23,6 +30,10 @@ import type { CellContext } from "../cell/cell_values.ts";
 import { useCellCommands } from "../cell/use_cell_commands.ts";
 import { getZoneColumns } from "../zone_columns.ts";
 import { applyCellSheetText, buildCellText } from "./cell_sheet_text.ts";
+import { snapshotBank } from "../../test_utils/bank_fixture.ts";
+import { formatNumberCell } from "../cell/cell_values.ts";
+import { CellSheetNumberEditor } from "./cell_sheet_number_editor.tsx";
+import { createSliderActions, getSliderRange } from "./slider_range.ts";
 
 const ATTENUATION = INSTRUMENT_ROWS.find(
     (r) => r.generator === GeneratorTypes.initialAttenuation
@@ -180,5 +191,146 @@ describe("the cell sheet's edits", () => {
         expect(buildCellText("add", "-", false)).toBeUndefined();
         expect(buildCellText("multiply", " - ", false)).toBeUndefined();
         expect(buildCellText("set", "-", true)).toBeUndefined();
+    });
+});
+
+/**
+ * The number editor with its slider over the given columns, committing like the sheet does.
+ */
+function renderSlider(
+    session: BankSession,
+    context: CellContext,
+    columns: ReturnType<typeof getColumns>,
+    value: number | null
+) {
+    const range = getSliderRange(context.row, true);
+    if (!range) {
+        throw new Error("The row has no slider.");
+    }
+    return render(
+        <CellSheetNumberEditor
+            unitSuffix={undefined}
+            isDisabled={false}
+            status={""}
+            footer={null}
+            onApply={() => true}
+            onNudge={() => undefined}
+            slider={{ row: context.row, range, value }}
+            onSliderCommit={(raw) =>
+                session.history.do(createSliderActions(context, columns, raw))
+            }
+        />
+    );
+}
+
+function getSlider() {
+    return screen.getByRole<HTMLInputElement>("slider");
+}
+
+function drag(values: number[], end: "pointerUp" | "pointerCancel" | null) {
+    const slider = getSlider();
+    fireEvent.pointerDown(slider, { pointerId: 1 });
+    for (const value of values) {
+        fireEvent.change(slider, { target: { value: String(value) } });
+    }
+    if (end) {
+        fireEvent[end](slider, { pointerId: 1 });
+    }
+}
+
+describe("the cell sheet's slider", () => {
+    afterEach(cleanup);
+
+    it("shows the dragged value without committing", () => {
+        const { session, context, columns } = setUpTwoZones();
+        renderSlider(session, context, columns, 150);
+        drag([100, 110, 120], null);
+        expect(session.history.canUndo).toBe(false);
+        expect(document.body.textContent).toContain(
+            formatNumberCell(context.row, 120)
+        );
+        // Nothing is typed, so the status line's "sends" part is the slider's
+        expect(document.querySelector(".cell_sheet_sends")).not.toBeNull();
+    });
+
+    it("makes one drag one undo step that equals a Set", () => {
+        const typed = setUpTwoZones();
+        const text = buildCellText(
+            "set",
+            formatNumberCell(typed.context.row, 120),
+            false
+        );
+        typed.session.history.do(
+            applyCellSheetText(typed.context, typed.columns, text ?? "") ?? []
+        );
+        const { session, instrument, context, columns } = setUpTwoZones();
+        const before = snapshotBank(session.document.bank);
+        renderSlider(session, context, columns, 150);
+        drag([100, 110, 120], "pointerUp");
+        expect(readAttenuations(instrument)).toEqual([120, 120]);
+        expect(snapshotBank(session.document.bank)).toEqual(
+            snapshotBank(typed.session.document.bank)
+        );
+        act(() => {
+            session.history.undo();
+        });
+        expect(snapshotBank(session.document.bank)).toEqual(before);
+        expect(session.history.canUndo).toBe(false);
+    });
+
+    it("shows the draft in the row's units", () => {
+        const { session, context, columns } = setUpTwoZones();
+        const attack = INSTRUMENT_ROWS.find(
+            (r) => r.generator === GeneratorTypes.attackVolEnv
+        );
+        if (!attack) {
+            throw new Error("No attack row.");
+        }
+        renderSlider(session, { ...context, row: attack }, columns, null);
+        drag([-1200], null);
+        expect(document.body.textContent).toContain(
+            formatNumberCell(attack, -1200)
+        );
+    });
+
+    it("commits nothing when the drag is canceled", () => {
+        const { session, instrument, context, columns } = setUpTwoZones();
+        renderSlider(session, context, columns, 150);
+        drag([100, 120], "pointerCancel");
+        fireEvent.pointerUp(getSlider(), { pointerId: 1 });
+        expect(readAttenuations(instrument)).toEqual([150, 200]);
+        expect(session.history.canUndo).toBe(false);
+    });
+
+    it("commits nothing when the sheet closes during the drag", () => {
+        const { session, instrument, context, columns } = setUpTwoZones();
+        const { unmount } = renderSlider(session, context, columns, 150);
+        drag([100, 120], null);
+        unmount();
+        expect(readAttenuations(instrument)).toEqual([150, 200]);
+        expect(session.history.canUndo).toBe(false);
+    });
+
+    it("commits nothing for a tap that moved nothing", () => {
+        const { session, context, columns } = setUpTwoZones();
+        renderSlider(session, context, columns, 150);
+        drag([], "pointerUp");
+        expect(session.history.canUndo).toBe(false);
+    });
+
+    it("shows no slider for a row without a range", () => {
+        render(
+            <CellSheetNumberEditor
+                unitSuffix={undefined}
+                isDisabled={false}
+                status={""}
+                footer={null}
+                onApply={() => true}
+                onNudge={() => undefined}
+                slider={undefined}
+                onSliderCommit={() => undefined}
+            />
+        );
+        expect(screen.queryByRole("slider")).toBeNull();
     });
 });
