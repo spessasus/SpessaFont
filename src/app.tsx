@@ -1,6 +1,6 @@
 import { MenuBar } from "./menu_bar/menu_bar.tsx";
 import { useTranslation } from "react-i18next";
-import { useRef, useState } from "react";
+import { lazy, Suspense, useRef, useState } from "react";
 import { Settings } from "./settings/settings.tsx";
 import { TabList } from "./tab_list/tab_list.tsx";
 import { KeyboardController } from "./keyboard/keyboard_controller.tsx";
@@ -30,7 +30,12 @@ import { renderPartError } from "./error_boundary/render_part_error.tsx";
 import { rememberFocus } from "./utils/focus_return.ts";
 import { ToolsMenuSlotContext } from "./menu_bar/tools_menu_slot.ts";
 import { useLayout } from "./layout/layout_context.ts";
-import { PhoneShell } from "./phone_shell/phone_shell.tsx";
+
+// Desktop never loads the phone shell
+const PhoneShell = lazy(async () => {
+    const { PhoneShell } = await import("./phone_shell/phone_shell.tsx");
+    return { default: PhoneShell };
+});
 
 const SOUND_BANK_EXTENSIONS = ACCEPTED_SOUNDBANK_FORMATS.split(",");
 
@@ -174,15 +179,20 @@ export function App() {
 
     if (layout === "phone") {
         return (
-            <PhoneShell
-                bankTabs={bankTabs}
-                areSettingsShown={areSettingsShown}
-                onToggleSettings={toggleSettings}
-                onCloseSettings={closeSettings}
-                onOpenFile={() => void handleOpenFile()}
-                onNewFile={() => void openBankFile()}
-                onCloseFile={handleCloseFile}
-            />
+            // A chunk that fails to load breaks only the shell, the open banks stay in App
+            <ErrorBoundary fallback={renderPartError}>
+                <Suspense fallback={null}>
+                    <PhoneShell
+                        bankTabs={bankTabs}
+                        areSettingsShown={areSettingsShown}
+                        onToggleSettings={toggleSettings}
+                        onCloseSettings={closeSettings}
+                        onOpenFile={() => void handleOpenFile()}
+                        onNewFile={() => void openBankFile()}
+                        onCloseFile={handleCloseFile}
+                    />
+                </Suspense>
+            </ErrorBoundary>
         );
     }
 
