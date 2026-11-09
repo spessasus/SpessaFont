@@ -14,6 +14,7 @@
     align-items: center;
     justify-content: center;
     min-height: var(--phone-touch);
+    margin: 0;
     padding: 0 0.75rem;
     font-size: var(--phone-text-button);
 }

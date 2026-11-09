@@ -8,7 +8,10 @@ interface ModulatorListActionsProps {
     count: number;
     canPaste: boolean;
     hasSelection: boolean;
-    onAdd: () => void;
+    /**
+     * The New button, null while the header holds it.
+     */
+    newButton: ReactNode;
     onPaste: () => void;
     onCopy: () => void;
     onDelete: () => void;
@@ -19,7 +22,7 @@ export function ModulatorListActions({
     count,
     canPaste,
     hasSelection,
-    onAdd,
+    newButton,
     onPaste,
     onCopy,
     onDelete,
@@ -31,13 +34,7 @@ export function ModulatorListActions({
             <span className={"modulator_main modulator_list_button"}>
                 {t("modulatorLocale.modulatorCount", { count })}
             </span>
-            <button
-                type={"button"}
-                onClick={onAdd}
-                className={`${BUTTON_CLASS} modulator_new_button`}
-            >
-                {t("modulatorLocale.newModulator")}
-            </button>
+            {newButton}
             {canPaste ? (
                 <button
                     type={"button"}

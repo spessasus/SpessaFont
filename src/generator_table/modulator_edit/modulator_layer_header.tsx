@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import "./modulator_edit_phone.css";
 import { ChevronLeftIcon } from "../../utils/icons/app_icons.tsx";
@@ -7,6 +8,10 @@ import { BACK_LEVELS } from "../../phone_shell/back_stack.ts";
 interface ModulatorLayerHeaderProps {
     title: string;
     onBack: () => void;
+    /**
+     * The end of the bar, where New goes.
+     */
+    children?: ReactNode;
 }
 
 /**
@@ -15,7 +20,8 @@ interface ModulatorLayerHeaderProps {
  */
 export function ModulatorLayerHeader({
     title,
-    onBack
+    onBack,
+    children
 }: ModulatorLayerHeaderProps) {
     const { t } = useTranslation();
     useBackHandler(true, BACK_LEVELS.modulatorLayer, () => {
@@ -34,6 +40,7 @@ export function ModulatorLayerHeader({
                 <ChevronLeftIcon />
             </button>
             <h2>{title}</h2>
+            {children}
         </div>
     );
 }

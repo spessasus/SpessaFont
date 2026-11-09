@@ -52,15 +52,7 @@ export function ModulatorEditor({
 
     return (
         <div className={"zone_modulators"}>
-            {layout === "phone" ? (
-                <ModulatorLayerHeader
-                    title={t("phoneLocale.modulators.title", {
-                        zone: name,
-                        count: column.zone.modulators.length
-                    })}
-                    onBack={onClose}
-                />
-            ) : (
+            {layout === "phone" ? null : (
                 <>
                     <h2>
                         {t("modulatorLocale.editingModulators", {
@@ -87,6 +79,21 @@ export function ModulatorEditor({
                 }
                 onModulatorListChange={setModulators}
                 defaultModulators={defaultModulators}
+                renderHeader={
+                    layout === "phone"
+                        ? (newButton) => (
+                              <ModulatorLayerHeader
+                                  title={t("phoneLocale.modulators.title", {
+                                      zone: name,
+                                      count: column.zone.modulators.length
+                                  })}
+                                  onBack={onClose}
+                              >
+                                  {newButton}
+                              </ModulatorLayerHeader>
+                          )
+                        : undefined
+                }
             />
         </div>
     );

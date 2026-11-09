@@ -35,11 +35,7 @@
     gap: var(--flex-gap);
     height: var(--phone-app-bar-height);
     box-sizing: border-box;
-    /* Room for New, which the action bar places over the header's end */
-    padding-right: calc(var(--phone-gutter) + 4.5rem);
-    position: sticky;
-    top: 0;
-    z-index: 1;
+    align-self: stretch;
     background: var(--menu-bar-color);
     border-bottom: 1px solid var(--menu-border-color);
 }
@@ -51,8 +47,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    /* The navigator header's size, so the zone name fits next to New */
-    font-size: var(--phone-text-body);
+    font-size: var(--phone-text-title);
     font-weight: 600;
     text-align: start;
 }
@@ -72,11 +67,9 @@
     height: 1.5rem;
 }
 
-/* New moves up into the header row, the rest of the action bar stays where it is */
-:root[data-layout="phone"] .modulator_layer .modulator_new_button {
-    position: absolute;
-    top: 0.375rem;
-    right: var(--phone-gutter);
-    z-index: 2;
+/* New ends the header row, the title takes what is left */
+:root[data-layout="phone"] .modulator_layer_header .modulator_new_button {
+    flex-shrink: 0;
     min-width: var(--phone-touch);
+    margin: 0 var(--phone-gutter) 0 0;
 }

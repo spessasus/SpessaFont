@@ -22,6 +22,8 @@ import { getDrillTo } from "./drill_to.ts";
 import { PhoneSettingsLayer } from "./phone_settings_layer.tsx";
 import { KeyboardDrawer } from "./keyboard_drawer.tsx";
 import { getDrawerOffset } from "./drawer_offset.ts";
+import { useBankCommands } from "../menu_bar/use_bank_commands.ts";
+import { useBankShortcutKeys } from "../hooks/use_bank_shortcut_keys.ts";
 import { useLeaveFlow } from "./use_leave_flow.ts";
 
 interface PhoneShellProps {
@@ -124,6 +126,17 @@ export function PhoneShell({
     });
     useLeaveFlow(tabs);
 
+    // The same view change as the app bar's undo and redo buttons
+    const showView = activeSession
+        ? getDrillTo(activeSession.id, activeView, setActiveView, dispatch)
+        : setActiveView;
+    const commands = useBankCommands(activeSession, showView);
+    useBankShortcutKeys(
+        activeSession !== undefined,
+        commands,
+        areSettingsShown
+    );
+
     const drawerOffset = getDrawerOffset(state.drawer);
 
     return (
@@ -143,16 +156,7 @@ export function PhoneShell({
                     <PhoneAppBar
                         session={activeSession}
                         view={activeView}
-                        onViewChange={
-                            activeSession
-                                ? getDrillTo(
-                                      activeSession.id,
-                                      activeView,
-                                      setActiveView,
-                                      dispatch
-                                  )
-                                : setActiveView
-                        }
+                        onViewChange={showView}
                         toolsSlotRef={setToolsMenuSlot}
                         isCovered={
                             areSettingsShown ||

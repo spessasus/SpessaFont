@@ -14,6 +14,7 @@ import type { ModulatorView as ModulatorData } from "../../core_backend/entity_v
 import { getClickedSelection } from "./modulator_selection.ts";
 import { ModulatorListActions } from "./modulator_list_actions.tsx";
 import { isSameModulator } from "../same_modulator.ts";
+import { ModulatorNewButton } from "./modulator_new_button.tsx";
 
 interface ModulatorListProps {
     modulatorList: readonly ModulatorData[];
@@ -27,6 +28,11 @@ interface ModulatorListProps {
      * Extra buttons for the action bar, after the list's own.
      */
     extraActions?: React.ReactNode;
+    /**
+     * Phone only. A header at the top of the list that holds the New button, so the title is
+     * laid out next to it and the action bar keeps the rest.
+     */
+    renderHeader?: (newButton: React.ReactNode) => React.ReactNode;
 }
 
 function isTyping(target: EventTarget) {
@@ -48,7 +54,8 @@ export function ModulatorList({
     getModulators,
     onModulatorListChange,
     defaultModulators,
-    extraActions
+    extraActions,
+    renderHeader
 }: ModulatorListProps) {
     const { t } = useTranslation();
     const { clipboard, contents } = useClipboard();
@@ -224,6 +231,8 @@ export function ModulatorList({
         );
     };
 
+    const newButton = <ModulatorNewButton onAdd={addModulator} />;
+
     return (
         <div
             className={"modulator_list"}
@@ -231,11 +240,12 @@ export function ModulatorList({
             tabIndex={-1}
             onKeyDown={handleKeyDown}
         >
+            {renderHeader?.(newButton)}
             <ModulatorListActions
                 count={modulatorList.length}
                 canPaste={contents.modulators > 0}
                 hasSelection={selectedCount > 0}
-                onAdd={addModulator}
+                newButton={renderHeader ? null : newButton}
                 onPaste={paste}
                 onCopy={copySelected}
                 onDelete={deleteSelected}

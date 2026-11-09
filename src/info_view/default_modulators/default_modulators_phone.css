@@ -8,6 +8,47 @@
     overflow-y: auto;
 }
 
+/* The panel keeps its bar fixed and the list scrolls under it, like the modulator layer */
+:root[data-layout="phone"] .overview_panel .default_modulators {
+    align-items: stretch;
+    flex: 1;
+    gap: 0;
+    min-height: 0;
+}
+
+:root[data-layout="phone"] .overview_panel .default_modulators .modulator_list {
+    min-height: 0;
+}
+
+/* The title and New share the bar, the back arrow of the panel header sits over its start */
+:root[data-layout="phone"] .default_modulators_bar {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    align-self: stretch;
+    height: var(--phone-app-bar-height);
+    background: var(--menu-bar-color);
+    border-bottom: 1px solid var(--menu-border-color);
+}
+
+:root[data-layout="phone"]
+    .overview_panel
+    .default_modulators_bar
+    .default_modulators_title {
+    position: static;
+    flex: 1;
+    width: auto;
+    min-width: 0;
+    background: none;
+    border-bottom: 0;
+}
+
+:root[data-layout="phone"] .default_modulators_bar .modulator_new_button {
+    flex-shrink: 0;
+    min-width: var(--phone-touch);
+    margin: 0 var(--phone-gutter) 0 0;
+}
+
 /* Zero height, so the panel's own title below becomes the sticky bar this arrow sits on */
 :root[data-layout="phone"] .overview_panel_header {
     position: sticky;
@@ -51,7 +92,7 @@
     line-height: var(--phone-app-bar-height);
     background: var(--menu-bar-color);
     border-bottom: 1px solid var(--menu-border-color);
-    font-size: var(--phone-text-body);
+    font-size: var(--phone-text-title);
     font-weight: 600;
     text-align: start;
 }
@@ -59,10 +100,13 @@
 /* The check's own scroller and padding would keep its title from sticking to the panel's top */
 :root[data-layout="phone"] .overview_panel .bank_check {
     overflow: visible;
-    padding-top: 0;
+    padding: 0 0 var(--phone-gutter);
 }
 
-:root[data-layout="phone"] .overview_panel .bank_check_title {
-    width: calc(100% + 1rem);
-    margin: 0 -0.5rem;
+/* The title is a bar to the edges, the rest of the check takes its own gutter */
+:root[data-layout="phone"]
+    .overview_panel
+    .bank_check
+    > :not(.bank_check_title) {
+    margin-inline: var(--phone-gutter);
 }
