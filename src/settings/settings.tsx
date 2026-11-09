@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import "./settings.css";
+import "./settings_phone.css";
 import type { SavedSettingsType } from "./save_load/settings_typedef.ts";
 import { AudioEngineSettings } from "./settings_groups/audio_engine_settings.tsx";
 import { InterfaceSettings } from "./settings_groups/interface_settings.tsx";
