@@ -297,6 +297,11 @@ export function ModulatorList({
                             <button
                                 type={"button"}
                                 className={MODULATOR_LIST_BUTTON_CLASS}
+                                aria-disabled={
+                                    modulatorList.length === 0
+                                        ? true
+                                        : undefined
+                                }
                                 onClick={() =>
                                     setSelectedIds(
                                         new Set(modulatorList.map((m) => m.id))

@@ -87,6 +87,18 @@ describe("useElementHistoryKeys", () => {
         expect(goBack).not.toHaveBeenCalled();
     });
 
+    it("moves nothing with Alt+Left in a text field on desktop", () => {
+        const { goBack } = renderKeys("desktop");
+        const input = document.createElement("input");
+        document.body.append(input);
+        onTestFinished(() => {
+            input.remove();
+        });
+        input.focus();
+        pressAlt("ArrowLeft", input);
+        expect(goBack).not.toHaveBeenCalled();
+    });
+
     it("leaves the keys and buttons to the browser on a phone, so back runs the back stack", () => {
         const { goBack, goForward } = renderKeys("phone");
         expect(pressAlt("ArrowLeft").defaultPrevented).toBe(false);

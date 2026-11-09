@@ -201,6 +201,15 @@ describe("ModulatorList", () => {
         expect(pressedCount()).toBe(3);
     });
 
+    it("disables All on an empty list", () => {
+        renderList("phone", 0);
+        expect(
+            screen
+                .getByRole("button", { name: "phoneLocale.selection.all" })
+                .getAttribute("aria-disabled")
+        ).toBe("true");
+    });
+
     it("disables Between below two selected", () => {
         renderList("phone", 3);
         const between = screen.getByRole("button", {

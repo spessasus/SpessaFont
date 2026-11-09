@@ -44,8 +44,9 @@ interface NavigatorLayerProps {
 }
 
 /**
- * The lists on a phone (spec 6.1): a layer over the app bar that stops at the drawer, so the
- * drawer stays playable under it. Closed, it keeps its layout, so the lists keep their scroll.
+ * The lists on a phone (spec 6.1). In portrait they are a layer over the app bar that stops at
+ * the drawer, so the drawer stays playable under it. In landscape they are docked beside the
+ * editor, or folded to a strip. Closed or folded, the lists keep their layout and their scroll.
  */
 export function NavigatorLayer({
     view,
@@ -120,9 +121,9 @@ export function NavigatorLayer({
         </div>
     );
     const toggleCollapsed = () => dispatch({ type: "toggleCollapsed" });
-    // The selection bar takes the place of this bar in selection mode. Docked in landscape,
-    // the lists cover nothing, so there is nothing to close or keep open
-    // Landscape is short, so the docked header holds the bank tabs instead of a title
+    // The selection bar takes the place of this bar in selection mode. Docked in landscape the
+    // lists cover nothing, so the header has no close or pin button, and as landscape is short
+    // it holds the bank tabs instead of a title
     const titleBar = isLandscape ? (
         <div className={"phone_layer_header navigator_dock_header"}>
             {tabs}

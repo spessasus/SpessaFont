@@ -1,5 +1,6 @@
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
+import toast from "react-hot-toast";
 import type { ZoneView } from "../../core_backend/entity_views.ts";
 import type { ZoneColumn } from "../zone_columns.ts";
 import { getColumnKeyRange, parseKeyText } from "../zone_finder.ts";
@@ -89,6 +90,17 @@ export function CellSheetKeySpan({
         return { start: min, end: max, color: getZoneColorNumber(index) };
     });
 
+    // A span with no zones keeps the checks and says so, as a played span does
+    const handleCheck = (isAdding: boolean) => {
+        if (found.length === 0) {
+            const low = getNoteName(Math.min(span.low, span.high));
+            const high = getNoteName(Math.max(span.low, span.high));
+            toast(t("phoneLocale.cellSheet.noZonesInSpan", { low, high }));
+            return;
+        }
+        onCheck(new Set(found.map((c) => c.zone.id)), isAdding);
+    };
+
     return (
         <div className={"cell_sheet_key_span"}>
             <p className={"cell_sheet_key_hint"}>
@@ -136,9 +148,7 @@ export function CellSheetKeySpan({
                 <button
                     type={"button"}
                     className={"pretty_button cell_sheet_button"}
-                    onClick={() =>
-                        onCheck(new Set(found.map((c) => c.zone.id)), true)
-                    }
+                    onClick={() => handleCheck(true)}
                 >
                     {t("phoneLocale.cellSheet.addToChecked")}
                 </button>
@@ -147,9 +157,7 @@ export function CellSheetKeySpan({
                     className={
                         "pretty_button cell_sheet_button cell_sheet_apply"
                     }
-                    onClick={() =>
-                        onCheck(new Set(found.map((c) => c.zone.id)), false)
-                    }
+                    onClick={() => handleCheck(false)}
                 >
                     {t("phoneLocale.cellSheet.checkThem")}
                 </button>

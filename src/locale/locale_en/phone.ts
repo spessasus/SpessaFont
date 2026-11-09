@@ -186,7 +186,8 @@ export const PhoneLocale = {
         checkThem: "Check them",
         back: "Back",
         playedSpan_one: "{{count}} zone plays {{low}} to {{high}}",
-        playedSpan_other: "{{count}} zones play {{low}} to {{high}}"
+        playedSpan_other: "{{count}} zones play {{low}} to {{high}}",
+        noZonesInSpan: "No zones play {{low}} to {{high}}"
     },
     sample: {
         loop: "Loop",

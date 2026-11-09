@@ -17,6 +17,8 @@ export interface PhoneShellState {
 
 export type PhoneShellAction =
     | { type: "openNavigator" }
+    // A bank was opened or another tab chosen: the lists show, a collapsed dock expands
+    | { type: "showNavigator" }
     | { type: "closeNavigator" }
     | { type: "togglePinned" }
     | { type: "toggleCollapsed" }
@@ -95,6 +97,13 @@ export function phoneShellReducer(
     switch (action.type) {
         case "openNavigator": {
             return { ...state, isNavigatorOpen: true };
+        }
+        case "showNavigator": {
+            return {
+                ...state,
+                isNavigatorOpen: true,
+                isNavigatorCollapsed: false
+            };
         }
         case "closeNavigator": {
             return { ...state, isNavigatorOpen: false };

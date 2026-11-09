@@ -102,6 +102,15 @@ describe("phoneShellReducer", () => {
         expect(getOpenNavigatorAction(open, false)).toBeUndefined();
     });
 
+    it("shows the lists for a new bank, a collapsed dock too", () => {
+        const collapsed = phoneShellReducer(INITIAL_PHONE_SHELL_STATE, {
+            type: "toggleCollapsed"
+        });
+        const shown = phoneShellReducer(collapsed, { type: "showNavigator" });
+        expect(getNavigatorPresence(shown, true).isShown).toBe(true);
+        expect(getNavigatorPresence(shown, false).isShown).toBe(true);
+    });
+
     it("keeps the portrait open state across a pick in landscape", () => {
         const next = phoneShellReducer(INITIAL_PHONE_SHELL_STATE, {
             type: "navigatorPick",

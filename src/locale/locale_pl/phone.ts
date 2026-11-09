@@ -207,7 +207,8 @@ export const PhoneLocale = {
         playedSpan_one: "{{count}} strefa gra od {{low}} do {{high}}",
         playedSpan_few: "{{count}} strefy grają od {{low}} do {{high}}",
         playedSpan_many: "{{count}} stref gra od {{low}} do {{high}}",
-        playedSpan_other: "{{count}} stref gra od {{low}} do {{high}}"
+        playedSpan_other: "{{count}} stref gra od {{low}} do {{high}}",
+        noZonesInSpan: "Żadna strefa nie gra od {{low}} do {{high}}"
     },
     sample: {
         loop: "Pętla",

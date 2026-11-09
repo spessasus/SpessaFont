@@ -106,7 +106,7 @@ export function PhoneShell({
     if (activeId !== lastActiveId) {
         setLastActiveId(activeId);
         if (activeId !== undefined) {
-            dispatch({ type: "openNavigator" });
+            dispatch({ type: "showNavigator" });
         }
     }
 

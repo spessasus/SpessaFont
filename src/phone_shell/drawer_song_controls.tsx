@@ -31,7 +31,7 @@ export function DrawerSongControls() {
             <button
                 type={"button"}
                 className={"plain_button drawer_song_open"}
-                aria-label={`${t("phoneLocale.drawer.songDetails")}: ${name}`}
+                aria-label={`${t("phoneLocale.drawer.songDetails")}: ${name}, ${formatTime(time)} / ${formatTime(duration)}`}
                 onClick={() => setIsSheetOpen(true)}
             >
                 <span className={"drawer_song_icon"} aria-hidden={true}>

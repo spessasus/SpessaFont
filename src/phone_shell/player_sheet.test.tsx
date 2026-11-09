@@ -2,6 +2,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { PlayerSheet } from "./player_sheet.tsx";
+import { DrawerSongControls } from "./drawer_song_controls.tsx";
+import { formatTime } from "../utils/format_time.ts";
 
 const engine = vi.hoisted(() => ({
     toggleMIDI: vi.fn(),
@@ -65,5 +67,15 @@ describe("PlayerSheet", () => {
         expect(
             screen.getByRole("heading", { name: "A very long song name.mid" })
         ).toBeDefined();
+    });
+
+    it("names the time in the drawer's song button", () => {
+        render(<DrawerSongControls />);
+        const button = screen.getByRole("button", {
+            name: /phoneLocale.drawer.songDetails/
+        });
+        expect(button.getAttribute("aria-label")).toContain(
+            `${formatTime(42)} / ${formatTime(190)}`
+        );
     });
 });
