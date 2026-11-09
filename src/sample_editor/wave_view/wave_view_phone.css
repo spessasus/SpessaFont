@@ -3,6 +3,8 @@
     min-height: 12.5rem;
     flex-grow: 0;
     flex-shrink: 0;
+    /* The desktop radius and outline stay, so the wave keeps clear of the screen edge */
+    margin: 0.25rem var(--phone-gutter) 0;
     cursor: default;
     touch-action: pan-x;
 }

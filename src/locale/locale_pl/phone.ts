@@ -169,6 +169,9 @@ export const PhoneLocale = {
         hertz: "{{value}} Hz",
         decibels: "{{value}} dB",
         gainDown: "Zmniejsz wzmocnienie",
-        gainUp: "Zwiększ wzmocnienie"
+        gainUp: "Zwiększ wzmocnienie",
+        bandAboveNyquist:
+            "To pasmo jest powyżej połowy częstotliwości próbkowania",
+        name: "Nazwa"
     }
 };

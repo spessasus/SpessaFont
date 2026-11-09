@@ -1,6 +1,7 @@
 import "./sample_properties_phone.css";
 import type { SampleView } from "../core_backend/entity_views.ts";
 import { useTranslation } from "react-i18next";
+import { useLayout } from "../layout/layout_context.ts";
 import { WaitingInput } from "../fancy_inputs/waiting_input/waiting_input.tsx";
 import { TypeSelector } from "./type_selector/type_selector.tsx";
 import { midiNoteToPitchClass } from "../utils/note_name.ts";
@@ -33,6 +34,7 @@ export function SampleProperties({
     edits
 }: SamplePropertiesProps) {
     const { t } = useTranslation();
+    const layout = useLayout();
     const { loopStart, loopEnd, originalKey, length } = sample;
     // With the octave, C4 being middle C (60) as on the keyboard
     const noteName = `${midiNoteToPitchClass(originalKey)}${Math.floor(originalKey / 12) - 1}`;
@@ -52,33 +54,38 @@ export function SampleProperties({
                 />
             </div>
 
-            <div className={"sample_editor_field"}>
-                <span>{t("sampleLocale.loopStart")}</span>
-                <WaitingInput
-                    onCommit={edits.setLoopStart}
-                    value={loopStart}
-                    className={"pretty_input monospaced"}
-                    type={"number"}
-                    min={0}
-                    max={loopEnd}
-                    inputMode={"numeric"}
-                    aria-label={t("sampleLocale.loopStart")}
-                />
-            </div>
+            {/* The phone's Loop section edits the loop points */}
+            {layout === "phone" ? null : (
+                <>
+                    <div className={"sample_editor_field"}>
+                        <span>{t("sampleLocale.loopStart")}</span>
+                        <WaitingInput
+                            onCommit={edits.setLoopStart}
+                            value={loopStart}
+                            className={"pretty_input monospaced"}
+                            type={"number"}
+                            min={0}
+                            max={loopEnd}
+                            inputMode={"numeric"}
+                            aria-label={t("sampleLocale.loopStart")}
+                        />
+                    </div>
 
-            <div className={"sample_editor_field"}>
-                <span>{t("sampleLocale.loopEnd")}</span>
-                <WaitingInput
-                    onCommit={edits.setLoopEnd}
-                    value={loopEnd}
-                    className={"pretty_input monospaced"}
-                    type={"number"}
-                    min={loopStart}
-                    max={length}
-                    inputMode={"numeric"}
-                    aria-label={t("sampleLocale.loopEnd")}
-                />
-            </div>
+                    <div className={"sample_editor_field"}>
+                        <span>{t("sampleLocale.loopEnd")}</span>
+                        <WaitingInput
+                            onCommit={edits.setLoopEnd}
+                            value={loopEnd}
+                            className={"pretty_input monospaced"}
+                            type={"number"}
+                            min={loopStart}
+                            max={length}
+                            inputMode={"numeric"}
+                            aria-label={t("sampleLocale.loopEnd")}
+                        />
+                    </div>
+                </>
+            )}
 
             <div className={"sample_editor_field"}>
                 {/* The note goes in the label, in the field it would count toward the digits */}

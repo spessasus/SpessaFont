@@ -32,10 +32,10 @@
     background: var(--primary-color);
 }
 
-:root[data-layout="phone"] .equalizer_band_button:disabled,
-:root[data-layout="phone"] .equalizer_actions button:disabled {
+:root[data-layout="phone"] .equalizer_band_button[aria-disabled="true"],
+:root[data-layout="phone"] .equalizer_actions button[aria-disabled="true"] {
     cursor: default;
-    opacity: 0.5;
+    opacity: 0.4;
     transform: none;
     filter: none;
 }
@@ -79,13 +79,13 @@
 
 :root[data-layout="phone"] .equalizer_card_title {
     text-align: start;
-    font-size: var(--phone-text-heading);
+    font-size: var(--phone-text-sheet-title);
     font-weight: 600;
 }
 
 :root[data-layout="phone"] .equalizer_card_value {
     text-align: end;
-    font-size: var(--phone-text-heading);
+    font-size: var(--phone-text-sheet-title);
     font-variant-numeric: tabular-nums;
 }
 
@@ -95,7 +95,7 @@
     gap: var(--flex-gap);
 }
 
-/* The desktop Wave Zoom look (ControllerRange), only the touch area grows to 44 px */
+/* The touch area of the range is in sample_editor_phone.css, shared with the wave zoom */
 :root[data-layout="phone"] .equalizer_card_row .controller_range_wrapper {
     flex: 1;
     min-width: 0;
@@ -103,19 +103,8 @@
 
 :root[data-layout="phone"]
     .equalizer_card_row
-    .controller_range_visual_wrapper {
-    margin-inline: 0.75rem;
-}
-
-:root[data-layout="phone"] .equalizer_card_row .controller_range {
-    height: var(--phone-touch);
-    top: calc((var(--track-height) - var(--phone-touch)) / 2);
-}
-
-:root[data-layout="phone"]
-    .equalizer_card_row
     .controller_range_wrapper:has(input:disabled) {
-    opacity: 0.5;
+    opacity: 0.4;
 }
 
 :root[data-layout="phone"] .equalizer_actions {

@@ -20,7 +20,7 @@
 
 :root[data-layout="phone"] .sample_sections_body .bottom_bar > div {
     padding-inline: 0;
-    font-size: var(--phone-text-small);
+    font-size: var(--phone-text-secondary);
     color: var(--muted-font-color);
 }
 
@@ -37,12 +37,48 @@
     > button.monospaced {
     display: flex;
     align-items: center;
+    gap: 0.75rem;
     min-height: var(--phone-row-height);
     padding-block: 0;
+    padding-inline: 0;
     border-bottom: 1px solid
         color-mix(in oklch, var(--track-border-color) 45%, transparent);
 }
 
 :root[data-layout="phone"] .sample_sections_body .bottom_bar > button.warning {
     margin-top: var(--phone-gutter);
+}
+
+:root[data-layout="phone"] .linked_instrument_glyph {
+    flex: none;
+    display: flex;
+    color: var(--instrument-item-color);
+}
+
+:root[data-layout="phone"] .linked_instrument_glyph svg {
+    width: 1.125rem;
+    height: 1.125rem;
+}
+
+:root[data-layout="phone"] .linked_instrument_name {
+    flex: 1;
+    min-width: 0;
+    text-align: start;
+}
+
+:root[data-layout="phone"] .linked_instrument_chevron {
+    flex: none;
+    display: flex;
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .linked_instrument_chevron svg {
+    width: var(--phone-disclosure-size);
+    height: var(--phone-disclosure-size);
+}
+
+/* The app sets a color on every element, which would hide the icons' own */
+:root[data-layout="phone"] .linked_instrument_glyph *,
+:root[data-layout="phone"] .linked_instrument_chevron * {
+    color: inherit;
 }

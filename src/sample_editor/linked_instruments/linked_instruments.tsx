@@ -7,6 +7,9 @@ import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 import { useSampleView } from "../../hooks/use_sample_view.ts";
 import { useBankSnapshot } from "../../hooks/use_bank_snapshot.ts";
 import { createInstrumentFromSamples } from "../../menu_list/link_actions.ts";
+import { useLayout } from "../../layout/layout_context.ts";
+import { ChevronRightIcon } from "../../utils/icons/app_icons.tsx";
+import { InstrumentIcon } from "../../utils/icons/player_icons.tsx";
 
 interface LinkedInstrumentsProps {
     /**
@@ -18,6 +21,7 @@ interface LinkedInstrumentsProps {
 export function LinkedInstruments({ sampleId }: LinkedInstrumentsProps) {
     const { t } = useTranslation();
     const { session, apply, setView } = useBankEditor();
+    const layout = useLayout();
     const sample = useSampleView(session.store, sampleId);
     const instruments = useBankSnapshot(
         session.store,
@@ -99,7 +103,27 @@ export function LinkedInstruments({ sampleId }: LinkedInstrumentsProps) {
                             onClick={() => showInstrument(id)}
                             key={id}
                         >
-                            {instruments.get(id)?.name}
+                            {layout === "phone" ? (
+                                <>
+                                    <span
+                                        className={"linked_instrument_glyph"}
+                                        aria-hidden={true}
+                                    >
+                                        <InstrumentIcon />
+                                    </span>
+                                    <span className={"linked_instrument_name"}>
+                                        {instruments.get(id)?.name}
+                                    </span>
+                                    <span
+                                        className={"linked_instrument_chevron"}
+                                        aria-hidden={true}
+                                    >
+                                        <ChevronRightIcon />
+                                    </span>
+                                </>
+                            ) : (
+                                instruments.get(id)?.name
+                            )}
                         </button>
                     ))}
                 </>

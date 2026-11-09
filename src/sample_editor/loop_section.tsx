@@ -9,8 +9,8 @@ import { WaitingInput } from "../fancy_inputs/waiting_input/waiting_input.tsx";
  * names (with a real minus sign, which screen readers say as "minus").
  */
 const LOWER_STEPS = [
-    { steps: -100, text: "-100", amount: "−100" },
-    { steps: -1, text: "-1", amount: "−1" }
+    { steps: -100, text: "−100", amount: "−100" },
+    { steps: -1, text: "−1", amount: "−1" }
 ] as const;
 const UPPER_STEPS = [
     { steps: 1, text: "+1", amount: "+1" },

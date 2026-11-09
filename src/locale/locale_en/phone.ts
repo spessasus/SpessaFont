@@ -157,6 +157,8 @@ export const PhoneLocale = {
         hertz: "{{value}} Hz",
         decibels: "{{value}} dB",
         gainDown: "Lower the gain",
-        gainUp: "Raise the gain"
+        gainUp: "Raise the gain",
+        bandAboveNyquist: "This band is above half the sample rate",
+        name: "Name"
     }
 };

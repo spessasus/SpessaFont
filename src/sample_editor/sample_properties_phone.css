@@ -28,13 +28,21 @@
     text-overflow: clip;
 }
 
+/* Values are end-aligned, and a native select ignores text-align for its shown value */
+:root[data-layout="phone"] .sample_editor_field select {
+    text-align-last: end;
+}
+
 /* The name sits above the fields and takes the column's width */
+:root[data-layout="phone"] .sample_editor_name_field {
+    margin-bottom: var(--phone-gutter);
+}
+
 :root[data-layout="phone"] .sample_sections_body .sample_editor_name {
     display: block;
     box-sizing: border-box;
     width: 100%;
     min-height: var(--phone-touch);
-    margin-bottom: var(--phone-gutter);
     font-size: var(--phone-text-body);
     text-align: start;
 }

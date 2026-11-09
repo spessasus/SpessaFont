@@ -40,12 +40,12 @@ describe("LoopSection", () => {
         });
         expect(steppers).toHaveLength(8);
         expect(steppers.map((button) => button.textContent)).toEqual([
-            "-100",
-            "-1",
+            "−100",
+            "−1",
             "+1",
             "+100",
-            "-100",
-            "-1",
+            "−100",
+            "−1",
             "+1",
             "+100"
         ]);

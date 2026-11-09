@@ -36,6 +36,11 @@
     font-weight: 600;
 }
 
+/* .monospaced sets its own 1rem, the phone size is named here so it cannot drift */
+:root[data-layout="phone"] .element_bar_name.monospaced {
+    font-size: var(--phone-text-body);
+}
+
 :root[data-layout="phone"] .element_bar_detail {
     flex: none;
     max-width: 55%;

@@ -255,7 +255,14 @@ function SampleEditorPane({
                     }
                     props={
                         <>
-                            {nameInput}
+                            <div
+                                className={
+                                    "sample_editor_field sample_editor_name_field"
+                                }
+                            >
+                                <span>{t("phoneLocale.sample.name")}</span>
+                                {nameInput}
+                            </div>
                             {properties}
                         </>
                     }

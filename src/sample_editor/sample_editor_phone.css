@@ -32,6 +32,23 @@
     padding: 0.25rem var(--phone-gutter);
 }
 
+/* The desktop range look (ControllerRange) on the wave zoom and the equalizer gain, only the touch
+   area grows to 44 px, and the track is inset so the thumb stays inside the gutter at both ends */
+:root[data-layout="phone"]
+    .sample_sections_zoom
+    .controller_range_visual_wrapper,
+:root[data-layout="phone"]
+    .equalizer_card_row
+    .controller_range_visual_wrapper {
+    margin-inline: 0.75rem;
+}
+
+:root[data-layout="phone"] .sample_sections_zoom .controller_range,
+:root[data-layout="phone"] .equalizer_card_row .controller_range {
+    height: var(--phone-touch);
+    top: calc((var(--track-height) - var(--phone-touch)) / 2);
+}
+
 /* The segments share the spare width, and a long label (Polish) keeps its own */
 :root[data-layout="phone"] .sample_sections_control .segmented_control_segment {
     flex: 1 1 auto;
@@ -92,12 +109,12 @@
 }
 
 :root[data-layout="phone"] .loop_section_stepper_row .stepper_button {
-    font-size: var(--phone-text-small);
+    font-size: var(--phone-text-button);
 }
 
 :root[data-layout="phone"] .loop_section_stepper_row input {
     min-width: 0;
     min-height: var(--phone-touch);
     font-size: var(--phone-text-body);
-    text-align: center;
+    text-align: end;
 }

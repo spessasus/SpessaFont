@@ -34,6 +34,10 @@ interface BarButtonProps {
     glyph: ReactNode;
     glyphClass: string;
     name: string;
+    /**
+     * Sample names are monospaced, preset and instrument names are not.
+     */
+    isNameMonospaced?: boolean;
     detail: ReactNode;
     onClick?: () => void;
 }
@@ -42,6 +46,7 @@ function BarButton({
     glyph,
     glyphClass,
     name,
+    isNameMonospaced = false,
     detail,
     onClick
 }: BarButtonProps) {
@@ -53,7 +58,15 @@ function BarButton({
             >
                 {glyph}
             </span>
-            <span className={"element_bar_name"}>{name}</span>
+            <span
+                className={
+                    isNameMonospaced
+                        ? "element_bar_name monospaced"
+                        : "element_bar_name"
+                }
+            >
+                {name}
+            </span>
             <span className={"element_bar_detail"}>{detail}</span>
             <span className={"element_bar_chevron"} aria-hidden={true}>
                 <ChevronRightIcon />
@@ -182,6 +195,7 @@ function SampleBar({
             glyphClass={"element_bar_sample"}
             onClick={() => onSampleSection?.(SAMPLE_SECTIONS.usedBy)}
             name={view.name}
+            isNameMonospaced={true}
             detail={
                 <UsedBy
                     label={t("sampleLocale.usedBy")}

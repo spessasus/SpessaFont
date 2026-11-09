@@ -1,6 +1,7 @@
 import "./equalizer_panel_phone.css";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import toast from "react-hot-toast";
 import { ControllerRange } from "../../fancy_inputs/controller_range/controller_range.tsx";
 import { StepperButton } from "../../fancy_inputs/stepper_button/stepper_button.tsx";
 import { MinusIcon, PlusIcon } from "../../utils/icons/app_icons.tsx";
@@ -86,14 +87,25 @@ export function EqualizerBandPicker({
                         // Read as "250 Hz, +3.0 dB" instead of the two spans run together
                         aria-label={`${item.name}, ${t("phoneLocale.sample.decibels", { value: formatBandGain(getEqualizerBandGain(settings, item.band)) })}`}
                         aria-pressed={band === item.band}
-                        disabled={item.isDisabled}
+                        aria-disabled={item.isDisabled}
                         onClick={() => {
+                            if (item.isDisabled) {
+                                toast(
+                                    t("phoneLocale.sample.bandAboveNyquist"),
+                                    {
+                                        id: "band-above-nyquist"
+                                    }
+                                );
+                                return;
+                            }
                             setBand(item.band);
                         }}
                         // Android's long press, the desktop's double click
                         onContextMenu={(event) => {
                             event.preventDefault();
-                            setGain(item.band, 0);
+                            if (!item.isDisabled) {
+                                setGain(item.band, 0);
+                            }
                         }}
                     >
                         <span>{item.label}</span>
@@ -167,16 +179,6 @@ export function EqualizerBandPicker({
                 <button
                     type={"button"}
                     className={buttonClass}
-                    disabled={isSettingsFlat}
-                    onClick={() => {
-                        onStateChange({ ...state, settings: FLAT_EQUALIZER });
-                    }}
-                >
-                    {t("sampleLocale.equalizer.reset")}
-                </button>
-                <button
-                    type={"button"}
-                    className={buttonClass}
                     aria-pressed={isPreviewing}
                     onClick={() => {
                         onStateChange({
@@ -190,8 +192,27 @@ export function EqualizerBandPicker({
                 <button
                     type={"button"}
                     className={buttonClass}
-                    disabled={isEffectFlat || isDisabled}
-                    onClick={onApply}
+                    aria-disabled={isSettingsFlat}
+                    onClick={() => {
+                        if (!isSettingsFlat) {
+                            onStateChange({
+                                ...state,
+                                settings: FLAT_EQUALIZER
+                            });
+                        }
+                    }}
+                >
+                    {t("sampleLocale.equalizer.reset")}
+                </button>
+                <button
+                    type={"button"}
+                    className={buttonClass}
+                    aria-disabled={isEffectFlat || isDisabled}
+                    onClick={() => {
+                        if (!isEffectFlat && !isDisabled) {
+                            onApply();
+                        }
+                    }}
                 >
                     {t("sampleLocale.equalizer.apply")}
                 </button>
