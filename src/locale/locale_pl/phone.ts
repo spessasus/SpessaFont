@@ -179,5 +179,8 @@ export const PhoneLocale = {
         bandAboveNyquist:
             "To pasmo jest powyżej połowy częstotliwości próbkowania",
         name: "Nazwa"
+    },
+    dialogs: {
+        invalidNumber: "Wpisz liczbę od {{min}} do {{max}}"
     }
 };

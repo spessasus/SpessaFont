@@ -1,0 +1,159 @@
+/* The dialog is a bottom sheet, its title bar holds Cancel on the left and OK on the right */
+:root[data-layout="phone"] .modal_dialog {
+    --dialog-bar-height: 3.5rem;
+    --dialog-cancel-space: 6rem;
+    --dialog-ok-space: 4.25rem;
+    box-sizing: border-box;
+    margin: auto 0 0;
+    padding: 0 0 1rem;
+    width: 100%;
+    max-width: none;
+    max-height: 90dvh;
+    border-width: 1px 0 0;
+    border-radius: 1rem 1rem 0 0;
+    overflow: hidden;
+}
+
+:root[data-layout="phone"] .modal_dialog[open] {
+    gap: 0;
+}
+
+:root[data-layout="phone"] .modal_dialog > :not(.modal_dialog_title) {
+    margin-inline: var(--phone-gutter);
+}
+
+:root[data-layout="phone"] .modal_dialog_title {
+    box-sizing: border-box;
+    display: block;
+    flex-shrink: 0;
+    min-width: 0;
+    height: var(--dialog-bar-height);
+    margin: 0 0 0.75rem;
+    /* Starts after Cancel and stops before OK, the buttons sit over the bar */
+    padding-inline: var(--dialog-cancel-space) var(--dialog-ok-space);
+    border-bottom: 1px solid var(--track-border-color);
+    font-size: var(--phone-text-sheet-title);
+    font-weight: 600;
+    line-height: calc(var(--dialog-bar-height) - 1px);
+    text-align: start;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* The picker has no OK button */
+:root[data-layout="phone"] .element_picker .modal_dialog_title {
+    padding-inline-end: var(--phone-gutter);
+}
+
+:root[data-layout="phone"] .modal_dialog .modal_dialog_buttons {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--dialog-bar-height);
+    margin: 0;
+    padding: 0 0.5rem;
+    pointer-events: none;
+}
+
+:root[data-layout="phone"] .modal_dialog_buttons button {
+    pointer-events: auto;
+    min-width: var(--phone-touch);
+    min-height: var(--phone-touch);
+    padding: 0.3rem 1rem;
+    font-size: var(--phone-text-button);
+}
+
+:root[data-layout="phone"] .tool_dialog form,
+:root[data-layout="phone"] .number_dialog form {
+    gap: 0.75rem;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+:root[data-layout="phone"] .tool_dialog_field,
+:root[data-layout="phone"] .number_dialog_field {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0.25rem;
+}
+
+:root[data-layout="phone"] .tool_dialog_field,
+:root[data-layout="phone"] .tool_dialog_field *,
+:root[data-layout="phone"] .number_dialog_field,
+:root[data-layout="phone"] .number_dialog_field * {
+    text-align: start;
+}
+
+:root[data-layout="phone"] .tool_dialog_field > span:first-child,
+:root[data-layout="phone"] .number_dialog_field > span:first-child {
+    color: var(--muted-font-color);
+    font-size: var(--phone-text-secondary);
+}
+
+:root[data-layout="phone"] .tool_dialog_field input[type="number"],
+:root[data-layout="phone"] .tool_dialog_field select,
+:root[data-layout="phone"] .number_dialog_field input {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: var(--phone-touch);
+    font-size: var(--phone-text-body);
+}
+
+:root[data-layout="phone"] .tool_dialog_check {
+    min-height: var(--phone-touch);
+}
+
+:root[data-layout="phone"] .dialog_field_message {
+    color: var(--warning-color);
+    font-size: var(--phone-text-caption);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .tool_dialog_note {
+    text-align: start;
+    font-size: var(--phone-text-secondary);
+}
+
+:root[data-layout="phone"] .key_curve_graph svg {
+    height: 40dvh;
+}
+
+/* The picker takes the whole screen */
+:root[data-layout="phone"] .modal_dialog.element_picker {
+    height: 100dvh;
+    max-height: 100dvh;
+    border: 0;
+    border-radius: 0;
+    padding-bottom: 0;
+    overflow: hidden;
+}
+
+:root[data-layout="phone"] .element_picker > input[type="search"] {
+    flex-shrink: 0;
+    min-height: var(--phone-touch);
+    margin-bottom: 0.75rem;
+    font-size: var(--phone-text-body);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .element_picker .element_picker_list {
+    flex: 1;
+    height: auto;
+    min-height: 0;
+    margin-bottom: 1rem;
+}
+
+:root[data-layout="phone"] .element_picker .element_picker_item {
+    box-sizing: border-box;
+    height: 3rem;
+    padding: 0 var(--phone-gutter);
+    font-size: var(--phone-text-body);
+}

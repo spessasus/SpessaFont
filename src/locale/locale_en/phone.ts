@@ -166,5 +166,8 @@ export const PhoneLocale = {
         gainUp: "Raise the gain",
         bandAboveNyquist: "This band is above half the sample rate",
         name: "Name"
+    },
+    dialogs: {
+        invalidNumber: "Enter a number from {{min}} to {{max}}"
     }
 };
