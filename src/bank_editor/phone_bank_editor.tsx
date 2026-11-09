@@ -56,8 +56,15 @@ export function PhoneBankEditor({
                 className={"bank_editor_content"}
                 inert={state.isNavigatorOpen}
             >
-                <ElementBar view={view} />
-                <BankEditorWindow model={model} />
+                <ElementBar
+                    view={view}
+                    onSampleSection={model.setSampleSection}
+                />
+                <BankEditorWindow
+                    model={model}
+                    sampleSection={model.sampleSection}
+                    onSampleSectionChange={model.setSampleSection}
+                />
             </div>
             <NavigatorLayer
                 view={view}

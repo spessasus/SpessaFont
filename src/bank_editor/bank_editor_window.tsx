@@ -6,6 +6,7 @@ import { SampleEditor } from "../sample_editor/sample_editor.tsx";
 import { ErrorBoundary } from "../error_boundary/error_boundary.tsx";
 import { PaneErrorFallback } from "../error_boundary/pane_error_fallback.tsx";
 import { getObjectId } from "../utils/object_id.ts";
+import type { SampleSection } from "../sample_editor/sample_section.ts";
 import type { BankEditorModel } from "./use_bank_editor_model.ts";
 
 function renderPaneError(error: unknown) {
@@ -14,12 +15,21 @@ function renderPaneError(error: unknown) {
 
 interface BankEditorWindowProps {
     model: BankEditorModel;
+    /**
+     * The phone editor's sample section, desktop passes none.
+     */
+    sampleSection?: SampleSection;
+    onSampleSectionChange?: (section: SampleSection) => void;
 }
 
 /**
  * The shown element's editor, the same in both layouts.
  */
-export function BankEditorWindow({ model }: BankEditorWindowProps) {
+export function BankEditorWindow({
+    model,
+    sampleSection,
+    onSampleSectionChange
+}: BankEditorWindowProps) {
     const {
         view,
         samplePlayerState,
@@ -57,6 +67,8 @@ export function BankEditorWindow({ model }: BankEditorWindowProps) {
                         onPlayerStateChange={setSamplePlayerState}
                         equalizer={equalizer}
                         onEqualizerChange={setEqualizer}
+                        section={sampleSection}
+                        onSectionChange={onSampleSectionChange}
                     />
                 )}
             </ErrorBoundary>

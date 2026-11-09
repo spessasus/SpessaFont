@@ -23,6 +23,7 @@ import { useSampleAudioCommands } from "./use_sample_audio_commands.ts";
 import { EqualizerPanel } from "./equalizer/equalizer_panel.tsx";
 import { useEqualizerPreview } from "./equalizer/use_equalizer_preview.ts";
 import { type EqualizerState, FLAT_EQUALIZER } from "./equalizer/equalizer.ts";
+import type { SampleSection } from "./sample_section.ts";
 import { useSampleAudio } from "../hooks/use_sample_audio.ts";
 
 const MAX_NAME_LENGTH = 40;
@@ -43,6 +44,11 @@ interface SampleEditorProps {
      */
     equalizer: EqualizerState;
     onEqualizerChange: (state: EqualizerState) => void;
+    /**
+     * The phone editor's shown section, desktop passes none.
+     */
+    section?: SampleSection;
+    onSectionChange?: (section: SampleSection) => void;
 }
 
 /**
@@ -55,7 +61,9 @@ export function SampleEditor({
     playRequest,
     onPlayerStateChange,
     equalizer,
-    onEqualizerChange
+    onEqualizerChange,
+    section,
+    onSectionChange
 }: SampleEditorProps) {
     const { session } = useBankEditor();
     const sampleId = getObjectId(sample);
@@ -73,6 +81,8 @@ export function SampleEditor({
             onPlayerStateChange={onPlayerStateChange}
             equalizer={equalizer}
             onEqualizerChange={onEqualizerChange}
+            section={section}
+            onSectionChange={onSectionChange}
         />
     );
 }

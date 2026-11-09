@@ -16,10 +16,18 @@ import { InfoIcon } from "../utils/icons/file_icons.tsx";
 import { InstrumentIcon, SpeakerIcon } from "../utils/icons/player_icons.tsx";
 import { getObjectId } from "../utils/object_id.ts";
 import { PresetPatch } from "../menu_list/preset_display/preset_patch.tsx";
+import {
+    SAMPLE_SECTIONS,
+    type SampleSection
+} from "../sample_editor/sample_section.ts";
 import { PropertiesSheet } from "./properties_sheet.tsx";
 
 interface ElementBarProps {
     view: BankEditView;
+    /**
+     * Called when the sample row is tapped, with the section to show.
+     */
+    onSampleSection?: (section: SampleSection) => void;
 }
 
 interface BarButtonProps {
@@ -151,7 +159,13 @@ function InstrumentBar({ instrument }: { instrument: BasicInstrument }) {
     );
 }
 
-function SampleBar({ sample }: { sample: BasicSample }) {
+function SampleBar({
+    sample,
+    onSampleSection
+}: {
+    sample: BasicSample;
+    onSampleSection?: (section: SampleSection) => void;
+}) {
     const { t } = useTranslation();
     const { session } = useBankEditor();
     const view = useSampleView(session.store, getObjectId(sample));
@@ -162,11 +176,11 @@ function SampleBar({ sample }: { sample: BasicSample }) {
     if (!view) {
         return null;
     }
-    // Task 42 gives this button the handler that selects the Used by section
     return (
         <BarButton
             glyph={<SpeakerIcon />}
             glyphClass={"element_bar_sample"}
+            onClick={() => onSampleSection?.(SAMPLE_SECTIONS.usedBy)}
             name={view.name}
             detail={
                 <UsedBy
@@ -182,7 +196,7 @@ function SampleBar({ sample }: { sample: BasicSample }) {
 /**
  * The phone form of the desktop bottom bars (spec 4.4), under the app bar.
  */
-export function ElementBar({ view }: ElementBarProps) {
+export function ElementBar({ view, onSampleSection }: ElementBarProps) {
     const { t } = useTranslation();
     if (view === "info") {
         return (
@@ -202,5 +216,5 @@ export function ElementBar({ view }: ElementBarProps) {
     if (view instanceof BasicInstrument) {
         return <InstrumentBar instrument={view} />;
     }
-    return <SampleBar sample={view} />;
+    return <SampleBar sample={view} onSampleSection={onSampleSection} />;
 }

@@ -11,6 +11,11 @@ import { usePreviewTarget } from "./use_preview_target.ts";
 import { getObjectId } from "../utils/object_id.ts";
 import type { SamplePlayerState } from "../sample_editor/use_sample_player.ts";
 import { DEFAULT_EQUALIZER_STATE } from "../sample_editor/equalizer/equalizer.ts";
+import {
+    getShownSampleSection,
+    type SampleSection,
+    type StoredSampleSection
+} from "../sample_editor/sample_section.ts";
 
 /**
  * Falls back to the overview when the selected element is no longer in the bank,
@@ -66,6 +71,15 @@ export function useBankEditorModel(
     const [playRequest, setPlayRequest] = useState(0);
     const [equalizer, setEqualizer] = useState(DEFAULT_EQUALIZER_STATE);
     const [infoPanel, setInfoPanel] = useState<InfoPanel>("info");
+    const [storedSection, setStoredSection] = useState<StoredSampleSection>();
+    const shownSampleId =
+        view instanceof BasicSample ? getObjectId(view) : undefined;
+    const sampleSection = getShownSampleSection(storedSection, shownSampleId);
+    const setSampleSection = (section: SampleSection) => {
+        if (shownSampleId !== undefined) {
+            setStoredSection({ sampleId: shownSampleId, section });
+        }
+    };
     // The context below depends on it, so it keeps its identity
     const startPlaying = useCallback(() => {
         setSamplePlayerState("playing");
@@ -100,6 +114,8 @@ export function useBankEditorModel(
         setEqualizer,
         infoPanel,
         setInfoPanel,
+        sampleSection,
+        setSampleSection,
         startPlaying
     };
 }

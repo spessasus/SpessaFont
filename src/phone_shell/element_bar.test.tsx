@@ -8,12 +8,14 @@ import { createTestSession } from "../test_utils/bank_fixture.ts";
 import { setUpFakeHistory } from "../test_utils/fake_history.ts";
 import type { FakeHistory } from "../test_utils/fake_history.ts";
 import { BackStackProvider } from "./back_stack_provider.tsx";
+import type { SampleSection } from "../sample_editor/sample_section.ts";
 import { ElementBar } from "./element_bar.tsx";
 
 vi.mock("react-hot-toast", () => ({ default: vi.fn() }));
 
 function renderBar(
-    pick: (session: ReturnType<typeof createTestSession>) => BankEditView
+    pick: (session: ReturnType<typeof createTestSession>) => BankEditView,
+    onSampleSection?: (section: SampleSection) => void
 ) {
     const session = createTestSession();
     const view = pick(session);
@@ -28,7 +30,7 @@ function renderBar(
                         playSample: () => undefined
                     }}
                 >
-                    <ElementBar view={view} />
+                    <ElementBar view={view} onSampleSection={onSampleSection} />
                 </BankEditorContext>
             </BackStackProvider>
         </LayoutContext>
@@ -59,6 +61,17 @@ describe("ElementBar", () => {
     it("has no button on the overview", () => {
         const { session } = renderBar(() => "info");
         expect(screen.queryByRole("button")).toBeNull();
+        session.close();
+    });
+
+    it("selects the Used by section when the sample row is tapped", () => {
+        const onSampleSection = vi.fn();
+        const { session } = renderBar(
+            (s) => s.document.samples[0],
+            onSampleSection
+        );
+        fireEvent.click(screen.getByRole("button"));
+        expect(onSampleSection).toHaveBeenCalledExactlyOnceWith("usedBy");
         session.close();
     });
 });
