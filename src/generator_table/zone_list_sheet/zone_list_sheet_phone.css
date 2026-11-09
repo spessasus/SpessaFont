@@ -124,3 +124,18 @@
     color: var(--muted-font-color);
     text-align: end;
 }
+
+/* Landscape: the finder and the list scroll together, so the list never shrinks away */
+:root[data-layout="phone"][data-orientation="landscape"] .zone_list_sheet {
+    overflow-y: auto;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"] .zone_list_sheet > * {
+    flex-shrink: 0;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .zone_list_sheet
+    .menu_list_scrollable {
+    flex: 1 0 calc(2 * var(--phone-row-height));
+}

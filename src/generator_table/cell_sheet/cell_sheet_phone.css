@@ -396,3 +396,18 @@
 :root[data-layout="phone"] .cell_sheet_option[aria-disabled="true"] {
     opacity: 0.4;
 }
+
+/* Landscape: everything below the sheet's header scrolls, so Apply stays reachable */
+:root[data-layout="phone"][data-orientation="landscape"] .cell_sheet {
+    overflow-y: auto;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"] .cell_sheet > * {
+    flex-shrink: 0;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .cell_sheet
+    .menu_list_scrollable {
+    flex: 1 0 calc(1.5 * var(--phone-row-height));
+}

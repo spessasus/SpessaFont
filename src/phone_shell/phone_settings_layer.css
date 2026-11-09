@@ -8,3 +8,12 @@
     min-height: 0;
     background: var(--darker-color-start);
 }
+
+/*
+ * In landscape the docked lists run down beside the drawer, so the settings cover the whole
+ * screen there, the dock and the drawer included (spec 12.4). The drawer goes inert with them
+ */
+:root[data-layout="phone"][data-orientation="landscape"] .phone_settings_layer {
+    position: fixed;
+    inset: 0;
+}

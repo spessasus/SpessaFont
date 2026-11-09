@@ -268,3 +268,28 @@
         var(--phone-name-column) + var(--phone-global-column) + 0.5rem
     );
 }
+
+/*
+ * Landscape: a slightly narrower name column fits five 80 px zones beside the docked lists at
+ * 915 px, and the grid keeps its header and one row when a sheet docks under it
+ */
+:root[data-layout="phone"][data-orientation="landscape"] .zone_table_wrapper {
+    --phone-name-column: 7rem;
+    min-height: calc(4.25rem + var(--phone-cell-height));
+}
+
+/*
+ * A docked sheet keeps its header and one row first (editor_sheet.css). The grid keeps its
+ * header and one row from what is left (less the editor's flex gap), or as much of it as fits
+ */
+:root[data-layout="phone"][data-orientation="landscape"]
+    :has(> .editor_sheet)
+    > .zone_table_wrapper {
+    min-height: max(
+        0px,
+        min(
+            4.25rem + var(--phone-cell-height),
+            100% - 1rem - 2 * var(--phone-row-height) - var(--flex-gap)
+        )
+    );
+}

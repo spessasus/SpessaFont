@@ -65,3 +65,14 @@
     overflow-y: auto;
     overscroll-behavior: contain;
 }
+
+/*
+ * Landscape is short, so the sheet gives way to the grid above it and its body scrolls. It
+ * keeps its grab bar, header and one row, and the grid gives way below that (see
+ * generator_table_phone.css)
+ */
+:root[data-layout="phone"][data-orientation="landscape"] .editor_sheet {
+    flex: 0 1 var(--phone-sheet-height);
+    height: auto;
+    min-height: calc(1rem + 2 * var(--phone-row-height));
+}
