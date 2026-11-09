@@ -17,6 +17,7 @@ import {
 import { DrawerHandle, type KeyReadout } from "./drawer_handle.tsx";
 import { OctaveStrip } from "./octave_strip.tsx";
 import { usePhoneShell } from "./phone_shell_context.ts";
+import { ControlsPanel } from "./controls_panel.tsx";
 
 interface KeyboardDrawerProps {
     session: BankSession;
@@ -153,6 +154,7 @@ export function KeyboardDrawer({
                     )}
                 </div>
             )}
+            {drawer === "controls" ? <ControlsPanel /> : null}
         </div>
     );
 }

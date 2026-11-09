@@ -57,6 +57,19 @@ export function DrawerHandle({ name, readout, strip }: DrawerHandleProps) {
             >
                 {t("phoneLocale.drawer.keys")}
             </button>
+            <button
+                type={"button"}
+                className={"pretty_button drawer_toggle"}
+                aria-pressed={drawer === "controls"}
+                onClick={() =>
+                    dispatch({
+                        type: "setDrawer",
+                        drawer: drawer === "controls" ? "collapsed" : "controls"
+                    })
+                }
+            >
+                {t("phoneLocale.drawer.controls")}
+            </button>
             {strip}
             <span
                 className={"drawer_name"}

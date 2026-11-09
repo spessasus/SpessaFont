@@ -1,6 +1,7 @@
 import { type MIDIController, MIDIControllers } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import "./controller.css";
+import "./controller_phone.css";
 import { CC_TOGGLES } from "../../utils/midi_constants.ts";
 import { ControllerKnob } from "../../fancy_inputs/controller_knob/controller_knob.tsx";
 import { KEYBOARD_TARGET_CHANNEL } from "../target_channel.ts";

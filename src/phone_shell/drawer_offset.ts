@@ -14,5 +14,8 @@ export function getDrawerOffset(drawer: DrawerState, isLandscape: boolean) {
                 ? "calc(var(--phone-handle-height) + var(--phone-keys-height))"
                 : "calc(var(--phone-handle-height) + var(--phone-strip-height) + var(--phone-keys-height))";
         }
+        case "controls": {
+            return "calc(var(--phone-handle-height) + var(--phone-controls-height))";
+        }
     }
 }

@@ -20,4 +20,13 @@ describe("getDrawerOffset", () => {
             "var(--phone-handle-height)"
         );
     });
+
+    it("gives the controls state the handle plus the controls height", () => {
+        expect(getDrawerOffset("controls", false)).toBe(
+            "calc(var(--phone-handle-height) + var(--phone-controls-height))"
+        );
+        expect(getDrawerOffset("controls", true)).toBe(
+            "calc(var(--phone-handle-height) + var(--phone-controls-height))"
+        );
+    });
 });

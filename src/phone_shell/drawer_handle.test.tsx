@@ -31,24 +31,42 @@ function renderHandle(drawer: DrawerState) {
 describe("DrawerHandle", () => {
     afterEach(cleanup);
 
-    it("shows only the Keys toggle, the controls panel is phase 2", () => {
-        renderHandle("collapsed");
-        const toggles = screen
-            .getAllByRole("button")
-            .map((button) => button.textContent);
-        expect(toggles).toEqual(["phoneLocale.drawer.keys"]);
+    it("toggles between keys, controls and collapsed", () => {
+        const openDispatch = renderHandle("keys");
+        fireEvent.click(
+            screen.getByRole("button", { name: "phoneLocale.drawer.controls" })
+        );
+        expect(openDispatch).toHaveBeenCalledWith({
+            type: "setDrawer",
+            drawer: "controls"
+        });
+        cleanup();
+        const closeDispatch = renderHandle("controls");
+        const controls = screen.getByRole("button", {
+            name: "phoneLocale.drawer.controls"
+        });
+        expect(controls.getAttribute("aria-pressed")).toBe("true");
+        fireEvent.click(controls);
+        expect(closeDispatch).toHaveBeenCalledWith({
+            type: "setDrawer",
+            drawer: "collapsed"
+        });
     });
 
     it("opens and closes the keys", () => {
         const openDispatch = renderHandle("collapsed");
-        fireEvent.click(screen.getByRole("button"));
+        fireEvent.click(
+            screen.getByRole("button", { name: "phoneLocale.drawer.keys" })
+        );
         expect(openDispatch).toHaveBeenCalledWith({
             type: "setDrawer",
             drawer: "keys"
         });
         cleanup();
         const closeDispatch = renderHandle("keys");
-        fireEvent.click(screen.getByRole("button"));
+        fireEvent.click(
+            screen.getByRole("button", { name: "phoneLocale.drawer.keys" })
+        );
         expect(closeDispatch).toHaveBeenCalledWith({
             type: "setDrawer",
             drawer: "collapsed"

@@ -17,6 +17,7 @@
     --phone-header-height: 4rem;
     --phone-edge-dead-zone: 1.875rem;
     --phone-sheet-height: 50dvh;
+    --phone-controls-height: 55dvh;
     --phone-navigator-width: 90%;
     --phone-pressed-color: color-mix(
         in oklch,
@@ -40,6 +41,8 @@
     --phone-keys-height: 5.5rem;
     --phone-dock-width: clamp(15rem, 35vw, 20rem);
     --phone-sheet-height: 60dvh;
+    /* The drawer's Controls leave the editor a usable height */
+    --phone-controls-height: 40dvh;
     /* The grid's view bar moves into the element bar row, so the grid keeps no room for it */
     --phone-view-bar-height: 0rem;
 }

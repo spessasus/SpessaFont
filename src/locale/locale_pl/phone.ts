@@ -27,6 +27,8 @@ export const PhoneLocale = {
     },
     drawer: {
         keys: "Klawisze",
+        controls: "Kontrolery",
+        lastNote: "Ostatnia nuta",
         songOnChannel: "Na tym kanale gra utwór",
         pause: "Pauza",
         resume: "Wznów",

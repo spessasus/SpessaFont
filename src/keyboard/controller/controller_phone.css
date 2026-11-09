@@ -1,0 +1,111 @@
+/*
+ * The desktop controllers in the phone drawer's Controls panel: the same knobs, switches, ranges
+ * and buttons, arranged for a narrow screen (phone-style §0)
+ */
+
+/*
+ * The ranges' wrappers step aside, so their columns and the knob grid are items of one panel
+ * column and CSS order arranges them: the readout, the ranges, the knobs, then Panic and
+ * Reset (landscape puts the knobs first, the panel is short there)
+ */
+:root[data-layout="phone"] .controls_panel_ranges,
+:root[data-layout="phone"] .controls_panel_ranges > .controller_row {
+    display: contents;
+}
+
+:root[data-layout="phone"]
+    .controls_panel_ranges
+    > .controller_row
+    > .controller_column {
+    order: 1;
+}
+
+:root[data-layout="phone"] .controls_panel_knobs {
+    order: 2;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"] .controls_panel_knobs {
+    order: 0;
+}
+
+/* Pitch wheel and pressure take the full width with their value at the end */
+:root[data-layout="phone"]
+    .controls_panel_ranges
+    > .controller_row
+    > .controller_column {
+    flex-direction: row;
+    align-items: center;
+    margin: 0;
+}
+
+:root[data-layout="phone"]
+    .controls_panel_ranges
+    > .controller_row
+    .controller_range_wrapper {
+    flex: 1;
+    min-width: 0;
+}
+
+:root[data-layout="phone"]
+    .controls_panel_ranges
+    > .controller_row
+    > .controller_column
+    > span.monospaced {
+    flex: none;
+    min-width: 6ch;
+    text-align: end;
+}
+
+/* Panic and Reset sit side by side, at the end of the panel */
+:root[data-layout="phone"]
+    .controls_panel_ranges
+    > .controller_row
+    > .controller_column:first-child {
+    order: 3;
+}
+
+:root[data-layout="phone"]
+    .controls_panel_ranges
+    > .controller_row
+    > .controller_column:first-child
+    > button {
+    flex: 1;
+    min-height: var(--phone-touch);
+}
+
+/* The nine slots in a grid, each a controller select over its knob or switch */
+:root[data-layout="phone"] .controls_panel_knobs > .controller_row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .controls_panel_knobs
+    > .controller_row {
+    grid-template-columns: repeat(9, minmax(0, 1fr));
+}
+
+:root[data-layout="phone"] .controls_panel .controller_wrapper {
+    min-width: 0;
+    margin: 0.25rem;
+}
+
+:root[data-layout="phone"] .controls_panel .controller_select {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: var(--phone-touch);
+}
+
+/* The knob turns with a finger drag, which must not scroll the drawer */
+:root[data-layout="phone"] .controls_panel .controller_knob {
+    --controller-size: 3.5rem;
+    touch-action: none;
+}
+
+/* Nine slots across in landscape leave little room, the select keeps 1rem text and its arrow */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .controls_panel
+    .controller_select {
+    padding-inline: 0.125rem;
+}
