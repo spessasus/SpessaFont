@@ -157,5 +157,13 @@ export const PhoneLocale = {
         shift: "Przesuń",
         unset: "−",
         unsetName: "Nie ustawiono"
+    },
+    sample: {
+        loop: "Pętla",
+        props: "Właściwości",
+        eq: "EQ",
+        usedBy: "Używana przez",
+        sections: "Sekcje próbki",
+        moveLoopPoint: "Przesuń {{point}} o {{amount}}"
     }
 };

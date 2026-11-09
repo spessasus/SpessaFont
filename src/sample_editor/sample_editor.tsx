@@ -1,5 +1,6 @@
 import type { BasicSample } from "spessasynth_core";
 import "./sample_editor.css";
+import "./sample_editor_phone.css";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { WaveView } from "./wave_view/wave_view.tsx";
@@ -23,8 +24,11 @@ import { useSampleAudioCommands } from "./use_sample_audio_commands.ts";
 import { EqualizerPanel } from "./equalizer/equalizer_panel.tsx";
 import { useEqualizerPreview } from "./equalizer/use_equalizer_preview.ts";
 import { type EqualizerState, FLAT_EQUALIZER } from "./equalizer/equalizer.ts";
-import type { SampleSection } from "./sample_section.ts";
+import { SAMPLE_SECTIONS, type SampleSection } from "./sample_section.ts";
 import { useSampleAudio } from "../hooks/use_sample_audio.ts";
+import { useLayout } from "../layout/layout_context.ts";
+import { SampleSections } from "./sample_sections.tsx";
+import { LoopSection } from "./loop_section.tsx";
 
 const MAX_NAME_LENGTH = 40;
 
@@ -111,6 +115,13 @@ function hasFreeSample(
     return false;
 }
 
+/**
+ * Used when the phone editor gets no section handler, the section then stays on Loop.
+ */
+function ignoreSection() {
+    // Nothing keeps the section without a handler
+}
+
 function SampleEditorPane({
     sample,
     view,
@@ -118,7 +129,9 @@ function SampleEditorPane({
     playRequest,
     onPlayerStateChange,
     equalizer,
-    onEqualizerChange
+    onEqualizerChange,
+    section,
+    onSectionChange
 }: SampleEditorPaneProps) {
     const { t } = useTranslation();
     const { session } = useBankEditor();
@@ -146,6 +159,64 @@ function SampleEditorPane({
     );
     const audio = useSampleAudioCommands(sample, player.stop);
     const [zoom, setZoom] = useState(1);
+    const layout = useLayout();
+
+    const wave = (
+        <WaveView
+            zoom={zoom}
+            onLoopStartChange={edits.setLoopStart}
+            onLoopEndChange={edits.setLoopEnd}
+            data={data}
+            loopStart={view.loopStart}
+            loopEnd={view.loopEnd}
+            sampleRate={view.sampleRate}
+            playerState={player.state}
+            playbackStartTime={player.startTime}
+            centCorrection={view.pitchCorrection}
+        />
+    );
+    const nameInput = (
+        <WaitingInput
+            onCommit={edits.setName}
+            value={view.name}
+            maxLength={MAX_NAME_LENGTH}
+            className={"pretty_input sample_editor_name monospaced"}
+            placeholder={t("sampleLocale.sampleName")}
+            aria-label={t("sampleLocale.sampleName")}
+        />
+    );
+    const zoomSlider = (
+        <ZoomSlider
+            sampleLength={view.length}
+            zoom={zoom}
+            onZoomChange={setZoom}
+        />
+    );
+    const properties = (
+        <SampleProperties
+            sample={view}
+            partnerName={partnerName}
+            canLink={canLink}
+            edits={edits}
+        />
+    );
+    const equalizerPanel = (
+        <EqualizerPanel
+            state={equalizer}
+            sampleRate={view.sampleRate}
+            isDisabled={audio.isLoading}
+            onStateChange={onEqualizerChange}
+            onApply={() => {
+                void audio.equalize(equalizer.settings);
+                // The audio now has the changes, previewing would apply them twice
+                onEqualizerChange({
+                    ...equalizer,
+                    isPreviewing: false
+                });
+            }}
+        />
+    );
+    const linkedInstruments = <LinkedInstruments sampleId={view.id} />;
 
     return (
         <div className={"sample_editor"}>
@@ -159,63 +230,59 @@ function SampleEditorPane({
                 onTrimAfterLoop={audio.trimAfterLoop}
                 onReplaceAudio={audio.replaceAudio}
             />
-            <WaveView
-                zoom={zoom}
-                onLoopStartChange={edits.setLoopStart}
-                onLoopEndChange={edits.setLoopEnd}
-                data={data}
-                loopStart={view.loopStart}
-                loopEnd={view.loopEnd}
-                sampleRate={view.sampleRate}
-                playerState={player.state}
-                playbackStartTime={player.startTime}
-                centCorrection={view.pitchCorrection}
-            />
-            <div className={"sample_editor_toolbar"}>
-                <div className={"sample_editor_title"}>
-                    <WaitingInput
-                        onCommit={edits.setName}
-                        value={view.name}
-                        maxLength={MAX_NAME_LENGTH}
-                        className={"pretty_input sample_editor_name monospaced"}
-                        placeholder={t("sampleLocale.sampleName")}
-                        aria-label={t("sampleLocale.sampleName")}
-                    />
-                    <SamplePlayback
-                        state={player.state}
-                        onPlay={player.play}
-                        onStop={player.stop}
-                    />
-                </div>
-                <ZoomSlider
-                    sampleLength={view.length}
-                    zoom={zoom}
-                    onZoomChange={setZoom}
+            {layout === "phone" ? (
+                <SampleSections
+                    section={section ?? SAMPLE_SECTIONS.loop}
+                    onSectionChange={onSectionChange ?? ignoreSection}
+                    wave={wave}
+                    zoom={zoomSlider}
+                    loop={
+                        <LoopSection
+                            loopStart={view.loopStart}
+                            loopEnd={view.loopEnd}
+                            length={view.length}
+                            playerState={player.state}
+                            onPlay={player.play}
+                            onStop={player.stop}
+                            onLoopStartChange={edits.setLoopStart}
+                            onLoopEndChange={edits.setLoopEnd}
+                            onStepLoopStart={edits.stepLoopStart}
+                            onStepLoopEnd={edits.stepLoopEnd}
+                            isLoading={audio.isLoading}
+                            onAutoLoop={() => void audio.autoLoop()}
+                            onTrimAfterLoop={() => void audio.trimAfterLoop()}
+                        />
+                    }
+                    props={
+                        <>
+                            {nameInput}
+                            {properties}
+                        </>
+                    }
+                    equalizer={equalizerPanel}
+                    usedBy={linkedInstruments}
                 />
-            </div>
-            <div className={"sample_editor_panels"}>
-                <SampleProperties
-                    sample={view}
-                    partnerName={partnerName}
-                    canLink={canLink}
-                    edits={edits}
-                />
-                <EqualizerPanel
-                    state={equalizer}
-                    sampleRate={view.sampleRate}
-                    isDisabled={audio.isLoading}
-                    onStateChange={onEqualizerChange}
-                    onApply={() => {
-                        void audio.equalize(equalizer.settings);
-                        // The audio now has the changes, previewing would apply them twice
-                        onEqualizerChange({
-                            ...equalizer,
-                            isPreviewing: false
-                        });
-                    }}
-                />
-            </div>
-            <LinkedInstruments sampleId={getObjectId(sample)} />
+            ) : (
+                <>
+                    {wave}
+                    <div className={"sample_editor_toolbar"}>
+                        <div className={"sample_editor_title"}>
+                            {nameInput}
+                            <SamplePlayback
+                                state={player.state}
+                                onPlay={player.play}
+                                onStop={player.stop}
+                            />
+                        </div>
+                        {zoomSlider}
+                    </div>
+                    <div className={"sample_editor_panels"}>
+                        {properties}
+                        {equalizerPanel}
+                    </div>
+                    {linkedInstruments}
+                </>
+            )}
         </div>
     );
 }

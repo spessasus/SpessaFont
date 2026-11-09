@@ -145,5 +145,13 @@ export const PhoneLocale = {
         shift: "Shift",
         unset: "−",
         unsetName: "Not set"
+    },
+    sample: {
+        loop: "Loop",
+        props: "Props",
+        eq: "EQ",
+        usedBy: "Used by",
+        sections: "Sample sections",
+        moveLoopPoint: "Move {{point}} by {{amount}}"
     }
 };

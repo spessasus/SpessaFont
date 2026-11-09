@@ -1,0 +1,103 @@
+/* The wave, the zoom and the sections control stay put, only the chosen section scrolls.
+   The wave pans sideways on a swipe, so a column that scrolled could not be scrolled from it */
+:root[data-layout="phone"] .sample_editor {
+    gap: 0;
+    overflow: hidden;
+}
+
+:root[data-layout="phone"] .sample_editor > .wave_view {
+    flex: none;
+}
+
+:root[data-layout="phone"] .sample_sections_zoom {
+    flex: none;
+    padding: 0.25rem var(--phone-gutter);
+}
+
+:root[data-layout="phone"] .sample_sections_zoom .controller_range_wrapper {
+    width: 100%;
+}
+
+:root[data-layout="phone"]
+    .sample_sections_zoom
+    .controller_range_wrapper
+    > span {
+    text-align: start;
+}
+
+:root[data-layout="phone"] .sample_sections_control {
+    position: sticky;
+    top: 0;
+    flex: none;
+    padding: 0.25rem var(--phone-gutter);
+}
+
+/* The segments share the spare width, and a long label (Polish) keeps its own */
+:root[data-layout="phone"] .sample_sections_control .segmented_control_segment {
+    flex: 1 1 auto;
+}
+
+:root[data-layout="phone"] .sample_sections_body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--phone-gutter);
+}
+
+:root[data-layout="phone"] .loop_section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--phone-gutter);
+}
+
+:root[data-layout="phone"] .loop_section .sample_playback,
+:root[data-layout="phone"] .loop_section_tools {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--flex-gap);
+}
+
+:root[data-layout="phone"] .loop_section .sample_playback button {
+    min-width: 0;
+    min-height: 3rem;
+    font-size: var(--phone-text-button);
+}
+
+:root[data-layout="phone"] .loop_section_tools button {
+    min-height: var(--phone-touch);
+    font-size: var(--phone-text-button);
+    text-align: center;
+}
+
+:root[data-layout="phone"] .loop_section_tools button[aria-disabled="true"] {
+    opacity: 0.4;
+}
+
+:root[data-layout="phone"] .loop_section_point {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+:root[data-layout="phone"] .loop_section_label {
+    text-align: start;
+    font-size: var(--phone-text-secondary);
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .loop_section_stepper_row {
+    display: grid;
+    grid-template-columns: auto auto 1fr auto auto;
+    gap: var(--flex-gap);
+}
+
+:root[data-layout="phone"] .loop_section_stepper_row .stepper_button {
+    font-size: var(--phone-text-small);
+}
+
+:root[data-layout="phone"] .loop_section_stepper_row input {
+    min-width: 0;
+    min-height: var(--phone-touch);
+    font-size: var(--phone-text-body);
+    text-align: center;
+}
