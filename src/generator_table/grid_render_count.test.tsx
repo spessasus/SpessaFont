@@ -268,8 +268,7 @@ describe("generator grid render counts", () => {
         labels.clear();
     });
 
-    // Fixed by Task 3 (memoized cells)
-    it.fails("re-renders only the edited zone's cell", async () => {
+    it("re-renders only the edited zone's cell", async () => {
         const { zoneIds, setAttenuation, counts, changesSince } = await setUp();
         const before = counts();
         setAttenuation(zoneIds[2], 300);
@@ -291,18 +290,14 @@ describe("generator grid render counts", () => {
         expect(attenuation[2]).toBeGreaterThan(0);
     });
 
-    // Fixed by Task 3 (memoized cells)
-    it.fails(
-        "re-renders no cell of a row that reads nothing Global changed",
-        async () => {
-            const { globalId, setAttenuation, counts, changesSince } =
-                await setUp();
-            const before = counts();
-            setAttenuation(globalId, 100);
-            const [, pan] = changesSince(before);
-            expect(pan).toEqual([0, 0, 0, 0, 0, 0, 0]);
-        }
-    );
+    it("re-renders no cell of a row that reads nothing Global changed", async () => {
+        const { globalId, setAttenuation, counts, changesSince } =
+            await setUp();
+        const before = counts();
+        setAttenuation(globalId, 100);
+        const [, pan] = changesSince(before);
+        expect(pan).toEqual([0, 0, 0, 0, 0, 0, 0]);
+    });
 
     it("re-renders a cell whose stereo partner changed", async () => {
         const { zoneIds, setAttenuation, counts, changesSince } = await setUp(
@@ -317,22 +312,17 @@ describe("generator grid render counts", () => {
         expect(attenuation[5]).toBeGreaterThan(0);
     });
 
-    // Fixed by Task 3 (memoized cells)
-    it.fails(
-        "re-renders the selected and the Tab stop cells when the selection moves",
-        async () => {
-            const { zoneIds, rerender, tree, counts, changesSince } =
-                await setUp();
-            rerender(tree(new Set([zoneIds[0]]), zoneIds[0]));
-            const before = counts();
-            rerender(tree(new Set([zoneIds[3]]), zoneIds[3]));
-            // Columns 1 and 4 flipped, in the pan row only the Tab stop moved
-            expect(changesSince(before)).toEqual([
-                [0, 1, 0, 0, 1, 0, 0],
-                [0, 1, 0, 0, 1, 0, 0]
-            ]);
-        }
-    );
+    it("re-renders the selected and the Tab stop cells when the selection moves", async () => {
+        const { zoneIds, rerender, tree, counts, changesSince } = await setUp();
+        rerender(tree(new Set([zoneIds[0]]), zoneIds[0]));
+        const before = counts();
+        rerender(tree(new Set([zoneIds[3]]), zoneIds[3]));
+        // Columns 1 and 4 flipped, in the pan row only the Tab stop moved
+        expect(changesSince(before)).toEqual([
+            [0, 1, 0, 0, 1, 0, 0],
+            [0, 1, 0, 0, 1, 0, 0]
+        ]);
+    });
 
     it("re-renders every cell when the language changes", async () => {
         const { i18n, counts, changesSince } = await setUp();

@@ -13,6 +13,7 @@ import {
     type CellContext,
     createCellEditActions,
     createSetCellActions,
+    createTextEditActions,
     formatCell,
     nudgeCellValue,
     readColumnCell
@@ -160,6 +161,35 @@ export function useCellCommands(
     };
 
     /**
+     * Commits typed text to the cell, or to all selected cells when it is one of them, each
+     * from its own value. False when a cell cannot take the text, which keeps the edit open.
+     * @param column the edited cell's column
+     * @param text the typed text
+     * @param shownText what the cell showed, which a lone cell keeps without an edit
+     */
+    const didCommitText = (
+        column: ZoneColumn,
+        text: string,
+        shownText: string
+    ) => {
+        const targets =
+            selectedColumns.length > 1 && selectedColumns.includes(column)
+                ? selectedColumns
+                : [column];
+        if (text === shownText && targets.length === 1) {
+            return true;
+        }
+        const actions = createTextEditActions(context, targets, text);
+        if (!actions) {
+            return false;
+        }
+        if (actions.length > 0) {
+            apply(actions);
+        }
+        return true;
+    };
+
+    /**
      * The commands of one cell's input.
      */
     const getInputCommands = (column: ZoneColumn): CellInputCommands => ({
@@ -237,6 +267,7 @@ export function useCellCommands(
     };
 
     return {
+        didCommitText,
         getInputCommands,
         getMenuEntries,
         handleSelectKeyDown,

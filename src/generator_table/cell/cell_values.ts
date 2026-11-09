@@ -54,6 +54,11 @@ export interface CellContext {
 }
 
 /**
+ * The part of a cell context that rendering needs, without the element (a core object).
+ */
+export type CellViewContext = Pick<CellContext, "row" | "isInstrument">;
+
+/**
  * The text a number cell shows for a raw value, or "" for unset.
  */
 export function formatNumberCell(row: GeneratorRowType, raw: number | null) {
@@ -185,7 +190,9 @@ export function readViewCell(
             generator === GeneratorTypes.keyRange
                 ? zone.keyRange
                 : zone.velocityRange;
-        return range ? { min: range.min, max: range.max } : null;
+        // The view's own range keeps its identity while the zone is unchanged, which the
+        // memoized cells rely on
+        return range ?? null;
     }
     if (isOffsetGenerator(generator)) {
         const fine = getViewGenerator(zone, generator);
@@ -210,7 +217,7 @@ export function readViewCell(
  * @param sample the zone's sample
  */
 function inheritCell(
-    { row, isInstrument }: CellContext,
+    { row, isInstrument }: CellViewContext,
     isGlobal: boolean,
     globalValue: CellValue,
     sample: SampleView | undefined
@@ -230,23 +237,6 @@ function inheritCell(
         return sample?.originalKey ?? -1;
     }
     return inherited ?? getGeneratorDefault(generator, isInstrument);
-}
-
-/**
- * What an unset cell of a zone view plays with, see `inheritCell`. For rendering.
- */
-export function getInheritedViewCell(
-    context: CellContext,
-    globalZone: ZoneView,
-    zone: ZoneView,
-    sample: SampleView | undefined
-) {
-    return inheritCell(
-        context,
-        zone.id === globalZone.id,
-        readViewCell(globalZone, context.row.generator),
-        sample
-    );
 }
 
 /**
@@ -626,21 +616,52 @@ export interface CellDisplay {
 }
 
 /**
+ * What the global zone stores for the row, as the cells of a column inherit it: null in the
+ * global zone's own column, which inherits nothing. For rendering.
+ */
+export function getGlobalCellValue(
+    row: GeneratorRowType,
+    globalZone: ZoneView,
+    column: ZoneColumn
+) {
+    return column.zone.id === globalZone.id
+        ? null
+        : readViewCell(globalZone, row.generator);
+}
+
+/**
  * What a cell of a column shows. For rendering.
  */
 export function getCellDisplay(
-    context: CellContext,
+    context: CellViewContext,
     column: ZoneColumn,
     globalZone: ZoneView
+) {
+    return getColumnDisplay(
+        context,
+        column,
+        getGlobalCellValue(context.row, globalZone, column)
+    );
+}
+
+/**
+ * What a cell of a column shows, from what the global zone stores for the row (see
+ * `getGlobalCellValue`). For rendering.
+ */
+export function getColumnDisplay(
+    context: CellViewContext,
+    column: ZoneColumn,
+    globalValue: CellValue
 ): CellDisplay {
     const { row } = context;
     const zones = getViewZones(column);
     const values = zones.map((z) => readViewCell(z, row.generator));
     const [first, second] = values;
     const isMixed = values.length > 1 && !isSameCell(first, second);
+    // The global column passes null, which inherits nothing, as a zone of an unset global does
     const placeholder = formatPlaceholder(
         row,
-        getInheritedViewCell(context, globalZone, column.zone, column.sample)
+        inheritCell(context, false, globalValue, column.sample)
     );
     const parts = values.map((v) => formatCell(row, v) || "-");
     return {

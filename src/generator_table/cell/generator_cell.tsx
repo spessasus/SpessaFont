@@ -5,13 +5,11 @@ import {
     type CellInputCommands,
     GeneratorCellInput
 } from "./generator_cell_input.tsx";
-import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
-import type { ZoneView } from "../../core_backend/entity_views.ts";
 import { getViewZones, type ZoneColumn } from "../zone_columns.ts";
 import {
-    type CellContext,
-    createTextEditActions,
-    getCellDisplay
+    type CellValue,
+    type CellViewContext,
+    getColumnDisplay
 } from "./cell_values.ts";
 
 /**
@@ -20,17 +18,21 @@ import {
 const EXCLUSIVE_CLASS_HUES = 10;
 
 interface GeneratorCellProps {
-    context: CellContext;
+    context: CellViewContext;
     column: ZoneColumn;
-    globalZone: ZoneView;
+    /**
+     * What the global zone stores for the row, null in the global zone's own cell.
+     */
+    globalValue: CellValue;
     label: string;
     gridKey: string;
     isActive: boolean;
     isSelected: boolean;
     /**
-     * The selected cells of this row, which an edit to a selected cell changes too.
+     * Commits typed text to this cell, or to all selected cells of the row when it is one of
+     * them. False when the cell cannot take it, which keeps the edit open.
      */
-    selectedColumns: readonly ZoneColumn[];
+    onCommit: (text: string) => boolean;
     /**
      * Ctrl or Shift and a click select cells, a plain click clears the selection.
      */
@@ -45,39 +47,20 @@ interface GeneratorCellProps {
 export function GeneratorCell({
     context,
     column,
-    globalZone,
+    globalValue,
     label,
     gridKey,
     isActive,
     isSelected,
-    selectedColumns,
+    onCommit,
     onSelect,
     commands,
     onContextMenu
 }: GeneratorCellProps) {
     const { t } = useTranslation();
-    const { apply } = useBankEditor();
     const { generator } = context.row;
-    const display = getCellDisplay(context, column, globalZone);
+    const display = getColumnDisplay(context, column, globalValue);
     const [firstValue] = display.values;
-
-    // Several selected cells of this row take one edit, each from its own value
-    const targets =
-        isSelected && selectedColumns.length > 1 ? selectedColumns : [column];
-
-    const didCommit = (typedText: string) => {
-        if (typedText === display.text && targets.length === 1) {
-            return true;
-        }
-        const actions = createTextEditActions(context, targets, typedText);
-        if (!actions) {
-            return false;
-        }
-        if (actions.length > 0) {
-            apply(actions);
-        }
-        return true;
-    };
 
     const isModulated = getViewZones(column).some((z) =>
         z.modulators.some((m) => m.destination === generator)
@@ -125,7 +108,7 @@ export function GeneratorCell({
                 placeholder={display.placeholder}
                 value={display.text}
                 onClick={onSelect}
-                onCommit={didCommit}
+                onCommit={onCommit}
                 commands={commands}
             />
         </td>
