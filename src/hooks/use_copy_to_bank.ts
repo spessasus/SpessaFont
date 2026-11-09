@@ -21,6 +21,10 @@ export function useCopyToBank() {
         target: BankSession,
         entities: readonly BankEntity[]
     ) => {
+        // The target's tab may have closed while the bank sheet was open
+        if (target.closeSignal.aborted) {
+            return;
+        }
         // An undo or a delete since they were picked may have removed some
         const copied = entities.filter((e) => source.document.contains(e));
         if (copied.length === 0) {

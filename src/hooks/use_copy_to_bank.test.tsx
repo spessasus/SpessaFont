@@ -99,6 +99,17 @@ describe("useCopyToBank", () => {
         expect(target.history.canUndo).toBe(false);
     });
 
+    it("copies nothing into a bank closed while the sheet was open", () => {
+        const { source, target, copyToBank } = setUp();
+        const before = snapshotBank(source.document.bank);
+        target.close();
+        act(() => {
+            copyToBank(source, target, [...source.document.presets]);
+        });
+        expect(snapshotBank(source.document.bank)).toEqual(before);
+        expect(toast.success).not.toHaveBeenCalled();
+    });
+
     it("skips entities the source no longer holds", () => {
         const { host, source, target, copyToBank } = setUp();
         const other = createTestSession(host);

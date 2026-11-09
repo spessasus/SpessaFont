@@ -5,7 +5,14 @@ import type { BankEntity } from "../core_backend/bank_view.ts";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useClipboard } from "../clipboard/clipboard_context.ts";
 import { useDialogs } from "../dialogs/dialogs_context.ts";
-import type { ContextMenuEntry } from "../context_menu/context_menu_context.ts";
+import {
+    type ContextMenuAPI,
+    type ContextMenuEntry,
+    useContextMenu
+} from "../context_menu/context_menu_context.ts";
+import { useLayout } from "../layout/layout_context.ts";
+import { useOpenBanks } from "../tab_list/open_banks_context.ts";
+import { useCopyToBank } from "../hooks/use_copy_to_bank.ts";
 import {
     isInstrument,
     isPreset,
@@ -47,6 +54,8 @@ import { useElementTools } from "../generator_table/tools/use_element_tools.tsx"
  * Builds the right-click menu of the element lists for a selection.
  */
 export function useListMenu() {
+    // The event that opened a menu, which a sub-sheet opens with too
+    type MenuEvent = Parameters<ContextMenuAPI["openMenu"]>[0];
     const { t } = useTranslation();
     const {
         session,
@@ -59,7 +68,45 @@ export function useListMenu() {
     const commands = useSelectionCommands();
     const sampleTools = useSampleTools();
     const elementTools = useElementTools();
+    const layout = useLayout();
+    const { openMenu } = useContextMenu();
+    const openBanks = useOpenBanks();
+    const copyToBank = useCopyToBank();
     const { document } = session;
+
+    /**
+     * Phones have no tabs to drop on, so the selection menu copies to another open bank: a
+     * second sheet lists them, and the copy is an undo step in that bank, as a drop is.
+     */
+    const getCopyToBankEntry = (
+        selection: ReadonlySet<BankEntity>,
+        event: MenuEvent
+    ): ContextMenuEntry => {
+        const otherBanks = openBanks.sessions.filter((s) => s !== session);
+        const label = t("phoneLocale.selection.copyToBank");
+        return {
+            label,
+            icon: "copy",
+            hasSubmenu: true,
+            isDisabled: otherBanks.length === 0,
+            disabledReason: t("phoneLocale.selection.copyToBankNone"),
+            onSelect: () =>
+                openMenu(
+                    event,
+                    otherBanks.map((bank) => {
+                        // Read when the sheet opens, a rename since then shows
+                        const name = bank.store.getSnapshot().info.name;
+                        return {
+                            label:
+                                name.length > 0 ? name : t("bankInfo.unnamed"),
+                            onSelect: () =>
+                                copyToBank(session, bank, [...selection])
+                        };
+                    }),
+                    { title: label }
+                )
+        };
+    };
 
     /**
      * The tools for many zones, the same for presets and instruments.
@@ -265,7 +312,8 @@ export function useListMenu() {
         });
 
     const getEntries = (
-        selection: ReadonlySet<BankEntity>
+        selection: ReadonlySet<BankEntity>,
+        event: MenuEvent
     ): ContextMenuEntry[] => {
         const hasClipboard =
             contents.presets + contents.instruments + contents.samples > 0;
@@ -296,6 +344,9 @@ export function useListMenu() {
                 onSelect: () => commands.duplicate(selection),
                 shortcut: shortcutText("D")
             },
+            ...(layout === "phone"
+                ? [getCopyToBankEntry(selection, event)]
+                : []),
             {
                 label: t("contextMenu.delete"),
                 icon: "delete",
@@ -442,8 +493,11 @@ export function useListMenu() {
 
     // The menu stays open while the bank changes (an undo from the menu bar), so a picked entry
     // acts on the part of the selection still in the bank, and does nothing when none is left
-    return (selection: ReadonlySet<BankEntity>): ContextMenuEntry[] =>
-        getEntries(selection).map((entry) =>
+    return (
+        selection: ReadonlySet<BankEntity>,
+        event: MenuEvent
+    ): ContextMenuEntry[] =>
+        getEntries(selection, event).map((entry) =>
             entry === "separator"
                 ? entry
                 : {
@@ -459,7 +513,7 @@ export function useListMenu() {
                           if (live.size === 0) {
                               return;
                           }
-                          const current = getEntries(live).find(
+                          const current = getEntries(live, event).find(
                               (e) =>
                                   e !== "separator" && e.label === entry.label
                           );

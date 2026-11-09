@@ -77,6 +77,8 @@ export const PhoneLocale = {
         noInstruments: "The bank has no instruments",
         noPresets: "The bank has no presets",
         selectTwo: "Select at least two samples",
+        copyToBank: "Copy to bank…",
+        copyToBankNone: "Open another bank first",
         exit: "End selection"
     },
     back: {

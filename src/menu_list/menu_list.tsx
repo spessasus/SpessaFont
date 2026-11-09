@@ -322,7 +322,7 @@ export function MenuList({
             target = new Set([item]);
             showPreview(item);
         }
-        openMenu(event, getMenuEntries(target));
+        openMenu(event, getMenuEntries(target, event));
     };
 
     // Read from the views when the user acts, like in render
@@ -349,7 +349,7 @@ export function MenuList({
                   : isInstrument(first)
                     ? t("phoneLocale.selection.selectedInstruments", { count })
                     : t("phoneLocale.selection.selectedSamples", { count });
-        openMenu(event, getMenuEntries(selection), { title });
+        openMenu(event, getMenuEntries(selection, event), { title });
     };
 
     const selectAll = () => {

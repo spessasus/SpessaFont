@@ -18,6 +18,7 @@ import {
 } from "../context_menu/context_menu_context.ts";
 import { DialogsProvider } from "../dialogs/dialogs_provider.tsx";
 import { DragProvider } from "../drag_and_drop/drag_provider.tsx";
+import { OpenBanksProvider } from "../tab_list/open_banks_provider.tsx";
 import { LayoutContext } from "../layout/layout_context.ts";
 import type { LayoutMode } from "../layout/layout_setting.ts";
 import type { BankEditView, BankEntity } from "../core_backend/bank_view.ts";
@@ -109,11 +110,16 @@ function renderList(layout: LayoutMode) {
                     <DialogsProvider>
                         <ContextMenuContext value={{ openMenu }}>
                             <DragProvider>
-                                <Harness
-                                    session={session}
-                                    onPick={onPick}
-                                    onPreview={onPreview}
-                                />
+                                <OpenBanksProvider
+                                    sessions={[session]}
+                                    activeId={session.id}
+                                >
+                                    <Harness
+                                        session={session}
+                                        onPick={onPick}
+                                        onPreview={onPreview}
+                                    />
+                                </OpenBanksProvider>
                             </DragProvider>
                         </ContextMenuContext>
                     </DialogsProvider>

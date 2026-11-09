@@ -6,6 +6,7 @@ import { BankEditorContext } from "../bank_editor/bank_editor_context.ts";
 import { ClipboardProvider } from "../clipboard/clipboard_provider.tsx";
 import { ContextMenuProvider } from "../context_menu/context_menu_provider.tsx";
 import { DragProvider } from "../drag_and_drop/drag_provider.tsx";
+import { OpenBanksProvider } from "../tab_list/open_banks_provider.tsx";
 import { type DialogsAPI, DialogsContext } from "../dialogs/dialogs_context.ts";
 import { createTestSession } from "../test_utils/bank_fixture.ts";
 import { setUpFakeHistory } from "../test_utils/fake_history.ts";
@@ -68,25 +69,30 @@ function renderLayer(
                         <DialogsContext value={DIALOGS}>
                             <ContextMenuProvider>
                                 <DragProvider>
-                                    <BankEditorContext
-                                        value={{
-                                            session,
-                                            apply: (actions) =>
-                                                session.history.do(actions),
-                                            setView: () => undefined,
-                                            playSample: () => undefined
-                                        }}
+                                    <OpenBanksProvider
+                                        sessions={[session]}
+                                        activeId={session.id}
                                     >
-                                        <NavigatorLayer
-                                            view={view}
-                                            tabList={null}
-                                            isCovered={false}
-                                            onViewChange={onViewChange}
-                                            onPlay={() => undefined}
-                                            onOpenFile={() => undefined}
-                                            onNewFile={() => undefined}
-                                        />
-                                    </BankEditorContext>
+                                        <BankEditorContext
+                                            value={{
+                                                session,
+                                                apply: (actions) =>
+                                                    session.history.do(actions),
+                                                setView: () => undefined,
+                                                playSample: () => undefined
+                                            }}
+                                        >
+                                            <NavigatorLayer
+                                                view={view}
+                                                tabList={null}
+                                                isCovered={false}
+                                                onViewChange={onViewChange}
+                                                onPlay={() => undefined}
+                                                onOpenFile={() => undefined}
+                                                onNewFile={() => undefined}
+                                            />
+                                        </BankEditorContext>
+                                    </OpenBanksProvider>
                                 </DragProvider>
                             </ContextMenuProvider>
                         </DialogsContext>
