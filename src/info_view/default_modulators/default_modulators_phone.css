@@ -1,0 +1,68 @@
+/* The overview's Default modulators and bank check panels, opened over the overview */
+:root[data-layout="phone"] .overview_panel {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+/* Zero height, so the panel's own title below becomes the sticky bar this arrow sits on */
+:root[data-layout="phone"] .overview_panel_header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    flex-shrink: 0;
+    height: 0;
+}
+
+:root[data-layout="phone"] .overview_panel_back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--phone-touch);
+    min-height: var(--phone-touch);
+    margin-top: calc((var(--phone-app-bar-height) - var(--phone-touch)) / 2);
+    margin-inline-start: calc(var(--phone-gutter) / 2);
+}
+
+:root[data-layout="phone"] .overview_panel_back svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+:root[data-layout="phone"] .overview_panel .default_modulators_title,
+:root[data-layout="phone"] .overview_panel .bank_check_title {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    width: 100%;
+    height: var(--phone-app-bar-height);
+    margin: 0;
+    padding: 0 var(--phone-gutter) 0
+        calc(var(--phone-touch) + var(--phone-gutter));
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: var(--phone-app-bar-height);
+    background: var(--menu-bar-color);
+    border-bottom: 1px solid var(--menu-border-color);
+    font-size: var(--phone-text-body);
+    font-weight: 600;
+    text-align: start;
+}
+
+/* The check's own scroller and padding would keep its title from sticking to the panel's top */
+:root[data-layout="phone"] .overview_panel .bank_check {
+    overflow: visible;
+    padding-top: 0;
+}
+
+:root[data-layout="phone"] .overview_panel .bank_check_title {
+    width: calc(100% + 1rem);
+    margin: 0 -0.5rem;
+}

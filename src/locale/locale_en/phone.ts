@@ -29,6 +29,9 @@ export const PhoneLocale = {
         octaveUp: "Octave up",
         minimap: "Visible keys"
     },
+    overview: {
+        back: "Back to the overview"
+    },
     navigator: {
         title: "Lists",
         close: "Close lists",

@@ -1,4 +1,4 @@
-:root[data-layout="phone"] .modulator_main {
+:root[data-layout="phone"] .modulator_main:not(.modulator_list_button) {
     display: grid;
     grid-template-columns: 7.5rem 1fr auto;
     grid-template-areas:

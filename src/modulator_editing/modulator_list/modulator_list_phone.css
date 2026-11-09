@@ -1,3 +1,19 @@
-:root[data-layout="phone"] .modulator_list .action_buttons button {
+:root[data-layout="phone"] .modulator_list .action_buttons {
+    flex-wrap: wrap;
+    justify-content: start;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0 var(--phone-gutter);
+}
+
+:root[data-layout="phone"]
+    .modulator_list
+    .action_buttons
+    .modulator_list_button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-height: var(--phone-touch);
+    padding: 0 0.75rem;
+    font-size: var(--phone-text-button);
 }
