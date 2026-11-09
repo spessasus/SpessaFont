@@ -31,6 +31,8 @@ export const PhoneLocale = {
         lastNote: "Last note",
         songOnChannel: "The song is playing on this channel",
         pause: "Pause",
+        openAnotherMIDI: "Open another MIDI file…",
+        songDetails: "Song controls",
         resume: "Resume",
         octaveDown: "Octave down",
         octaveUp: "Octave up",

@@ -57,6 +57,16 @@
     flex: 1;
 }
 
+:root[data-layout="phone"] .drawer_song_open {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex: 1;
+    min-width: 0;
+    min-height: var(--phone-touch);
+    padding: 0;
+}
+
 :root[data-layout="phone"] .drawer_song_icon {
     flex: none;
     display: flex;
