@@ -32,10 +32,11 @@ function createModulator() {
     );
 }
 
-function renderList(modulators = [createModulator()]) {
+function renderList(layout: "phone" | "desktop" = "phone") {
+    const modulators = [createModulator()];
     const stack = new BackStack();
     render(
-        <LayoutContext value={"phone"}>
+        <LayoutContext value={layout}>
             <BackStackContext
                 value={{
                     stack,
@@ -152,5 +153,27 @@ describe("ModulatorList", () => {
             });
             expect(first.getAttribute("aria-pressed")).toBe("false");
         });
+    });
+
+    it("shows summaries that expand into the form on a phone", () => {
+        renderList("phone");
+        expect(screen.queryByLabelText("modulatorLocale.amount")).toBeNull();
+        const summary = document.querySelector(".modulator_summary_toggle");
+        if (!summary) {
+            throw new Error("No summary row.");
+        }
+        expect(summary.getAttribute("aria-expanded")).toBe("false");
+        fireEvent.click(summary);
+        expect(screen.getByLabelText("modulatorLocale.amount")).toBeTruthy();
+        fireEvent.click(
+            screen.getByRole("button", { name: "phoneLocale.modulators.done" })
+        );
+        expect(screen.queryByLabelText("modulatorLocale.amount")).toBeNull();
+    });
+
+    it("keeps the cards on desktop", () => {
+        renderList("desktop");
+        expect(screen.getByLabelText("modulatorLocale.amount")).toBeTruthy();
+        expect(document.querySelector(".modulator_summary_toggle")).toBeNull();
     });
 });

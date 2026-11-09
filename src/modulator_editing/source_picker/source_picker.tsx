@@ -1,8 +1,6 @@
-import { ModulatorControllerSources } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import type { ChangeEvent } from "react";
 import "./source_picker.css";
-import { isLinkSource } from "../linked_modulator.ts";
 import { OptionList } from "../../utils/translated_options/option_list.tsx";
 import { useTranslatedOptions } from "../../utils/translated_options/translated_options_context.ts";
 import {
@@ -11,25 +9,9 @@ import {
     type SpessaFontModulatorSource,
     toSourceOptionValue
 } from "./source_option_value.ts";
+import { getSourceLabel, NON_CC_SOURCE_LABELS } from "./source_label.ts";
 
 export type { SpessaFontModulatorSource } from "./source_option_value.ts";
-
-const NON_CC_SOURCE_LABELS = {
-    [ModulatorControllerSources.noController]:
-        "modulatorLocale.sources.noController",
-    [ModulatorControllerSources.noteOnVelocity]:
-        "modulatorLocale.sources.velocity",
-    [ModulatorControllerSources.noteOnKeyNum]:
-        "modulatorLocale.sources.midiNote",
-    [ModulatorControllerSources.polyPressure]:
-        "modulatorLocale.sources.polyPressure",
-    [ModulatorControllerSources.channelPressure]:
-        "modulatorLocale.sources.channelPressure",
-    [ModulatorControllerSources.pitchWheel]:
-        "modulatorLocale.sources.pitchWheel",
-    [ModulatorControllerSources.pitchWheelRange]:
-        "modulatorLocale.sources.pitchWheelRange"
-} as const;
 
 interface SourcePickerProps {
     label: string;
@@ -45,18 +27,9 @@ export function SourcePicker({ label, source, onChange }: SourcePickerProps) {
     const isListed = source.usesCC
         ? controllers.some((c) => c.value === source.sourceIndex)
         : NON_CC_SOURCES.some((s) => s === source.sourceIndex);
-    let unlistedLabel = "";
-    if (!isListed) {
-        unlistedLabel = source.usesCC
-            ? t("modulatorLocale.sources.otherController", {
-                  number: source.sourceIndex
-              })
-            : isLinkSource({ isCC: false, index: source.sourceIndex })
-              ? t("modulatorLocale.sources.link")
-              : t("modulatorLocale.sources.otherSource", {
-                    number: source.sourceIndex
-                });
-    }
+    const unlistedLabel = isListed
+        ? ""
+        : getSourceLabel(source, controllers, t);
 
     const handleSelectChange = (e: ChangeEvent<HTMLSelectElement>) =>
         onChange(fromSourceOptionValue(e.target.value));

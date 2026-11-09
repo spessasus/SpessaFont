@@ -184,3 +184,94 @@
     text-align: start;
     text-align-last: start;
 }
+
+/* The phone modulator rows (spec 10): 56 px, the number then the sources over the destination */
+:root[data-layout="phone"] .modulator_summary {
+    display: flex;
+    align-items: stretch;
+    box-sizing: border-box;
+    min-height: 3.5rem;
+    background: var(--lighter-color-end);
+    border-bottom: 1px solid var(--track-border-color);
+}
+
+:root[data-layout="phone"] .modulator_summary[data-selected="true"] {
+    background: var(--cell-selection-color);
+}
+
+:root[data-layout="phone"] .modulator_summary_number {
+    flex: none;
+    min-width: 3rem;
+    min-height: var(--phone-touch);
+    font-size: var(--phone-text-small);
+}
+
+:root[data-layout="phone"] .modulator_summary_toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--flex-gap);
+    flex: 1;
+    min-width: 0;
+    padding: 0 0.5rem 0 0;
+}
+
+:root[data-layout="phone"] .modulator_summary_lines {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+:root[data-layout="phone"] .modulator_summary_source,
+:root[data-layout="phone"] .modulator_summary_destination {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: start;
+}
+
+:root[data-layout="phone"] .modulator_summary_source {
+    font-size: var(--phone-text-body);
+}
+
+:root[data-layout="phone"] .modulator_summary_destination {
+    font-size: var(--phone-text-secondary);
+    color: var(--muted-font-color);
+}
+
+/* The amount never gives way, the lines do */
+:root[data-layout="phone"] .modulator_summary .modulator_summary_amount {
+    flex: none;
+    font-size: var(--phone-text-small);
+    text-align: end;
+}
+
+:root[data-layout="phone"] .modulator_summary_chevron {
+    display: flex;
+    flex: none;
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .modulator_summary_chevron * {
+    color: inherit;
+}
+
+:root[data-layout="phone"] .modulator_summary_chevron svg {
+    width: var(--phone-disclosure-size);
+    height: var(--phone-disclosure-size);
+}
+
+:root[data-layout="phone"] .modulator_summary_form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--flex-gap);
+    padding-bottom: var(--flex-gap);
+    border-bottom: 1px solid var(--track-border-color);
+}
+
+:root[data-layout="phone"] .modulator_summary_done {
+    align-self: flex-end;
+    min-height: var(--phone-touch);
+    margin-inline-end: var(--phone-gutter);
+    font-size: var(--phone-text-button);
+}
