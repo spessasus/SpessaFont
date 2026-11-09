@@ -50,11 +50,13 @@ export function useSampleEdits(sample: BasicSample, view: SampleView) {
     /**
      * @param fitPartner the value for the other half of a stereo pair, if it needs its own
      * (loop points have to fit the partner's length)
+     * @param mergeKey merges a burst of the same edit into one undo step
      */
     const changeProperty = <K extends EditableSampleProperty>(
         property: K,
         value: BasicSample[K],
-        fitPartner?: (partner: BasicSample) => BasicSample[K]
+        fitPartner?: (partner: BasicSample) => BasicSample[K],
+        mergeKey?: string
     ) => {
         if (value === sample[property]) {
             return value;
@@ -75,7 +77,7 @@ export function useSampleEdits(sample: BasicSample, view: SampleView) {
                 )
             );
         }
-        apply(actions);
+        apply(actions, mergeKey);
         return value;
     };
 
@@ -108,17 +110,25 @@ export function useSampleEdits(sample: BasicSample, view: SampleView) {
         return newName;
     };
 
-    const setLoopPoint = (property: "loopStart" | "loopEnd", value: number) => {
+    const setLoopPoint = (
+        property: "loopStart" | "loopEnd",
+        value: number,
+        mergeKey?: string
+    ) => {
         const point = Math.round(value);
         // A loop point stays on its side of the other one and inside the sample
         const fit = (s: BasicSample, sampleLength: number) =>
             property === "loopStart"
                 ? clamp(point, 0, Math.min(s.loopEnd, sampleLength - 1))
                 : clamp(point, Math.max(s.loopStart, 0), sampleLength);
-        return changeProperty(property, fit(sample, length), (partner) =>
-            isLoopShared(sample, partner)
-                ? fit(partner, session.getSampleLength(partner))
-                : partner[property]
+        return changeProperty(
+            property,
+            fit(sample, length),
+            (partner) =>
+                isLoopShared(sample, partner)
+                    ? fit(partner, session.getSampleLength(partner))
+                    : partner[property],
+            mergeKey
         );
     };
 
@@ -173,6 +183,20 @@ export function useSampleEdits(sample: BasicSample, view: SampleView) {
         setName,
         setLoopStart: (start: number) => setLoopPoint("loopStart", start),
         setLoopEnd: (end: number) => setLoopPoint("loopEnd", end),
+        /**
+         * Moves the loop start by a step. A burst of steps is one undo step.
+         */
+        stepLoopStart: (by: number) =>
+            setLoopPoint(
+                "loopStart",
+                sample.loopStart + by,
+                `loop start ${view.id}`
+            ),
+        /**
+         * Moves the loop end by a step. A burst of steps is one undo step.
+         */
+        stepLoopEnd: (by: number) =>
+            setLoopPoint("loopEnd", sample.loopEnd + by, `loop end ${view.id}`),
         setSampleRate: (rate: number) =>
             changeProperty(
                 "sampleRate",
