@@ -21,6 +21,9 @@ import { TranslatedOptionsContext } from "../../utils/translated_options/transla
 import { useInstrumentView } from "../../hooks/use_instrument_view.ts";
 import { getObjectId } from "../../utils/object_id.ts";
 import { ModulatorEditor } from "./modulator_editor.tsx";
+import i18next, { type i18n } from "i18next";
+import { I18nextProvider, initReactI18next } from "react-i18next";
+import { LocaleList } from "../../locale/locale_list.ts";
 
 afterEach(cleanup);
 
@@ -52,7 +55,7 @@ function GlobalModulators({ session }: { session: BankSession }) {
     );
 }
 
-function renderEditor(layout: LayoutMode, amount: number) {
+function renderEditor(layout: LayoutMode, amount: number, i18n?: i18n) {
     const session = createTestSession();
     const [instrument] = session.document.instruments;
     instrument.globalZone.modulators.length = 0;
@@ -66,7 +69,7 @@ function renderEditor(layout: LayoutMode, amount: number) {
         )
     );
     publishSetUp(session);
-    render(
+    const tree = (
         <LayoutContext value={layout}>
             <BankEditorContext
                 value={{
@@ -87,6 +90,7 @@ function renderEditor(layout: LayoutMode, amount: number) {
             </BankEditorContext>
         </LayoutContext>
     );
+    render(i18n ? <I18nextProvider i18n={i18n}>{tree}</I18nextProvider> : tree);
     // Phones show the form once its summary is open
     const summary = document.querySelector(".modulator_summary_toggle");
     if (summary) {
@@ -140,5 +144,23 @@ describe("ModulatorEditor amount steppers", () => {
         ).toBeNull();
         cleanup();
         session.close();
+    });
+});
+
+describe("ModulatorEditor zone layer title", () => {
+    it("titles the layer with the zone and no count", async () => {
+        const instance = i18next.createInstance();
+        await instance
+            .use(initReactI18next)
+            .init({ resources: LocaleList, lng: "en", fallbackLng: "en" });
+        const { session } = renderEditor("phone", 47, instance);
+        expect(screen.getByText("Modulators: Global")).toBeDefined();
+        cleanup();
+        session.close();
+        await instance.changeLanguage("pl");
+        const polish = renderEditor("phone", 47, instance);
+        expect(screen.getByText("Modulatory: Global")).toBeDefined();
+        cleanup();
+        polish.session.close();
     });
 });

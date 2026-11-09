@@ -132,7 +132,7 @@ export const PhoneLocale = {
     },
     modulators: {
         overrides: "overrides a default modulator",
-        title: "Modulators for {{zone}} ({{count}})",
+        title: "Modulators: {{zone}}",
         back: "Back to the generators",
         done: "Done",
         amountDown: "Lower the amount",

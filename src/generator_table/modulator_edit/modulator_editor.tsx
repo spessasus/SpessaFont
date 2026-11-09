@@ -85,8 +85,7 @@ export function ModulatorEditor({
                         ? (newButton) => (
                               <ModulatorLayerHeader
                                   title={t("phoneLocale.modulators.title", {
-                                      zone: name,
-                                      count: column.zone.modulators.length
+                                      zone: name
                                   })}
                                   onBack={onClose}
                               >
