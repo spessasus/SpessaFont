@@ -26,3 +26,11 @@
     min-height: var(--phone-touch);
     margin: 0;
 }
+
+/* Between needs two selected */
+:root[data-layout="phone"]
+    .modulator_list
+    .action_buttons
+    .modulator_list_button[aria-disabled="true"] {
+    opacity: 0.4;
+}

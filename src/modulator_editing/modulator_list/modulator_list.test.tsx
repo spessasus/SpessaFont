@@ -32,8 +32,8 @@ function createModulator() {
     );
 }
 
-function renderList(layout: "phone" | "desktop" = "phone") {
-    const modulators = [createModulator()];
+function renderList(layout: "phone" | "desktop" = "phone", count = 1) {
+    const modulators = Array.from({ length: count }, () => createModulator());
     const stack = new BackStack();
     render(
         <LayoutContext value={layout}>
@@ -169,6 +169,56 @@ describe("ModulatorList", () => {
             screen.getByRole("button", { name: "phoneLocale.modulators.done" })
         );
         expect(screen.queryByLabelText("modulatorLocale.amount")).toBeNull();
+    });
+
+    it("selects all and between from the phone action bar", () => {
+        renderList("phone", 3);
+        const numbers = screen.getAllByRole("button", {
+            name: "modulatorLocale.modulatorNumber"
+        });
+        const pressedCount = () =>
+            numbers.filter((n) => n.getAttribute("aria-pressed") === "true")
+                .length;
+        fireEvent.click(
+            screen.getByRole("button", { name: "phoneLocale.selection.all" })
+        );
+        expect(pressedCount()).toBe(3);
+
+        // Start over with the first and the last
+        fireEvent.click(numbers[1]);
+        expect(pressedCount()).toBe(2);
+        const between = screen.getByRole("button", {
+            name: "phoneLocale.selection.between"
+        });
+        expect(between.getAttribute("aria-disabled")).toBeNull();
+        fireEvent.click(between);
+        expect(pressedCount()).toBe(3);
+    });
+
+    it("disables Between below two selected", () => {
+        renderList("phone", 3);
+        const between = screen.getByRole("button", {
+            name: "phoneLocale.selection.between"
+        });
+        expect(between.getAttribute("aria-disabled")).toBe("true");
+        fireEvent.click(
+            screen.getAllByRole("button", {
+                name: "modulatorLocale.modulatorNumber"
+            })[0]
+        );
+        expect(between.getAttribute("aria-disabled")).toBe("true");
+    });
+
+    it("shows no All or Between on desktop", () => {
+        renderList("desktop", 3);
+        expect(
+            screen.queryByRole("button", { name: "phoneLocale.selection.all" })
+        ).toBeNull();
+        expect(
+            screen.queryByRole("button", {
+                name: "phoneLocale.selection.between"
+            })
+        ).toBeNull();
     });
 
     it("keeps the cards on desktop", () => {

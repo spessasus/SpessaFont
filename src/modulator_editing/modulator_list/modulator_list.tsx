@@ -11,7 +11,8 @@ import { useClipboard } from "../../clipboard/clipboard_context.ts";
 import toast from "react-hot-toast";
 import { getObjectId, shareObjectId } from "../../utils/object_id.ts";
 import type { ModulatorView as ModulatorData } from "../../core_backend/entity_views.ts";
-import { getClickedSelection } from "./modulator_selection.ts";
+import { getClickedSelection, selectBetween } from "./modulator_selection.ts";
+import { MODULATOR_LIST_BUTTON_CLASS } from "./modulator_list_button.ts";
 import { ModulatorListActions } from "./modulator_list_actions.tsx";
 import { isSameModulator } from "../same_modulator.ts";
 import { ModulatorNewButton } from "./modulator_new_button.tsx";
@@ -290,6 +291,39 @@ export function ModulatorList({
                 onCopy={copySelected}
                 onDelete={deleteSelected}
             >
+                {/* Shift+click ranges and Ctrl+A have no touch stand-in, these are it */}
+                {layout === "phone" ? (
+                    <>
+                        <button
+                            type={"button"}
+                            className={MODULATOR_LIST_BUTTON_CLASS}
+                            onClick={() =>
+                                setSelectedIds(
+                                    new Set(modulatorList.map((m) => m.id))
+                                )
+                            }
+                        >
+                            {t("phoneLocale.selection.all")}
+                        </button>
+                        <button
+                            type={"button"}
+                            className={MODULATOR_LIST_BUTTON_CLASS}
+                            aria-disabled={selectedCount < 2 ? true : undefined}
+                            onClick={() => {
+                                if (selectedCount >= 2) {
+                                    setSelectedIds(
+                                        selectBetween(
+                                            modulatorList.map((m) => m.id),
+                                            selectedIds
+                                        )
+                                    );
+                                }
+                            }}
+                        >
+                            {t("phoneLocale.selection.between")}
+                        </button>
+                    </>
+                ) : null}
                 {extraActions}
             </ModulatorListActions>
             <div className={"list_contents"}>
