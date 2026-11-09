@@ -14,6 +14,7 @@ import { logError, logInfo } from "./utils/core_utils.ts";
 import { useAudioEngine } from "./core_backend/audio_engine_context.ts";
 import { useMIDIInput } from "./keyboard/use_midi_input.ts";
 import { useBankTabs } from "./tab_list/use_bank_tabs.ts";
+import { OpenBanksProvider } from "./tab_list/open_banks_provider.tsx";
 import { useBankFileOpener } from "./hooks/use_bank_file_opener.ts";
 import { useLaunchQueue } from "./hooks/use_launch_queue.ts";
 import { useElectronFileOpen } from "./hooks/use_electron_file_open.ts";
@@ -180,96 +181,102 @@ export function App() {
     if (layout === "phone") {
         return (
             // A chunk that fails to load breaks only the shell, the open banks stay in App
-            <ErrorBoundary fallback={renderPartError}>
-                <Suspense fallback={null}>
-                    <PhoneShell
-                        bankTabs={bankTabs}
-                        areSettingsShown={areSettingsShown}
-                        onToggleSettings={toggleSettings}
-                        onCloseSettings={closeSettings}
-                        onOpenFile={() => void handleOpenFile()}
-                        onNewFile={() => void openBankFile()}
-                        onCloseFile={handleCloseFile}
-                    />
-                </Suspense>
-            </ErrorBoundary>
+            <OpenBanksProvider sessions={tabs} activeId={activeSession?.id}>
+                <ErrorBoundary fallback={renderPartError}>
+                    <Suspense fallback={null}>
+                        <PhoneShell
+                            bankTabs={bankTabs}
+                            areSettingsShown={areSettingsShown}
+                            onToggleSettings={toggleSettings}
+                            onCloseSettings={closeSettings}
+                            onOpenFile={() => void handleOpenFile()}
+                            onNewFile={() => void openBankFile()}
+                            onCloseFile={handleCloseFile}
+                        />
+                    </Suspense>
+                </ErrorBoundary>
+            </OpenBanksProvider>
         );
     }
 
     return (
-        <div className={`spessafont_main`}>
-            <Toaster toastOptions={{ className: "toasts" }} />
-            <MenuBar
-                showMIDIPlayer={tabs.length > 0}
-                onToggleSettings={toggleSettings}
-                onOpenFile={() => void handleOpenFile()}
-                onNewFile={() => void openBankFile()}
-                onCloseFile={handleCloseFile}
-                session={activeSession}
-                onViewChange={setActiveView}
-                onToggleKeyboard={() => setIsKeyboardShown((shown) => !shown)}
-                isEditorCovered={areSettingsShown}
-                isKeyboardShown={isKeyboardShown}
-                toolsMenuSlotRef={setToolsMenuSlot}
-            />
-            <div className={"app_body"}>
-                {/* Covered by the settings, nothing in here takes the focus or a click */}
-                <div className={"app_covered"} inert={areSettingsShown}>
-                    <TabList
-                        activeId={activeSession?.id}
-                        onSelect={activate}
-                        onClose={requestClose}
-                        tabs={tabs}
-                    />
-                    {activeSession && (
-                        <ErrorBoundary
-                            key={activeSession.id}
-                            fallback={renderPartError}
-                        >
-                            <ToolsMenuSlotContext value={toolsMenuContext}>
-                                <BankEditor
-                                    session={activeSession}
-                                    view={activeView}
-                                    onViewChange={setActiveView}
-                                    isCovered={areSettingsShown}
-                                />
-                            </ToolsMenuSlotContext>
-                        </ErrorBoundary>
-                    )}
-                    {tabs.length === 0 && (
-                        <Welcome
-                            onOpenFile={() => void handleOpenFile()}
-                            onNewFile={() => void openBankFile()}
+        <OpenBanksProvider sessions={tabs} activeId={activeSession?.id}>
+            <div className={`spessafont_main`}>
+                <Toaster toastOptions={{ className: "toasts" }} />
+                <MenuBar
+                    showMIDIPlayer={tabs.length > 0}
+                    onToggleSettings={toggleSettings}
+                    onOpenFile={() => void handleOpenFile()}
+                    onNewFile={() => void openBankFile()}
+                    onCloseFile={handleCloseFile}
+                    session={activeSession}
+                    onViewChange={setActiveView}
+                    onToggleKeyboard={() =>
+                        setIsKeyboardShown((shown) => !shown)
+                    }
+                    isEditorCovered={areSettingsShown}
+                    isKeyboardShown={isKeyboardShown}
+                    toolsMenuSlotRef={setToolsMenuSlot}
+                />
+                <div className={"app_body"}>
+                    {/* Covered by the settings, nothing in here takes the focus or a click */}
+                    <div className={"app_covered"} inert={areSettingsShown}>
+                        <TabList
+                            activeId={activeSession?.id}
+                            onSelect={activate}
+                            onClose={requestClose}
+                            tabs={tabs}
                         />
+                        {activeSession && (
+                            <ErrorBoundary
+                                key={activeSession.id}
+                                fallback={renderPartError}
+                            >
+                                <ToolsMenuSlotContext value={toolsMenuContext}>
+                                    <BankEditor
+                                        session={activeSession}
+                                        view={activeView}
+                                        onViewChange={setActiveView}
+                                        isCovered={areSettingsShown}
+                                    />
+                                </ToolsMenuSlotContext>
+                            </ErrorBoundary>
+                        )}
+                        {tabs.length === 0 && (
+                            <Welcome
+                                onOpenFile={() => void handleOpenFile()}
+                                onNewFile={() => void openBankFile()}
+                            />
+                        )}
+                    </div>
+                    {areSettingsShown && (
+                        <div className={"app_settings_layer"}>
+                            <button
+                                type={"button"}
+                                className={"pretty_button app_settings_close"}
+                                autoFocus={true}
+                                onClick={closeSettings}
+                                title={t("settingsLocale.closeSettings")}
+                                aria-label={t("settingsLocale.closeSettings")}
+                            >
+                                &times;
+                            </button>
+                            <ErrorBoundary fallback={renderPartError}>
+                                <Settings openSessions={tabs} />
+                            </ErrorBoundary>
+                        </div>
                     )}
                 </div>
-                {areSettingsShown && (
-                    <div className={"app_settings_layer"}>
-                        <button
-                            type={"button"}
-                            className={"pretty_button app_settings_close"}
-                            autoFocus={true}
-                            onClick={closeSettings}
-                            title={t("settingsLocale.closeSettings")}
-                            aria-label={t("settingsLocale.closeSettings")}
-                        >
-                            &times;
-                        </button>
-                        <ErrorBoundary fallback={renderPartError}>
-                            <Settings openSessions={tabs} />
-                        </ErrorBoundary>
-                    </div>
+
+                {isKeyboardShown && (
+                    <ErrorBoundary fallback={renderPartError}>
+                        <KeyboardController
+                            session={isEditorShown ? activeSession : undefined}
+                            view={activeView}
+                        />
+                    </ErrorBoundary>
                 )}
             </div>
-
-            {isKeyboardShown && (
-                <ErrorBoundary fallback={renderPartError}>
-                    <KeyboardController
-                        session={isEditorShown ? activeSession : undefined}
-                        view={activeView}
-                    />
-                </ErrorBoundary>
-            )}
-        </div>
+        </OpenBanksProvider>
     );
 }
