@@ -275,3 +275,32 @@
     margin-inline-end: var(--phone-gutter);
     font-size: var(--phone-text-button);
 }
+
+/* The amount with its − and + steppers and ×10, one row in the amount's grid area */
+:root[data-layout="phone"] .modulator_main .modulator_amount_steppers {
+    grid-area: amount;
+    display: flex;
+    align-items: center;
+    gap: var(--flex-gap);
+    min-width: 0;
+}
+
+:root[data-layout="phone"]
+    .modulator_main
+    .modulator_amount_steppers
+    .modulator_amount_input {
+    flex: 1;
+}
+
+:root[data-layout="phone"] .modulator_amount_times10 {
+    flex: none;
+    white-space: nowrap;
+    min-width: var(--phone-touch);
+    min-height: var(--phone-touch);
+    font-size: var(--phone-text-button);
+}
+
+:root[data-layout="phone"] .modulator_amount_times10[aria-pressed="true"] {
+    background: var(--primary-color);
+    border-color: var(--border-color);
+}

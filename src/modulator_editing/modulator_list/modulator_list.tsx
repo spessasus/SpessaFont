@@ -27,7 +27,10 @@ interface ModulatorListProps {
      * The current modulators, read when an edit is applied. The list renders from the views.
      */
     getModulators: () => readonly Modulator[];
-    onModulatorListChange: (l: Modulator[]) => void;
+    /**
+     * A change with a merge key joins the previous change of the same key in one undo step.
+     */
+    onModulatorListChange: (l: Modulator[], mergeKey?: string) => void;
     defaultModulators: readonly ModulatorData[];
     /**
      * Extra buttons for the action bar, after the list's own.
@@ -247,7 +250,8 @@ export function ModulatorList({
 
     const replaceModulator = (
         id: number,
-        change: (copy: Modulator) => void
+        change: (copy: Modulator) => void,
+        mergeKey?: string
     ) => {
         const current = getModulators();
         const original = current.find((m) => getObjectId(m) === id);
@@ -262,7 +266,8 @@ export function ModulatorList({
         }
         shareObjectId(original, edited);
         onModulatorListChange(
-            current.map((m) => (m === original ? edited : m))
+            current.map((m) => (m === original ? edited : m)),
+            mergeKey
         );
     };
 
@@ -307,7 +312,9 @@ export function ModulatorList({
                             }
                             modulatorNumber={i + 1}
                             mod={mod}
-                            onChange={(change) => replaceModulator(id, change)}
+                            onChange={(change, mergeKey) =>
+                                replaceModulator(id, change, mergeKey)
+                            }
                             onDelete={() => deleteOne(id)}
                             openCurvePicker={
                                 openCurvePicker?.id === id

@@ -26,10 +26,14 @@ export function DefaultModulators({ onBack }: DefaultModulatorsProps) {
     const getModulators = () => session.document.bank.defaultModulators;
     const info = useBankSnapshot(session.store, (s) => s.info);
 
-    const setDefaultModulators = (modulators: Modulator[]) => {
-        apply([
-            new SetDefaultModulatorsAction([...getModulators()], modulators)
-        ]);
+    const setDefaultModulators = (
+        modulators: Modulator[],
+        mergeKey?: string
+    ) => {
+        apply(
+            [new SetDefaultModulatorsAction([...getModulators()], modulators)],
+            mergeKey
+        );
     };
 
     const resetDefaultModulators = () => {

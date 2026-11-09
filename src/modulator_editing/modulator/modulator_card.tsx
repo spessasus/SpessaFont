@@ -35,9 +35,10 @@ interface ModulatorCardProps {
     onOpenCurvePickerChange: (slot: ModulatorSourceSlot | null) => void;
     /**
      * Receives the change, which the list applies to a copy of the modulator. The modulator
-     * itself is never changed.
+     * itself is never changed. A change with a merge key makes one undo step with the previous
+     * change of the same key.
      */
-    onChange: (change: (copy: Modulator) => void) => void;
+    onChange: (change: (copy: Modulator) => void, mergeKey?: string) => void;
     onDelete: () => void;
     onSelect: (e: React.MouseEvent) => void;
 }
@@ -212,6 +213,11 @@ export function ModulatorCard({
                     update((copy) => {
                         copy.transformAmount = amount;
                     })
+                }
+                onAmountStep={(amount) =>
+                    update((copy) => {
+                        copy.transformAmount = amount;
+                    }, `modulator amount ${mod.id}`)
                 }
                 onTransformTypeChange={(transformType) =>
                     update((copy) => {

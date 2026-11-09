@@ -38,7 +38,7 @@ export function ModulatorEditor({
 
     // A column has a stereo partner only while both zones have the same modulators (the
     // table splits the pair otherwise), so the partner gets copies of the same list
-    const setModulators = (mods: Modulator[]) =>
+    const setModulators = (mods: Modulator[], mergeKey?: string) =>
         apply(
             getColumnZones(element, column).map(
                 ({ zone }, i) =>
@@ -47,7 +47,8 @@ export function ModulatorEditor({
                         zone,
                         i === 0 ? mods : mods.map((m) => Modulator.copyFrom(m))
                     )
-            )
+            ),
+            mergeKey
         );
 
     return (

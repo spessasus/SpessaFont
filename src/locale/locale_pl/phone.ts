@@ -142,7 +142,9 @@ export const PhoneLocale = {
         overrides: "nadpisuje domyślny modulator",
         title: "Modulatory: {{zone}} ({{count}})",
         back: "Wróć do generatorów",
-        done: "Gotowe"
+        done: "Gotowe",
+        amountDown: "Zmniejsz wartość",
+        amountUp: "Zwiększ wartość"
     },
     cellSheet: {
         pickGenerator: "Wybierz generator",
