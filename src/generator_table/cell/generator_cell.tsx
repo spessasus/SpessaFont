@@ -1,6 +1,6 @@
 import type * as React from "react";
 import { GeneratorTypes } from "spessasynth_core";
-import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import {
     type CellInputCommands,
     GeneratorCellInput
@@ -39,6 +39,7 @@ interface GeneratorCellProps {
     onSelect: (event: React.MouseEvent) => void;
     commands: CellInputCommands;
     onContextMenu: (e: React.MouseEvent) => void;
+    t: TFunction;
 }
 
 /**
@@ -55,9 +56,9 @@ export function GeneratorCell({
     onCommit,
     onSelect,
     commands,
-    onContextMenu
+    onContextMenu,
+    t
 }: GeneratorCellProps) {
-    const { t } = useTranslation();
     const { generator } = context.row;
     const display = getColumnDisplay(context, column, globalValue);
     const [firstValue] = display.values;
@@ -110,6 +111,7 @@ export function GeneratorCell({
                 onClick={onSelect}
                 onCommit={onCommit}
                 commands={commands}
+                t={t}
             />
         </td>
     );

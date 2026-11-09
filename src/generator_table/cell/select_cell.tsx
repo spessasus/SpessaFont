@@ -1,6 +1,6 @@
 import type * as React from "react";
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import type { GeneratorType } from "spessasynth_core";
 import { useWheelStep } from "../../hooks/use_wheel_step.ts";
 import { useLayout } from "../../layout/layout_context.ts";
@@ -26,6 +26,7 @@ interface SelectCellProps {
     onCellKeyDown: (e: React.KeyboardEvent<HTMLElement>) => void;
     onClick: (e: React.MouseEvent) => void;
     onContextMenu: (e: React.MouseEvent) => void;
+    t: TFunction;
 }
 
 /**
@@ -45,9 +46,9 @@ export function SelectCell({
     onNudge,
     onCellKeyDown,
     onClick,
-    onContextMenu
+    onContextMenu,
+    t
 }: SelectCellProps) {
-    const { t } = useTranslation();
     const layout = useLayout();
     const [isOpen, setIsOpen] = useState(false);
     const wheelRef = useWheelStep<HTMLSelectElement>(onNudge);

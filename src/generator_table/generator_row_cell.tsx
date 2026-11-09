@@ -115,6 +115,7 @@ export const GeneratorRowCell = memo(function GeneratorRowCell({
                 onCellKeyDown={(e) => handlers.selectKeyDown(zoneId, e)}
                 onClick={handleSelect}
                 onContextMenu={handleContextMenu}
+                t={t}
             />
         );
     }
@@ -137,6 +138,7 @@ export const GeneratorRowCell = memo(function GeneratorRowCell({
                 nudge: handleNudge
             }}
             onContextMenu={handleContextMenu}
+            t={t}
         />
     );
 });

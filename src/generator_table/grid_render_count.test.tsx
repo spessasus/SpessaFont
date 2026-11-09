@@ -337,6 +337,22 @@ describe("generator grid render counts", () => {
         }
     });
 
+    it("renders the cell texts in the new language after a change", async () => {
+        const { i18n, zoneIds } = await setUp();
+        const key = getCellKey(GeneratorTypes.initialAttenuation, zoneIds[0]);
+        const english = labels.get(key);
+        await act(async () => {
+            await i18n.changeLanguage("pl");
+        });
+        expect(labels.get(key)).not.toBe(english);
+        expect(labels.get(key)).toBe(
+            i18n.t("soundBankLocale.cellLabel", {
+                generator: i18n.t("generatorLocale.attenuation"),
+                zone: "Saw"
+            })
+        );
+    });
+
     it("keeps desktop and phone behavior the same", async () => {
         expect(await getEditChanges("phone")).toEqual(
             await getEditChanges("desktop")

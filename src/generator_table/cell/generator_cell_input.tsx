@@ -1,6 +1,6 @@
 import type * as React from "react";
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import toast from "react-hot-toast";
 import { useWheelStep } from "../../hooks/use_wheel_step.ts";
 
@@ -42,6 +42,7 @@ interface GeneratorCellInputProps {
     onCommit: (text: string) => boolean;
     onClick: (e: React.MouseEvent) => void;
     commands: CellInputCommands;
+    t: TFunction;
 }
 
 /**
@@ -62,9 +63,9 @@ export function GeneratorCellInput({
     style,
     onCommit,
     onClick,
-    commands
+    commands,
+    t
 }: GeneratorCellInputProps) {
-    const { t } = useTranslation();
     // The typed text, null when the cell is not being edited
     const [draft, setDraft] = useState<string | null>(null);
     const [isInvalid, setIsInvalid] = useState(false);
