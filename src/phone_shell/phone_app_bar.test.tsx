@@ -10,13 +10,17 @@ import { createShellContext } from "../test_utils/shell_context.ts";
 
 vi.mock("react-hot-toast", () => ({ default: vi.fn() }));
 
-function renderBar() {
+function renderBar(isLandscape = false) {
     const session = createTestSession();
     const dispatch = vi.fn();
     const onViewChange = vi.fn();
     const result = render(
         <PhoneShellContext
-            value={createShellContext(INITIAL_PHONE_SHELL_STATE, dispatch)}
+            value={createShellContext(
+                INITIAL_PHONE_SHELL_STATE,
+                dispatch,
+                isLandscape
+            )}
         >
             <PhoneAppBar
                 session={session}
@@ -64,6 +68,64 @@ describe("PhoneAppBar", () => {
         expect(dispatch).toHaveBeenCalledTimes(2);
         expect(dispatch).toHaveBeenNthCalledWith(1, { type: "openNavigator" });
         expect(dispatch).toHaveBeenNthCalledWith(2, { type: "openNavigator" });
+        session.close();
+    });
+
+    it("drops the lists button and the subtitle in landscape", () => {
+        const { session, container, queryByLabelText } = renderBar(true);
+        expect(queryByLabelText("phoneLocale.appBar.openLists")).toBeNull();
+        expect(container.querySelector(".phone_app_bar_subtitle")).toBeNull();
+        session.close();
+    });
+
+    it("marks a dirty bank after the title in landscape", () => {
+        const { session, getByRole, getByText } = renderBar(true);
+        act(() => {
+            session.history.do([
+                new SetBankInfoAction(
+                    "name",
+                    session.document.bank.soundBankInfo.name,
+                    "Renamed"
+                )
+            ]);
+        });
+        const title = getByRole("button", { name: /presetList.overview/ });
+        expect(title.textContent).toContain("phoneLocale.appBar.unsaved");
+        // After the title itself, as there is no subtitle line to hold it
+        expect(
+            getByText("phoneLocale.appBar.unsaved").closest(
+                ".phone_app_bar_subtitle"
+            )
+        ).toBeNull();
+        session.close();
+    });
+
+    it("expands the collapsed dock from the title in landscape", () => {
+        const session = createTestSession();
+        const dispatch = vi.fn();
+        const { getByRole } = render(
+            <PhoneShellContext
+                value={createShellContext(
+                    {
+                        ...INITIAL_PHONE_SHELL_STATE,
+                        isNavigatorCollapsed: true
+                    },
+                    dispatch,
+                    true
+                )}
+            >
+                <PhoneAppBar
+                    session={session}
+                    view={"info"}
+                    onViewChange={vi.fn()}
+                    toolsSlotRef={() => undefined}
+                    isCovered={false}
+                    overflow={null}
+                />
+            </PhoneShellContext>
+        );
+        fireEvent.click(getByRole("button", { name: /presetList.overview/ }));
+        expect(dispatch).toHaveBeenCalledWith({ type: "toggleCollapsed" });
         session.close();
     });
 });

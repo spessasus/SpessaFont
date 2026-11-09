@@ -11,6 +11,7 @@ import { useBankCommands } from "../menu_bar/use_bank_commands.ts";
 import { ListIcon } from "../utils/icons/app_icons.tsx";
 import { RedoIcon, UndoIcon } from "../utils/icons/edit_icons.tsx";
 import { usePhoneShell } from "./phone_shell_context.ts";
+import { getOpenNavigatorAction } from "./phone_shell_state.ts";
 
 interface PhoneAppBarProps {
     /**
@@ -37,34 +38,54 @@ interface SessionProps {
     session: BankSession;
 }
 
+function DirtyMark() {
+    const { t } = useTranslation();
+    return (
+        <>
+            {" "}
+            <span aria-hidden={true}>•</span>
+            <span className={"phone_app_bar_hidden"}>
+                {t("phoneLocale.appBar.unsaved")}
+            </span>
+        </>
+    );
+}
+
 function TitleButton({ session, view }: SessionProps & { view: BankEditView }) {
     const { t } = useTranslation();
-    const { dispatch } = usePhoneShell();
+    const { state, dispatch, isLandscape } = usePhoneShell();
     const title = useViewName(session, view);
     const bankName = useBankDisplayName(session.store);
     const { isDirty } = useHistoryState(session.store);
+    const openAction = getOpenNavigatorAction(state, isLandscape);
 
     return (
         <button
             type={"button"}
             className={"phone_app_bar_title"}
-            onClick={() => dispatch({ type: "openNavigator" })}
+            onClick={() => {
+                if (openAction) {
+                    dispatch(openAction);
+                }
+            }}
         >
             <span className={"phone_app_bar_title_line"}>
-                {title ?? t("presetList.overview")}
-            </span>
-            <span className={"phone_app_bar_subtitle"}>
-                {bankName}
-                {isDirty ? (
-                    <>
-                        {" "}
-                        <span aria-hidden={true}>•</span>
-                        <span className={"phone_app_bar_hidden"}>
-                            {t("phoneLocale.appBar.unsaved")}
-                        </span>
-                    </>
+                <span className={"phone_app_bar_title_text"}>
+                    {title ?? t("presetList.overview")}
+                </span>
+                {/* Landscape has no subtitle, so a collapsed dock still shows the mark */}
+                {isLandscape && isDirty ? (
+                    <span className={"phone_app_bar_title_mark"}>
+                        <DirtyMark />
+                    </span>
                 ) : null}
             </span>
+            {isLandscape ? null : (
+                <span className={"phone_app_bar_subtitle"}>
+                    {bankName}
+                    {isDirty ? <DirtyMark /> : null}
+                </span>
+            )}
         </button>
     );
 }
@@ -129,11 +150,12 @@ export function PhoneAppBar({
     isCovered
 }: PhoneAppBarProps) {
     const { t } = useTranslation();
-    const { dispatch } = usePhoneShell();
+    const { dispatch, isLandscape } = usePhoneShell();
 
     return (
         <header className={"phone_app_bar"} inert={isCovered}>
-            {session ? (
+            {/* The docked lists need no button in landscape */}
+            {session && !isLandscape ? (
                 <button
                     type={"button"}
                     className={"phone_app_bar_button"}

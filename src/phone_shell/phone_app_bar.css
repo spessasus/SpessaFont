@@ -89,3 +89,22 @@
     overflow: hidden;
     clip-path: inset(50%);
 }
+
+/* A long title gives way before the unsaved mark after it */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .phone_app_bar_title_line {
+    display: flex;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .phone_app_bar_title_text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .phone_app_bar_title_mark {
+    flex: none;
+    white-space: pre;
+}
