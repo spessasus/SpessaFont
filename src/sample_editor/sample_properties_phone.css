@@ -38,7 +38,9 @@
     margin-bottom: var(--phone-gutter);
 }
 
+/* The desktop flex basis of 12rem would become its height in this column */
 :root[data-layout="phone"] .sample_sections_body .sample_editor_name {
+    flex: none;
     display: block;
     box-sizing: border-box;
     width: 100%;
