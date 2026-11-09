@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
     getDrillDepth,
+    getNavigatorPresence,
     INITIAL_PHONE_SHELL_STATE,
     phoneShellReducer
 } from "./phone_shell_state.ts";
@@ -51,5 +52,19 @@ describe("phoneShellReducer", () => {
         });
         expect(INITIAL_PHONE_SHELL_STATE.drillDepth.size).toBe(0);
         expect(next.drillDepth).not.toBe(INITIAL_PHONE_SHELL_STATE.drillDepth);
+    });
+
+    it("covers the editor exactly while the portrait navigator is open", () => {
+        const open = phoneShellReducer(INITIAL_PHONE_SHELL_STATE, {
+            type: "openNavigator"
+        });
+        expect(getNavigatorPresence(open)).toEqual({
+            isShown: true,
+            isCoveringEditor: true
+        });
+        expect(getNavigatorPresence(INITIAL_PHONE_SHELL_STATE)).toEqual({
+            isShown: false,
+            isCoveringEditor: false
+        });
     });
 });

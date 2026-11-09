@@ -7,6 +7,7 @@ import { INITIAL_PHONE_SHELL_STATE } from "./phone_shell_state.ts";
 import { OverflowSheet } from "./overflow_sheet.tsx";
 import { LayoutContext } from "../layout/layout_context.ts";
 import { BackStackProvider } from "./back_stack_provider.tsx";
+import { createShellContext } from "../test_utils/shell_context.ts";
 
 vi.mock("react-hot-toast", () => ({ default: vi.fn() }));
 vi.mock("../core_backend/audio_engine_context.ts", () => ({
@@ -28,7 +29,10 @@ function renderOverflow(options: {
         <LayoutContext value={"phone"}>
             <BackStackProvider>
                 <PhoneShellContext
-                    value={{ state: INITIAL_PHONE_SHELL_STATE, dispatch }}
+                    value={createShellContext(
+                        INITIAL_PHONE_SHELL_STATE,
+                        dispatch
+                    )}
                 >
                     <OverflowSheet
                         session={session}

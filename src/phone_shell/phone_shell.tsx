@@ -13,6 +13,7 @@ import { useBackHandler } from "../hooks/use_back_handler.ts";
 import { BACK_LEVELS, hasBackBehindNavigator } from "./back_stack.ts";
 import {
     getDrillDepth,
+    getNavigatorPresence,
     INITIAL_PHONE_SHELL_STATE,
     phoneShellReducer
 } from "./phone_shell_state.ts";
@@ -68,7 +69,14 @@ export function PhoneShell({
         phoneShellReducer,
         INITIAL_PHONE_SHELL_STATE
     );
-    const shellContext = useMemo(() => ({ state, dispatch }), [state]);
+    const shellContext = useMemo(
+        () => ({
+            state,
+            dispatch,
+            presence: getNavigatorPresence(state)
+        }),
+        [state]
+    );
     // The editor puts its tools menu here, see ToolsMenu
     const [toolsMenuSlot, setToolsMenuSlot] = useState<HTMLDivElement | null>(
         null

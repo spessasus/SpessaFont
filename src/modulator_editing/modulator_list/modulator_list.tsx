@@ -17,6 +17,7 @@ import { isSameModulator } from "../same_modulator.ts";
 import { ModulatorNewButton } from "./modulator_new_button.tsx";
 import { useBackHandler } from "../../hooks/use_back_handler.ts";
 import { BACK_LEVELS } from "../../phone_shell/back_stack.ts";
+import { useIsEditorCovered } from "../../phone_shell/use_is_editor_covered.ts";
 
 interface ModulatorListProps {
     modulatorList: readonly ModulatorData[];
@@ -76,11 +77,18 @@ export function ModulatorList({
     const selectedCount = modulatorList.filter((m) =>
         selectedIds.has(m.id)
     ).length;
-    // On a phone, back ends the selection before it closes the modulator layer
-    useBackHandler(selectedCount > 0, BACK_LEVELS.selection, () => {
-        setSelectedIds(new Set());
-        return true;
-    });
+    const isEditorCovered = useIsEditorCovered();
+    // On a phone, back ends the selection before it closes the modulator layer. While the
+    // navigator covers the editor, back closes the navigator first, as the user cannot see
+    // the selection it would end
+    useBackHandler(
+        selectedCount > 0 && !isEditorCovered,
+        BACK_LEVELS.selection,
+        () => {
+            setSelectedIds(new Set());
+            return true;
+        }
+    );
 
     /**
      * Moves the focus off the modulators about to be removed, to the next one that stays, or

@@ -14,6 +14,7 @@ import { BackStackProvider } from "./back_stack_provider.tsx";
 import { PhoneShellContext } from "./phone_shell_context.ts";
 import { INITIAL_PHONE_SHELL_STATE } from "./phone_shell_state.ts";
 import { NavigatorLayer } from "./navigator_layer.tsx";
+import { createShellContext } from "../test_utils/shell_context.ts";
 
 // The virtualizer renders no rows in jsdom
 vi.mock("../menu_list/virtual_item_list.tsx", () => ({
@@ -51,7 +52,7 @@ function renderLayer(isOpen: boolean, isFirstSampleShown = false) {
     const result = render(
         <LayoutContext value="phone">
             <BackStackProvider>
-                <PhoneShellContext value={{ state, dispatch }}>
+                <PhoneShellContext value={createShellContext(state, dispatch)}>
                     <ClipboardProvider>
                         <DialogsContext value={DIALOGS}>
                             <ContextMenuProvider>

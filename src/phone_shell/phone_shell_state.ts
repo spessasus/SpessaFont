@@ -19,6 +19,24 @@ export type PhoneShellAction =
     | { type: "navigatorPick"; tabId: number }
     | { type: "drillBack"; tabId: number };
 
+/**
+ * Whether the navigator shows, and whether it covers the editor, so back and the editor's
+ * handlers know what the user can see.
+ */
+export interface NavigatorPresence {
+    isShown: boolean;
+    isCoveringEditor: boolean;
+}
+
+export function getNavigatorPresence(
+    state: PhoneShellState
+): NavigatorPresence {
+    return {
+        isShown: state.isNavigatorOpen,
+        isCoveringEditor: state.isNavigatorOpen
+    };
+}
+
 export const INITIAL_PHONE_SHELL_STATE = {
     isNavigatorOpen: false,
     isNavigatorPinned: false,

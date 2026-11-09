@@ -6,6 +6,7 @@ import { createTestSession } from "../test_utils/bank_fixture.ts";
 import { PhoneAppBar } from "./phone_app_bar.tsx";
 import { PhoneShellContext } from "./phone_shell_context.ts";
 import { INITIAL_PHONE_SHELL_STATE } from "./phone_shell_state.ts";
+import { createShellContext } from "../test_utils/shell_context.ts";
 
 vi.mock("react-hot-toast", () => ({ default: vi.fn() }));
 
@@ -15,7 +16,7 @@ function renderBar() {
     const onViewChange = vi.fn();
     const result = render(
         <PhoneShellContext
-            value={{ state: INITIAL_PHONE_SHELL_STATE, dispatch }}
+            value={createShellContext(INITIAL_PHONE_SHELL_STATE, dispatch)}
         >
             <PhoneAppBar
                 session={session}

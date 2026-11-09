@@ -1,10 +1,15 @@
 import { createContext, useContext } from "react";
 import type { Dispatch } from "react";
-import type { PhoneShellAction, PhoneShellState } from "./phone_shell_state.ts";
+import type {
+    NavigatorPresence,
+    PhoneShellAction,
+    PhoneShellState
+} from "./phone_shell_state.ts";
 
 export interface PhoneShellContextValue {
     state: PhoneShellState;
     dispatch: Dispatch<PhoneShellAction>;
+    presence: NavigatorPresence;
 }
 
 export const PhoneShellContext = createContext<PhoneShellContextValue | null>(

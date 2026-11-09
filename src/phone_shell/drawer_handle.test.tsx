@@ -7,6 +7,7 @@ import {
     INITIAL_PHONE_SHELL_STATE,
     type DrawerState
 } from "./phone_shell_state.ts";
+import { createShellContext } from "../test_utils/shell_context.ts";
 
 vi.mock("../hooks/use_engine_status.ts", () => ({
     useEngineStatus: () => false
@@ -16,10 +17,10 @@ function renderHandle(drawer: DrawerState) {
     const dispatch = vi.fn();
     render(
         <PhoneShellContext
-            value={{
-                state: { ...INITIAL_PHONE_SHELL_STATE, drawer },
+            value={createShellContext(
+                { ...INITIAL_PHONE_SHELL_STATE, drawer },
                 dispatch
-            }}
+            )}
         >
             <DrawerHandle name={"Piano"} readout={undefined} />
         </PhoneShellContext>
