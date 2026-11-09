@@ -16,6 +16,7 @@ import { clamp } from "../generator_table/generator_range.ts";
 import { useDialogs } from "../dialogs/dialogs_context.ts";
 import { getStereoBaseName } from "../utils/stereo_regex.ts";
 import { isLoopShared } from "./sample_audio.ts";
+import { fitLoopPoint } from "./loop_points.ts";
 
 export const MIN_SAMPLE_RATE = 8000;
 export const MAX_SAMPLE_RATE = 192_000;
@@ -115,18 +116,17 @@ export function useSampleEdits(sample: BasicSample, view: SampleView) {
         value: number,
         mergeKey?: string
     ) => {
-        const point = Math.round(value);
-        // A loop point stays on its side of the other one and inside the sample
-        const fit = (s: BasicSample, sampleLength: number) =>
-            property === "loopStart"
-                ? clamp(point, 0, Math.min(s.loopEnd, sampleLength - 1))
-                : clamp(point, Math.max(s.loopStart, 0), sampleLength);
         return changeProperty(
             property,
-            fit(sample, length),
+            fitLoopPoint(property, value, sample, length),
             (partner) =>
                 isLoopShared(sample, partner)
-                    ? fit(partner, session.getSampleLength(partner))
+                    ? fitLoopPoint(
+                          property,
+                          value,
+                          partner,
+                          session.getSampleLength(partner)
+                      )
                     : partner[property],
             mergeKey
         );
