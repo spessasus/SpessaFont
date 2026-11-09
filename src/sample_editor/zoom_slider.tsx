@@ -1,18 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ControllerRange } from "../fancy_inputs/controller_range/controller_range.tsx";
-
-const ZOOM_PER_SAMPLE = 50_000 / 6_000_000;
-const MIN_MAX_ZOOM = 5;
-/**
- * Browsers cap the size of an element (Firefox near 17.9 million pixels), and the scroll range
- * is the view's width times the zoom. This keeps it below that on a 4K wide view.
- */
-const MAX_ZOOM = 4000;
-/**
- * The zoom slider maps to the zoom exponentially, so small zooms get most of its range.
- */
-const ZOOM_CURVE = 5;
+import { getMaxZoom, getSliderValue, getSliderZoom } from "./zoom_mapping.ts";
 
 interface ZoomSliderProps {
     /**
@@ -23,27 +12,32 @@ interface ZoomSliderProps {
     onZoomChange: (zoom: number) => void;
 }
 
+/**
+ * The wave's zoom. A zoom made elsewhere (a pinch) moves it, while its own moves keep the
+ * dragged position: near 100 a step zooms by less than a double holds, and the position read
+ * back from that zoom would snap back to 100.
+ */
 export function ZoomSlider({
     sampleLength,
     zoom,
     onZoomChange
 }: ZoomSliderProps) {
     const { t } = useTranslation();
-    const [sliderValue, setSliderValue] = useState(100);
-    const maxZoom = Math.min(
-        MAX_ZOOM,
-        Math.max(MIN_MAX_ZOOM, ZOOM_PER_SAMPLE * sampleLength + 1)
-    );
+    const maxZoom = getMaxZoom(sampleLength);
+    // The last position the slider set, with the zoom it set
+    const [dragged, setDragged] = useState({ value: 100, zoom: 1 });
+    const value =
+        dragged.zoom === zoom ? dragged.value : getSliderValue(zoom, maxZoom);
     return (
         <ControllerRange
             max={(maxZoom - 1) * 100}
             min={100}
-            onChange={(value) => {
-                const mapped = (value / 100 - 1) / (maxZoom - 1);
-                onZoomChange(Math.pow(mapped, ZOOM_CURVE) * (maxZoom - 1) + 1);
-                setSliderValue(value);
+            onChange={(next) => {
+                const nextZoom = getSliderZoom(next, maxZoom);
+                setDragged({ value: next, zoom: nextZoom });
+                onZoomChange(nextZoom);
             }}
-            value={sliderValue}
+            value={value}
             text={t("sampleLocale.waveZoomPercent", {
                 percent: Math.floor(zoom * 10_000) / 100
             })}

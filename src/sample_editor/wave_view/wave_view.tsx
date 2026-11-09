@@ -10,6 +10,8 @@ import { xToSample } from "./wave_geometry.ts";
 import { WaveformLayer } from "./waveform_layer.tsx";
 import { OverlayLayer } from "./overlay_layer.tsx";
 import { type LoopPreview, WaveTouchLayer } from "./wave_touch_layer.tsx";
+import { getPinchScroll } from "./wave_pinch.ts";
+import { useWaveGestures } from "./use_wave_gestures.ts";
 
 /**
  * Shown until the audio is read.
@@ -38,13 +40,19 @@ interface WaveViewProps {
     playbackStartTime: number;
     playerState: SamplePlayerState;
     zoom: number;
+    /**
+     * The largest zoom a pinch may reach, the zoom slider's.
+     */
+    maxZoom: number;
+    onZoomChange: (zoom: number) => void;
     centCorrection: number;
 }
 
 /**
  * The sample's wave with its loop points. A click sets the loop start and a right click the
  * loop end, as a mouse shortcut for the loop inputs. On a phone the loop lines have handles to
- * drag instead (`WaveTouchLayer`). Zooming keeps the middle of the view.
+ * drag instead (`WaveTouchLayer`), one finger scrolls and two fingers zoom. The slider's zoom
+ * keeps the middle of the view, a pinch keeps the sample between the fingers.
  */
 export function WaveView({
     sampleId,
@@ -59,6 +67,8 @@ export function WaveView({
     playbackStartTime,
     playerState,
     zoom,
+    maxZoom,
+    onZoomChange,
     centCorrection
 }: WaveViewProps) {
     const { t } = useTranslation();
@@ -97,22 +107,37 @@ export function WaveView({
     };
 
     // The scroll position is in pixels of the zoomed wave, so a new zoom moves it to keep the
-    // sample in the middle of the view where it was. The position before the zoom is kept here,
-    // as the scroller has already clamped its own to the new width, and the scroll event that
-    // updates the state may not have come yet when the slider moves again
+    // sample in the middle of the view (or under a pinch) where it was. The position before the
+    // zoom is kept here, as the scroller has already clamped its own to the new width, and the
+    // scroll event that updates the state may not have come yet when the slider moves again
     const zoomRef = useRef(zoom);
     const scrollRef = useRef(0);
+    const zoomAnchorRef = useRef<number | null>(null);
     useLayoutEffect(() => {
         const scroller = scrollerRef.current;
         if (!scroller || zoomRef.current === zoom) {
             return;
         }
-        const width = scroller.clientWidth;
-        const center = (scrollRef.current + width / 2) / zoomRef.current;
+        const centerX = zoomAnchorRef.current ?? scroller.clientWidth / 2;
+        zoomAnchorRef.current = null;
+        scroller.scrollLeft = getPinchScroll({
+            centerX,
+            scrollX: scrollRef.current,
+            oldZoom: zoomRef.current,
+            newZoom: zoom
+        });
         zoomRef.current = zoom;
-        scroller.scrollLeft = Math.max(0, center * zoom - width / 2);
         scrollRef.current = scroller.scrollLeft;
     }, [zoom]);
+    const gestures = useWaveGestures({
+        layout,
+        scrollerRef,
+        zoomAnchorRef,
+        zoom,
+        maxZoom,
+        onZoomChange,
+        isHandleDragging: preview !== null
+    });
 
     // The canvases span the whole view (their border is an outline), so the pointer maps
     // through the same width they draw with
@@ -135,7 +160,11 @@ export function WaveView({
                 onLoopStartChange,
                 onLoopEndChange
             })}
+            onPointerDown={gestures.onPointerDown}
+            onPointerUp={gestures.onPointerUp}
+            onPointerCancel={gestures.onPointerCancel}
             onPointerMove={(e) => {
+                gestures.onPointerMove?.(e);
                 if (isLoaded) {
                     setHoveredSample(getSampleAt(e));
                 }

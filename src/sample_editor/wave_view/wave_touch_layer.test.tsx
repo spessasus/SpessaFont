@@ -200,6 +200,8 @@ function renderWave(layout: LayoutMode) {
                 playbackStartTime={0}
                 playerState={"stopped"}
                 zoom={1}
+                maxZoom={5}
+                onZoomChange={vi.fn()}
                 centCorrection={0}
             />
         </LayoutContext.Provider>
