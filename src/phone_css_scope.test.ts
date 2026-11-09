@@ -107,16 +107,20 @@ function splitSelectorList(list: string) {
  * Returns the selectors that do not start with the phone scope.
  */
 function findUnscoped(css: string) {
-    return findSelectors(css)
-        .flatMap((list) => splitSelectorList(list))
-        .filter(
-            (selector) =>
-                selector !== SCOPE &&
-                !selector.startsWith(`${SCOPE} `) &&
-                !selector.startsWith(`${SCOPE}.`) &&
-                !selector.startsWith(`${SCOPE}:`) &&
-                !selector.startsWith(`${SCOPE}[`)
-        );
+    return (
+        findSelectors(css)
+            .flatMap((list) => splitSelectorList(list))
+            // Prettier wraps long selectors over several lines
+            .map((selector) => selector.replaceAll(/\s+/g, " "))
+            .filter(
+                (selector) =>
+                    selector !== SCOPE &&
+                    !selector.startsWith(`${SCOPE} `) &&
+                    !selector.startsWith(`${SCOPE}.`) &&
+                    !selector.startsWith(`${SCOPE}:`) &&
+                    !selector.startsWith(`${SCOPE}[`)
+            )
+    );
 }
 
 describe("phone CSS", () => {
@@ -166,4 +170,17 @@ describe("phone CSS", () => {
             expect(unscoped).toEqual([]);
         }
     );
+});
+
+describe("the cell sheet's phone CSS", () => {
+    it("leaves a full height sheet full when it has a slider", () => {
+        // The portrait sheet grows by the slider's height, which must not undo the grab bar's
+        // full height (editor_sheet.css sets 100% on data-full)
+        const css = files["./generator_table/cell_sheet/cell_sheet_phone.css"];
+        const rule =
+            /([^{}]*\.editor_sheet[^{}]*:has\(\.cell_sheet_slider\)[^{}]*)\{/.exec(
+                css
+            );
+        expect(rule?.[1]).toContain(':not([data-full="true"])');
+    });
 });

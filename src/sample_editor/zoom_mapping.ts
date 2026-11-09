@@ -36,3 +36,12 @@ export function getSliderValue(zoom: number, maxZoom: number) {
     const mapped = Math.pow((zoom - 1) / (maxZoom - 1), 1 / ZOOM_CURVE);
     return (mapped * (maxZoom - 1) + 1) * 100;
 }
+
+/**
+ * The largest zoom a pinch may reach: the slider's top. The slider's mapping stops short of
+ * `getMaxZoom` (near 2x for short samples), and a pinch past it would push the slider off its track.
+ */
+export function getPinchMaxZoom(sampleLength: number) {
+    const maxZoom = getMaxZoom(sampleLength);
+    return getSliderZoom((maxZoom - 1) * 100, maxZoom);
+}

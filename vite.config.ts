@@ -121,8 +121,19 @@ export default defineConfig({
         setupFiles: ["src/test_utils/setup.ts"],
         // Restores navigator and other globals that individual tests stub
         unstubGlobals: true,
-        // The theme test reads the theme files as text, other CSS stays unprocessed
-        css: { include: [/src\/themes\//] },
+        // The theme test and the phone CSS scope test read their files as text, other CSS stays
+        // unprocessed (an unprocessed file reads as an empty string)
+        css: {
+            include: [
+                /src\/themes\//,
+                /_phone\.css/,
+                /src\/index_phone\.css/,
+                /src\/context_menu\/action_sheet\.css/,
+                /src\/fancy_inputs\/(segmented_control|stepper_button)\//,
+                /src\/menu_list\/selection_mode\//,
+                /src\/phone_shell\//
+            ]
+        },
         // History and core logging is noise unless a test fails
         silent: "passed-only"
     }

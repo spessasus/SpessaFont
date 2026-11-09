@@ -644,8 +644,8 @@
 }
 
 /* In portrait the sheet grows by the slider's height, so the editor fits as it did without one
-   and the grid above gives the room */
+   and the grid above gives the room. A sheet dragged to full height stays full */
 :root[data-layout="phone"][data-orientation="portrait"]
-    .editor_sheet:has(.cell_sheet_slider) {
+    .editor_sheet:not([data-full="true"]):has(.cell_sheet_slider) {
     height: calc(var(--phone-sheet-height) + var(--phone-touch));
 }

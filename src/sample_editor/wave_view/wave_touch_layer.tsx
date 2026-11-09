@@ -1,5 +1,5 @@
 import type * as React from "react";
-import { useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./wave_touch_layer_phone.css";
 import { fitLoopPoint } from "../loop_points.ts";
@@ -83,10 +83,19 @@ export function WaveTouchLayer({
         onPreviewChange(null);
     };
 
+    // A layer that goes away mid drag (another sample, a closed section) leaves no preview
+    const dropPreview = useEffectEvent(() => {
+        if (pointRef.current !== null) {
+            onPreviewChange(null);
+        }
+    });
+    useEffect(() => dropPreview, []);
+
     const renderHandle = (handle: LoopHandle) => {
         const property = getProperty(handle);
         const lineX = handle === "start" ? startX : endX;
-        if (!isHandleVisible(lineX, width)) {
+        // The dragged handle stays, or a drag past the edge of a zoomed view would lose its pointer
+        if (dragged !== handle && !isHandleVisible(lineX, width)) {
             return null;
         }
         const left = lefts[handle];
@@ -165,6 +174,12 @@ export function WaveTouchLayer({
                 onPointerCancel={(e) => {
                     e.stopPropagation();
                     if (dragged === handle) {
+                        endDrag();
+                    }
+                }}
+                onLostPointerCapture={() => {
+                    // After a pointerup the drag has ended already, otherwise nothing commits
+                    if (dragged === handle && pointRef.current !== null) {
                         endDrag();
                     }
                 }}

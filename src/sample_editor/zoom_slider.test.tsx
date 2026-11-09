@@ -3,7 +3,12 @@ import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { ZoomSlider } from "./zoom_slider.tsx";
-import { getMaxZoom, getSliderValue, getSliderZoom } from "./zoom_mapping.ts";
+import {
+    getMaxZoom,
+    getPinchMaxZoom,
+    getSliderValue,
+    getSliderZoom
+} from "./zoom_mapping.ts";
 
 function onZoomChange() {
     // The test changes the zoom itself
@@ -16,6 +21,15 @@ describe("zoom mapping", () => {
             expect(
                 getSliderValue(getSliderZoom(value, maxZoom), maxZoom)
             ).toBeCloseTo(value, 6);
+        }
+    });
+
+    it("limits a pinch to the slider's top, so the slider stays on its track", () => {
+        for (const length of [1000, 100_000, 10_000_000]) {
+            const maxZoom = getMaxZoom(length);
+            expect(
+                getSliderValue(getPinchMaxZoom(length), maxZoom)
+            ).toBeCloseTo((maxZoom - 1) * 100, 6);
         }
     });
 

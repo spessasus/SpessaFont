@@ -13,6 +13,7 @@ const WIDTH = 400;
 
 function renderWave(layout: LayoutMode) {
     const onZoomChange = vi.fn<(zoom: number) => void>();
+    const onLoopStartChange = vi.fn<(point: number) => void>();
     const { container } = render(
         <LayoutContext.Provider value={layout}>
             <WaveView
@@ -20,7 +21,7 @@ function renderWave(layout: LayoutMode) {
                 data={new Float32Array(100_000)}
                 loopStart={1000}
                 loopEnd={90_000}
-                onLoopStartChange={vi.fn()}
+                onLoopStartChange={onLoopStartChange}
                 onLoopEndChange={vi.fn()}
                 onStepLoopStart={vi.fn()}
                 onStepLoopEnd={vi.fn()}
@@ -38,7 +39,7 @@ function renderWave(layout: LayoutMode) {
     if (!wave) {
         throw new Error("No wave.");
     }
-    return { wave, onZoomChange, container };
+    return { wave, onZoomChange, onLoopStartChange, container };
 }
 
 describe("WaveView gestures", () => {
@@ -89,6 +90,64 @@ describe("WaveView gestures", () => {
         fireEvent.pointerDown(wave, { pointerId: 2, clientX: 250 });
         fireEvent.pointerMove(wave, { pointerId: 2, clientX: 350 });
         expect(onZoomChange).not.toHaveBeenCalled();
+    });
+
+    it("follows the spread of fingers placed one above the other", () => {
+        const { wave, onZoomChange } = renderWave("phone");
+        fireEvent.pointerDown(wave, {
+            pointerId: 1,
+            clientX: 200,
+            clientY: 10
+        });
+        fireEvent.pointerDown(wave, {
+            pointerId: 2,
+            clientX: 200,
+            clientY: 110
+        });
+        fireEvent.pointerMove(wave, {
+            pointerId: 2,
+            clientX: 200,
+            clientY: 160
+        });
+        // The fingers moved from 100 to 150 px apart, so the zoom of 2 grows by half
+        expect(onZoomChange).toHaveBeenLastCalledWith(3);
+    });
+
+    it("stops a pan when a handle drag starts", () => {
+        const { wave, container } = renderWave("phone");
+        const scroller = container.querySelectorAll(".wave_view_child")[1];
+        scroller.scrollLeft = 200;
+        fireEvent.pointerDown(wave, { pointerId: 1, clientX: 300 });
+        const handle = container.querySelector(".wave_touch_handle");
+        if (!handle) {
+            throw new Error("No handle.");
+        }
+        handle.setPointerCapture = () => undefined;
+        fireEvent.pointerDown(handle, { pointerId: 2, clientX: 4 });
+        fireEvent.pointerMove(handle, { pointerId: 2, clientX: 20 });
+        fireEvent.pointerMove(wave, { pointerId: 1, clientX: 250 });
+        expect(scroller.scrollLeft).toBe(200);
+    });
+
+    it("keeps a drag past the edge of the zoomed view and commits it once", () => {
+        // At zoom 2 the view shows the first half, x 410 is past its right edge
+        const { wave, onLoopStartChange, container } = renderWave("phone");
+        const handle = container.querySelector(".wave_touch_handle_start");
+        if (!(handle instanceof HTMLElement)) {
+            throw new TypeError("No handle.");
+        }
+        handle.setPointerCapture = () => undefined;
+        fireEvent.pointerDown(handle, { pointerId: 1, clientX: 8 });
+        fireEvent.pointerMove(handle, { pointerId: 1, clientX: 410 });
+        fireEvent.pointerUp(handle, { pointerId: 1, clientX: 410 });
+        expect(onLoopStartChange).toHaveBeenCalledOnce();
+        expect(container.querySelector(".wave_touch_readout")).toBeNull();
+        // The wave pans again afterwards
+        const scroller = container.querySelectorAll(".wave_view_child")[1];
+        scroller.scrollLeft = 200;
+        fireEvent.pointerDown(wave, { pointerId: 2, clientX: 300 });
+        fireEvent.pointerMove(wave, { pointerId: 2, clientX: 250 });
+        expect(scroller.scrollLeft).toBe(250);
     });
 
     it("does not pinch on desktop", () => {

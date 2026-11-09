@@ -41,7 +41,7 @@ interface WaveViewProps {
     playerState: SamplePlayerState;
     zoom: number;
     /**
-     * The largest zoom a pinch may reach, the zoom slider's.
+     * The largest zoom a pinch may reach, the zoom slider's top (`getPinchMaxZoom`).
      */
     maxZoom: number;
     onZoomChange: (zoom: number) => void;

@@ -147,6 +147,25 @@ describe("WaveTouchLayer", () => {
         expect(onPreviewChange).toHaveBeenLastCalledWith(null);
     });
 
+    it("ends a drag that lost its pointer without committing", () => {
+        const { onLoopStartChange, onPreviewChange } = renderLayer();
+        const handle = getHandle("phoneLocale.wave.loopStartHandle");
+        fireEvent.pointerDown(handle, { pointerId: 1, clientX: xOf(100) });
+        fireEvent.pointerMove(handle, { pointerId: 1, clientX: xOf(300) });
+        fireEvent.lostPointerCapture(handle, { pointerId: 1 });
+        expect(onLoopStartChange).not.toHaveBeenCalled();
+        expect(onPreviewChange).toHaveBeenLastCalledWith(null);
+    });
+
+    it("clears the preview when it goes away mid drag", () => {
+        const { onPreviewChange } = renderLayer();
+        const handle = getHandle("phoneLocale.wave.loopStartHandle");
+        fireEvent.pointerDown(handle, { pointerId: 1, clientX: xOf(100) });
+        fireEvent.pointerMove(handle, { pointerId: 1, clientX: xOf(300) });
+        cleanup();
+        expect(onPreviewChange).toHaveBeenLastCalledWith(null);
+    });
+
     it("steps the loop end with the arrow keys", () => {
         const { onStepLoopEnd } = renderLayer();
         const handle = getHandle("phoneLocale.wave.loopEndHandle");

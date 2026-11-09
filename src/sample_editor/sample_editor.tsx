@@ -11,7 +11,7 @@ import { SampleToolsMenu } from "./sample_tools_menu.tsx";
 import { SampleProperties } from "./sample_properties.tsx";
 import { SamplePlayback } from "./sample_playback.tsx";
 import { ZoomSlider } from "./zoom_slider.tsx";
-import { getMaxZoom } from "./zoom_mapping.ts";
+import { getPinchMaxZoom } from "./zoom_mapping.ts";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useSampleView } from "../hooks/use_sample_view.ts";
 import type { SampleView } from "../core_backend/entity_views.ts";
@@ -170,7 +170,7 @@ function SampleEditorPane({
             onLoopEndChange={edits.setLoopEnd}
             onStepLoopStart={edits.stepLoopStart}
             onStepLoopEnd={edits.stepLoopEnd}
-            maxZoom={getMaxZoom(view.length)}
+            maxZoom={getPinchMaxZoom(view.length)}
             onZoomChange={setZoom}
             data={data}
             loopStart={view.loopStart}

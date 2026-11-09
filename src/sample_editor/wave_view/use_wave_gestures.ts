@@ -40,16 +40,19 @@ export function useWaveGestures({
         | { kind: "pinch"; startDistance: number; startZoom: number }
         // A pinch ended while a finger is still down, which must not start a pan with a jump
         | { kind: "done" };
-    // Each finger's last x, by pointer id
-    const pointersRef = useRef(new Map<number, number>());
+    // Each finger's last position, by pointer id
+    const pointersRef = useRef(new Map<number, { x: number; y: number }>());
     const gestureRef = useRef<Gesture>({ kind: "none" });
     if (layout !== "phone") {
         return {};
     }
 
+    // The spread of the fingers in any direction, as fingers placed one above the other pinch too
     const getDistance = () => {
-        const [first = 0, second = 0] = pointersRef.current.values();
-        return Math.max(1, Math.abs(second - first));
+        const [first, second] = pointersRef.current.values();
+        return first && second
+            ? Math.max(1, Math.hypot(second.x - first.x, second.y - first.y))
+            : 1;
     };
 
     const handlePointerEnd = (e: React.PointerEvent<HTMLElement>) => {
@@ -70,7 +73,7 @@ export function useWaveGestures({
             if (isHandleDragging || pointers.size >= 2) {
                 return;
             }
-            pointers.set(e.pointerId, e.clientX);
+            pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
             gestureRef.current =
                 pointers.size === 1
                     ? { kind: "pan", lastX: e.clientX }
@@ -85,7 +88,12 @@ export function useWaveGestures({
             if (!pointers.has(e.pointerId)) {
                 return;
             }
-            pointers.set(e.pointerId, e.clientX);
+            // A handle drag has the pointer to itself, a finger already down stops panning
+            if (isHandleDragging) {
+                gestureRef.current = { kind: "done" };
+                return;
+            }
+            pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
             const gesture = gestureRef.current;
             if (gesture.kind === "pan") {
                 const scroller = scrollerRef.current;
@@ -94,9 +102,10 @@ export function useWaveGestures({
                 }
                 gestureRef.current = { kind: "pan", lastX: e.clientX };
             } else if (gesture.kind === "pinch") {
-                const [first = 0, second = 0] = pointers.values();
+                const [first, second] = pointers.values();
                 const rect = e.currentTarget.getBoundingClientRect();
-                zoomAnchorRef.current = (first + second) / 2 - rect.left;
+                zoomAnchorRef.current =
+                    (first.x + (second?.x ?? first.x)) / 2 - rect.left;
                 onZoomChange(
                     getPinchZoom({
                         startZoom: gesture.startZoom,
