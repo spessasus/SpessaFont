@@ -82,7 +82,7 @@
 
 :root[data-layout="phone"] .loop_section .sample_playback button {
     min-width: 0;
-    min-height: 3rem;
+    min-height: var(--phone-touch);
     font-size: var(--phone-text-button);
 }
 

@@ -196,6 +196,17 @@
     margin-top: 0.25rem;
 }
 
+/*
+ * In portrait Apply stays in view above the drawer while the zone list scrolls under it. A docked
+ * landscape sheet can be shorter than the footer, which would then cover the value row for good
+ */
+:root[data-layout="phone"][data-orientation="portrait"] .cell_sheet_footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    background: var(--lighter-color-end);
+}
+
 :root[data-layout="phone"] .cell_sheet_button {
     min-height: var(--phone-touch);
     padding: 0 0.75rem;

@@ -39,3 +39,22 @@
 :root[data-layout="phone"] .modulator_list .list_contents {
     gap: 0;
 }
+
+/*
+ * Landscape has no height for a fixed header, action bar and rows, so the whole list scrolls as
+ * one and only the layer header stays
+ */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .modulator_list
+    .list_contents {
+    flex: none;
+    overflow: visible;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .modulator_list
+    > .phone_layer_header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}

@@ -14,6 +14,11 @@
     gap: var(--flex-gap);
 }
 
+/* The docked column is narrower than a portrait phone, six bands cut "125" to "1…" */
+:root[data-layout="phone"][data-orientation="landscape"] .equalizer_band_grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 :root[data-layout="phone"] .equalizer_band_button {
     display: flex;
     flex-direction: column;
@@ -114,14 +119,17 @@
 }
 
 :root[data-layout="phone"] .equalizer_actions button {
-    min-height: 3rem;
+    min-height: var(--phone-touch);
     min-width: 0;
     padding: 0 0.25rem;
     font-size: var(--phone-text-button);
     text-align: center;
 }
 
-/* Ten bands and a two column Gain fill both rows of six, and "Wzmocnienie" fits it */
+/*
+ * Ten bands and a two column Gain fill two rows of six (three rows of four in landscape), and
+ * "Wzmocnienie" fits it
+ */
 :root[data-layout="phone"] .equalizer_band_gain {
     grid-column: span 2;
 }

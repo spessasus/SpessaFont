@@ -86,6 +86,18 @@
 }
 
 /*
+ * The same for a modulator list (zone layer or the overview's defaults), where Controls give way
+ * too, or the open keys or controls leave it a sliver
+ */
+:root[data-layout="phone"][data-orientation="landscape"]:has(
+        .modulator_layer,
+        .default_modulators
+    ) {
+    --phone-keys-height: 3.5rem;
+    --phone-controls-height: 28dvh;
+}
+
+/*
  * A capture or the Keys… view needs the sheet's fields more than the grid, so in landscape the
  * sheet takes the height and the grid yields
  */
