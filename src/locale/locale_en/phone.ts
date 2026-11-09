@@ -152,6 +152,11 @@ export const PhoneLocale = {
         eq: "EQ",
         usedBy: "Used by",
         sections: "Sample sections",
-        moveLoopPoint: "Move {{point}} by {{amount}}"
+        moveLoopPoint: "Move {{point}} by {{amount}}",
+        resetBandHint: "Long press a band to reset it",
+        hertz: "{{value}} Hz",
+        decibels: "{{value}} dB",
+        gainDown: "Lower the gain",
+        gainUp: "Raise the gain"
     }
 };

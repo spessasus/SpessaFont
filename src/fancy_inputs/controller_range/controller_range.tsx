@@ -8,7 +8,13 @@ import type { ControllerProps } from "../controller_knob/controller_knob.tsx";
 const TRANSITION_THRESHOLD = 5;
 
 interface ControllerRangeProps extends ControllerProps {
-    text: string;
+    /**
+     * The value line above the track, left out when there is none.
+     */
+    text?: string;
+    step?: number;
+    ariaLabel?: string;
+    isDisabled?: boolean;
 }
 
 export function ControllerRange({
@@ -16,7 +22,10 @@ export function ControllerRange({
     max,
     value,
     onChange,
-    text
+    text,
+    step,
+    ariaLabel,
+    isDisabled
 }: ControllerRangeProps) {
     const percent = Math.round(((value - min) / (max - min)) * 100);
     const [previousPercent, setPreviousPercent] = useState(percent);
@@ -28,7 +37,9 @@ export function ControllerRange({
 
     return (
         <label className="controller_range_wrapper">
-            <span className={"monospaced"}>{text}</span>
+            {text === undefined ? null : (
+                <span className={"monospaced"}>{text}</span>
+            )}
             <div
                 className={`controller_range_visual_wrapper ${isJump ? "controller_range_transition" : ""}`}
                 style={{ "--visual-width": `${percent}%` }}
@@ -40,8 +51,11 @@ export function ControllerRange({
                     type="range"
                     min={min}
                     max={max}
+                    step={step}
                     value={value}
-                    onChange={(e) => onChange(Number.parseInt(e.target.value))}
+                    disabled={isDisabled}
+                    aria-label={ariaLabel}
+                    onChange={(e) => onChange(Number(e.target.value))}
                 />
             </div>
         </label>

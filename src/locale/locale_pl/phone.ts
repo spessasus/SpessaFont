@@ -164,6 +164,11 @@ export const PhoneLocale = {
         eq: "EQ",
         usedBy: "Używana przez",
         sections: "Sekcje próbki",
-        moveLoopPoint: "Przesuń {{point}} o {{amount}}"
+        moveLoopPoint: "Przesuń {{point}} o {{amount}}",
+        resetBandHint: "Przytrzymaj pasmo, aby je wyzerować",
+        hertz: "{{value}} Hz",
+        decibels: "{{value}} dB",
+        gainDown: "Zmniejsz wzmocnienie",
+        gainUp: "Zwiększ wzmocnienie"
     }
 };

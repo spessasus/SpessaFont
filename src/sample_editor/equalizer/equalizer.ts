@@ -6,6 +6,7 @@ export const EQ_FREQUENCIES = [
 ] as const;
 export const EQ_MAX_BAND_GAIN = 15;
 export const EQ_MAX_GAIN = 24;
+export const EQ_STEP = 0.5;
 /**
  * One octave wide bands, so neighbors overlap a bit and the curve stays smooth.
  */
@@ -34,6 +35,17 @@ export interface EqualizerState {
     readonly isPreviewing: boolean;
 }
 
+/**
+ * What the equalizer panel and its phone band picker take.
+ */
+export interface EqualizerPanelProps {
+    state: EqualizerState;
+    sampleRate: number;
+    isDisabled: boolean;
+    onStateChange: (state: EqualizerState) => void;
+    onApply: () => void;
+}
+
 export const FLAT_EQUALIZER: EqualizerSettings = {
     gain: 0,
     bands: EQ_FREQUENCIES.map(() => 0)
@@ -43,6 +55,43 @@ export const DEFAULT_EQUALIZER_STATE: EqualizerState = {
     settings: FLAT_EQUALIZER,
     isPreviewing: false
 };
+
+/**
+ * One of the bands, as an index into `EQ_FREQUENCIES`, or the overall gain.
+ */
+export type EqualizerBand = number | "gain";
+
+export function formatGain(gain: number) {
+    return gain > 0 ? `+${gain}` : String(gain);
+}
+
+export function formatFrequency(frequency: number) {
+    return frequency >= 1000 ? `${frequency / 1000}k` : String(frequency);
+}
+
+export function getEqualizerBandGain(
+    settings: EqualizerSettings,
+    band: EqualizerBand
+) {
+    return band === "gain" ? settings.gain : (settings.bands[band] ?? 0);
+}
+
+/**
+ * Sets one band (or the gain), rounded to the step and kept in the band's range.
+ */
+export function setEqualizerBand(
+    settings: EqualizerSettings,
+    band: EqualizerBand,
+    gain: number
+): EqualizerSettings {
+    const max = band === "gain" ? EQ_MAX_GAIN : EQ_MAX_BAND_GAIN;
+    // + 0 turns a -0 from a small negative value into 0
+    const value =
+        Math.max(-max, Math.min(max, Math.round(gain / EQ_STEP) * EQ_STEP)) + 0;
+    return band === "gain"
+        ? { ...settings, gain: value }
+        : { ...settings, bands: settings.bands.with(band, value) };
+}
 
 export function isFlat(settings: EqualizerSettings) {
     return settings.gain === 0 && settings.bands.every((gain) => gain === 0);

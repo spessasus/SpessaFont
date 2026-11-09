@@ -5,7 +5,8 @@ import {
     FLAT_EQUALIZER,
     getBandGains,
     getEqualizerResponse,
-    isFlat
+    isFlat,
+    setEqualizerBand
 } from "./equalizer.ts";
 
 const RATE = 44_100;
@@ -76,5 +77,22 @@ describe("equalizer", () => {
         const gains = getBandGains(settings, 16_000);
         expect(gains.slice(-2)).toEqual([0, 0]);
         expect(gains[7]).toBe(6);
+    });
+});
+
+describe("setEqualizerBand", () => {
+    it("sets one band and leaves the rest", () => {
+        expect(setEqualizerBand(FLAT_EQUALIZER, 3, 3).bands).toEqual([
+            0, 0, 0, 3, 0, 0, 0, 0, 0, 0
+        ]);
+    });
+
+    it("clamps bands to 15 dB and the gain to 24 dB", () => {
+        expect(setEqualizerBand(FLAT_EQUALIZER, 0, 20).bands[0]).toBe(15);
+        expect(setEqualizerBand(FLAT_EQUALIZER, "gain", -30).gain).toBe(-24);
+    });
+
+    it("rounds to half a decibel", () => {
+        expect(setEqualizerBand(FLAT_EQUALIZER, 8, -2.3).bands[8]).toBe(-2.5);
     });
 });
