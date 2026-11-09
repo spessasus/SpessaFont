@@ -23,5 +23,6 @@
 :root[data-layout="phone"] .phone_layer_header .modulator_new_button {
     flex-shrink: 0;
     min-width: var(--phone-touch);
+    min-height: var(--phone-touch);
     margin: 0;
 }

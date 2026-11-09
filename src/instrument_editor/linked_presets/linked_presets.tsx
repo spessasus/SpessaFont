@@ -94,7 +94,9 @@ export function LinkedPresets({ instrument }: LinkedPresetsProps) {
                 </>
             ) : (
                 <>
-                    <div>{t("instrumentLocale.usedBy")}</div>
+                    <div className={"linked_presets_label"}>
+                        {t("instrumentLocale.usedBy")}
+                    </div>
                     {Array.from(linked, (id) => (
                         <button
                             type={"button"}

@@ -21,7 +21,8 @@
     white-space: normal;
 }
 
-:root[data-layout="phone"] .bottom_sheet .bottom_bar label > span {
+:root[data-layout="phone"] .bottom_sheet .bottom_bar label > span,
+:root[data-layout="phone"] .bottom_sheet .bottom_bar .linked_presets_label {
     text-align: start;
     font-size: var(--phone-text-secondary);
     color: var(--muted-font-color);

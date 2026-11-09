@@ -5,7 +5,8 @@
     align-self: stretch;
     gap: var(--flex-gap);
     box-sizing: border-box;
-    height: var(--phone-row-height);
+    /* The app bar's height for every layer, so the navigator header lines up with the bar beside it */
+    height: var(--phone-app-bar-height);
     padding: 0 var(--flex-gap);
     background: var(--menu-bar-color);
     border-bottom: 1px solid var(--menu-border-color);

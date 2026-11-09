@@ -35,7 +35,8 @@ export const PhoneLocale = {
         minimap: "Visible keys"
     },
     overview: {
-        back: "Back to the overview"
+        back: "Back to the overview",
+        defaultModulators: "Default modulators"
     },
     navigator: {
         title: "Lists",

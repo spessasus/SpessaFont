@@ -8,10 +8,10 @@
     flex-wrap: wrap;
     align-items: center;
     flex: none;
-    column-gap: 0.25rem;
+    column-gap: var(--flex-gap);
     box-sizing: border-box;
-    min-height: var(--phone-row-height);
-    padding: 0 0.25rem;
+    min-height: var(--phone-app-bar-height);
+    padding: 0 var(--flex-gap);
     background: var(--menu-bar-color);
     border-bottom: solid 1px var(--menu-border-color);
 }
@@ -26,7 +26,7 @@
 
 :root[data-layout="phone"] .selection_bar_start {
     flex: 1 0 auto;
-    gap: 0.25rem;
+    gap: var(--flex-gap);
 }
 
 :root[data-layout="phone"] .selection_bar_end {
@@ -36,7 +36,7 @@
 :root[data-layout="phone"] .selection_bar_count {
     white-space: nowrap;
     text-align: start;
-    font-size: var(--phone-text-body);
+    font-size: var(--phone-text-title);
     font-weight: 600;
 }
 

@@ -70,7 +70,10 @@ export function DefaultModulators({ onBack }: DefaultModulatorsProps) {
                         ? (newButton) => (
                               <OverviewPanelHeader
                                   onBack={onBack}
-                                  title={titleText}
+                                  // The app bar already names the bank
+                                  title={t(
+                                      "phoneLocale.overview.defaultModulators"
+                                  )}
                               >
                                   {newButton}
                               </OverviewPanelHeader>
