@@ -6,6 +6,7 @@ import { useBackHandler } from "../hooks/use_back_handler.ts";
 import { useEventListener } from "../hooks/use_event_listener.ts";
 import { BACK_LEVELS } from "./back_stack.ts";
 import { PianoKeysIcon } from "../utils/icons/player_icons.tsx";
+import { useIsEditorCovered } from "./use_is_editor_covered.ts";
 
 interface PianoCaptureBarProps {
     count: 1 | 2;
@@ -29,8 +30,11 @@ export function PianoCaptureBar({
     const keys = useRef(new Array<number>());
     const finishedRef = useRef(false);
     const [playedCount, setPlayedCount] = useState(0);
+    // The open portrait lists hide the capture, so their keys are an audition and back closes
+    // them first. The capture goes on once they close
+    const isCovered = useIsEditorCovered();
     useNextPlayedKeys(1, ([key]) => {
-        if (finishedRef.current) {
+        if (isCovered || finishedRef.current) {
             return;
         }
         keys.current.push(key);
@@ -42,7 +46,7 @@ export function PianoCaptureBar({
         finishedRef.current = true;
         onDone(keys.current);
     });
-    useBackHandler(true, BACK_LEVELS.transient, () => {
+    useBackHandler(!isCovered, BACK_LEVELS.transient, () => {
         onCancel();
         return true;
     });

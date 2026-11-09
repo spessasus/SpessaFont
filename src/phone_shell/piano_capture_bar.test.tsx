@@ -6,6 +6,9 @@ import { LayoutContext } from "../layout/layout_context.ts";
 import { BackStackContext } from "./back_stack_context.ts";
 import { BackStack } from "./back_stack.ts";
 import { PianoCaptureBar } from "./piano_capture_bar.tsx";
+import { PhoneShellContext } from "./phone_shell_context.ts";
+import { INITIAL_PHONE_SHELL_STATE } from "./phone_shell_state.ts";
+import { createShellContext } from "../test_utils/shell_context.ts";
 
 const handlers = vi.hoisted(() => ({
     current: undefined as ((event: ForwardedSynthEvent) => void) | undefined
@@ -36,7 +39,7 @@ function noteOn(channel: number, midiNote: number) {
     });
 }
 
-function renderBar(count: 1 | 2 = 2) {
+function renderBar(count: 1 | 2 = 2, isCovered = false) {
     const onDone = vi.fn();
     const onCancel = vi.fn();
     const stack = new BackStack();
@@ -49,12 +52,19 @@ function renderBar(count: 1 | 2 = 2) {
                     dropSentinel: vi.fn()
                 }}
             >
-                <PianoCaptureBar
-                    count={count}
-                    prompt={"Play two keys"}
-                    onDone={onDone}
-                    onCancel={onCancel}
-                />
+                <PhoneShellContext
+                    value={createShellContext({
+                        ...INITIAL_PHONE_SHELL_STATE,
+                        isNavigatorOpen: isCovered
+                    })}
+                >
+                    <PianoCaptureBar
+                        count={count}
+                        prompt={"Play two keys"}
+                        onDone={onDone}
+                        onCancel={onCancel}
+                    />
+                </PhoneShellContext>
             </BackStackContext>
         </LayoutContext>
     );
@@ -66,6 +76,22 @@ describe("PianoCaptureBar", () => {
         handlers.current = undefined;
     });
     afterEach(cleanup);
+
+    it("ignores keys auditioned while the lists cover the editor", () => {
+        const { onDone } = renderBar(1, true);
+        noteOn(0, 64);
+        expect(onDone).not.toHaveBeenCalled();
+    });
+
+    it("leaves back to the lists while they cover the editor", () => {
+        const { stack, onCancel } = renderBar(2, true);
+        let isHandled = true;
+        act(() => {
+            isHandled = stack.handleBack();
+        });
+        expect(isHandled).toBe(false);
+        expect(onCancel).not.toHaveBeenCalled();
+    });
 
     it("shows the count only when it asks for more than one key", () => {
         renderBar(1);

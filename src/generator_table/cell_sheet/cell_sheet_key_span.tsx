@@ -9,6 +9,7 @@ import { findColumnsInSpan } from "./cell_sheet_keys.ts";
 import { KeySpanBar } from "./key_span_bar.tsx";
 import { useBackHandler } from "../../hooks/use_back_handler.ts";
 import { BACK_LEVELS } from "../../phone_shell/back_stack.ts";
+import { useIsEditorCovered } from "../../phone_shell/use_is_editor_covered.ts";
 
 interface CellSheetKeySpanProps {
     /**
@@ -70,8 +71,10 @@ export function CellSheetKeySpan({
     onBack
 }: CellSheetKeySpanProps) {
     const { t } = useTranslation();
-    // Back returns to the zone list before it closes the sheet
-    useBackHandler(true, BACK_LEVELS.transient, () => {
+    // Back returns to the zone list before it closes the sheet, after the open portrait lists
+    // that hide it
+    const isCovered = useIsEditorCovered();
+    useBackHandler(!isCovered, BACK_LEVELS.transient, () => {
         onBack();
         return true;
     });
