@@ -14,11 +14,13 @@ import {
  */
 export function createShellContext(
     state: PhoneShellState = INITIAL_PHONE_SHELL_STATE,
-    dispatch: Dispatch<PhoneShellAction> = vi.fn()
+    dispatch: Dispatch<PhoneShellAction> = vi.fn(),
+    isLandscape = false
 ): PhoneShellContextValue {
     return {
         state,
         dispatch,
-        presence: getNavigatorPresence(state)
+        presence: getNavigatorPresence(state),
+        isLandscape
     };
 }

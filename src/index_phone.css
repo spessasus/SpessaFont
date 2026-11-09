@@ -34,6 +34,14 @@
     --phone-text-caption: 0.75rem;
 }
 
+/* Landscape is the phone layout held sideways (spec 14.2) */
+:root[data-layout="phone"][data-orientation="landscape"] {
+    --phone-app-bar-height: 3rem;
+    --phone-keys-height: 5.5rem;
+    --phone-dock-width: clamp(15rem, 35vw, 20rem);
+    --phone-sheet-height: 60dvh;
+}
+
 /* The page never scrolls, and dvh follows the address bar and the soft keyboard */
 :root[data-layout="phone"] #root {
     height: 100dvh;

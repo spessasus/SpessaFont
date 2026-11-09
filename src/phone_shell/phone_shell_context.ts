@@ -10,6 +10,10 @@ export interface PhoneShellContextValue {
     state: PhoneShellState;
     dispatch: Dispatch<PhoneShellAction>;
     presence: NavigatorPresence;
+    /**
+     * The phone is held sideways (`useIsLandscape`).
+     */
+    isLandscape: boolean;
 }
 
 export const PhoneShellContext = createContext<PhoneShellContextValue | null>(

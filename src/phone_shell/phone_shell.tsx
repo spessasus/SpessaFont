@@ -1,4 +1,4 @@
-import { useMemo, useReducer, useState } from "react";
+import { useLayoutEffect, useMemo, useReducer, useState } from "react";
 import { Toaster } from "react-hot-toast";
 import "./phone_shell.css";
 import "../toasts/toasts_phone.css";
@@ -29,6 +29,8 @@ import { useBankShortcutKeys } from "../hooks/use_bank_shortcut_keys.ts";
 import { useLeaveFlow } from "./use_leave_flow.ts";
 import { useInstallPrompt } from "../hooks/use_install_prompt.ts";
 import { logError } from "../utils/core_utils.ts";
+import { useIsLandscape } from "../layout/use_is_landscape.ts";
+import { applyOrientation } from "../layout/orientation.ts";
 
 interface PhoneShellProps {
     bankTabs: BankTabs;
@@ -69,13 +71,20 @@ export function PhoneShell({
         phoneShellReducer,
         INITIAL_PHONE_SHELL_STATE
     );
+    const isLandscape = useIsLandscape();
+    // Before paint, so a rotation never paints a frame with the other orientation's sizes
+    useLayoutEffect(() => {
+        applyOrientation(isLandscape);
+        return () => applyOrientation(undefined);
+    }, [isLandscape]);
     const shellContext = useMemo(
         () => ({
             state,
             dispatch,
-            presence: getNavigatorPresence(state)
+            presence: getNavigatorPresence(state),
+            isLandscape
         }),
-        [state]
+        [state, isLandscape]
     );
     // The editor puts its tools menu here, see ToolsMenu
     const [toolsMenuSlot, setToolsMenuSlot] = useState<HTMLDivElement | null>(
