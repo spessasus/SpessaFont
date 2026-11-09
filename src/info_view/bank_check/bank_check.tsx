@@ -1,4 +1,5 @@
 import "./bank_check.css";
+import "./bank_check_phone.css";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";

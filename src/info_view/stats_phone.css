@@ -1,0 +1,96 @@
+/* Stats as a two column grid, the two panel rows come first */
+:root[data-layout="phone"] .sound_bank_info .stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--flex-gap);
+    min-width: 0;
+    flex-shrink: 0;
+    overflow: visible;
+}
+
+:root[data-layout="phone"] .sound_bank_info .stats h1,
+:root[data-layout="phone"] .sound_bank_info .stats .stat_group,
+:root[data-layout="phone"] .sound_bank_info .stats .stats_panel_button,
+:root[data-layout="phone"] .sound_bank_info .stats .powered_by {
+    grid-column: 1 / -1;
+}
+
+:root[data-layout="phone"] .sound_bank_info .stats h1 {
+    padding: 0;
+    border: 0;
+    background: none;
+    font-size: var(--phone-text-heading);
+    font-weight: 600;
+    text-align: start;
+}
+
+:root[data-layout="phone"] .sound_bank_info .stats .stats_panel_button {
+    order: -1;
+    min-height: var(--phone-row-height);
+}
+
+:root[data-layout="phone"]
+    .sound_bank_info
+    .stats
+    .stats_panel_button
+    .stat_span {
+    border-right: 0;
+    padding: 0 var(--phone-gutter);
+    align-items: center;
+}
+
+:root[data-layout="phone"] .sound_bank_info .stats .stats_panel_button svg {
+    flex-shrink: 0;
+    width: var(--phone-disclosure-size);
+    height: var(--phone-disclosure-size);
+    margin-inline: 0 var(--phone-gutter);
+}
+
+:root[data-layout="phone"] .sound_bank_info .stats .stats_panel_button svg * {
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .sound_bank_info .stats .stat_span,
+:root[data-layout="phone"] .sound_bank_info .stats .stat_group > .stat_label {
+    text-align: start;
+}
+
+:root[data-layout="phone"] .sound_bank_info .stats .stat_label {
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .sound_bank_info .stats .stat_span pre {
+    min-width: 0;
+    text-align: end;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+:root[data-layout="phone"] .sound_bank_info .stats .stat_group > .stat_label {
+    font-weight: 600;
+    color: var(--font-color);
+}
+
+:root[data-layout="phone"] .sound_bank_info .stats .powered_by {
+    margin-top: 0;
+    border: 0;
+    padding: 0.3rem;
+}
+
+/* A value under its label, so Sound Engine and Software fit half a row */
+:root[data-layout="phone"] .sound_bank_info .stats .stat_span.single_stat {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    text-align: start;
+    gap: 0.125rem;
+    padding: 0.5rem var(--phone-gutter);
+}
+
+:root[data-layout="phone"] .sound_bank_info .stats .stat_span.single_stat pre {
+    text-align: start;
+}
+
+:root[data-layout="phone"] .sound_bank_info .stats .stat_group {
+    text-align: start;
+}

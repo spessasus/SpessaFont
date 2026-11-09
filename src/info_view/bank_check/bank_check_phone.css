@@ -1,0 +1,45 @@
+:root[data-layout="phone"] .bank_check > .pretty_button {
+    align-self: stretch;
+    min-height: var(--phone-row-height);
+    font-size: var(--phone-text-button);
+    text-align: center;
+}
+
+:root[data-layout="phone"] .bank_check_list li {
+    min-height: var(--phone-row-height);
+    gap: 0.25rem var(--flex-gap);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .bank_check_list li > span {
+    flex: 1 1 100%;
+    min-width: 0;
+    font-size: var(--phone-text-body);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .bank_check_list li button {
+    display: inline-flex;
+    align-items: center;
+    min-width: var(--phone-touch);
+    min-height: var(--phone-touch);
+    max-width: 100%;
+    font-size: var(--phone-text-button);
+    text-align: start;
+    overflow-wrap: anywhere;
+}
+
+/* Fix goes to the end of the row */
+:root[data-layout="phone"]
+    .bank_check_list
+    li
+    button:not(.monospaced):not(:only-child) {
+    margin-inline-start: auto;
+}
+
+/* Show all N is a full width button */
+:root[data-layout="phone"] .bank_check_list li:last-child > button:only-child {
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+}

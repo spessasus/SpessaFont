@@ -1,6 +1,7 @@
 import { EditableInfo } from "./editable_info.tsx";
 import { BankInfoStats } from "./bank_info_stats.tsx";
 import "./sound_bank_info.css";
+import "./sound_bank_info_phone.css";
 import "./default_modulators/default_modulators.css";
 import "./default_modulators/default_modulators_phone.css";
 import { DefaultModulators } from "./default_modulators/default_modulators.tsx";
