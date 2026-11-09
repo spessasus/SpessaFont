@@ -11,6 +11,7 @@ export interface PickerOption {
 
 interface ElementPickerProps {
     title: string;
+    kind?: "sample";
     options: readonly PickerOption[];
     onAnswer: (index: number | undefined) => void;
 }
@@ -22,6 +23,7 @@ interface ElementPickerProps {
  */
 export function ElementPicker({
     title,
+    kind,
     options,
     onAnswer
 }: ElementPickerProps) {
@@ -107,6 +109,7 @@ export function ElementPicker({
                 id={listId}
                 className={"element_picker_list"}
                 role={"listbox"}
+                data-kind={layout === "phone" ? kind : undefined}
                 aria-label={title}
             >
                 {matches.length === 0 ? (

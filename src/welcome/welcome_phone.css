@@ -15,12 +15,13 @@
 
 :root[data-layout="phone"] .welcome .welcome_action {
     width: 100%;
-    height: 3.5rem;
+    height: auto;
+    min-height: 3.5rem;
     justify-content: flex-start;
 }
 
 :root[data-layout="phone"] .welcome .welcome_action span {
-    font-size: var(--phone-text-title);
+    font-size: var(--phone-text-body);
     padding: 0.5rem 0.75rem;
     text-align: start;
 }
@@ -28,5 +29,12 @@
 :root[data-layout="phone"] .welcome .welcome_note {
     margin: 0;
     font-size: var(--phone-text-secondary);
+    color: var(--muted-font-color);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .welcome h1 {
+    font-size: var(--phone-text-heading);
+    font-weight: 600;
     text-align: start;
 }

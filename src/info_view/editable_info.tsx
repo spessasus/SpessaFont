@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useRef, useState } from "react";
 import type { SoundBankInfoData } from "spessasynth_core";
 import { SetBankInfoAction } from "./set_bank_info_action.ts";
+import { useLayout } from "../layout/layout_context.ts";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
 import { WaitingInput } from "../fancy_inputs/waiting_input/waiting_input.tsx";
@@ -121,6 +122,7 @@ function CreationDateField({ date, onCommit }: CreationDateFieldProps) {
 export function EditableInfo() {
     const { t } = useTranslation();
     const { session, apply } = useBankEditor();
+    const layout = useLayout();
     const info = useBankSnapshot(session.store, (s) => s.info);
 
     function setInfo<K extends keyof SoundBankInfoData>(
@@ -146,20 +148,31 @@ export function EditableInfo() {
     // SF2 saves write the subject at the end of the comment, and both must fit in one text
     const subjectLength = info.subject ? info.subject.length + 1 : 0;
 
+    const nameInput = (
+        <WaitingInput
+            className={"pretty_input hover_brightness"}
+            id={"INAM"}
+            aria-label={t("bankInfo.name")}
+            maxLength={INFO_TEXT_LENGTH}
+            onCommit={(name) => {
+                setInfo("name", name);
+                return name;
+            }}
+            value={info.name}
+            placeholder={t("bankInfo.name")}
+        />
+    );
+
     return (
         <div className={"editable"}>
-            <WaitingInput
-                className={"pretty_input hover_brightness"}
-                id={"INAM"}
-                aria-label={t("bankInfo.name")}
-                maxLength={INFO_TEXT_LENGTH}
-                onCommit={(name) => {
-                    setInfo("name", name);
-                    return name;
-                }}
-                value={info.name}
-                placeholder={t("bankInfo.name")}
-            />
+            {layout === "phone" ? (
+                <span className={"phone_info_field"}>
+                    <label htmlFor={"INAM"}>{t("bankInfo.name")}</label>
+                    {nameInput}
+                </span>
+            ) : (
+                nameInput
+            )}
 
             <div className={"fields"}>
                 {getTextField("engineer", "IENG", t("bankInfo.engineer"))}
@@ -172,6 +185,9 @@ export function EditableInfo() {
                 {getTextField("subject", "ISBJ", t("bankInfo.subject"))}
             </div>
             <div className={"comment"}>
+                {layout === "phone" ? (
+                    <label htmlFor={"ICMT"}>{t("bankInfo.description")}</label>
+                ) : null}
                 <WaitingTextArea
                     className={"pretty_input hover_brightness"}
                     id={"ICMT"}

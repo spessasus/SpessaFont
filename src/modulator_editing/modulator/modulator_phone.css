@@ -1,19 +1,25 @@
 :root[data-layout="phone"] .modulator_main:not(.modulator_list_button) {
     display: grid;
-    grid-template-columns: 7.5rem 1fr auto;
+    /* Each label sits above its field, so the selects get the whole card width and show their values */
+    grid-template-columns: auto minmax(0, 1fr) auto;
     grid-template-areas:
         "number note delete"
-        "srcLabel src srcCurve"
-        "secLabel sec secCurve"
-        "amtLabel amount amount"
-        "trLabel transform transform"
-        "dstLabel dest dest";
+        "srcLabel srcLabel srcCurve"
+        "src src src"
+        "secLabel secLabel secCurve"
+        "sec sec sec"
+        "amtLabel amtLabel amtLabel"
+        "amount amount amount"
+        "trLabel trLabel trLabel"
+        "transform transform transform"
+        "dstLabel dstLabel dstLabel"
+        "dest dest dest";
     align-items: center;
     column-gap: 0.5rem;
-    row-gap: 0;
+    row-gap: 0.25rem;
     /* Inset like the desktop cards, so the rounded corners and borders stay off the screen edge */
     margin: 0 var(--phone-gutter);
-    padding: 0.25rem 0.5rem;
+    padding: 0.25rem 0.5rem 0.5rem;
     box-sizing: border-box;
     width: calc(100% - 2 * var(--phone-gutter));
 }
@@ -52,9 +58,11 @@
 }
 
 :root[data-layout="phone"] .modulator_main .modulator_field_label {
-    min-height: var(--phone-row-height);
+    min-height: 0;
+    padding-top: 0.5rem;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
+    align-self: end;
     min-width: 0;
     overflow-wrap: anywhere;
     text-align: start;
@@ -170,6 +178,7 @@
     padding: 0.3rem;
 }
 
+:root[data-layout="phone"] .modulator_main .source_picker,
 :root[data-layout="phone"] .modulator_main .transform_selector,
 :root[data-layout="phone"] .modulator_main .destination_picker {
     text-align: start;

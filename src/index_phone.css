@@ -44,3 +44,8 @@
 :root[data-layout="phone"] .spessafont_main * {
     transition: none;
 }
+
+/* Android keeps :hover on the last tapped element, so the desktop hover brightness would stick */
+:root[data-layout="phone"] .hover_brightness:hover {
+    filter: none;
+}

@@ -121,7 +121,8 @@ export function useZoneCommands(element: BasicInstrument | BasicPreset) {
             const picked = await pickElement({
                 title: t("contextMenu.pickSample", { name }),
                 items: document.samples,
-                getLabel: (s) => s.name
+                getLabel: (s) => s.name,
+                kind: "sample"
             });
             if (picked) {
                 apply(
@@ -172,7 +173,8 @@ export function useZoneCommands(element: BasicInstrument | BasicPreset) {
             const picked = await pickElement({
                 title: t("soundBankLocale.pickZoneSample"),
                 items: document.samples,
-                getLabel: (s) => s.name
+                getLabel: (s) => s.name,
+                kind: "sample"
             });
             if (picked) apply(createSampleLinkActions(element, [picked]));
             return;

@@ -111,6 +111,11 @@
     min-height: var(--phone-touch);
 }
 
+:root[data-layout="phone"] .tool_dialog_check input[type="checkbox"] {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
 :root[data-layout="phone"] .dialog_field_message {
     color: var(--warning-color);
     font-size: var(--phone-text-caption);
@@ -156,4 +161,11 @@
     height: 3rem;
     padding: 0 var(--phone-gutter);
     font-size: var(--phone-text-body);
+}
+
+/* Sample names are monospace like in the lists, instrument and preset names are not */
+:root[data-layout="phone"]
+    .element_picker_list[data-kind="sample"]
+    .element_picker_item {
+    font-family: "JetBrains Mono", "Monospaced", monospace;
 }

@@ -159,7 +159,8 @@ export function useSampleEdits(sample: BasicSample, view: SampleView) {
                 ...matches,
                 ...free.filter((other) => !matches.includes(other))
             ],
-            getLabel: (other) => other.name
+            getLabel: (other) => other.name,
+            kind: "sample"
         });
         const partner = picked && lookup.sample(picked.id);
         if (!partner) {

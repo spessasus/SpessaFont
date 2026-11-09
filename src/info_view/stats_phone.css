@@ -67,14 +67,24 @@
 }
 
 :root[data-layout="phone"] .sound_bank_info .stats .stat_group > .stat_label {
+    /* The desktop span rule gives the label no box, so it gets one to line up with the rows */
+    display: block;
+    padding: 0.5rem var(--phone-gutter);
+    border-bottom: 1px solid var(--track-border-color);
     font-weight: 600;
     color: var(--font-color);
+}
+
+:root[data-layout="phone"] .sound_bank_info .stats .stat_group > .stat_span {
+    padding-inline: var(--phone-gutter);
 }
 
 :root[data-layout="phone"] .sound_bank_info .stats .powered_by {
     margin-top: 0;
     border: 0;
-    padding: 0.3rem;
+    padding: 0.3rem calc(var(--phone-gutter) + 1px);
+    /* The long name moves under the label when they do not fit one line */
+    flex-wrap: wrap;
 }
 
 /* A value under its label, so Sound Engine and Software fit half a row */
@@ -93,4 +103,20 @@
 
 :root[data-layout="phone"] .sound_bank_info .stats .stat_group {
     text-align: start;
+}
+
+/* A last single stat with no partner in its row takes the whole row */
+:root[data-layout="phone"]
+    .sound_bank_info
+    .stats
+    > span.single_stat:nth-child(odd of span.single_stat):nth-last-child(
+        1 of span.single_stat
+    ) {
+    grid-column: 1 / -1;
+}
+
+/* Android keeps :hover on the last tapped element, so the brightness would stick */
+:root[data-layout="phone"] .sound_bank_info .single_stat:hover,
+:root[data-layout="phone"] .sound_bank_info .stats h1:hover {
+    filter: none;
 }

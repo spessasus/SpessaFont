@@ -146,4 +146,25 @@ describe("ElementPicker", () => {
         }
         focus.mockRestore();
     });
+
+    it("marks a sample list for the phone's monospace names only", () => {
+        const options = [{ label: "Sample", index: 0 }];
+        for (const layout of ["desktop", "phone"] as const) {
+            const view = render(
+                <LayoutContext value={layout}>
+                    <ElementPicker
+                        title={"Pick"}
+                        kind={"sample"}
+                        options={options}
+                        onAnswer={vi.fn()}
+                    />
+                </LayoutContext>
+            );
+            const list = screen.getByRole("listbox", { hidden: true });
+            expect(
+                list instanceof HTMLElement ? list.dataset.kind : "missing"
+            ).toBe(layout === "phone" ? "sample" : undefined);
+            view.unmount();
+        }
+    });
 });

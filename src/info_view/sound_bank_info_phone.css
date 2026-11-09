@@ -23,7 +23,8 @@
 }
 
 /* Label above the field */
-:root[data-layout="phone"] .sound_bank_info .fields > span {
+:root[data-layout="phone"] .sound_bank_info .fields > span,
+:root[data-layout="phone"] .sound_bank_info .phone_info_field {
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -31,14 +32,17 @@
     width: 100%;
 }
 
-:root[data-layout="phone"] .sound_bank_info .fields > span label {
+:root[data-layout="phone"] .sound_bank_info .fields > span label,
+:root[data-layout="phone"] .sound_bank_info .phone_info_field label,
+:root[data-layout="phone"] .sound_bank_info .comment label {
     margin: 0;
     font-size: var(--phone-text-secondary);
     color: var(--muted-font-color);
     text-align: start;
 }
 
-:root[data-layout="phone"] .sound_bank_info .fields > span input {
+:root[data-layout="phone"] .sound_bank_info .fields > span input,
+:root[data-layout="phone"] .sound_bank_info .phone_info_field input {
     box-sizing: border-box;
     width: 100%;
     min-height: var(--phone-touch);
@@ -49,12 +53,13 @@
 :root[data-layout="phone"] .sound_bank_info #INAM {
     box-sizing: border-box;
     min-height: var(--phone-touch);
-    font-size: 1.5rem;
+    font-size: var(--phone-text-heading);
     text-align: start;
 }
 
 :root[data-layout="phone"] .sound_bank_info .comment {
     flex: none;
+    gap: 0.25rem;
 }
 
 :root[data-layout="phone"] .sound_bank_info .comment textarea {
