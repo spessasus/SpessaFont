@@ -14,6 +14,7 @@ import { BACK_LEVELS, hasBackBehindNavigator } from "./back_stack.ts";
 import {
     getDrillDepth,
     getNavigatorPresence,
+    getOpenNavigatorAction,
     INITIAL_PHONE_SHELL_STATE,
     phoneShellReducer
 } from "./phone_shell_state.ts";
@@ -81,7 +82,7 @@ export function PhoneShell({
         () => ({
             state,
             dispatch,
-            presence: getNavigatorPresence(state),
+            presence: getNavigatorPresence(state, isLandscape),
             isLandscape
         }),
         [state, isLandscape]
@@ -116,8 +117,10 @@ export function PhoneShell({
         onCloseSettings();
         return true;
     });
+    const { presence } = shellContext;
+    // The docked navigator covers nothing, so back passes it by
     useBackHandler(
-        state.isNavigatorOpen,
+        presence.isCoveringEditor,
         BACK_LEVELS.closeNavigator,
         (stack) => {
             if (!hasBackBehindNavigator(stack)) {
@@ -127,12 +130,16 @@ export function PhoneShell({
             return true;
         }
     );
-    // The lists are the parent of every editor
+    // The lists are the parent of every editor. A shown dock passes, so the next press leaves
+    const openNavigatorAction = getOpenNavigatorAction(state, isLandscape);
     useBackHandler(
-        !state.isNavigatorOpen && activeSession !== undefined,
+        openNavigatorAction !== undefined && activeSession !== undefined,
         BACK_LEVELS.openNavigator,
         () => {
-            dispatch({ type: "openNavigator" });
+            if (openNavigatorAction === undefined) {
+                return false;
+            }
+            dispatch(openNavigatorAction);
             return true;
         }
     );
@@ -177,6 +184,13 @@ export function PhoneShell({
             <div
                 className={"spessafont_main phone_shell"}
                 style={{ "--phone-drawer-offset": drawerOffset }}
+                data-dock={
+                    isLandscape && activeSession
+                        ? presence.isShown
+                            ? "expanded"
+                            : "collapsed"
+                        : undefined
+                }
             >
                 <Toaster
                     position={"bottom-center"}
@@ -194,7 +208,7 @@ export function PhoneShell({
                         isCovered={
                             areSettingsShown ||
                             (activeSession !== undefined &&
-                                state.isNavigatorOpen)
+                                presence.isCoveringEditor)
                         }
                         overflow={
                             <OverflowSheet

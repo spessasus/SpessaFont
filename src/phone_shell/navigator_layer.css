@@ -121,3 +121,57 @@
     resize: none;
     overflow: hidden;
 }
+
+/*
+ * Landscape docks the lists at the start, the whole height of the screen, with the app bar, the
+ * editor and the drawer beside them (spec 14.2, the 06_landscape mock-up). Collapsed, only the
+ * strip with the expand button shows. The panel slides out and is hidden after its
+ * transition, never display: none
+ */
+:root[data-layout="phone"][data-orientation="landscape"] .navigator_layer {
+    /* Down over the drawer's rows, which move aside */
+    inset: 0 auto calc(-1 * var(--phone-drawer-offset)) 0;
+    width: var(--phone-dock-width);
+    transform: none;
+    visibility: visible;
+    transition: none;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .navigator_layer[data-open="false"] {
+    width: var(--phone-touch);
+}
+
+:root[data-layout="phone"][data-orientation="landscape"] .navigator_panel {
+    flex: none;
+    width: var(--phone-dock-width);
+    transition: transform 0.2s ease-out;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .navigator_layer[data-open="false"]
+    .navigator_panel {
+    position: absolute;
+    inset: 0 auto 0 0;
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition:
+        transform 0.2s ease-out,
+        visibility 0s linear 0.2s;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"] .navigator_strip {
+    display: flex;
+    justify-content: center;
+    flex: none;
+    width: var(--phone-touch);
+    padding-top: calc((var(--phone-row-height) - var(--phone-touch)) / 2);
+    background: var(--darker-color-start);
+    border-right: solid 1px var(--border-color);
+}
+
+:root[data-layout="phone"][data-orientation="landscape"] .navigator_strip svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-top: calc((var(--phone-touch) - 1.5rem) / 2);
+}

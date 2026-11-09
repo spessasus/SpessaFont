@@ -13,7 +13,9 @@ import { useContextMenu } from "../context_menu/context_menu_context.ts";
 import {
     ChevronRightIcon,
     PinIcon,
-    PlusIcon
+    PlusIcon,
+    SidebarCollapseIcon,
+    SidebarExpandIcon
 } from "../utils/icons/app_icons.tsx";
 import { InfoIcon } from "../utils/icons/file_icons.tsx";
 import { usePhoneShell } from "./phone_shell_context.ts";
@@ -55,10 +57,10 @@ export function NavigatorLayer({
     onNewFile
 }: NavigatorLayerProps) {
     const { t } = useTranslation();
-    const { state, dispatch } = usePhoneShell();
+    const { state, dispatch, presence, isLandscape } = usePhoneShell();
     const context = useBankEditor();
     const { openMenu } = useContextMenu();
-    const isOpen = state.isNavigatorOpen;
+    const isOpen = presence.isShown;
     const tabId = context.session.id;
 
     const close = () => dispatch({ type: "closeNavigator" });
@@ -83,8 +85,21 @@ export function NavigatorLayer({
         }
     };
 
-    // The selection bar takes the place of this bar in selection mode
-    const titleBar = (
+    const toggleCollapsed = () => dispatch({ type: "toggleCollapsed" });
+    // The selection bar takes the place of this bar in selection mode. Docked in landscape,
+    // the lists cover nothing, so there is nothing to close or keep open
+    const titleBar = isLandscape ? (
+        <PhoneLayerHeader title={t("phoneLocale.navigator.title")}>
+            <button
+                type={"button"}
+                className={"plain_button navigator_button"}
+                aria-label={t("phoneLocale.navigator.collapse")}
+                onClick={toggleCollapsed}
+            >
+                <SidebarCollapseIcon />
+            </button>
+        </PhoneLayerHeader>
+    ) : (
         <PhoneLayerHeader
             icon={"close"}
             buttonLabel={t("phoneLocale.navigator.close")}
@@ -150,9 +165,15 @@ export function NavigatorLayer({
         </>
     );
 
+    // One tree for both orientations, so a rotation keeps the lists and their scroll. Docked,
+    // only the panel goes inert, as the strip next to it expands it
     return (
-        <div className={"navigator_layer"} data-open={isOpen} inert={!isOpen}>
-            <div className={"navigator_panel"}>
+        <div
+            className={"navigator_layer"}
+            data-open={isOpen}
+            inert={!isLandscape && !isOpen}
+        >
+            <div className={"navigator_panel"} inert={isLandscape && !isOpen}>
                 <BankEditorContext value={listContext}>
                     {/* The closed lists must not act on keys either */}
                     <MenuList
@@ -164,14 +185,27 @@ export function NavigatorLayer({
                     />
                 </BankEditorContext>
             </div>
-            {/* The header's close button is the one for the keyboard */}
-            <button
-                type={"button"}
-                className={"plain_button navigator_scrim"}
-                tabIndex={-1}
-                aria-label={t("phoneLocale.navigator.close")}
-                onClick={close}
-            />
+            {isLandscape ? (
+                isOpen ? null : (
+                    <button
+                        type={"button"}
+                        className={"plain_button navigator_strip"}
+                        aria-label={t("phoneLocale.navigator.expand")}
+                        onClick={toggleCollapsed}
+                    >
+                        <SidebarExpandIcon />
+                    </button>
+                )
+            ) : (
+                // The header's close button is the one for the keyboard
+                <button
+                    type={"button"}
+                    className={"plain_button navigator_scrim"}
+                    tabIndex={-1}
+                    aria-label={t("phoneLocale.navigator.close")}
+                    onClick={close}
+                />
+            )}
         </div>
     );
 }

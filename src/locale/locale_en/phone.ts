@@ -45,7 +45,9 @@ export const PhoneLocale = {
         overview: "Overview",
         unusedNote: "Showing elements nothing uses",
         addBank: "Open or create a sound bank",
-        openBanks: "Open sound banks"
+        openBanks: "Open sound banks",
+        collapse: "Collapse the lists",
+        expand: "Expand the lists"
     },
     selection: {
         select: "Select…",

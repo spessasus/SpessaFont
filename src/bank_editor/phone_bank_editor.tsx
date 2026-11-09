@@ -30,7 +30,7 @@ export function PhoneBankEditor({
     onOpenFile,
     onNewFile
 }: PhoneBankEditorProps) {
-    const { state, dispatch } = usePhoneShell();
+    const { dispatch, presence } = usePhoneShell();
     const drillTo = getDrillTo(
         session.id,
         selectedView,
@@ -51,10 +51,10 @@ export function PhoneBankEditor({
 
     return (
         <BankEditorContext value={context}>
-            {/* The open navigator covers the editor */}
+            {/* The open navigator covers the editor in portrait */}
             <div
                 className={"bank_editor_content"}
-                inert={state.isNavigatorOpen}
+                inert={presence.isCoveringEditor}
             >
                 <ElementBar
                     view={view}

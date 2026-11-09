@@ -45,7 +45,9 @@ export const PhoneLocale = {
         overview: "Przegląd",
         unusedNote: "Pokazano elementy, których nic nie używa",
         addBank: "Otwórz lub utwórz bank dźwięków",
-        openBanks: "Otwarte banki dźwięków"
+        openBanks: "Otwarte banki dźwięków",
+        collapse: "Zwiń listy",
+        expand: "Rozwiń listy"
     },
     selection: {
         select: "Zaznacz…",

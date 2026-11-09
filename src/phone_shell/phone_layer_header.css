@@ -39,6 +39,11 @@
     text-align: start;
 }
 
+/* Without a leading button the title starts at the gutter */
+:root[data-layout="phone"] .phone_layer_header_title:first-child {
+    padding-inline-start: calc(var(--phone-gutter) - var(--flex-gap));
+}
+
 /* The italic bank name in the default modulators title would get the global font size otherwise */
 :root[data-layout="phone"] .phone_layer_header_title * {
     font-size: inherit;

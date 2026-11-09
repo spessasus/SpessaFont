@@ -20,7 +20,7 @@ export function createShellContext(
     return {
         state,
         dispatch,
-        presence: getNavigatorPresence(state),
+        presence: getNavigatorPresence(state, isLandscape),
         isLandscape
     };
 }

@@ -198,3 +198,19 @@
 :root[data-layout="phone"] .menu_list_main .menu_list_empty {
     font-size: var(--phone-text-secondary);
 }
+
+/* The docked lists are narrow, so the field gives way to the clear button and Unused */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .menu_list_main
+    .list_search_bar
+    input {
+    flex: 1 1 0;
+    width: 0;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .menu_list_main
+    .list_search_bar
+    button {
+    flex: none;
+}

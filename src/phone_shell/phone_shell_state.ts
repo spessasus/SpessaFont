@@ -3,6 +3,11 @@ export type DrawerState = "collapsed" | "keys";
 export interface PhoneShellState {
     isNavigatorOpen: boolean;
     isNavigatorPinned: boolean;
+    /**
+     * Landscape only: the docked navigator is folded to its strip. `isNavigatorOpen` keeps
+     * meaning open in portrait, so a rotation back shows what portrait had.
+     */
+    isNavigatorCollapsed: boolean;
     drawer: DrawerState;
     /**
      * Element changes made from inside the editor since the last pick in the navigator, per tab
@@ -14,6 +19,7 @@ export type PhoneShellAction =
     | { type: "openNavigator" }
     | { type: "closeNavigator" }
     | { type: "togglePinned" }
+    | { type: "toggleCollapsed" }
     | { type: "setDrawer"; drawer: DrawerState }
     | { type: "editorChange"; tabId: number }
     | { type: "navigatorPick"; tabId: number }
@@ -28,18 +34,46 @@ export interface NavigatorPresence {
     isCoveringEditor: boolean;
 }
 
+/**
+ * In portrait the open navigator covers the editor. In landscape it is docked beside the
+ * editor, so it shows unless collapsed and never covers it.
+ */
 export function getNavigatorPresence(
-    state: PhoneShellState
+    state: PhoneShellState,
+    isLandscape: boolean
 ): NavigatorPresence {
+    if (isLandscape) {
+        return {
+            isShown: !state.isNavigatorCollapsed,
+            isCoveringEditor: false
+        };
+    }
     return {
         isShown: state.isNavigatorOpen,
         isCoveringEditor: state.isNavigatorOpen
     };
 }
 
+/**
+ * What showing the lists takes, for back and the app bar title: opening them in portrait,
+ * expanding the collapsed dock in landscape. Undefined while they show.
+ */
+export function getOpenNavigatorAction(
+    state: PhoneShellState,
+    isLandscape: boolean
+): PhoneShellAction | undefined {
+    if (isLandscape) {
+        return state.isNavigatorCollapsed
+            ? { type: "toggleCollapsed" }
+            : undefined;
+    }
+    return state.isNavigatorOpen ? undefined : { type: "openNavigator" };
+}
+
 export const INITIAL_PHONE_SHELL_STATE = {
     isNavigatorOpen: false,
     isNavigatorPinned: false,
+    isNavigatorCollapsed: false,
     drawer: "collapsed",
     drillDepth: new Map<number, number>()
 } satisfies PhoneShellState;
@@ -67,6 +101,12 @@ export function phoneShellReducer(
         }
         case "togglePinned": {
             return { ...state, isNavigatorPinned: !state.isNavigatorPinned };
+        }
+        case "toggleCollapsed": {
+            return {
+                ...state,
+                isNavigatorCollapsed: !state.isNavigatorCollapsed
+            };
         }
         case "setDrawer": {
             return { ...state, drawer: action.drawer };

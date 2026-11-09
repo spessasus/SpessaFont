@@ -43,16 +43,27 @@ const DIALOGS: DialogsAPI = {
     openDialog: () => Promise.resolve(undefined)
 };
 
-function renderLayer(isOpen: boolean, isFirstSampleShown = false) {
+function renderLayer(
+    isOpen: boolean,
+    isFirstSampleShown = false,
+    isLandscape = false,
+    isCollapsed = false
+) {
     const session = createTestSession();
     const view = isFirstSampleShown ? session.document.samples[0] : "info";
     const dispatch = vi.fn();
     const onViewChange = vi.fn();
-    const state = { ...INITIAL_PHONE_SHELL_STATE, isNavigatorOpen: isOpen };
+    const state = {
+        ...INITIAL_PHONE_SHELL_STATE,
+        isNavigatorOpen: isOpen,
+        isNavigatorCollapsed: isCollapsed
+    };
     const result = render(
         <LayoutContext value="phone">
             <BackStackProvider>
-                <PhoneShellContext value={createShellContext(state, dispatch)}>
+                <PhoneShellContext
+                    value={createShellContext(state, dispatch, isLandscape)}
+                >
                     <ClipboardProvider>
                         <DialogsContext value={DIALOGS}>
                             <ContextMenuProvider>
@@ -162,5 +173,80 @@ describe("NavigatorLayer", () => {
         fireEvent.click(scrim);
         expect(dispatch).toHaveBeenCalledWith({ type: "closeNavigator" });
         session.close();
+    });
+
+    describe("docked in landscape", () => {
+        it("collapses from its header and expands from the strip", () => {
+            const shown = renderLayer(false, false, true);
+            fireEvent.click(
+                screen.getByRole("button", {
+                    name: "phoneLocale.navigator.collapse"
+                })
+            );
+            expect(shown.dispatch).toHaveBeenLastCalledWith({
+                type: "toggleCollapsed"
+            });
+            expect(
+                screen.queryByRole("button", {
+                    name: "phoneLocale.navigator.expand"
+                })
+            ).toBeNull();
+            shown.session.close();
+            cleanup();
+
+            const { session, dispatch, container } = renderLayer(
+                false,
+                false,
+                true,
+                true
+            );
+            expect(
+                container
+                    .querySelector(".navigator_panel")
+                    ?.hasAttribute("inert")
+            ).toBe(true);
+            fireEvent.click(
+                screen.getByRole("button", {
+                    name: "phoneLocale.navigator.expand"
+                })
+            );
+            expect(dispatch).toHaveBeenLastCalledWith({
+                type: "toggleCollapsed"
+            });
+            session.close();
+        });
+
+        it("renders no close, pin or scrim when docked", () => {
+            const { session, container } = renderLayer(false, false, true);
+            expect(
+                screen.queryByRole("button", {
+                    name: "phoneLocale.navigator.close"
+                })
+            ).toBeNull();
+            expect(
+                screen.queryByRole("button", {
+                    name: "phoneLocale.navigator.keepOpen"
+                })
+            ).toBeNull();
+            expect(container.querySelector(".navigator_scrim")).toBeNull();
+            session.close();
+        });
+
+        it("keeps the dock open on a pick", () => {
+            const { session, onViewChange, container } = renderLayer(
+                false,
+                false,
+                true
+            );
+            fireEvent.click(
+                screen.getByRole("button", {
+                    name: "phoneLocale.navigator.overview"
+                })
+            );
+            expect(onViewChange).toHaveBeenCalledWith("info");
+            const panel = container.querySelector(".navigator_panel");
+            expect(panel?.hasAttribute("inert")).toBe(false);
+            session.close();
+        });
     });
 });
