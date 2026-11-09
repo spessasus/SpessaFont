@@ -306,3 +306,13 @@
         );
     }
 }
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    :has(
+        > .editor_sheet .piano_capture_bar,
+        > .editor_sheet .cell_sheet_key_span
+    )
+    > .zone_table_wrapper {
+    flex: 0 1 0;
+    min-height: 0;
+}

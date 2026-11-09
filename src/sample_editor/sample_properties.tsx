@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import "./sample_properties_phone.css";
 import type { SampleView } from "../core_backend/entity_views.ts";
 import { useTranslation } from "react-i18next";
@@ -37,6 +38,7 @@ export function SampleProperties({
     const { t } = useTranslation();
     const layout = useLayout();
     const { loopStart, loopEnd, originalKey, length } = sample;
+    const originalKeyRef = useRef<HTMLDivElement>(null);
     // With the octave, C4 being middle C (60) as on the keyboard
     const noteName = `${midiNoteToPitchClass(originalKey)}${Math.floor(originalKey / 12) - 1}`;
     return (
@@ -88,7 +90,7 @@ export function SampleProperties({
                 </>
             )}
 
-            <div className={"sample_editor_field"}>
+            <div ref={originalKeyRef} className={"sample_editor_field"}>
                 {/* The note goes in the label, in the field it would count toward the digits */}
                 <span>{`${t("sampleLocale.originalKey")} (${noteName})`}</span>
                 <WaitingInput
@@ -103,7 +105,15 @@ export function SampleProperties({
                 />
             </div>
             {layout === "phone" ? (
-                <OriginalKeyFromPiano onKey={edits.setOriginalKey} />
+                <OriginalKeyFromPiano
+                    onKey={(key) => {
+                        edits.setOriginalKey(key);
+                        // The capture may have scrolled the field away (landscape)
+                        originalKeyRef.current?.scrollIntoView({
+                            block: "nearest"
+                        });
+                    }}
+                />
             ) : null}
 
             <div className={"sample_editor_field"}>

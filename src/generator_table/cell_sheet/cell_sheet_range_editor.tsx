@@ -1,4 +1,5 @@
-import { useContext, useState } from "react";
+import { useContext, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import type { ReactNode, SubmitEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { SegmentedControl } from "../../fancy_inputs/segmented_control/segmented_control.tsx";
@@ -78,6 +79,8 @@ export function CellSheetRangeEditor({
     );
     const [shift, setShift] = useState("");
     const [isCapturing, setIsCapturing] = useState(false);
+    // The Low and High row, brought into view when the played keys fill it
+    const fieldsRef = useRef<HTMLDivElement>(null);
     if (isCapturing && isPianoBusy) {
         setIsCapturing(false);
     }
@@ -151,10 +154,16 @@ export function CellSheetRangeEditor({
                     count={2}
                     prompt={t("phoneLocale.capture.playLowHigh")}
                     onDone={([first, second]) => {
-                        setIsCapturing(false);
-                        // Fills the fields only, Apply stays the user's step
-                        setLow(String(Math.min(first, second)));
-                        setHigh(String(Math.max(first, second)));
+                        // Rendered first, so the scroll sees the sheet without the bar
+                        flushSync(() => {
+                            setIsCapturing(false);
+                            // Fills the fields only, Apply stays the user's step
+                            setLow(String(Math.min(first, second)));
+                            setHigh(String(Math.max(first, second)));
+                        });
+                        // The end, as a landscape sheet can be shorter than the row, and then
+                        // the inputs matter more than their labels
+                        fieldsRef.current?.scrollIntoView({ block: "end" });
                     }}
                     onCancel={() => setIsCapturing(false)}
                 />
@@ -185,17 +194,22 @@ export function CellSheetRangeEditor({
                         }
                         aria-pressed={isCapturing}
                         onClick={() => {
-                            // Only a start shows the keys, a cancel leaves the drawer
-                            if (shell && !isCapturing) {
+                            // A cancel leaves the drawer as it is
+                            if (isCapturing) {
+                                setIsCapturing(false);
+                                return;
+                            }
+                            if (shell) {
                                 openKeysForCapture(
                                     shell.state.drawer,
                                     shell.dispatch
                                 );
                             }
-                            if (!isCapturing) {
-                                onCaptureStart();
-                            }
-                            setIsCapturing(!isCapturing);
+                            onCaptureStart();
+                            flushSync(() => setIsCapturing(true));
+                            // The fields go to the bottom, so the sticky bar covers the
+                            // mode row and not them
+                            fieldsRef.current?.scrollIntoView({ block: "end" });
                         }}
                     >
                         <PianoKeysIcon />
@@ -204,7 +218,7 @@ export function CellSheetRangeEditor({
                     </button>
                 ) : null}
             </div>
-            <div className={"cell_sheet_editor_row"}>
+            <div ref={fieldsRef} className={"cell_sheet_editor_row"}>
                 {mode === "set" ? (
                     <>
                         {renderField(

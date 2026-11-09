@@ -23,9 +23,9 @@
 :root[data-layout="phone"] .piano_capture_prompt {
     flex: 1;
     min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    /* Wraps instead of cutting the instruction on a narrow phone */
+    padding-block: 0.25rem;
+    line-height: 1.25;
     text-align: start;
     font-size: var(--phone-text-body);
 }

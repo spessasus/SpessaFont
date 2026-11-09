@@ -121,7 +121,7 @@ describe("SampleProperties", () => {
         ).toBeNull();
     });
 
-    it("cancels on a second tap without opening the keys", () => {
+    it("cancels from the capture bar without opening the keys", () => {
         const dispatch = vi.fn();
         const setOriginalKey = vi.fn();
         render(
@@ -154,9 +154,18 @@ describe("SampleProperties", () => {
         });
         fireEvent.click(button);
         expect(dispatch).toHaveBeenCalledOnce();
-        fireEvent.click(button);
+        // The bar takes the button's place while it waits
+        expect(button.isConnected).toBe(false);
+        fireEvent.click(
+            screen.getByRole("button", { name: "phoneLocale.capture.cancel" })
+        );
         // The cancel leaves the drawer as it is
         expect(dispatch).toHaveBeenCalledOnce();
+        expect(
+            screen.getByRole("button", {
+                name: "phoneLocale.cellSheet.setFromPiano"
+            })
+        ).toBeTruthy();
         act(() => {
             handlers.current?.({
                 type: "noteOn",

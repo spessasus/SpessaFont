@@ -63,8 +63,3 @@
     width: 1.5rem;
     height: 1.5rem;
 }
-
-:root[data-layout="phone"] .original_key_from_piano[aria-pressed="true"] {
-    background: var(--primary-color);
-    border-color: var(--border-color);
-}

@@ -17,34 +17,30 @@ export function OriginalKeyFromPiano({ onKey }: OriginalKeyFromPianoProps) {
     const [isCapturing, setIsCapturing] = useState(false);
     // Not usePhoneShell, which throws where the properties render without the shell (tests)
     const shell = useContext(PhoneShellContext);
-    return (
-        <>
-            <button
-                type={"button"}
-                className={"pretty_button original_key_from_piano"}
-                aria-pressed={isCapturing}
-                onClick={() => {
-                    // Only a start shows the keys, a cancel leaves the drawer
-                    if (shell && !isCapturing) {
-                        openKeysForCapture(shell.state.drawer, shell.dispatch);
-                    }
-                    setIsCapturing(!isCapturing);
-                }}
-            >
-                <PianoKeysIcon />
-                <span>{t("phoneLocale.cellSheet.setFromPiano")}</span>
-            </button>
-            {isCapturing ? (
-                <PianoCaptureBar
-                    count={1}
-                    prompt={t("phoneLocale.capture.playKey")}
-                    onDone={([key]) => {
-                        setIsCapturing(false);
-                        onKey(key);
-                    }}
-                    onCancel={() => setIsCapturing(false)}
-                />
-            ) : null}
-        </>
+    // While it waits the bar takes the button's place, its Cancel ends the capture
+    return isCapturing ? (
+        <PianoCaptureBar
+            count={1}
+            prompt={t("phoneLocale.capture.playKey")}
+            onDone={([key]) => {
+                setIsCapturing(false);
+                onKey(key);
+            }}
+            onCancel={() => setIsCapturing(false)}
+        />
+    ) : (
+        <button
+            type={"button"}
+            className={"pretty_button original_key_from_piano"}
+            onClick={() => {
+                if (shell) {
+                    openKeysForCapture(shell.state.drawer, shell.dispatch);
+                }
+                setIsCapturing(true);
+            }}
+        >
+            <PianoKeysIcon />
+            <span>{t("phoneLocale.cellSheet.setFromPiano")}</span>
+        </button>
     );
 }

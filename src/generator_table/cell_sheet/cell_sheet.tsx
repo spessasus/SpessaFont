@@ -55,6 +55,9 @@ import { openKeysForCapture } from "../../phone_shell/open_keys_for_capture.ts";
 import { PhoneShellContext } from "../../phone_shell/phone_shell_context.ts";
 import { PianoKeysIcon } from "../../utils/icons/player_icons.tsx";
 
+// Short, as the toast sits over the sheet's buttons
+const PLAYED_SPAN_TOAST_MS = 2000;
+
 interface CellSheetProps {
     element: BasicPreset | BasicInstrument;
     /**
@@ -183,7 +186,8 @@ export function CellSheet({
                     count: 0,
                     low: lowName,
                     high: highName
-                })
+                }),
+                { duration: PLAYED_SPAN_TOAST_MS }
             );
             return;
         }
@@ -198,7 +202,8 @@ export function CellSheet({
                 count: found.length,
                 low: lowName,
                 high: highName
-            })
+            }),
+            { duration: PLAYED_SPAN_TOAST_MS }
         );
     };
 

@@ -65,12 +65,15 @@ export function PianoCaptureBar({
                 <PianoKeysIcon />
             </span>
             <span className={"piano_capture_prompt"}>{prompt}</span>
-            <span className={"piano_capture_progress"} role={"status"}>
-                {t("phoneLocale.capture.progress", {
-                    played: playedCount,
-                    count
-                })}
-            </span>
+            {/* One key needs no count */}
+            {count > 1 ? (
+                <span className={"piano_capture_progress"} role={"status"}>
+                    {t("phoneLocale.capture.progress", {
+                        played: playedCount,
+                        count
+                    })}
+                </span>
+            ) : null}
             <button
                 type={"button"}
                 className={"pretty_button piano_capture_cancel"}

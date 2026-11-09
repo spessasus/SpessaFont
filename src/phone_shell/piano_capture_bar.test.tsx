@@ -36,7 +36,7 @@ function noteOn(channel: number, midiNote: number) {
     });
 }
 
-function renderBar() {
+function renderBar(count: 1 | 2 = 2) {
     const onDone = vi.fn();
     const onCancel = vi.fn();
     const stack = new BackStack();
@@ -50,7 +50,7 @@ function renderBar() {
                 }}
             >
                 <PianoCaptureBar
-                    count={2}
+                    count={count}
                     prompt={"Play two keys"}
                     onDone={onDone}
                     onCancel={onCancel}
@@ -66,6 +66,16 @@ describe("PianoCaptureBar", () => {
         handlers.current = undefined;
     });
     afterEach(cleanup);
+
+    it("shows the count only when it asks for more than one key", () => {
+        renderBar(1);
+        expect(screen.queryByRole("status")).toBeNull();
+        cleanup();
+        renderBar(2);
+        expect(screen.getByRole("status").textContent).toBe(
+            "phoneLocale.capture.progress"
+        );
+    });
 
     it("calls onDone with two keys in played order", () => {
         const { onDone } = renderBar();

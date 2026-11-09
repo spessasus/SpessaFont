@@ -176,8 +176,9 @@
 }
 
 :root[data-layout="phone"] .cell_sheet_text_button {
+    min-width: var(--phone-touch);
     min-height: var(--phone-touch);
-    padding: 0 1rem;
+    padding: 0 0.625rem;
     font-size: var(--phone-text-button);
 }
 
@@ -477,6 +478,8 @@
     display: flex;
     flex-wrap: wrap;
     gap: var(--flex-gap);
+    /* The three buttons fit one row at 360 */
+    margin-inline: -0.5rem;
 }
 
 :root[data-layout="phone"] .cell_sheet_piano {
@@ -574,4 +577,22 @@
     font-size: var(--phone-text-small);
     font-weight: 600;
     color: var(--font-color);
+}
+
+/* The piano buttons are square touch targets */
+:root[data-layout="phone"] .cell_sheet_piano:not(.cell_sheet_piano_labelled) {
+    width: var(--phone-touch);
+    padding: 0;
+}
+
+/* Landscape: the Global line comes first, above the fold of the short sheet */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .cell_sheet_ignore_global {
+    order: -1;
+    padding-block: 0;
+}
+
+/* Keys…: the hint is the first thing to go when the sheet is short */
+:root[data-layout="phone"][data-orientation="landscape"] .cell_sheet_key_hint {
+    display: none;
 }
