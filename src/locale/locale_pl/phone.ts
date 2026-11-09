@@ -175,7 +175,23 @@ export const PhoneLocale = {
         high: "Do",
         shift: "Przesuń",
         unset: "−",
-        unsetName: "Nie ustawiono"
+        unsetName: "Nie ustawiono",
+        keys: "Klawisze…",
+        playKeys: "Zagraj dwa klawisze",
+        keySpanHint:
+            "Zaznacz każdą strefę, której zakres klawiszy nachodzi na wybrany zakres.",
+        keySpanLabel: "Klawisze od {{low}} do {{high}}",
+        spanZones_one: "{{count}} strefa: {{names}}",
+        spanZones_few: "{{count}} strefy: {{names}}",
+        spanZones_many: "{{count}} stref: {{names}}",
+        spanZones_other: "{{count}} stref: {{names}}",
+        addToChecked: "Dodaj do zaznaczonych",
+        checkThem: "Zaznacz je",
+        back: "Wstecz",
+        playedSpan_one: "{{count}} strefa gra od {{low}} do {{high}}",
+        playedSpan_few: "{{count}} strefy grają od {{low}} do {{high}}",
+        playedSpan_many: "{{count}} stref gra od {{low}} do {{high}}",
+        playedSpan_other: "{{count}} stref gra od {{low}} do {{high}}"
     },
     sample: {
         loop: "Pętla",

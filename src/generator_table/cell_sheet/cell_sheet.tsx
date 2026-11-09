@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useContext, useId, useState } from "react";
 import type { MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
@@ -42,6 +42,14 @@ import {
 } from "./cell_sheet_text.ts";
 import { CellSheetZoneList } from "./cell_sheet_zone_list.tsx";
 import "./cell_sheet_phone.css";
+import { CellSheetKeySpan } from "./cell_sheet_key_span.tsx";
+import { findColumnsInSpan } from "./cell_sheet_keys.ts";
+import { getColumnKeyRange } from "../zone_finder.ts";
+import { getNoteName } from "../../keyboard/keyboard/piano_keys.ts";
+import { PianoCaptureBar } from "../../phone_shell/piano_capture_bar.tsx";
+import { openKeysForCapture } from "../../phone_shell/open_keys_for_capture.ts";
+import { PhoneShellContext } from "../../phone_shell/phone_shell_context.ts";
+import { PianoKeysIcon } from "../../utils/icons/player_icons.tsx";
 
 interface CellSheetProps {
     element: BasicPreset | BasicInstrument;
@@ -90,6 +98,20 @@ export function CellSheet({
     // Lives here so the editor can remount on a changed range and keep its mode
     const [rangeMode, setRangeMode] = useState<"set" | "shift">("set");
     const { generator } = row;
+    // Keys… and a piano capture belong to the row they started on, another row drops them
+    const [keySpanRow, setKeySpanRow] = useState<GeneratorType | null>(null);
+    const [captureRow, setCaptureRow] = useState<GeneratorType | null>(null);
+    // Cleared on the render after a row change, so coming back to the row starts fresh
+    if (keySpanRow !== null && keySpanRow !== generator) {
+        setKeySpanRow(null);
+    }
+    if (captureRow !== null && captureRow !== generator) {
+        setCaptureRow(null);
+    }
+    const isKeySpanShown = keySpanRow === generator;
+    const isCapturing = captureRow === generator;
+    // Not usePhoneShell, which throws where the sheet renders without the shell (its tests)
+    const shell = useContext(PhoneShellContext);
     const checkedColumns = columns.filter((c) => checkedIds.has(c.zone.id));
     const commands = useCellCommands(element, row, columns, checkedColumns);
     const context: CellContext = {
@@ -144,6 +166,44 @@ export function CellSheet({
         }
         onCheckedChange(ids);
     };
+
+    const handlePlayedSpan = ([low, high]: readonly number[]) => {
+        setCaptureRow(null);
+        const found = findColumnsInSpan(columns, globalZone, low, high);
+        const lowName = getNoteName(Math.min(low, high));
+        const highName = getNoteName(Math.max(low, high));
+        // A span with no zones keeps the checks, the toast says so
+        if (found.length === 0) {
+            toast(
+                t("phoneLocale.cellSheet.playedSpan", {
+                    count: 0,
+                    low: lowName,
+                    high: highName
+                })
+            );
+            return;
+        }
+        // The zone checks are replaced, Global stays as it was
+        const ids = new Set(found.map((c) => c.zone.id));
+        if (checkedIds.has(globalZone.id)) {
+            ids.add(globalZone.id);
+        }
+        onCheckedChange(ids);
+        toast(
+            t("phoneLocale.cellSheet.playedSpan", {
+                count: found.length,
+                low: lowName,
+                high: highName
+            })
+        );
+    };
+
+    const firstZoneColumn = checkedColumns.find(
+        (c) => c.zone.id !== globalZone.id
+    );
+    const firstZoneRange = firstZoneColumn
+        ? getColumnKeyRange(firstZoneColumn, globalZone)
+        : undefined;
 
     const status = t("phoneLocale.cellSheet.checked", {
         checked: checkedColumns.length,
@@ -235,6 +295,14 @@ export function CellSheet({
             }
         >
             <div className={"cell_sheet"}>
+                {isCapturing ? (
+                    <PianoCaptureBar
+                        count={2}
+                        prompt={t("phoneLocale.capture.playTwoKeys")}
+                        onDone={handlePlayedSpan}
+                        onCancel={() => setCaptureRow(null)}
+                    />
+                ) : null}
                 {modulatedColumn ? (
                     <button
                         type={"button"}
@@ -251,90 +319,162 @@ export function CellSheet({
                         <ChevronRightIcon />
                     </button>
                 ) : null}
-                <CellSheetZoneList
-                    context={context}
-                    columns={columns}
-                    focusedZone={first?.zone}
-                    colorColumns={colorColumns}
-                    globalZone={globalZone}
-                    checkedIds={checkedIds}
-                    onToggle={toggle}
-                />
-                <div className={"cell_sheet_bar"}>
-                    <button
-                        type={"button"}
-                        className={"pretty_button cell_sheet_text_button"}
-                        onClick={() => onCheckedChange(selectAllZones(columns))}
-                    >
-                        {t("phoneLocale.cellSheet.all")}
-                    </button>
-                    <button
-                        type={"button"}
-                        className={"pretty_button cell_sheet_text_button"}
-                        onClick={() => onCheckedChange(new Set<number>())}
-                    >
-                        {t("phoneLocale.cellSheet.none")}
-                    </button>
-                    <button
-                        type={"button"}
-                        className={"pretty_button cell_sheet_text_button"}
-                        onClick={() =>
-                            onCheckedChange(fillBetween(checkedIds, columns))
+                {isKeySpanShown ? (
+                    <CellSheetKeySpan
+                        columns={columns}
+                        colorColumns={colorColumns}
+                        globalZone={globalZone}
+                        initialSpan={
+                            firstZoneRange
+                                ? {
+                                      low: firstZoneRange.min,
+                                      high: firstZoneRange.max
+                                  }
+                                : undefined
                         }
-                    >
-                        {t("phoneLocale.cellSheet.between")}
-                    </button>
-                </div>
-                {isRangeGenerator(generator) ? (
-                    <CellSheetRangeEditor
-                        // The fields follow the checked cells' shared range, also after an apply
-                        // or an undo
-                        key={`${generator}-${first?.zone.id}-${sharedRange ? `${sharedRange.low}-${sharedRange.high}` : "mixed"}`}
-                        isKeyRange={generator === GeneratorTypes.keyRange}
-                        initialRange={sharedRange}
-                        mode={rangeMode}
-                        onModeChange={setRangeMode}
-                        isDisabled={!first}
-                        status={status}
-                        footer={footerButtons}
-                        onApply={isTextApplied}
-                    />
-                ) : options ? (
-                    <CellSheetOptionEditor
-                        options={options}
-                        value={getSharedOption(
-                            checkedColumns.flatMap((c) =>
-                                getViewZones(c).map((zone) =>
-                                    readViewCell(zone, generator)
-                                )
-                            )
-                        )}
-                        isDisabled={!first}
-                        status={status}
-                        footer={footerButtons}
-                        onPick={(value) => {
-                            if (first) {
-                                commands.pick(first, value);
+                        onCheck={(ids, isAdding) => {
+                            const next = new Set(isAdding ? checkedIds : []);
+                            for (const id of ids) {
+                                next.add(id);
                             }
+                            onCheckedChange(next);
+                            setKeySpanRow(null);
                         }}
+                        onBack={() => setKeySpanRow(null)}
                     />
                 ) : (
-                    <CellSheetNumberEditor
-                        // Another row starts with an empty field
-                        key={generator}
-                        unitSuffix={unit ? t(unit.suffix) : undefined}
-                        isDisabled={!first}
-                        status={status}
-                        footer={footerButtons}
-                        onApply={isTextApplied}
-                        onNudge={(direction, steps) => {
-                            if (first) {
-                                commands
-                                    .getInputCommands(first)
-                                    .nudge(direction, steps);
-                            }
-                        }}
-                    />
+                    <>
+                        <CellSheetZoneList
+                            context={context}
+                            columns={columns}
+                            focusedZone={first?.zone}
+                            colorColumns={colorColumns}
+                            globalZone={globalZone}
+                            checkedIds={checkedIds}
+                            onToggle={toggle}
+                        />
+                        <div className={"cell_sheet_bar"}>
+                            <button
+                                type={"button"}
+                                className={
+                                    "pretty_button cell_sheet_text_button"
+                                }
+                                onClick={() =>
+                                    onCheckedChange(selectAllZones(columns))
+                                }
+                            >
+                                {t("phoneLocale.cellSheet.all")}
+                            </button>
+                            <button
+                                type={"button"}
+                                className={
+                                    "pretty_button cell_sheet_text_button"
+                                }
+                                onClick={() =>
+                                    onCheckedChange(new Set<number>())
+                                }
+                            >
+                                {t("phoneLocale.cellSheet.none")}
+                            </button>
+                            <button
+                                type={"button"}
+                                className={
+                                    "pretty_button cell_sheet_text_button"
+                                }
+                                onClick={() =>
+                                    onCheckedChange(
+                                        fillBetween(checkedIds, columns)
+                                    )
+                                }
+                            >
+                                {t("phoneLocale.cellSheet.between")}
+                            </button>
+                            <button
+                                type={"button"}
+                                className={
+                                    "pretty_button cell_sheet_text_button"
+                                }
+                                onClick={() => setKeySpanRow(generator)}
+                            >
+                                {t("phoneLocale.cellSheet.keys")}
+                            </button>
+                            <button
+                                type={"button"}
+                                className={
+                                    "pretty_button cell_sheet_text_button cell_sheet_piano"
+                                }
+                                aria-label={t("phoneLocale.cellSheet.playKeys")}
+                                aria-pressed={isCapturing}
+                                onClick={() => {
+                                    // Only a start shows the keys, a cancel leaves the drawer
+                                    if (shell && !isCapturing) {
+                                        openKeysForCapture(
+                                            shell.state.drawer,
+                                            shell.dispatch
+                                        );
+                                    }
+                                    setCaptureRow(
+                                        isCapturing ? null : generator
+                                    );
+                                }}
+                            >
+                                <PianoKeysIcon />
+                            </button>
+                        </div>
+                        {isRangeGenerator(generator) ? (
+                            <CellSheetRangeEditor
+                                // The fields follow the checked cells' shared range, also after an apply
+                                // or an undo
+                                key={`${generator}-${first?.zone.id}-${sharedRange ? `${sharedRange.low}-${sharedRange.high}` : "mixed"}`}
+                                isKeyRange={
+                                    generator === GeneratorTypes.keyRange
+                                }
+                                initialRange={sharedRange}
+                                mode={rangeMode}
+                                onModeChange={setRangeMode}
+                                isDisabled={!first}
+                                status={status}
+                                footer={footerButtons}
+                                onApply={isTextApplied}
+                            />
+                        ) : options ? (
+                            <CellSheetOptionEditor
+                                options={options}
+                                value={getSharedOption(
+                                    checkedColumns.flatMap((c) =>
+                                        getViewZones(c).map((zone) =>
+                                            readViewCell(zone, generator)
+                                        )
+                                    )
+                                )}
+                                isDisabled={!first}
+                                status={status}
+                                footer={footerButtons}
+                                onPick={(value) => {
+                                    if (first) {
+                                        commands.pick(first, value);
+                                    }
+                                }}
+                            />
+                        ) : (
+                            <CellSheetNumberEditor
+                                // Another row starts with an empty field
+                                key={generator}
+                                unitSuffix={unit ? t(unit.suffix) : undefined}
+                                isDisabled={!first}
+                                status={status}
+                                footer={footerButtons}
+                                onApply={isTextApplied}
+                                onNudge={(direction, steps) => {
+                                    if (first) {
+                                        commands
+                                            .getInputCommands(first)
+                                            .nudge(direction, steps);
+                                    }
+                                }}
+                            />
+                        )}
+                    </>
                 )}
             </div>
         </EditorSheet>

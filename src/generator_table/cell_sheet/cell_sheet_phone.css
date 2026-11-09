@@ -169,6 +169,8 @@
 :root[data-layout="phone"] .cell_sheet_footer {
     flex: none;
     display: flex;
+    /* Five selection buttons wrap to a second row on a narrow phone (Polish) */
+    flex-wrap: wrap;
     gap: var(--flex-gap);
     padding: 0.25rem var(--flex-gap);
 }
@@ -410,4 +412,135 @@
     .cell_sheet
     .menu_list_scrollable {
     flex: 1 0 calc(1.5 * var(--phone-row-height));
+}
+
+/* Keys…: check the zones that overlap a typed span of keys */
+:root[data-layout="phone"] .cell_sheet_key_span {
+    display: flex;
+    flex-direction: column;
+    gap: var(--phone-gutter);
+    padding: var(--flex-gap) var(--phone-gutter) var(--phone-gutter);
+}
+
+:root[data-layout="phone"] .cell_sheet_key_hint,
+:root[data-layout="phone"] .cell_sheet_key_found {
+    margin: 0;
+    text-align: start;
+    font-size: var(--phone-text-secondary);
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .cell_sheet_key_found {
+    color: var(--font-color);
+}
+
+:root[data-layout="phone"] .cell_sheet_key_fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--phone-gutter);
+}
+
+:root[data-layout="phone"] .cell_sheet_key_field {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: var(--flex-gap);
+}
+
+:root[data-layout="phone"] .cell_sheet_key_field label {
+    grid-column: 1 / -1;
+    text-align: start;
+    font-size: var(--phone-text-secondary);
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .cell_sheet_key_input {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: var(--phone-touch);
+    font-size: var(--phone-text-body);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet_key_input[aria-invalid="true"] {
+    border-color: var(--destructive-color);
+}
+
+:root[data-layout="phone"] .cell_sheet_key_note {
+    min-width: 3ch;
+    font-size: var(--phone-text-small);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet_key_buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--flex-gap);
+}
+
+:root[data-layout="phone"] .cell_sheet_piano {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+:root[data-layout="phone"] .cell_sheet_piano svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+:root[data-layout="phone"] .cell_sheet_piano[aria-pressed="true"] {
+    background: var(--primary-color);
+    border-color: var(--border-color);
+}
+
+/* The span bar: the zones along the keys like the drawer's minimap, the span over them */
+:root[data-layout="phone"] .key_span_bar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+:root[data-layout="phone"] .key_span_bar_track {
+    position: relative;
+    height: 1.5rem;
+    border-radius: 0.25rem;
+    background: var(--darker-color-start);
+    overflow: hidden;
+}
+
+:root[data-layout="phone"] .key_span_bar_labels {
+    position: relative;
+    height: 1rem;
+}
+
+:root[data-layout="phone"] .key_span_bar_label {
+    position: absolute;
+    top: 0;
+    left: calc(var(--start) / 128 * 100%);
+    font-size: var(--phone-text-caption);
+    color: var(--muted-font-color);
+}
+
+/* The last label ends at the bar's end */
+:root[data-layout="phone"] .key_span_bar_label:last-child {
+    left: auto;
+    right: 0;
+}
+
+/*
+ * A capture stays in view while the sheet's body scrolls (landscape). The tint is translucent,
+ * so the sheet's own color goes under it to hide the rows scrolling past
+ */
+:root[data-layout="phone"] .cell_sheet > .piano_capture_bar {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background:
+        linear-gradient(
+            var(--cell-selection-color),
+            var(--cell-selection-color)
+        ),
+        var(--lighter-color-end);
 }

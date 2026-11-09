@@ -163,7 +163,19 @@ export const PhoneLocale = {
         high: "High",
         shift: "Shift",
         unset: "−",
-        unsetName: "Not set"
+        unsetName: "Not set",
+        keys: "Keys…",
+        playKeys: "Play two keys",
+        keySpanHint:
+            "Check every zone whose key range overlaps a span of keys.",
+        keySpanLabel: "Keys {{low}} to {{high}}",
+        spanZones_one: "{{count}} zone: {{names}}",
+        spanZones_other: "{{count}} zones: {{names}}",
+        addToChecked: "Add to checked",
+        checkThem: "Check them",
+        back: "Back",
+        playedSpan_one: "{{count}} zone plays {{low}} to {{high}}",
+        playedSpan_other: "{{count}} zones play {{low}} to {{high}}"
     },
     sample: {
         loop: "Loop",
