@@ -12,6 +12,7 @@ import { checkBank } from "./bank_check/check_bank.ts";
 import type { InfoPanel } from "./info_panel.ts";
 import { OverviewPanelHeader } from "./overview_panel_header.tsx";
 import { useLayout } from "../layout/layout_context.ts";
+import { useTranslation } from "react-i18next";
 
 interface SoundBankInfoProps {
     /**
@@ -23,6 +24,7 @@ interface SoundBankInfoProps {
 }
 
 export function SoundBankInfo({ panel, onPanelChange }: SoundBankInfoProps) {
+    const { t } = useTranslation();
     const layout = useLayout();
     const { session } = useBankEditor();
     const views = useBankSnapshot(session.store, (s) => s.views);
@@ -33,7 +35,9 @@ export function SoundBankInfo({ panel, onPanelChange }: SoundBankInfoProps) {
     let content;
     switch (panel) {
         case "modulators": {
-            content = <DefaultModulators />;
+            content = (
+                <DefaultModulators onBack={() => onPanelChange("info")} />
+            );
             break;
         }
 
@@ -50,7 +54,15 @@ export function SoundBankInfo({ panel, onPanelChange }: SoundBankInfoProps) {
     if (layout === "phone" && panel !== "info") {
         return (
             <div className={"overview_panel"}>
-                <OverviewPanelHeader onBack={() => onPanelChange("info")} />
+                {/* The default modulators put New in their bar, so they render it */}
+                {panel === "check" ? (
+                    <OverviewPanelHeader
+                        onBack={() => onPanelChange("info")}
+                        title={t("bankInfo.check.title", {
+                            count: issues.length
+                        })}
+                    />
+                ) : null}
                 {content}
             </div>
         );

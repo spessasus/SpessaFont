@@ -18,3 +18,10 @@
     padding: 0 0.75rem;
     font-size: var(--phone-text-button);
 }
+
+/* New ends a layer's header row (zone and default modulators), the title takes what is left */
+:root[data-layout="phone"] .phone_layer_header .modulator_new_button {
+    flex-shrink: 0;
+    min-width: var(--phone-touch);
+    margin: 0;
+}

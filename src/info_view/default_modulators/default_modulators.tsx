@@ -5,8 +5,16 @@ import { SetDefaultModulatorsAction } from "./set_default_modulators_action.ts";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 import { useLayout } from "../../layout/layout_context.ts";
 import { useBankSnapshot } from "../../hooks/use_bank_snapshot.ts";
+import { OverviewPanelHeader } from "../overview_panel_header.tsx";
 
-export function DefaultModulators() {
+interface DefaultModulatorsProps {
+    /**
+     * Back to the overview, from the phone panel's bar.
+     */
+    onBack: () => void;
+}
+
+export function DefaultModulators({ onBack }: DefaultModulatorsProps) {
     const { t } = useTranslation();
     const layout = useLayout();
     const { session, apply } = useBankEditor();
@@ -38,22 +46,21 @@ export function DefaultModulators() {
         }
     };
 
-    const title = (
-        <h2 className={"default_modulators_title"}>
-            <Trans
-                i18nKey={"bankInfo.defaultModulatorsForBank"}
-                values={{
-                    name:
-                        info.name.length > 0 ? info.name : t("bankInfo.unnamed")
-                }}
-                components={{ bank: <i /> }}
-            />
-        </h2>
+    const titleText = (
+        <Trans
+            i18nKey={"bankInfo.defaultModulatorsForBank"}
+            values={{
+                name: info.name.length > 0 ? info.name : t("bankInfo.unnamed")
+            }}
+            components={{ bank: <i /> }}
+        />
     );
 
     return (
         <div className={"default_modulators"}>
-            {layout === "phone" ? null : title}
+            {layout === "phone" ? null : (
+                <h2 className={"default_modulators_title"}>{titleText}</h2>
+            )}
             <ModulatorList
                 modulatorList={defaultModulators}
                 getModulators={getModulators}
@@ -61,10 +68,12 @@ export function DefaultModulators() {
                 renderHeader={
                     layout === "phone"
                         ? (newButton) => (
-                              <div className={"default_modulators_bar"}>
-                                  {title}
+                              <OverviewPanelHeader
+                                  onBack={onBack}
+                                  title={titleText}
+                              >
                                   {newButton}
-                              </div>
+                              </OverviewPanelHeader>
                           )
                         : undefined
                 }

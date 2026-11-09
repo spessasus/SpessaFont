@@ -20,93 +20,20 @@
     min-height: 0;
 }
 
-/* The title and New share the bar, the back arrow of the panel header sits over its start */
-:root[data-layout="phone"] .default_modulators_bar {
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-    align-self: stretch;
-    height: var(--phone-app-bar-height);
-    background: var(--menu-bar-color);
-    border-bottom: 1px solid var(--menu-border-color);
-}
-
-:root[data-layout="phone"]
-    .overview_panel
-    .default_modulators_bar
-    .default_modulators_title {
-    position: static;
-    flex: 1;
-    width: auto;
-    min-width: 0;
-    background: none;
-    border-bottom: 0;
-}
-
-:root[data-layout="phone"] .default_modulators_bar .modulator_new_button {
-    flex-shrink: 0;
-    min-width: var(--phone-touch);
-    margin: 0 var(--phone-gutter) 0 0;
-}
-
-/* Zero height, so the panel's own title below becomes the sticky bar this arrow sits on */
-:root[data-layout="phone"] .overview_panel_header {
+/* The panel scrolls, its bar stays at the top */
+:root[data-layout="phone"] .overview_panel .phone_layer_header {
     position: sticky;
     top: 0;
     z-index: 2;
-    display: flex;
-    flex-shrink: 0;
-    height: 0;
 }
 
-:root[data-layout="phone"] .overview_panel_back {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: var(--phone-touch);
-    min-height: var(--phone-touch);
-    margin-top: calc((var(--phone-app-bar-height) - var(--phone-touch)) / 2);
-    margin-inline-start: calc(var(--phone-gutter) / 2);
-}
-
-:root[data-layout="phone"] .overview_panel_back svg {
-    width: 1.5rem;
-    height: 1.5rem;
-}
-
-:root[data-layout="phone"] .overview_panel .default_modulators_title,
-:root[data-layout="phone"] .overview_panel .bank_check_title {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    flex-shrink: 0;
-    box-sizing: border-box;
-    width: 100%;
-    height: var(--phone-app-bar-height);
-    margin: 0;
-    padding: 0 var(--phone-gutter) 0
-        calc(var(--phone-touch) + var(--phone-gutter));
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    line-height: var(--phone-app-bar-height);
-    background: var(--menu-bar-color);
-    border-bottom: 1px solid var(--menu-border-color);
-    font-size: var(--phone-text-title);
-    font-weight: 600;
-    text-align: start;
-}
-
-/* The check's own scroller and padding would keep its title from sticking to the panel's top */
+/* The check's own scroller and padding would keep the bar from sticking to the panel's top */
 :root[data-layout="phone"] .overview_panel .bank_check {
     overflow: visible;
     padding: 0 0 var(--phone-gutter);
 }
 
-/* The title is a bar to the edges, the rest of the check takes its own gutter */
-:root[data-layout="phone"]
-    .overview_panel
-    .bank_check
-    > :not(.bank_check_title) {
+/* The bar goes to the edges, the check takes its own gutter */
+:root[data-layout="phone"] .overview_panel .bank_check > * {
     margin-inline: var(--phone-gutter);
 }

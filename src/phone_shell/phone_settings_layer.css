@@ -8,35 +8,3 @@
     min-height: 0;
     background: var(--darker-color-start);
 }
-
-:root[data-layout="phone"] .phone_settings_header {
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-    gap: var(--flex-gap);
-    height: var(--phone-app-bar-height);
-    padding-right: var(--phone-gutter);
-    background: var(--menu-bar-color);
-    border-bottom: 1px solid var(--menu-border-color);
-}
-
-:root[data-layout="phone"] .phone_settings_header h2 {
-    margin: 0;
-    font-size: var(--phone-text-title);
-    font-weight: 600;
-    text-align: start;
-}
-
-:root[data-layout="phone"] .phone_settings_close {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: var(--phone-touch);
-    height: var(--phone-touch);
-    margin-left: calc(var(--phone-gutter) / 2);
-}
-
-:root[data-layout="phone"] .phone_settings_close svg {
-    width: 1.5rem;
-    height: 1.5rem;
-}

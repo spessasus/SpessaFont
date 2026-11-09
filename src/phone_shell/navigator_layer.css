@@ -36,28 +36,6 @@
     cursor: default;
 }
 
-:root[data-layout="phone"] .navigator_header {
-    display: flex;
-    align-items: center;
-    flex: none;
-    gap: var(--flex-gap);
-    height: var(--phone-row-height);
-    padding: 0 var(--flex-gap);
-    background: var(--menu-bar-color);
-    border-bottom: solid 1px var(--menu-border-color);
-}
-
-:root[data-layout="phone"] .navigator_title {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    text-align: start;
-    font-size: var(--phone-text-body);
-    font-weight: 600;
-}
-
 :root[data-layout="phone"] .navigator_button {
     display: inline-flex;
     align-items: center;

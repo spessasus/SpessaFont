@@ -12,12 +12,12 @@ import { MenuList } from "../menu_list/menu_list.tsx";
 import { useContextMenu } from "../context_menu/context_menu_context.ts";
 import {
     ChevronRightIcon,
-    CloseIcon,
     PinIcon,
     PlusIcon
 } from "../utils/icons/app_icons.tsx";
 import { InfoIcon } from "../utils/icons/file_icons.tsx";
 import { usePhoneShell } from "./phone_shell_context.ts";
+import { PhoneLayerHeader } from "./phone_layer_header.tsx";
 
 interface NavigatorLayerProps {
     view: BankEditView;
@@ -85,18 +85,12 @@ export function NavigatorLayer({
 
     // The selection bar takes the place of this bar in selection mode
     const titleBar = (
-        <div className={"navigator_header"}>
-            <button
-                type={"button"}
-                className={"plain_button navigator_button"}
-                aria-label={t("phoneLocale.navigator.close")}
-                onClick={close}
-            >
-                <CloseIcon />
-            </button>
-            <h2 className={"navigator_title"}>
-                {t("phoneLocale.navigator.title")}
-            </h2>
+        <PhoneLayerHeader
+            icon={"close"}
+            buttonLabel={t("phoneLocale.navigator.close")}
+            onButton={close}
+            title={t("phoneLocale.navigator.title")}
+        >
             <button
                 type={"button"}
                 className={"plain_button navigator_button"}
@@ -106,7 +100,7 @@ export function NavigatorLayer({
             >
                 <PinIcon />
             </button>
-        </div>
+        </PhoneLayerHeader>
     );
     const header = (
         <>

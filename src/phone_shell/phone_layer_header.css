@@ -1,0 +1,44 @@
+:root[data-layout="phone"] .phone_layer_header {
+    display: flex;
+    align-items: center;
+    flex: none;
+    align-self: stretch;
+    gap: var(--flex-gap);
+    box-sizing: border-box;
+    height: var(--phone-row-height);
+    padding: 0 var(--flex-gap);
+    background: var(--menu-bar-color);
+    border-bottom: 1px solid var(--menu-border-color);
+}
+
+:root[data-layout="phone"] .phone_layer_header_button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    min-width: var(--phone-touch);
+    min-height: var(--phone-touch);
+    border-radius: var(--primary-border-radius);
+}
+
+:root[data-layout="phone"] .phone_layer_header_button svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+:root[data-layout="phone"] .phone_layer_header_title {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--phone-text-title);
+    font-weight: 600;
+    text-align: start;
+}
+
+/* The italic bank name in the default modulators title would get the global font size otherwise */
+:root[data-layout="phone"] .phone_layer_header_title * {
+    font-size: inherit;
+}

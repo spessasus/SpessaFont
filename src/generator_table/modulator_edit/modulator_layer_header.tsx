@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import "./modulator_edit_phone.css";
-import { ChevronLeftIcon } from "../../utils/icons/app_icons.tsx";
+import { PhoneLayerHeader } from "../../phone_shell/phone_layer_header.tsx";
 import { useBackHandler } from "../../hooks/use_back_handler.ts";
 import { BACK_LEVELS } from "../../phone_shell/back_stack.ts";
 
@@ -29,18 +29,13 @@ export function ModulatorLayerHeader({
         return true;
     });
     return (
-        <div className={"modulator_layer_header"}>
-            {/* No autoFocus, on a phone it would only draw a ring */}
-            <button
-                type={"button"}
-                className={"plain_button modulator_layer_back"}
-                onClick={onBack}
-                aria-label={t("phoneLocale.modulators.back")}
-            >
-                <ChevronLeftIcon />
-            </button>
-            <h2>{title}</h2>
+        <PhoneLayerHeader
+            icon={"back"}
+            buttonLabel={t("phoneLocale.modulators.back")}
+            onButton={onBack}
+            title={title}
+        >
             {children}
-        </div>
+        </PhoneLayerHeader>
     );
 }

@@ -1,26 +1,34 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronLeftIcon } from "../utils/icons/app_icons.tsx";
+import { PhoneLayerHeader } from "../phone_shell/phone_layer_header.tsx";
 
 interface OverviewPanelHeaderProps {
     onBack: () => void;
+    title: ReactNode;
+    /**
+     * The end of the bar, where New goes.
+     */
+    children?: ReactNode;
 }
 
 /**
- * The back arrow of a phone overview panel. Back itself is handled by PhoneBankEditor, so this
+ * The bar of a phone overview panel. Back itself is handled by PhoneBankEditor, so this
  * registers nothing.
  */
-export function OverviewPanelHeader({ onBack }: OverviewPanelHeaderProps) {
+export function OverviewPanelHeader({
+    onBack,
+    title,
+    children
+}: OverviewPanelHeaderProps) {
     const { t } = useTranslation();
     return (
-        <div className={"overview_panel_header"}>
-            <button
-                type={"button"}
-                className={"plain_button overview_panel_back"}
-                onClick={onBack}
-                aria-label={t("phoneLocale.overview.back")}
-            >
-                <ChevronLeftIcon />
-            </button>
-        </div>
+        <PhoneLayerHeader
+            icon={"back"}
+            buttonLabel={t("phoneLocale.overview.back")}
+            onButton={onBack}
+            title={title}
+        >
+            {children}
+        </PhoneLayerHeader>
     );
 }

@@ -10,7 +10,7 @@ afterEach(cleanup);
 describe("OverviewPanelHeader", () => {
     it("returns to the overview on its arrow", () => {
         const onBack = vi.fn();
-        render(<OverviewPanelHeader onBack={onBack} />);
+        render(<OverviewPanelHeader onBack={onBack} title={"Problems: 0"} />);
         fireEvent.click(
             screen.getByRole("button", { name: "phoneLocale.overview.back" })
         );
@@ -27,7 +27,7 @@ describe("OverviewPanelHeader", () => {
                     dropSentinel: vi.fn()
                 }}
             >
-                <OverviewPanelHeader onBack={vi.fn()} />
+                <OverviewPanelHeader onBack={vi.fn()} title={"Problems: 0"} />
             </BackStackContext>
         );
         expect(stack.hasActive([BACK_LEVELS.overviewPanel])).toBe(false);
