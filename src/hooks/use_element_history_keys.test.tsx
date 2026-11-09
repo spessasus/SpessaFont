@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import type { ReactNode } from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, onTestFinished, vi } from "vitest";
 import { cleanup, renderHook } from "@testing-library/react";
 import { LayoutContext } from "../layout/layout_context.ts";
 import type { LayoutMode } from "../layout/layout_setting.ts";
@@ -17,14 +17,17 @@ function renderKeys(layout: LayoutMode) {
     return { goBack, goForward };
 }
 
-function pressAltLeft() {
+function pressAlt(
+    key: "ArrowLeft" | "ArrowRight",
+    target: Element = document.body
+) {
     const event = new KeyboardEvent("keydown", {
-        key: "ArrowLeft",
+        key,
         altKey: true,
         bubbles: true,
         cancelable: true
     });
-    document.body.dispatchEvent(event);
+    target.dispatchEvent(event);
     return event;
 }
 
@@ -57,18 +60,36 @@ describe("useElementHistoryKeys", () => {
         expect(goForward).toHaveBeenCalledOnce();
     });
 
-    // The handler prevents the default before isEditorShortcut runs, and that check refuses a
-    // prevented event, so Alt+Left only keeps the browser from leaving the page. The same on
-    // master
-    it.fails("goes back with Alt+Left on desktop", () => {
+    it("goes back with Alt+Left on desktop", () => {
         const { goBack } = renderKeys("desktop");
-        expect(pressAltLeft().defaultPrevented).toBe(true);
+        expect(pressAlt("ArrowLeft").defaultPrevented).toBe(true);
         expect(goBack).toHaveBeenCalledOnce();
+    });
+
+    it("goes forward with Alt+Right on desktop", () => {
+        const { goForward } = renderKeys("desktop");
+        expect(pressAlt("ArrowRight").defaultPrevented).toBe(true);
+        expect(goForward).toHaveBeenCalledOnce();
+    });
+
+    it("keeps the browser from leaving but moves nothing with a dialog open", () => {
+        const { goBack } = renderKeys("desktop");
+        const dialog = document.createElement("dialog");
+        dialog.open = true;
+        const button = document.createElement("button");
+        dialog.append(button);
+        document.body.append(dialog);
+        onTestFinished(() => {
+            dialog.remove();
+        });
+        button.focus();
+        expect(pressAlt("ArrowLeft", button).defaultPrevented).toBe(true);
+        expect(goBack).not.toHaveBeenCalled();
     });
 
     it("leaves the keys and buttons to the browser on a phone, so back runs the back stack", () => {
         const { goBack, goForward } = renderKeys("phone");
-        expect(pressAltLeft().defaultPrevented).toBe(false);
+        expect(pressAlt("ArrowLeft").defaultPrevented).toBe(false);
         const { down, up } = clickSideButton(3);
         expect(down.defaultPrevented).toBe(false);
         expect(up.defaultPrevented).toBe(false);

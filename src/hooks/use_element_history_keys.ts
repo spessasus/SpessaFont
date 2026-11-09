@@ -33,8 +33,10 @@ export function useElementHistoryKeys(
         if (IS_MAC && isTextField(e.target)) {
             return;
         }
+        // Read before preventDefault, which makes isEditorShortcut refuse the event
+        const isShortcut = isEditorShortcut(e);
         e.preventDefault();
-        if (!isEditorShown || !isEditorShortcut(e)) {
+        if (!isEditorShown || !isShortcut) {
             return;
         }
         if (e.key === "ArrowLeft") {
