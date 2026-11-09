@@ -1,0 +1,48 @@
+/* The desktop bar scrolls sideways in one row, on a phone it is a column of full-width rows */
+:root[data-layout="phone"] .sample_sections_body .bottom_bar {
+    flex-direction: column;
+    overflow: visible;
+    border-top: none;
+    margin-top: 0;
+    gap: var(--flex-gap);
+}
+
+:root[data-layout="phone"] .sample_sections_body .bottom_bar > div,
+:root[data-layout="phone"] .sample_sections_body .bottom_bar > button {
+    box-sizing: border-box;
+    width: 100%;
+    border-right: none;
+    padding: 0.5rem var(--phone-gutter);
+    text-align: start;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+:root[data-layout="phone"] .sample_sections_body .bottom_bar > div {
+    padding-inline: 0;
+    font-size: var(--phone-text-small);
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .sample_sections_body .bottom_bar > button {
+    display: flex;
+    align-items: center;
+    min-height: var(--phone-touch);
+    font-size: var(--phone-text-body);
+}
+
+:root[data-layout="phone"]
+    .sample_sections_body
+    .bottom_bar
+    > button.monospaced {
+    display: flex;
+    align-items: center;
+    min-height: var(--phone-row-height);
+    padding-block: 0;
+    border-bottom: 1px solid
+        color-mix(in oklch, var(--track-border-color) 45%, transparent);
+}
+
+:root[data-layout="phone"] .sample_sections_body .bottom_bar > button.warning {
+    margin-top: var(--phone-gutter);
+}

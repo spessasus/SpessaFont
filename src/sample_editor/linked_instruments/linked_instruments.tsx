@@ -1,4 +1,5 @@
 import "../../bank_editor/bottom_bar.css";
+import "./linked_instruments_phone.css";
 import { useTranslation } from "react-i18next";
 
 import { DeleteSampleAction } from "./delete_sample_action.ts";

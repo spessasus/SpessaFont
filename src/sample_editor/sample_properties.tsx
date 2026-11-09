@@ -1,3 +1,4 @@
+import "./sample_properties_phone.css";
 import type { SampleView } from "../core_backend/entity_views.ts";
 import { useTranslation } from "react-i18next";
 import { WaitingInput } from "../fancy_inputs/waiting_input/waiting_input.tsx";
@@ -46,6 +47,7 @@ export function SampleProperties({
                     type={"number"}
                     min={MIN_SAMPLE_RATE}
                     max={MAX_SAMPLE_RATE}
+                    inputMode={"numeric"}
                     aria-label={t("sampleLocale.sampleRate")}
                 />
             </div>
@@ -59,6 +61,7 @@ export function SampleProperties({
                     type={"number"}
                     min={0}
                     max={loopEnd}
+                    inputMode={"numeric"}
                     aria-label={t("sampleLocale.loopStart")}
                 />
             </div>
@@ -72,6 +75,7 @@ export function SampleProperties({
                     type={"number"}
                     min={loopStart}
                     max={length}
+                    inputMode={"numeric"}
                     aria-label={t("sampleLocale.loopEnd")}
                 />
             </div>
@@ -86,6 +90,7 @@ export function SampleProperties({
                     type={"number"}
                     min={0}
                     max={127}
+                    inputMode={"numeric"}
                     aria-label={t("sampleLocale.originalKey")}
                 />
             </div>
@@ -99,6 +104,7 @@ export function SampleProperties({
                     type={"number"}
                     min={-99}
                     max={99}
+                    inputMode={"text"}
                     aria-label={t("sampleLocale.centCorrection")}
                 />
             </div>
