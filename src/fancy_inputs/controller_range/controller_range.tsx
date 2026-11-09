@@ -1,11 +1,24 @@
 import "./controller_range.css";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { ControllerProps } from "../controller_knob/controller_knob.tsx";
 
 /**
  * Jumps larger than this (in percent) animate, so dragging stays responsive.
  */
 const TRANSITION_THRESHOLD = 5;
+/**
+ * The keys that move a range input, each ends one step.
+ */
+const STEP_KEYS = new Set([
+    "ArrowLeft",
+    "ArrowRight",
+    "ArrowUp",
+    "ArrowDown",
+    "Home",
+    "End",
+    "PageUp",
+    "PageDown"
+]);
 
 interface ControllerRangeProps extends ControllerProps {
     /**
@@ -15,6 +28,16 @@ interface ControllerRangeProps extends ControllerProps {
     step?: number;
     ariaLabel?: string;
     isDisabled?: boolean;
+    /**
+     * Called once when a drag ends with the pointer lifted, and after each key step, with the
+     * value then. `onChange` still runs on every move.
+     */
+    onCommit?: (value: number) => void;
+    /**
+     * Called when the browser cancels a drag (a scroll or a rotation took the pointer).
+     * `onCommit` does not run then.
+     */
+    onCancel?: () => void;
 }
 
 export function ControllerRange({
@@ -25,8 +48,13 @@ export function ControllerRange({
     text,
     step,
     ariaLabel,
-    isDisabled
+    isDisabled,
+    onCommit,
+    onCancel
 }: ControllerRangeProps) {
+    // The value the input moved to last. The input is controlled, so by the time the pointer
+    // lifts it may show the value prop again
+    const movedValueRef = useRef<number | null>(null);
     const percent = Math.round(((value - min) / (max - min)) * 100);
     const [previousPercent, setPreviousPercent] = useState(percent);
     const [isJump, setIsJump] = useState(false);
@@ -55,7 +83,43 @@ export function ControllerRange({
                     value={value}
                     disabled={isDisabled}
                     aria-label={ariaLabel}
-                    onChange={(e) => onChange(Number(e.target.value))}
+                    onChange={(e) => {
+                        movedValueRef.current = Number(e.target.value);
+                        onChange(movedValueRef.current);
+                    }}
+                    onPointerUp={
+                        onCommit
+                            ? (e) => {
+                                  onCommit(
+                                      movedValueRef.current ??
+                                          Number(e.currentTarget.value)
+                                  );
+                                  movedValueRef.current = null;
+                              }
+                            : undefined
+                    }
+                    onPointerCancel={
+                        onCancel
+                            ? () => {
+                                  movedValueRef.current = null;
+                                  onCancel();
+                              }
+                            : undefined
+                    }
+                    onKeyUp={
+                        onCommit
+                            ? (e) => {
+                                  if (!STEP_KEYS.has(e.key)) {
+                                      return;
+                                  }
+                                  onCommit(
+                                      movedValueRef.current ??
+                                          Number(e.currentTarget.value)
+                                  );
+                                  movedValueRef.current = null;
+                              }
+                            : undefined
+                    }
                 />
             </div>
         </label>
