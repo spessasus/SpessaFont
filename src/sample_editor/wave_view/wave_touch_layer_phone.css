@@ -50,8 +50,10 @@
     background: var(--loop-end-color);
 }
 
-/* Above the finger, at the top of the wave, following the dragged handle */
+/* Above the finger, following the dragged handle, under the wave's three stat lines (Length,
+   Loop, seconds at 18px each) so the two never print over each other */
 :root[data-layout="phone"] .wave_touch_readout {
+    top: calc(6px + 3 * 18px + 0.5rem);
     right: auto;
     left: var(--readout-left);
     align-items: center;
