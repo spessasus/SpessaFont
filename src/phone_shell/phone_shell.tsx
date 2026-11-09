@@ -25,6 +25,8 @@ import { getDrawerOffset } from "./drawer_offset.ts";
 import { useBankCommands } from "../menu_bar/use_bank_commands.ts";
 import { useBankShortcutKeys } from "../hooks/use_bank_shortcut_keys.ts";
 import { useLeaveFlow } from "./use_leave_flow.ts";
+import { useInstallPrompt } from "../hooks/use_install_prompt.ts";
+import { logError } from "../utils/core_utils.ts";
 
 interface PhoneShellProps {
     bankTabs: BankTabs;
@@ -137,6 +139,19 @@ export function PhoneShell({
         areSettingsShown
     );
 
+    // One listener, as the browser fires its offer once
+    const install = useInstallPrompt();
+    const showInstallPrompt = async () => {
+        try {
+            await install?.();
+        } catch (error) {
+            logError("Failed to show the install prompt.", error);
+        }
+    };
+    const handleInstallApp = install
+        ? () => void showInstallPrompt()
+        : undefined;
+
     const drawerOffset = getDrawerOffset(state.drawer);
 
     return (
@@ -171,6 +186,7 @@ export function PhoneShell({
                                 onNewFile={onNewFile}
                                 onCloseFile={onCloseFile}
                                 onToggleSettings={onToggleSettings}
+                                onInstallApp={handleInstallApp}
                                 onViewChange={setActiveView}
                             />
                         }
@@ -205,6 +221,7 @@ export function PhoneShell({
                             <Welcome
                                 onOpenFile={onOpenFile}
                                 onNewFile={onNewFile}
+                                onInstallApp={handleInstallApp}
                             />
                         )}
                     </div>

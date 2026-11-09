@@ -12,7 +12,7 @@ import type { BankTabs } from "../tab_list/use_bank_tabs.ts";
 import { useBankDisplayName } from "../hooks/use_bank_display_name.ts";
 import { usePhoneShell } from "./phone_shell_context.ts";
 import { MoreVerticalIcon } from "../utils/icons/app_icons.tsx";
-import { CloseFileIcon } from "../utils/icons/file_icons.tsx";
+import { CloseFileIcon, DownloadIcon } from "../utils/icons/file_icons.tsx";
 
 interface OverflowSheetProps {
     /**
@@ -24,6 +24,10 @@ interface OverflowSheetProps {
     onNewFile: () => void;
     onCloseFile: () => void;
     onToggleSettings: () => void;
+    /**
+     * Installs the app, undefined while the browser has no offer.
+     */
+    onInstallApp?: () => void;
     /**
      * Selects an element, used for the focus hints of undo and redo.
      */
@@ -82,6 +86,7 @@ export function OverflowSheet({
     onNewFile,
     onCloseFile,
     onToggleSettings,
+    onInstallApp,
     onViewChange
 }: OverflowSheetProps) {
     const { t } = useTranslation();
@@ -103,6 +108,16 @@ export function OverflowSheet({
             onSelect: onToggleSettings
         }
     ];
+    const installEntries: ContextMenuEntry[] = onInstallApp
+        ? [
+              {
+                  label: t("phoneLocale.overflow.installApp"),
+                  description: t("phoneLocale.overflow.installAppDescription"),
+                  iconNode: <DownloadIcon />,
+                  onSelect: onInstallApp
+              }
+          ]
+        : [];
     const about: ContextMenuEntry = {
         label: t("phoneLocale.overflow.about"),
         icon: "info",
@@ -216,6 +231,7 @@ export function OverflowSheet({
                           onSelect: () => void playMIDIFile()
                       },
                       ...sharedTail,
+                      ...installEntries,
                       {
                           label: t("phoneLocale.overflow.fullscreen"),
                           icon: "fullscreen",
@@ -223,7 +239,13 @@ export function OverflowSheet({
                       },
                       about
                   ]
-                : [openEntry, newEntry, ...sharedTail, about];
+                : [
+                      openEntry,
+                      newEntry,
+                      ...sharedTail,
+                      ...installEntries,
+                      about
+                  ];
             break;
         }
         case null: {

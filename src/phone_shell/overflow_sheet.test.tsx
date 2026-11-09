@@ -13,7 +13,11 @@ vi.mock("../core_backend/audio_engine_context.ts", () => ({
     useAudioEngine: () => ({ audioEngine: { playMIDI: vi.fn() } })
 }));
 
-function renderOverflow(options: { hasBank: boolean; canGoForward: boolean }) {
+function renderOverflow(options: {
+    hasBank: boolean;
+    canGoForward: boolean;
+    onInstallApp?: () => void;
+}) {
     const session = options.hasBank ? createTestSession() : undefined;
     const bankTabs = {
         canGoForward: options.canGoForward,
@@ -33,6 +37,7 @@ function renderOverflow(options: { hasBank: boolean; canGoForward: boolean }) {
                         onNewFile={vi.fn()}
                         onCloseFile={vi.fn()}
                         onToggleSettings={vi.fn()}
+                        onInstallApp={options.onInstallApp}
                         onViewChange={vi.fn()}
                     />
                 </PhoneShellContext>
@@ -117,5 +122,31 @@ describe("OverflowSheet", () => {
             tabId: session?.id
         });
         session?.close();
+    });
+
+    it("lists Install app before About only while the browser offers it", () => {
+        const onInstallApp = vi.fn();
+        const withOffer = renderOverflow({
+            hasBank: false,
+            canGoForward: false,
+            onInstallApp
+        });
+        expect(labels(withOffer.container)).toEqual([
+            "phoneLocale.overflow.open",
+            "phoneLocale.overflow.new",
+            "phoneLocale.overflow.settings",
+            "phoneLocale.overflow.installApp",
+            "phoneLocale.overflow.about"
+        ]);
+        fireEvent.click(withOffer.getByText("phoneLocale.overflow.installApp"));
+        expect(onInstallApp).toHaveBeenCalledTimes(1);
+        cleanup();
+        const without = renderOverflow({
+            hasBank: false,
+            canGoForward: false
+        });
+        expect(labels(without.container)).not.toContain(
+            "phoneLocale.overflow.installApp"
+        );
     });
 });

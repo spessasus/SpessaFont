@@ -17,7 +17,13 @@ export const PhoneLocale = {
         playMIDI: "Play MIDI file…",
         settings: "Settings",
         fullscreen: "Fullscreen",
-        about: "About"
+        about: "About",
+        installApp: "Install app",
+        installAppDescription: "Add SpessaFont to your home screen"
+    },
+    welcome: {
+        installApp: "Install app",
+        firefoxNote: "Consider using Firefox to load large files."
     },
     drawer: {
         keys: "Keys",

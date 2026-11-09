@@ -17,7 +17,13 @@ export const PhoneLocale = {
         playMIDI: "Odtwórz plik MIDI…",
         settings: "Ustawienia",
         fullscreen: "Pełny ekran",
-        about: "O programie"
+        about: "O programie",
+        installApp: "Zainstaluj aplikację",
+        installAppDescription: "Dodaj SpessaFont do ekranu głównego"
+    },
+    welcome: {
+        installApp: "Zainstaluj aplikację",
+        firefoxNote: "Rozważ użycie Firefoksa, aby móc wczytywać duże pliki."
     },
     drawer: {
         keys: "Klawisze",
