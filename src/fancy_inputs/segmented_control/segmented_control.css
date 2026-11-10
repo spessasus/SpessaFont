@@ -1,0 +1,43 @@
+:root[data-layout="phone"] .segmented_control {
+    display: flex;
+    /* Sized by its labels, so it never cuts "Pomnóż" or "Jedna strefa" */
+    flex-shrink: 0;
+    border: 1px solid var(--track-border-color);
+    border-radius: var(--primary-border-radius);
+    overflow: hidden;
+}
+
+:root[data-layout="phone"] .segmented_control_segment {
+    flex: 0 0 auto;
+    min-width: var(--phone-touch, 2.75rem);
+    min-height: var(--phone-touch, 2.75rem);
+    padding: 0 0.5rem;
+    border: none;
+    border-radius: 0;
+    background: var(--lighter-color-end);
+    color: var(--font-color);
+    font-family: inherit;
+    font-size: var(--phone-text-button);
+    text-align: center;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+:root[data-layout="phone"]
+    .segmented_control_segment
+    + .segmented_control_segment {
+    border-inline-start: 1px solid var(--track-border-color);
+}
+
+:root[data-layout="phone"] .segmented_control_segment[aria-checked="true"] {
+    background: var(--primary-color);
+}
+
+:root[data-layout="phone"] .segmented_control_segment[aria-disabled="true"] {
+    opacity: 0.4;
+}
+
+:root[data-layout="phone"] .segmented_control_segment:focus-visible {
+    outline: 2px solid var(--light-primary-color);
+    outline-offset: -2px;
+}

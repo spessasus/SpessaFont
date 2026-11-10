@@ -1,0 +1,92 @@
+:root[data-layout="phone"] .bottom_sheet_scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: var(--sheet-scrim-color);
+}
+
+:root[data-layout="phone"] .bottom_sheet {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 101;
+    display: flex;
+    flex-direction: column;
+    max-height: 85dvh;
+    background: var(--lighter-color-end);
+    color: var(--font-color);
+    font-family: var(--main-font);
+    border: 1px solid var(--track-border-color);
+    border-bottom: none;
+    border-radius: 1rem 1rem 0 0;
+    box-shadow: 0 -0.5rem 2rem var(--shadow-color);
+    transform: translateY(0);
+    transition: transform 0.2s ease-out;
+}
+
+@starting-style {
+    :root[data-layout="phone"] .bottom_sheet {
+        transform: translateY(100%);
+    }
+}
+
+:root[data-layout="phone"] .bottom_sheet_grab {
+    flex: none;
+    align-self: center;
+    width: 2.5rem;
+    height: 0.25rem;
+    margin: 0.5rem 0 0.25rem;
+    border-radius: 0.125rem;
+    background: var(--track-border-color);
+}
+
+:root[data-layout="phone"] .bottom_sheet_header {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: var(--phone-row-height, 3rem);
+    padding: 0 0.5rem 0 1rem;
+    border-bottom: 1px solid var(--track-border-color);
+}
+
+:root[data-layout="phone"] .bottom_sheet_title {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    font-size: var(--phone-text-sheet-title);
+    font-weight: 600;
+    text-align: start;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+:root[data-layout="phone"] .bottom_sheet_close {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--phone-touch, 2.75rem);
+    min-height: var(--phone-touch, 2.75rem);
+}
+
+:root[data-layout="phone"] .bottom_sheet_close svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+:root[data-layout="phone"] .bottom_sheet_body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* The sheet is portaled outside the app, so its controls need the app font */
+:root[data-layout="phone"] .bottom_sheet input,
+:root[data-layout="phone"] .bottom_sheet select,
+:root[data-layout="phone"] .bottom_sheet button,
+:root[data-layout="phone"] .bottom_sheet textarea {
+    font-family: inherit;
+}

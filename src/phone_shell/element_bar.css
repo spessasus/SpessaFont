@@ -1,0 +1,179 @@
+:root[data-layout="phone"] .element_bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: none;
+    width: 100%;
+    height: var(--phone-element-bar-height);
+    padding: 0 var(--phone-gutter);
+    border: none;
+    border-bottom: solid 1px var(--track-border-color);
+    background: var(--lighter-color-end);
+    color: var(--font-color);
+    font: inherit;
+    text-align: start;
+}
+
+:root[data-layout="phone"] .element_bar_static {
+    cursor: default;
+}
+
+:root[data-layout="phone"] .element_bar_glyph {
+    flex: none;
+    min-width: 1.5rem;
+    text-align: center;
+    color: var(--font-color);
+}
+
+:root[data-layout="phone"] .element_bar_name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: start;
+    font-size: var(--phone-text-body);
+    font-weight: 600;
+}
+
+/* .monospaced sets its own 1rem, the phone size is named here so it cannot drift */
+:root[data-layout="phone"] .element_bar_name.monospaced {
+    font-size: var(--phone-text-body);
+}
+
+:root[data-layout="phone"] .element_bar_detail {
+    flex: none;
+    max-width: 55%;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    font-size: var(--phone-text-small);
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .element_bar_used_by {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .element_bar_target {
+    color: var(--font-color);
+    font-weight: 600;
+}
+
+:root[data-layout="phone"] .element_bar_more {
+    flex: none;
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .element_bar_chevron {
+    flex: none;
+    display: flex;
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .element_bar_chevron * {
+    color: inherit;
+}
+
+:root[data-layout="phone"] .element_bar_chevron svg {
+    width: var(--phone-disclosure-size);
+    height: var(--phone-disclosure-size);
+}
+
+:root[data-layout="phone"] .element_bar_preset {
+    color: var(--preset-item-color);
+}
+
+:root[data-layout="phone"] .element_bar_instrument {
+    color: var(--instrument-item-color);
+}
+
+:root[data-layout="phone"] .element_bar_sample {
+    color: var(--sample-item-color);
+}
+
+:root[data-layout="phone"] .element_bar_glyph svg {
+    display: block;
+    width: 1.125rem;
+    height: 1.125rem;
+}
+
+/* The patch keeps the list's size and its muted zero parts */
+:root[data-layout="phone"] .element_bar_glyph .preset_item_patch,
+:root[data-layout="phone"] .element_bar_glyph .preset_item_patch span {
+    font-size: var(--phone-text-secondary);
+}
+
+:root[data-layout="phone"] .element_bar_glyph .preset_item_patch,
+:root[data-layout="phone"] .element_bar_glyph .preset_item_patch * {
+    color: var(--font-color);
+}
+
+:root[data-layout="phone"]
+    .element_bar_glyph
+    .preset_item_patch
+    .patch_number_zero {
+    color: var(--muted-font-color);
+}
+
+/* The app sets a color on every element, which would hide the glyph's own */
+:root[data-layout="phone"] .element_bar_glyph * {
+    color: inherit;
+}
+
+/* Portrait keeps the bar as it was, the empty slot takes no space */
+:root[data-layout="phone"] .element_bar_row {
+    display: contents;
+}
+
+/* Landscape puts the grid's view bar at the end of the row (spec 4.4) */
+:root[data-layout="phone"][data-orientation="landscape"] .element_bar_row {
+    display: flex;
+    align-items: stretch;
+    flex: none;
+    min-width: 0;
+    border-bottom: solid 1px var(--track-border-color);
+    background: var(--lighter-color-end);
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .element_bar_row
+    .element_bar {
+    flex: 1;
+    min-width: 0;
+    border-bottom: none;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"] .view_bar_slot {
+    display: flex;
+    flex: none;
+}
+
+/* The grid's view bar takes the end of the landscape row, so the bar's detail gives way */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .element_bar_row:has(.grid_view_bar)
+    .element_bar_detail {
+    display: none;
+}
+
+/* A long patch label (Drums in Polish) gives way before the name */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .element_bar_row
+    .element_bar_glyph {
+    flex-shrink: 1;
+    min-width: 1.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .element_bar_row
+    .element_bar_name {
+    min-width: 5rem;
+}

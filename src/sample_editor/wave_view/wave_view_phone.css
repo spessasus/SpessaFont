@@ -1,0 +1,16 @@
+:root[data-layout="phone"] .wave_view {
+    height: 12.5rem;
+    min-height: 12.5rem;
+    flex-grow: 0;
+    flex-shrink: 0;
+    /* The desktop radius and outline stay, so the wave keeps clear of the screen edge */
+    margin: 0.25rem var(--phone-gutter) 0;
+    cursor: default;
+    /* The wave scrolls and zooms itself (useWaveGestures). With pan-x the browser takes a pinch
+       whose first finger moves before the second lands */
+    touch-action: none;
+}
+
+:root[data-layout="phone"] .wave_view_child {
+    touch-action: none;
+}

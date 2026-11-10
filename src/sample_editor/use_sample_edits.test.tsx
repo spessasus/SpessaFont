@@ -52,8 +52,11 @@ function renderEdits(
     }
     const editor = {
         session,
-        apply: (actions: Parameters<typeof session.history.do>[0]) => {
-            session.history.do(actions);
+        apply: (
+            actions: Parameters<typeof session.history.do>[0],
+            mergeKey?: string
+        ) => {
+            session.history.do(actions, mergeKey);
         },
         setView: () => {
             // The test shows no view
@@ -124,6 +127,55 @@ describe("useSampleEdits", () => {
         });
 
         expect(right.loopStart).toBe(3000);
+    });
+
+    it("merges a burst of loop steps into one undo step", () => {
+        const { session, samples } = setUp(["Bell"]);
+        const [sample] = samples;
+        sample.loopStart = 1000;
+        const result = renderEdits(session, sample);
+
+        act(() => {
+            for (let i = 0; i < 10; i += 1) {
+                result.current.stepLoopStart(1);
+            }
+        });
+
+        expect(sample.loopStart).toBe(1010);
+        session.history.undo();
+        expect(sample.loopStart).toBe(1000);
+        expect(session.history.canUndo).toBe(false);
+    });
+
+    it("keeps a stepped loop end inside the sample and after the start", () => {
+        const { session, samples } = setUp(["Bell"]);
+        const [sample] = samples;
+        sample.loopStart = 1000;
+        sample.loopEnd = 4900;
+        const result = renderEdits(session, sample);
+
+        act(() => {
+            result.current.stepLoopEnd(100);
+        });
+        expect(sample.loopEnd).toBe(LENGTH);
+
+        act(() => {
+            result.current.stepLoopEnd(-100_000);
+        });
+        expect(sample.loopEnd).toBe(1000);
+    });
+
+    it("steps a partner that shares the loop", () => {
+        const { session, samples } = setUp(["L", "R"]);
+        const [left, right] = samples;
+        left.setLinkedSample(right, SampleTypes.leftSample);
+        const result = renderEdits(session, left);
+
+        act(() => {
+            result.current.stepLoopStart(100);
+        });
+
+        expect([left.loopStart, right.loopStart]).toEqual([100, 100]);
     });
 
     it("asks for the partner of a mono sample, the name match first", async () => {

@@ -1,0 +1,168 @@
+/* The wave, the zoom and the sections control stay put, only the chosen section scrolls.
+   The wave pans sideways on a swipe, so a column that scrolled could not be scrolled from it */
+:root[data-layout="phone"] .sample_editor {
+    gap: 0;
+    overflow: hidden;
+}
+
+:root[data-layout="phone"] .sample_editor .wave_view {
+    flex: none;
+}
+
+/* Portrait stacks everything in the editor's column, the wrappers are for landscape */
+:root[data-layout="phone"] .sample_sections_wave_column,
+:root[data-layout="phone"] .sample_sections_section_column {
+    display: contents;
+}
+
+:root[data-layout="phone"] .sample_sections_zoom {
+    flex: none;
+    padding: 0.25rem var(--phone-gutter);
+}
+
+:root[data-layout="phone"] .sample_sections_zoom .controller_range_wrapper {
+    width: 100%;
+}
+
+:root[data-layout="phone"]
+    .sample_sections_zoom
+    .controller_range_wrapper
+    > span {
+    text-align: start;
+}
+
+:root[data-layout="phone"] .sample_sections_control {
+    position: sticky;
+    top: 0;
+    flex: none;
+    padding: 0.25rem var(--phone-gutter);
+}
+
+/* The desktop range look (ControllerRange) on the wave zoom and the equalizer gain, only the touch
+   area grows to 44 px, and the track is inset so the thumb stays inside the gutter at both ends */
+:root[data-layout="phone"]
+    .sample_sections_zoom
+    .controller_range_visual_wrapper,
+:root[data-layout="phone"]
+    .equalizer_card_row
+    .controller_range_visual_wrapper {
+    margin-inline: 0.75rem;
+}
+
+:root[data-layout="phone"] .sample_sections_zoom .controller_range,
+:root[data-layout="phone"] .equalizer_card_row .controller_range {
+    height: var(--phone-touch);
+    top: calc((var(--track-height) - var(--phone-touch)) / 2);
+}
+
+/* The segments share the spare width, and a long label (Polish) keeps its own */
+:root[data-layout="phone"] .sample_sections_control .segmented_control_segment {
+    flex: 1 1 auto;
+}
+
+:root[data-layout="phone"] .sample_sections_body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--phone-gutter);
+}
+
+:root[data-layout="phone"] .loop_section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--phone-gutter);
+}
+
+:root[data-layout="phone"] .loop_section .sample_playback,
+:root[data-layout="phone"] .loop_section_tools {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--flex-gap);
+}
+
+:root[data-layout="phone"] .loop_section .sample_playback button {
+    min-width: 0;
+    min-height: var(--phone-touch);
+    font-size: var(--phone-text-button);
+}
+
+:root[data-layout="phone"] .loop_section_tools button {
+    min-height: var(--phone-touch);
+    font-size: var(--phone-text-button);
+    text-align: center;
+}
+
+:root[data-layout="phone"] .loop_section_tools button[aria-disabled="true"] {
+    opacity: 0.4;
+}
+
+:root[data-layout="phone"] .loop_section_point {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+:root[data-layout="phone"] .loop_section_label {
+    text-align: start;
+    font-size: var(--phone-text-secondary);
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .loop_section_stepper_row {
+    display: grid;
+    grid-template-columns: auto auto 1fr auto auto;
+    gap: var(--flex-gap);
+}
+
+:root[data-layout="phone"] .loop_section_stepper_row .stepper_button {
+    font-size: var(--phone-text-button);
+}
+
+:root[data-layout="phone"] .loop_section_stepper_row input {
+    min-width: 0;
+    min-height: var(--phone-touch);
+    font-size: var(--phone-text-body);
+    text-align: end;
+}
+
+/*
+ * Landscape: two columns, the wave and its zoom on the left filling the height, the sections
+ * control and the chosen section on the right, which scrolls on its own
+ */
+:root[data-layout="phone"][data-orientation="landscape"] .sample_editor {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: minmax(0, 1fr);
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .sample_sections_wave_column,
+:root[data-layout="phone"][data-orientation="landscape"]
+    .sample_sections_section_column {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+/* The wave gives way, the sections column keeps the control's full labels (Polish) */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .sample_sections_wave_column {
+    min-width: 0;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .sample_sections_wave_column
+    .wave_view {
+    flex: 1 1 0;
+    height: auto;
+    min-height: 0;
+    /* The sections column brings its own gutter */
+    margin-right: 0;
+    margin-bottom: 0.25rem;
+}
+
+/* A loop point keeps room for five digits, the narrow sections column grows for it */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .loop_section_stepper_row {
+    grid-template-columns: auto auto minmax(5rem, 1fr) auto auto;
+}

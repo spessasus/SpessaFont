@@ -1,0 +1,41 @@
+/* The drawer's Controls state, a scroller of its own under the handle */
+:root[data-layout="phone"] .controls_panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--flex-gap);
+    box-sizing: border-box;
+    height: var(--phone-controls-height);
+    overflow-y: auto;
+    padding: var(--flex-gap) var(--phone-gutter) var(--phone-gutter);
+}
+
+:root[data-layout="phone"] .controls_panel_readout {
+    display: flex;
+    align-items: center;
+    gap: var(--flex-gap);
+    min-height: var(--phone-touch);
+    font-size: var(--phone-text-small);
+}
+
+:root[data-layout="phone"] .controls_panel_readout > span:nth-child(odd) {
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .controls_panel_readout > .monospaced {
+    min-width: 3ch;
+    font-size: var(--phone-text-small);
+    text-align: start;
+}
+
+/* Landscape leaves the panel little height, the knob row gets it */
+:root[data-layout="phone"][data-orientation="landscape"] .controls_panel {
+    padding-block: 0.25rem;
+}
+
+/* The song's own note on the keyboard channel, as Keys says it */
+:root[data-layout="phone"] .controls_panel_song_note {
+    margin: 0;
+    text-align: start;
+    font-size: var(--phone-text-secondary);
+    color: var(--muted-font-color);
+}

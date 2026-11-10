@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import "./index.css";
+import "./index_phone.css";
 import { App } from "./app.tsx";
 import { StrictMode } from "react";
 import { MIDIProvider } from "./settings/midi_context/midi_provider.tsx";
@@ -10,6 +11,8 @@ import { ClipboardProvider } from "./clipboard/clipboard_provider.tsx";
 import { ContextMenuProvider } from "./context_menu/context_menu_provider.tsx";
 import { DialogsProvider } from "./dialogs/dialogs_provider.tsx";
 import { DragProvider } from "./drag_and_drop/drag_provider.tsx";
+import { LayoutProvider } from "./layout/layout_provider.tsx";
+import { BackStackProvider } from "./phone_shell/back_stack_provider.tsx";
 import { init } from "./init.ts";
 import { TranslatedOptionsProvider } from "./utils/translated_options/translated_options_provider.tsx";
 import { logError } from "./utils/core_utils.ts";
@@ -24,21 +27,25 @@ function render(settings: SavedSettingsType) {
         <StrictMode>
             <ErrorBoundary>
                 <SettingsProvider initialSettings={settings}>
-                    <TranslatedOptionsProvider>
-                        <MIDIProvider>
-                            <AudioEngineProvider>
-                                <ClipboardProvider>
-                                    <ContextMenuProvider>
-                                        <DialogsProvider>
-                                            <DragProvider>
-                                                <App />
-                                            </DragProvider>
-                                        </DialogsProvider>
-                                    </ContextMenuProvider>
-                                </ClipboardProvider>
-                            </AudioEngineProvider>
-                        </MIDIProvider>
-                    </TranslatedOptionsProvider>
+                    <LayoutProvider>
+                        <BackStackProvider>
+                            <TranslatedOptionsProvider>
+                                <MIDIProvider>
+                                    <AudioEngineProvider>
+                                        <ClipboardProvider>
+                                            <ContextMenuProvider>
+                                                <DialogsProvider>
+                                                    <DragProvider>
+                                                        <App />
+                                                    </DragProvider>
+                                                </DialogsProvider>
+                                            </ContextMenuProvider>
+                                        </ClipboardProvider>
+                                    </AudioEngineProvider>
+                                </MIDIProvider>
+                            </TranslatedOptionsProvider>
+                        </BackStackProvider>
+                    </LayoutProvider>
                 </SettingsProvider>
             </ErrorBoundary>
         </StrictMode>

@@ -6,11 +6,10 @@ import { Discord, Gear, GitHub } from "../utils/icons/app_icons.tsx";
 import { IS_CHROME, IS_ELECTRON } from "../utils/environment_detection.ts";
 import type { BankSession } from "../core_backend/bank_session.ts";
 import type { BankEditView } from "../core_backend/bank_view.ts";
-import { useEventListener } from "../hooks/use_event_listener.ts";
+import { useBankShortcutKeys } from "../hooks/use_bank_shortcut_keys.ts";
 import { useBankCommands } from "./use_bank_commands.ts";
 import { FileMenu } from "./file_menu.tsx";
 import { EditMenu } from "./edit_menu.tsx";
-import { isEditorShortcut, isTextField } from "../utils/is_editor_shortcut.ts";
 
 interface MenuBarProps {
     session: BankSession | undefined;
@@ -58,54 +57,11 @@ export function MenuBar({
         mergeDuplicateSamples
     } = useBankCommands(session, onViewChange);
 
-    useEventListener(document, "keydown", (e) => {
-        if (e.defaultPrevented || !(e.ctrlKey || e.metaKey)) {
-            return;
-        }
-        // Shift or Caps Lock gives upper case letters, and Ctrl+Shift+Z is redo too
-        const key = e.key.toLowerCase();
-        // Ctrl+S saves the bank from anywhere, the browser would save the web page instead.
-        // Only a dialog or a toast question keeps it: the save's own questions could not be
-        // answered behind a dialog, and a toast may be the save asking something already
-        if (key === "s") {
-            e.preventDefault();
-            // Holding the keys would start a save for every repeat
-            if (
-                !session ||
-                e.repeat ||
-                (e.target instanceof Element &&
-                    e.target.closest("dialog, [role=alertdialog]") !== null)
-            ) {
-                return;
-            }
-            // The field applies its draft when it loses the focus, so the save includes it
-            if (isTextField(e.target) && e.target instanceof HTMLElement) {
-                e.target.blur();
-                e.target.focus();
-            }
-            save("auto");
-            return;
-        }
-        if (isEditorCovered || !session || !isEditorShortcut(e)) {
-            return;
-        }
-        switch (key) {
-            case "z": {
-                e.preventDefault();
-                if (e.shiftKey) {
-                    redo();
-                } else {
-                    undo();
-                }
-                break;
-            }
-            case "y": {
-                e.preventDefault();
-                redo();
-                break;
-            }
-        }
-    });
+    useBankShortcutKeys(
+        session !== undefined,
+        { undo, redo, save },
+        isEditorCovered
+    );
 
     // The menus edit the active bank, so the settings make way to show what changed
     const revealed = (command: () => void) => () => {

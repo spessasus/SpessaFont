@@ -28,3 +28,16 @@ if (typeof location === "undefined") {
         configurable: true
     });
 }
+
+// jsdom does not scroll, so it has no scrollIntoView. Components call it to keep things in view
+if (
+    typeof Element !== "undefined" &&
+    !("scrollIntoView" in Element.prototype)
+) {
+    Object.defineProperty(Element.prototype, "scrollIntoView", {
+        value: () => undefined,
+        // Tests may assign their own
+        writable: true,
+        configurable: true
+    });
+}

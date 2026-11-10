@@ -1,3 +1,6 @@
+import { useId } from "react";
+import { useTranslation } from "react-i18next";
+import { useLayout } from "../layout/layout_context.ts";
 import { readNumberField } from "./read_number_field.ts";
 
 interface DialogNumberFieldProps {
@@ -27,6 +30,11 @@ export function DialogNumberField({
     step,
     onChange
 }: DialogNumberFieldProps) {
+    const { t } = useTranslation();
+    const layout = useLayout();
+    const messageId = useId();
+    const isInvalid = readNumberField(value, min, max) === undefined;
+    const hasMessage = layout === "phone" && isInvalid;
     return (
         <label className={"tool_dialog_field"}>
             <span>{label}</span>
@@ -37,9 +45,17 @@ export function DialogNumberField({
                 max={max}
                 step={step}
                 value={value}
-                aria-invalid={readNumberField(value, min, max) === undefined}
+                // The decimal keypad has no minus sign
+                inputMode={min >= 0 ? "decimal" : "text"}
+                aria-invalid={isInvalid}
+                aria-describedby={hasMessage ? messageId : undefined}
                 onChange={(e) => onChange(e.target.value)}
             />
+            {hasMessage ? (
+                <span id={messageId} className={"dialog_field_message"}>
+                    {t("phoneLocale.dialogs.invalidNumber", { min, max })}
+                </span>
+            ) : null}
         </label>
     );
 }

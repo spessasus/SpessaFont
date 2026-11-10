@@ -171,3 +171,44 @@ describe("parseSettings", () => {
         expect(parseSettings(valid)).toEqual(valid);
     });
 });
+
+describe("layout setting", () => {
+    it("keeps a valid layout", () => {
+        expect(parseSettings({ layout: "phone" }).layout).toBe("phone");
+    });
+
+    it("falls back to auto", () => {
+        expect(parseSettings({ layout: "tablet" }).layout).toBe("auto");
+    });
+});
+
+describe("phone grid settings", () => {
+    it("keeps a valid grid mode and falls back to grid", () => {
+        expect(parseSettings({ phoneGridMode: "oneZone" }).phoneGridMode).toBe(
+            "oneZone"
+        );
+        expect(parseSettings({ phoneGridMode: "table" }).phoneGridMode).toBe(
+            "grid"
+        );
+    });
+
+    it("keeps Values only as a boolean", () => {
+        expect(parseSettings({ phoneValuesOnly: true }).phoneValuesOnly).toBe(
+            true
+        );
+        expect(parseSettings({ phoneValuesOnly: "yes" }).phoneValuesOnly).toBe(
+            false
+        );
+    });
+
+    it("keeps only known collapsed groups", () => {
+        expect(
+            parseSettings({ phoneCollapsedGroups: ["volume", "bogus", 3] })
+                .phoneCollapsedGroups
+        ).toEqual(["volume"]);
+        expect(
+            parseSettings({ phoneCollapsedGroups: "volume" })
+                .phoneCollapsedGroups
+        ).toEqual([]);
+    });
+});

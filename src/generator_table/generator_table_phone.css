@@ -1,0 +1,318 @@
+/* The modulator layer is placed against the editor around the table */
+:root[data-layout="phone"] .preset_editor,
+:root[data-layout="phone"] .instrument_editor {
+    position: relative;
+}
+
+:root[data-layout="phone"] .zone_table_wrapper {
+    padding: 0;
+}
+
+:root[data-layout="phone"] .zone_table {
+    border-radius: 0;
+    overflow: visible;
+}
+
+:root[data-layout="phone"] .zone_table th:first-child,
+:root[data-layout="phone"] .zone_table td:first-child {
+    width: var(--phone-name-column);
+    min-width: var(--phone-name-column);
+    max-width: var(--phone-name-column);
+    box-sizing: border-box;
+    background: var(--lighter-color-end);
+}
+
+/* The Global column stays next to the names so inheritance is visible while zones scroll */
+:root[data-layout="phone"] .zone_table th:nth-child(2),
+:root[data-layout="phone"] .zone_table td:nth-child(2) {
+    position: sticky;
+    left: var(--phone-name-column);
+    z-index: 1;
+    width: var(--phone-global-column);
+    min-width: var(--phone-global-column);
+    max-width: var(--phone-global-column);
+    box-sizing: border-box;
+    background: var(--lighter-color-end);
+    box-shadow: 2px 0 0 var(--border-color);
+}
+
+:root[data-layout="phone"] .zone_table thead tr:first-child th {
+    height: var(--phone-header-height);
+    box-sizing: border-box;
+    /* Marks the header's edge while the body scrolls under it, like the Global column's */
+    box-shadow: inset 0 -2px 0 var(--border-color);
+}
+
+:root[data-layout="phone"] .zone_table thead tr:first-child th:nth-child(2) {
+    box-shadow:
+        2px 0 0 var(--border-color),
+        inset 0 -2px 0 var(--border-color);
+}
+
+:root[data-layout="phone"]
+    .zone_table
+    thead
+    tr:first-child
+    th:nth-child(-n + 2) {
+    z-index: 2;
+}
+
+:root[data-layout="phone"] .zone_table td {
+    min-width: var(--phone-cell-width);
+    height: var(--phone-cell-height);
+    background: var(--darker-color-end);
+}
+
+:root[data-layout="phone"] .zone_table td:nth-child(2) {
+    background: var(--lighter-color-end);
+}
+
+:root[data-layout="phone"] .zone_table .generator_row_highlight,
+:root[data-layout="phone"] .zone_table .generator_row {
+    background: transparent;
+}
+
+:root[data-layout="phone"] .zone_table .generator_cell_header {
+    padding: 0.25rem 0.5rem;
+    height: var(--phone-cell-height);
+    box-sizing: border-box;
+    text-align: start;
+    font-size: var(--phone-text-secondary);
+    cursor: default;
+}
+
+:root[data-layout="phone"] .zone_table .generator_cell_header > div {
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 0;
+    padding: 0;
+    text-align: start;
+}
+
+:root[data-layout="phone"] .zone_table .generator_cell_header span {
+    white-space: normal;
+    text-align: start;
+    font-size: var(--phone-text-secondary);
+    line-height: 1.15;
+}
+
+:root[data-layout="phone"]
+    .zone_table
+    .generator_cell_header
+    .generator_unit_line {
+    font-size: var(--phone-text-caption);
+    font-style: normal;
+    line-height: 1.15;
+    text-align: start;
+    cursor: default;
+    color: var(--muted-font-color);
+}
+
+/* The view bar sits above the header row in the same scroller */
+:root[data-layout="phone"] .zone_table thead tr:first-child th {
+    top: var(--phone-view-bar-height);
+}
+
+:root[data-layout="phone"] .zone_table .generator_group_row th,
+:root[data-layout="phone"] .zone_table .add_generator_row td {
+    position: static;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    height: var(--phone-row-height);
+    padding: 0;
+    outline: none;
+    box-shadow: none;
+    text-align: start;
+}
+
+:root[data-layout="phone"] .zone_table .generator_group_row th {
+    background: var(--grid-group-color);
+}
+
+:root[data-layout="phone"] .zone_table .add_generator_row td {
+    background: var(--darker-color-end);
+}
+
+/* The rows span the whole table, so their content sticks to the start of the visible part */
+:root[data-layout="phone"] .generator_group_button,
+:root[data-layout="phone"] .add_generator_button {
+    position: sticky;
+    left: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: var(--phone-row-height);
+    padding: 0 var(--phone-gutter);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .generator_group_chevron {
+    display: inline-flex;
+}
+
+:root[data-layout="phone"] .generator_group_chevron svg {
+    width: var(--phone-disclosure-size);
+    height: var(--phone-disclosure-size);
+}
+
+:root[data-layout="phone"] .zone_table .generator_group_name {
+    font-size: var(--phone-text-button);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+:root[data-layout="phone"] .zone_table .generator_group_count {
+    font-size: var(--phone-text-small);
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .add_generator_button * {
+    color: var(--focus-color);
+}
+
+:root[data-layout="phone"] .add_generator_button svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+:root[data-layout="phone"] .zone_table .add_generator_label,
+:root[data-layout="phone"] .zone_table .add_generator_count {
+    font-size: var(--phone-text-button);
+    white-space: nowrap;
+}
+
+/* One zone mode: Global and one zone column that fills the rest of the width */
+:root[data-layout="phone"] .zone_table.one_zone {
+    width: 100%;
+}
+
+/* Vertical scrolling stays native, horizontal moves are the zone swipe. On the cells, as
+   touch-action does not apply to row groups */
+:root[data-layout="phone"] .zone_table.one_zone tbody td,
+:root[data-layout="phone"] .zone_table.one_zone tbody th {
+    touch-action: pan-y pinch-zoom;
+}
+
+:root[data-layout="phone"]
+    .zone_table.one_zone
+    thead
+    tr:first-child
+    th:nth-child(3) {
+    padding: 0;
+    vertical-align: middle;
+}
+
+:root[data-layout="phone"] .zone_stepper {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+:root[data-layout="phone"] .zone_stepper_step {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--phone-touch);
+    min-height: var(--phone-touch);
+}
+
+:root[data-layout="phone"] .zone_stepper_step svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+:root[data-layout="phone"] .zone_stepper_step[aria-disabled="true"] {
+    opacity: 0.4;
+}
+
+:root[data-layout="phone"] .zone_table.one_zone .zone_stepper_name {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: var(--phone-touch);
+    text-align: center;
+}
+
+:root[data-layout="phone"] .zone_table.one_zone .zone_stepper_name span {
+    max-width: 100%;
+    text-align: center;
+}
+
+:root[data-layout="phone"]
+    .zone_table.one_zone
+    .zone_stepper_name
+    .zone_header_range {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* A zone the Zones sheet jumps to starts right of the sticky name and Global columns */
+:root[data-layout="phone"] .zone_table .header_cell_name {
+    scroll-margin-inline-start: calc(
+        var(--phone-name-column) + var(--phone-global-column) + 0.5rem
+    );
+}
+
+/* A cell the cell sheet reveals stays clear of the sticky view bar, header row and name columns */
+:root[data-layout="phone"] .zone_table tbody [data-grid-key] {
+    scroll-margin-top: calc(var(--phone-view-bar-height) + 4.25rem);
+    scroll-margin-inline-start: calc(
+        var(--phone-name-column) + var(--phone-global-column) + 0.5rem
+    );
+}
+
+/*
+ * Landscape: a slightly narrower name column fits five 80 px zones beside the docked lists at
+ * 915 px, and the grid keeps its header and one row when a sheet docks under it
+ */
+:root[data-layout="phone"][data-orientation="landscape"] .zone_table_wrapper {
+    --phone-name-column: 7rem;
+    min-height: calc(4.25rem + var(--phone-cell-height));
+}
+
+/*
+ * A docked sheet keeps its header and one row first (editor_sheet.css). The grid keeps its
+ * header and one row from what is left (less the editor's flex gap), or as much of it as fits
+ */
+:root[data-layout="phone"][data-orientation="landscape"]
+    :has(> .editor_sheet)
+    > .zone_table_wrapper {
+    --grid-floor: min(
+        4.25rem + var(--phone-cell-height),
+        100% - 1rem - 2 * var(--phone-row-height) - var(--flex-gap)
+    );
+    min-height: max(0px, var(--grid-floor));
+}
+
+/*
+ * Less than the header row would only show a sliver of it, so the sheet takes that too. A
+ * declaration with var() is never dropped at parse time, so it needs the feature test
+ */
+@supports (min-height: calc(1px * sign(100% - 1px))) {
+    :root[data-layout="phone"][data-orientation="landscape"]
+        :has(> .editor_sheet)
+        > .zone_table_wrapper {
+        min-height: calc(
+            var(--grid-floor) *
+                max(0, sign(var(--grid-floor) - 4.25rem + 0.5px))
+        );
+    }
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    :has(
+        > .editor_sheet .piano_capture_bar,
+        > .editor_sheet .cell_sheet_key_span
+    )
+    > .zone_table_wrapper {
+    flex: 0 1 0;
+    min-height: 0;
+}

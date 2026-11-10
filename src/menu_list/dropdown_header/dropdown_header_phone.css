@@ -1,0 +1,71 @@
+:root[data-layout="phone"] .item_group_header {
+    flex: none;
+    height: var(--phone-row-height);
+    margin: 0;
+    border: none;
+    border-bottom: solid 1px var(--track-border-color);
+    border-radius: 0;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+:root[data-layout="phone"] .item_group_header:active {
+    background: var(--selection-color);
+}
+
+/* Title and count take what the buttons leave, the buttons follow in the header's flow */
+:root[data-layout="phone"] .item_group_header h2 {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+}
+
+:root[data-layout="phone"] .item_group_title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: 100%;
+    padding: 0 0 0 var(--phone-gutter);
+    text-align: start;
+    font-size: var(--phone-text-sheet-title);
+    font-weight: 600;
+}
+
+:root[data-layout="phone"] .item_group_count {
+    font-size: var(--phone-text-small);
+    font-weight: 400;
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .item_group_header .left_buttons,
+:root[data-layout="phone"] .item_group_header .right_buttons {
+    position: static;
+    flex: none;
+}
+
+:root[data-layout="phone"] .item_group_header .left_buttons > *,
+:root[data-layout="phone"] .item_group_header .right_buttons > * {
+    min-width: var(--phone-touch);
+    padding: 0;
+    border: none;
+}
+
+:root[data-layout="phone"] .item_group_header .svg_wrapper svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+:root[data-layout="phone"] .item_group_header .dropdown_triangle svg {
+    width: var(--phone-disclosure-size);
+    height: var(--phone-disclosure-size);
+}
+
+:root[data-layout="phone"] .item_group_header .dropdown_triangle,
+:root[data-layout="phone"] .item_group_header .dropdown_triangle * {
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .item_group_header button:disabled,
+:root[data-layout="phone"] .item_group_header button[aria-disabled="true"] {
+    opacity: 0.4;
+}

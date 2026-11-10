@@ -1,0 +1,135 @@
+/* The desktop panel is a wide flex item, here it is one full width column */
+:root[data-layout="phone"] .equalizer {
+    flex: none;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    margin-inline-start: 0;
+    gap: var(--phone-gutter);
+}
+
+:root[data-layout="phone"] .equalizer_band_grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: var(--flex-gap);
+}
+
+/* The docked column is narrower than a portrait phone, six bands cut "125" to "1…" */
+:root[data-layout="phone"][data-orientation="landscape"] .equalizer_band_grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+:root[data-layout="phone"] .equalizer_band_button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: var(--phone-touch);
+    padding: 0.125rem;
+    font-size: var(--phone-text-button);
+    line-height: 1.2;
+}
+
+:root[data-layout="phone"] .equalizer_band_button[aria-pressed="true"],
+:root[data-layout="phone"] .equalizer_actions button[aria-pressed="true"] {
+    border-color: var(--border-color);
+    background: var(--primary-color);
+}
+
+:root[data-layout="phone"] .equalizer_band_button[aria-disabled="true"],
+:root[data-layout="phone"] .equalizer_actions button[aria-disabled="true"] {
+    cursor: default;
+    opacity: 0.4;
+    transform: none;
+    filter: none;
+}
+
+:root[data-layout="phone"] .equalizer_band_button span {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+:root[data-layout="phone"] .equalizer_band_value {
+    font-size: var(--phone-text-caption);
+    font-variant-numeric: tabular-nums;
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .equalizer_hint {
+    margin: 0;
+    text-align: start;
+    font-size: var(--phone-text-caption);
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .equalizer_card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--flex-gap);
+    padding: var(--phone-gutter);
+    border-radius: var(--primary-border-radius);
+    background: var(--lighter-color-end);
+    border: 1px solid var(--track-border-color);
+}
+
+:root[data-layout="phone"] .equalizer_card_heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--flex-gap);
+}
+
+:root[data-layout="phone"] .equalizer_card_title {
+    text-align: start;
+    font-size: var(--phone-text-sheet-title);
+    font-weight: 600;
+}
+
+:root[data-layout="phone"] .equalizer_card_value {
+    text-align: end;
+    font-size: var(--phone-text-sheet-title);
+    font-variant-numeric: tabular-nums;
+}
+
+:root[data-layout="phone"] .equalizer_card_row {
+    display: flex;
+    align-items: center;
+    gap: var(--flex-gap);
+}
+
+/* The touch area of the range is in sample_editor_phone.css, shared with the wave zoom */
+:root[data-layout="phone"] .equalizer_card_row .controller_range_wrapper {
+    flex: 1;
+    min-width: 0;
+}
+
+:root[data-layout="phone"]
+    .equalizer_card_row
+    .controller_range_wrapper:has(input:disabled) {
+    opacity: 0.4;
+}
+
+:root[data-layout="phone"] .equalizer_actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--flex-gap);
+}
+
+:root[data-layout="phone"] .equalizer_actions button {
+    min-height: var(--phone-touch);
+    min-width: 0;
+    padding: 0 0.25rem;
+    font-size: var(--phone-text-button);
+    text-align: center;
+}
+
+/*
+ * Ten bands and a two column Gain fill two rows of six (three rows of four in landscape), and
+ * "Wzmocnienie" fits it
+ */
+:root[data-layout="phone"] .equalizer_band_gain {
+    grid-column: span 2;
+}

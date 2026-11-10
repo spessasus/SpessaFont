@@ -1,0 +1,651 @@
+:root[data-layout="phone"] .editor_sheet_title:has(.cell_sheet_picker) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    overflow: hidden;
+}
+
+:root[data-layout="phone"] .cell_sheet_picker {
+    display: inline-flex;
+    /* The name keeps its width, the unit gives way first */
+    flex: none;
+    max-width: 75%;
+    align-items: center;
+    gap: 0.25rem;
+    min-width: 0;
+    min-height: var(--phone-touch);
+}
+
+:root[data-layout="phone"] .cell_sheet_title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--phone-text-sheet-title);
+    font-weight: 600;
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet_picker svg {
+    flex: none;
+    width: var(--phone-disclosure-size);
+    height: var(--phone-disclosure-size);
+}
+
+:root[data-layout="phone"] .cell_sheet_unit {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--phone-text-secondary);
+    color: var(--muted-font-color);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+:root[data-layout="phone"] .cell_sheet_modulated {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-height: var(--phone-touch);
+    padding: 0 var(--phone-gutter);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet_modulated * {
+    color: var(--focus-color);
+}
+
+:root[data-layout="phone"] .cell_sheet_modulated span {
+    font-size: var(--phone-text-small);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet_modulated svg {
+    width: var(--phone-disclosure-size);
+    height: var(--phone-disclosure-size);
+}
+
+/* The list sits on the grid's color, the sheet's own is lighter */
+:root[data-layout="phone"] .cell_sheet .menu_list_scrollable {
+    flex: 1;
+    min-height: calc(1.5 * var(--phone-row-height));
+    background: var(--darker-color-end);
+    border-top: 1px solid var(--track-border-color);
+    border-bottom: 1px solid var(--track-border-color);
+}
+
+:root[data-layout="phone"] .cell_sheet_zone_row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    min-height: var(--phone-row-height);
+    box-sizing: border-box;
+    padding: 0 var(--phone-gutter);
+    border-bottom: 1px solid
+        color-mix(in oklch, var(--track-border-color) 45%, transparent);
+}
+
+:root[data-layout="phone"] .cell_sheet_zone_row[data-checked="true"] {
+    background: var(--cell-selection-color);
+}
+
+:root[data-layout="phone"] .cell_sheet_zone_row:has(:focus-visible) {
+    outline: 2px solid var(--light-primary-color);
+    outline-offset: -2px;
+}
+
+:root[data-layout="phone"] .cell_sheet_checkbox {
+    flex: none;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin: 0;
+    accent-color: var(--focus-color);
+}
+
+:root[data-layout="phone"] .cell_sheet_zone_swatch {
+    flex: none;
+    width: 0.5rem;
+    height: 1.5rem;
+    border-radius: 0.25rem;
+}
+
+/* The name with its key range under it, so the ranges line up whatever the value is */
+:root[data-layout="phone"] .cell_sheet_zone_text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+:root[data-layout="phone"] .cell_sheet_zone_name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--phone-text-body);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet_zone_range {
+    font-size: var(--phone-text-caption);
+    font-variant-numeric: tabular-nums;
+    color: var(--muted-font-color);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet_zone_value {
+    flex: none;
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem;
+    font-size: var(--phone-text-body);
+    font-variant-numeric: tabular-nums;
+    color: var(--muted-font-color);
+    text-align: end;
+    white-space: nowrap;
+}
+
+:root[data-layout="phone"] .cell_sheet_zone_value[data-own="true"] {
+    font-weight: 600;
+    color: var(--font-color);
+}
+
+:root[data-layout="phone"] .cell_sheet_zone_source {
+    font-size: var(--phone-text-caption);
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .cell_sheet_bar,
+:root[data-layout="phone"] .cell_sheet_footer {
+    flex: none;
+    display: flex;
+    /* Five selection buttons wrap to a second row on a narrow phone (Polish) */
+    flex-wrap: wrap;
+    gap: var(--flex-gap);
+    padding: 0.25rem var(--flex-gap);
+}
+
+:root[data-layout="phone"] .cell_sheet_text_button {
+    min-width: var(--phone-touch);
+    min-height: var(--phone-touch);
+    padding: 0 0.625rem;
+    font-size: var(--phone-text-button);
+}
+
+:root[data-layout="phone"] .cell_sheet_status {
+    flex: none;
+    margin: 0;
+    padding: 0 var(--phone-gutter);
+    font-size: var(--phone-text-caption);
+    color: var(--muted-font-color);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet_footer {
+    border-top: 1px solid var(--track-border-color);
+    margin-top: 0.25rem;
+}
+
+/*
+ * In portrait Apply stays in view above the drawer while the zone list scrolls under it. A docked
+ * landscape sheet can be shorter than the footer, which would then cover the value row for good
+ */
+:root[data-layout="phone"][data-orientation="portrait"] .cell_sheet_footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    background: var(--lighter-color-end);
+}
+
+:root[data-layout="phone"] .cell_sheet_button {
+    min-height: var(--phone-touch);
+    padding: 0 0.75rem;
+    font-size: var(--phone-text-button);
+}
+
+:root[data-layout="phone"] .cell_sheet_button[aria-disabled="true"] {
+    opacity: 0.4;
+}
+
+:root[data-layout="phone"] .cell_sheet_editor {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+}
+
+:root[data-layout="phone"] .cell_sheet_editor_row {
+    display: flex;
+    align-items: center;
+    gap: var(--flex-gap);
+    padding: 0.25rem var(--flex-gap);
+}
+
+:root[data-layout="phone"] .cell_sheet_toggle {
+    flex: none;
+    min-width: var(--phone-touch);
+    min-height: var(--phone-touch);
+    padding: 0 0.5rem;
+    font-size: var(--phone-text-button);
+    text-align: center;
+    white-space: nowrap;
+}
+
+:root[data-layout="phone"] .cell_sheet_toggle[aria-pressed="true"] {
+    background: var(--primary-color);
+    border-color: var(--border-color);
+}
+
+:root[data-layout="phone"] .cell_sheet_field {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    min-height: var(--phone-touch);
+    box-sizing: border-box;
+    padding-inline-end: 0.5rem;
+    border: 1px solid var(--track-border-color);
+    border-radius: var(--primary-border-radius);
+    background: var(--darker-color-end);
+}
+
+:root[data-layout="phone"] .cell_sheet_field:focus-within {
+    border-color: var(--focus-color);
+    outline: 1px solid var(--focus-color);
+}
+
+:root[data-layout="phone"] .cell_sheet_sign {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--phone-touch);
+    min-height: var(--phone-touch);
+}
+
+:root[data-layout="phone"] .cell_sheet_sign * {
+    color: var(--focus-color);
+}
+
+:root[data-layout="phone"] .cell_sheet_sign svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+:root[data-layout="phone"] .cell_sheet_sign[aria-disabled="true"] {
+    opacity: 0.4;
+}
+
+:root[data-layout="phone"] .cell_sheet_input {
+    flex: 1;
+    width: 0;
+    min-width: 0;
+    min-height: var(--phone-touch);
+    padding: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: var(--phone-text-body);
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+:root[data-layout="phone"] .cell_sheet_field_unit {
+    flex: none;
+    font-size: var(--phone-text-caption);
+    color: var(--muted-font-color);
+}
+
+/* .monospaced forces 1rem, the note name takes the unit's size */
+:root[data-layout="phone"] .cell_sheet_field_unit.monospaced {
+    font-size: var(--phone-text-caption);
+}
+
+:root[data-layout="phone"] .cell_sheet_editor .cell_sheet_status {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+:root[data-layout="phone"] .cell_sheet_editor .cell_sheet_status span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--phone-text-caption);
+    color: var(--muted-font-color);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet_editor .cell_sheet_sends {
+    flex: none;
+    text-align: end;
+}
+
+:root[data-layout="phone"] .cell_sheet_apply {
+    margin-inline-start: auto;
+    padding: 0 1.25rem;
+    border-color: var(--border-color);
+    background: var(--primary-color);
+    text-align: center;
+}
+
+:root[data-layout="phone"] .cell_sheet_range_field {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+}
+
+:root[data-layout="phone"] .cell_sheet_range_label {
+    font-size: var(--phone-text-secondary);
+    color: var(--muted-font-color);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet_range_field .cell_sheet_input {
+    text-align: center;
+}
+
+:root[data-layout="phone"] .cell_sheet_options {
+    /* Two columns, so the options never need a scroller of their own */
+    flex: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+:root[data-layout="phone"] .cell_sheet_option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    min-height: var(--phone-touch);
+    padding: 0 0.5rem 0 0.75rem;
+    font-size: var(--phone-text-body);
+    text-align: start;
+    border-bottom: 1px solid
+        color-mix(in oklch, var(--track-border-color) 45%, transparent);
+}
+
+:root[data-layout="phone"] .cell_sheet_option_label {
+    min-width: 0;
+    /* A long label (Polish) wraps to a second line instead of losing its end */
+    overflow-wrap: anywhere;
+    line-height: 1.2;
+    text-align: start;
+}
+
+/* The radio mark, a ring with a dot when checked */
+:root[data-layout="phone"] .cell_sheet_option::before {
+    content: "";
+    flex: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    box-sizing: border-box;
+    border: 2px solid var(--muted-font-color);
+    border-radius: 50%;
+}
+
+:root[data-layout="phone"] .cell_sheet_option[aria-checked="true"] {
+    background: var(--cell-selection-color);
+    font-weight: 600;
+}
+
+:root[data-layout="phone"] .cell_sheet_option[aria-checked="true"]::before {
+    border-color: var(--focus-color);
+    background: radial-gradient(var(--focus-color) 0 40%, transparent 45%);
+}
+
+:root[data-layout="phone"] .cell_sheet_option[aria-disabled="true"] {
+    opacity: 0.4;
+}
+
+/* Landscape: everything below the sheet's header scrolls, so Apply stays reachable */
+:root[data-layout="phone"][data-orientation="landscape"] .cell_sheet {
+    overflow-y: auto;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"] .cell_sheet > * {
+    flex-shrink: 0;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .cell_sheet
+    .menu_list_scrollable {
+    flex: 1 0 calc(1.5 * var(--phone-row-height));
+}
+
+/* Keys…: check the zones that overlap a typed span of keys */
+:root[data-layout="phone"] .cell_sheet_key_span {
+    display: flex;
+    flex-direction: column;
+    gap: var(--phone-gutter);
+    padding: var(--flex-gap) var(--phone-gutter) var(--phone-gutter);
+}
+
+:root[data-layout="phone"] .cell_sheet_key_hint,
+:root[data-layout="phone"] .cell_sheet_key_found {
+    margin: 0;
+    text-align: start;
+    font-size: var(--phone-text-secondary);
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .cell_sheet_key_found {
+    color: var(--font-color);
+}
+
+:root[data-layout="phone"] .cell_sheet_key_fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--phone-gutter);
+}
+
+:root[data-layout="phone"] .cell_sheet_key_field {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: var(--flex-gap);
+}
+
+:root[data-layout="phone"] .cell_sheet_key_field label {
+    grid-column: 1 / -1;
+    text-align: start;
+    font-size: var(--phone-text-secondary);
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .cell_sheet_key_input {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: var(--phone-touch);
+    font-size: var(--phone-text-body);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet_key_input[aria-invalid="true"] {
+    border-color: var(--destructive-color);
+}
+
+:root[data-layout="phone"] .cell_sheet_key_note {
+    min-width: 3ch;
+    font-size: var(--phone-text-small);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet_key_buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--flex-gap);
+    /* The three buttons fit one row at 360 */
+    margin-inline: -0.5rem;
+}
+
+:root[data-layout="phone"] .cell_sheet_piano {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+:root[data-layout="phone"] .cell_sheet_piano svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+:root[data-layout="phone"] .cell_sheet_piano[aria-pressed="true"] {
+    background: var(--primary-color);
+    border-color: var(--border-color);
+}
+
+/* The span bar: the zones along the keys like the drawer's minimap, the span over them */
+:root[data-layout="phone"] .key_span_bar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+:root[data-layout="phone"] .key_span_bar_track {
+    position: relative;
+    height: 1.5rem;
+    border-radius: 0.25rem;
+    background: var(--darker-color-start);
+    overflow: hidden;
+}
+
+:root[data-layout="phone"] .key_span_bar_labels {
+    position: relative;
+    height: 1rem;
+}
+
+:root[data-layout="phone"] .key_span_bar_label {
+    position: absolute;
+    top: 0;
+    left: calc(var(--start) / 128 * 100%);
+    font-size: var(--phone-text-caption);
+    color: var(--muted-font-color);
+}
+
+/* The last label ends at the bar's end */
+:root[data-layout="phone"] .key_span_bar_label:last-child {
+    left: auto;
+    right: 0;
+}
+
+/*
+ * A capture stays in view while the sheet's body scrolls (landscape). The tint is translucent,
+ * so the sheet's own color goes under it to hide the rows scrolling past
+ */
+:root[data-layout="phone"] .cell_sheet .piano_capture_bar {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background:
+        linear-gradient(
+            var(--cell-selection-color),
+            var(--cell-selection-color)
+        ),
+        var(--lighter-color-end);
+}
+
+/* Set from piano names itself next to its icon */
+:root[data-layout="phone"] .cell_sheet_piano_labelled {
+    gap: var(--flex-gap);
+}
+
+/* Under a Global edit: how many zones keep their own value, and a way to check them too */
+:root[data-layout="phone"] .cell_sheet_ignore_global {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: var(--flex-gap);
+    margin: 0;
+    padding: 0.25rem var(--phone-gutter);
+    font-size: var(--phone-text-secondary);
+    color: var(--muted-font-color);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet_ignore_global > span {
+    flex: 1 1 12rem;
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet_ignore_select {
+    min-height: var(--phone-touch);
+    padding: 0 0.5rem;
+    font-size: var(--phone-text-small);
+    font-weight: 600;
+    color: var(--font-color);
+}
+
+/* The piano buttons are square touch targets */
+:root[data-layout="phone"] .cell_sheet_piano:not(.cell_sheet_piano_labelled) {
+    width: var(--phone-touch);
+    padding: 0;
+}
+
+/* Landscape: the Global line comes first, above the fold of the short sheet */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .cell_sheet_ignore_global {
+    order: -1;
+    padding-block: 0;
+}
+
+/* Keys…: the hint is the first thing to go when the sheet is short */
+:root[data-layout="phone"][data-orientation="landscape"] .cell_sheet_key_hint {
+    display: none;
+}
+
+/* The slider under the steppers: the desktop range look (ControllerRange), only the touch area
+   grows to 44 px, and the track is inset so the thumb stays inside the gutter at both ends. Its
+   value sits beside the track, as the sheet has no height to spare at 360 px */
+:root[data-layout="phone"] .cell_sheet_slider {
+    flex: none;
+    padding: 0 var(--flex-gap);
+}
+
+:root[data-layout="phone"] .cell_sheet_slider .controller_range_wrapper {
+    width: 100%;
+    min-height: var(--phone-touch);
+    flex-direction: row;
+    align-items: center;
+}
+
+:root[data-layout="phone"] .cell_sheet_slider .controller_range_wrapper > span {
+    flex: none;
+    min-width: 6.5rem;
+    padding-inline-start: var(--flex-gap);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .cell_sheet_slider .controller_range_visual_wrapper {
+    flex: 1;
+}
+
+:root[data-layout="phone"] .cell_sheet_slider .controller_range_visual_wrapper {
+    margin-inline: 0.75rem;
+}
+
+:root[data-layout="phone"] .cell_sheet_slider .controller_range {
+    height: var(--phone-touch);
+    top: calc((var(--track-height) - var(--phone-touch)) / 2);
+}
+
+/* In portrait the sheet grows by the slider's height, so the editor fits as it did without one
+   and the grid above gives the room. A sheet dragged to full height stays full */
+:root[data-layout="phone"][data-orientation="portrait"]
+    .editor_sheet:not([data-full="true"]):has(.cell_sheet_slider) {
+    height: calc(var(--phone-sheet-height) + var(--phone-touch));
+}

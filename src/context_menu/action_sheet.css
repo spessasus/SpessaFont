@@ -1,0 +1,107 @@
+:root[data-layout="phone"] .action_sheet {
+    display: flex;
+    flex-direction: column;
+    padding: 0.25rem 0;
+}
+
+:root[data-layout="phone"] .action_sheet .action_sheet_item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-height: 3rem;
+    padding: 0.25rem var(--phone-gutter);
+    text-align: start;
+    color: var(--font-color);
+}
+
+:root[data-layout="phone"]
+    .action_sheet
+    .action_sheet_item:active:not(:disabled),
+:root[data-layout="phone"] .action_sheet .action_sheet_item:focus-visible {
+    background: var(--phone-pressed-color);
+    outline: none;
+}
+
+/* The current choice, like the navigator's current row */
+:root[data-layout="phone"]
+    .action_sheet
+    .action_sheet_item[aria-current="true"] {
+    background: var(--phone-pressed-color);
+    box-shadow: inset 3px 0 0 var(--focus-color);
+}
+
+:root[data-layout="phone"] .action_sheet .action_sheet_item:disabled {
+    cursor: default;
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .action_sheet .action_sheet_item[data-destructive] {
+    color: var(--destructive-color);
+}
+
+:root[data-layout="phone"]
+    .action_sheet
+    .action_sheet_item:disabled[data-destructive] {
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .action_sheet_icon {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+:root[data-layout="phone"] .action_sheet_icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+:root[data-layout="phone"] .action_sheet_text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+}
+
+:root[data-layout="phone"] .action_sheet_chevron {
+    flex: none;
+    display: flex;
+    color: var(--muted-font-color);
+}
+
+/* The app sets a color on every path, so the chevron's own would not show */
+:root[data-layout="phone"] .action_sheet_chevron * {
+    color: inherit;
+}
+
+:root[data-layout="phone"] .action_sheet_chevron svg {
+    width: var(--phone-disclosure-size);
+    height: var(--phone-disclosure-size);
+}
+
+:root[data-layout="phone"] .action_sheet_label {
+    font-size: var(--phone-text-body);
+}
+
+:root[data-layout="phone"] .action_sheet_second {
+    font-size: var(--phone-text-secondary);
+    color: var(--muted-font-color);
+}
+
+/* Separators are a plain gap on a phone */
+:root[data-layout="phone"] .action_sheet .action_sheet_gap {
+    flex: none;
+    height: 0.75rem;
+    margin: 0;
+    border: none;
+}
+
+/* The global reset centers every element's text, so the text spans say start themselves */
+:root[data-layout="phone"] .action_sheet .action_sheet_text,
+:root[data-layout="phone"] .action_sheet .action_sheet_label,
+:root[data-layout="phone"] .action_sheet .action_sheet_second {
+    text-align: start;
+}

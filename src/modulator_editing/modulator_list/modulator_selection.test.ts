@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getClickedSelection } from "./modulator_selection.ts";
+import { getClickedSelection, selectBetween } from "./modulator_selection.ts";
 
 const IDS = [10, 11, 12, 13, 14];
 
@@ -35,5 +35,19 @@ describe("getClickedSelection", () => {
         expect([...getClickedSelection(IDS, new Set(), 99, 12, true)]).toEqual([
             12
         ]);
+    });
+});
+
+describe("selectBetween", () => {
+    it("fills the gap between the first and last selected modulator", () => {
+        expect(selectBetween([1, 2, 3, 4, 5], new Set([2, 4]))).toEqual(
+            new Set([2, 3, 4])
+        );
+    });
+
+    it("keeps a selection of one as it is", () => {
+        expect(selectBetween([1, 2, 3, 4, 5], new Set([3]))).toEqual(
+            new Set([3])
+        );
     });
 });

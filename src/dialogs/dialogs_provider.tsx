@@ -20,6 +20,7 @@ export function DialogsProvider({ children }: DialogsProviderProps) {
         | {
               type: "pick";
               title: string;
+              kind: PickElementOptions<unknown>["kind"];
               options: PickerOption[];
               resolve: (index: number | undefined) => void;
           }
@@ -69,12 +70,14 @@ export function DialogsProvider({ children }: DialogsProviderProps) {
             pickElement: <T,>({
                 title,
                 items,
-                getLabel
+                getLabel,
+                kind
             }: PickElementOptions<T>) =>
                 new Promise<T | undefined>((resolve) =>
                     replaceRequest({
                         type: "pick",
                         title,
+                        kind,
                         // The picker works on labels, the index leads back to the item
                         options: items.map((item, index) => ({
                             label: getLabel(item),
@@ -148,6 +151,7 @@ export function DialogsProvider({ children }: DialogsProviderProps) {
                     {request.type === "pick" ? (
                         <ElementPicker
                             title={request.title}
+                            kind={request.kind}
                             options={request.options}
                             onAnswer={answer}
                         />

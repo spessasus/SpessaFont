@@ -21,7 +21,7 @@ function trueKeys(keys: boolean[]) {
     return notes;
 }
 function keysOnly(...ranges: { min: number; max: number }[]) {
-    return ranges.map((keys) => ({ keys, velocities: FULL }));
+    return ranges.map((keys, zoneId) => ({ keys, velocities: FULL, zoneId }));
 }
 const NOTHING_PRESSED = new Map<number, number>();
 
@@ -64,8 +64,16 @@ describe("getKeyStates", () => {
 
     it("highlights only the layers that play at the pressed velocity", () => {
         const splits = [
-            { keys: { min: 60, max: 61 }, velocities: { min: 0, max: 63 } },
-            { keys: { min: 61, max: 62 }, velocities: { min: 64, max: 127 } }
+            {
+                keys: { min: 60, max: 61 },
+                velocities: { min: 0, max: 63 },
+                zoneId: 0
+            },
+            {
+                keys: { min: 61, max: 62 },
+                velocities: { min: 64, max: 127 },
+                zoneId: 1
+            }
         ];
         const soft = getKeyStates(
             new Map([[noteId(KEYBOARD_TARGET_CHANNEL, 61), 20]]),

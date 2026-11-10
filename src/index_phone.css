@@ -1,0 +1,64 @@
+:root[data-layout="phone"] {
+    --phone-app-bar-height: 3.5rem;
+    --phone-element-bar-height: 2.75rem;
+    --phone-view-bar-height: 3rem;
+    --phone-touch: 2.75rem;
+    --phone-row-height: 3rem;
+    --phone-child-row-height: 2.5rem;
+    --phone-gutter: 1rem;
+    --phone-handle-height: 2.75rem;
+    --phone-strip-height: 2.75rem;
+    --phone-keys-height: 7rem;
+    --phone-key-width: calc(1.5625rem * 7 / 12);
+    --phone-name-column: 7.5rem;
+    --phone-global-column: 4.5rem;
+    --phone-cell-width: 5rem;
+    --phone-cell-height: 2.75rem;
+    --phone-header-height: 4rem;
+    --phone-edge-dead-zone: 1.875rem;
+    --phone-sheet-height: 50dvh;
+    --phone-controls-height: 55dvh;
+    --phone-navigator-width: 90%;
+    --phone-pressed-color: color-mix(
+        in oklch,
+        var(--focus-color) 18%,
+        var(--lighter-color-end)
+    );
+    --phone-disclosure-size: 1.25rem;
+    --phone-text-heading: 1.25rem;
+    --phone-text-title: 1.125rem;
+    --phone-text-sheet-title: 1.0625rem;
+    --phone-text-body: 1rem;
+    --phone-text-button: 0.9375rem;
+    --phone-text-small: 0.875rem;
+    --phone-text-secondary: 0.8125rem;
+    --phone-text-caption: 0.75rem;
+}
+
+/* Landscape is the phone layout held sideways (spec 14.2) */
+:root[data-layout="phone"][data-orientation="landscape"] {
+    --phone-app-bar-height: 3rem;
+    --phone-keys-height: 5.5rem;
+    --phone-dock-width: clamp(15rem, 35vw, 20rem);
+    --phone-sheet-height: 60dvh;
+    /* The drawer's Controls leave the editor a usable height */
+    --phone-controls-height: 40dvh;
+    /* The grid's view bar moves into the element bar row, so the grid keeps no room for it */
+    --phone-view-bar-height: 0rem;
+}
+
+/* The page never scrolls, and dvh follows the address bar and the soft keyboard */
+:root[data-layout="phone"] #root {
+    height: 100dvh;
+    overflow: hidden;
+}
+
+/* Only the sheets, the navigator and the drawer move on a phone */
+:root[data-layout="phone"] .spessafont_main * {
+    transition: none;
+}
+
+/* Android keeps :hover on the last tapped element, so the desktop hover brightness would stick */
+:root[data-layout="phone"] .hover_brightness:hover {
+    filter: none;
+}

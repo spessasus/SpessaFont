@@ -1,11 +1,12 @@
 import { useTranslation } from "react-i18next";
 import "./welcome.css";
+import "./welcome_phone.css";
 import {
     DownloadIcon,
     NewFileIcon,
     OpenFileIcon
 } from "../utils/icons/file_icons.tsx";
-import { IS_ELECTRON } from "../utils/environment_detection.ts";
+import { IS_CHROME, IS_ELECTRON } from "../utils/environment_detection.ts";
 import { showToastDialog } from "../toasts/show_toast_dialog.tsx";
 import {
     DEFAULT_RELEASE_URL,
@@ -13,6 +14,7 @@ import {
     fetchDesktopDownloads
 } from "./desktop_downloads.ts";
 import { logError } from "../utils/core_utils.ts";
+import { useLayout } from "../layout/layout_context.ts";
 
 const DOWNLOADS = [
     { key: "windowsInstaller", label: "downloadDesktop.windowsInstaller" },
@@ -24,10 +26,15 @@ const DOWNLOADS = [
 interface WelcomeProps {
     onOpenFile: () => void;
     onNewFile: () => void;
+    /**
+     * Installs the app on a phone, undefined while the browser has no offer.
+     */
+    onInstallApp?: () => void;
 }
 
-export function Welcome({ onOpenFile, onNewFile }: WelcomeProps) {
+export function Welcome({ onOpenFile, onNewFile, onInstallApp }: WelcomeProps) {
     const { t } = useTranslation();
+    const layout = useLayout();
 
     const handleDownload = async () => {
         let downloads: DesktopDownloads | undefined;
@@ -88,7 +95,27 @@ export function Welcome({ onOpenFile, onNewFile }: WelcomeProps) {
                         <span>{t("welcome.newPrompt")}</span>
                     </button>
                 </div>
-                {IS_ELECTRON ? null : (
+                {layout === "phone" ? (
+                    <>
+                        {onInstallApp ? (
+                            <button
+                                type={"button"}
+                                className={"welcome_action"}
+                                onClick={onInstallApp}
+                            >
+                                <DownloadIcon />
+                                <span>
+                                    {t("phoneLocale.welcome.installApp")}
+                                </span>
+                            </button>
+                        ) : null}
+                        {IS_CHROME ? (
+                            <p className={"welcome_note"}>
+                                {t("phoneLocale.welcome.firefoxNote")}
+                            </p>
+                        ) : null}
+                    </>
+                ) : IS_ELECTRON ? null : (
                     <button
                         type={"button"}
                         className={"welcome_action"}

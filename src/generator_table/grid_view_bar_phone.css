@@ -1,0 +1,54 @@
+:root[data-layout="phone"] .grid_view_bar {
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: var(--flex-gap);
+    height: var(--phone-view-bar-height);
+    box-sizing: border-box;
+    padding: 0 0.25rem 0 var(--flex-gap);
+    background: var(--darker-color-end);
+    border-bottom: 1px solid var(--track-border-color);
+}
+
+:root[data-layout="phone"] .grid_view_bar_values {
+    flex-shrink: 0;
+    margin-inline-start: auto;
+    height: var(--phone-touch);
+    min-width: var(--phone-touch);
+    /* Polish needs the room at 360 px */
+    padding: 0 0.5rem;
+    font-size: var(--phone-text-button);
+    white-space: nowrap;
+}
+
+:root[data-layout="phone"] .grid_view_bar_values[aria-pressed="true"] {
+    background: var(--primary-color);
+    border-color: var(--border-color);
+}
+
+:root[data-layout="phone"] .grid_view_bar_all {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--phone-touch);
+    min-height: var(--phone-touch);
+}
+
+:root[data-layout="phone"] .grid_view_bar_all svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+/* In the landscape element bar row (view_bar_slot.ts) the bar takes the row's look */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .view_bar_slot
+    .grid_view_bar {
+    position: static;
+    height: var(--phone-element-bar-height);
+    border-bottom: none;
+    background: none;
+}

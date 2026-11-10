@@ -4,6 +4,10 @@ export interface PickElementOptions<T> {
     title: string;
     items: readonly T[];
     getLabel: (item: T) => string;
+    /**
+     * What the items are. Sample names are shown in monospace on phones, like in the lists.
+     */
+    kind?: "sample";
 }
 
 export interface AskNumberOptions {

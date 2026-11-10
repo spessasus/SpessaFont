@@ -1,0 +1,32 @@
+/* A read-only stand-in for the select, a tap selects the cell like any other */
+:root[data-layout="phone"] .generator_cell .select_cell_button {
+    display: block;
+    width: 100%;
+    min-height: var(--phone-cell-height);
+    padding: 0 0.5rem;
+    box-sizing: border-box;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    color: var(--font-color);
+    font-size: var(--phone-text-body);
+    font-weight: 600;
+    text-align: end;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+:root[data-layout="phone"] .generator_cell.modulated .select_cell_button {
+    outline: 1px solid var(--focus-color);
+    outline-offset: -1px;
+}
+
+:root[data-layout="phone"] .generator_cell .select_cell_button:focus-visible {
+    outline: 2px solid var(--light-primary-color);
+    outline-offset: -2px;
+}
+
+:root[data-layout="phone"] .generator_cell.selected .select_cell_button {
+    background: var(--cell-selection-color);
+}

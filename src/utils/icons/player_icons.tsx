@@ -98,6 +98,21 @@ export function SpeakerIcon() {
     );
 }
 
+export function InstrumentIcon() {
+    return (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="currentColor"
+            fillRule="evenodd"
+            viewBox="0 0 16 16"
+        >
+            <path d="M3 3h10a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1M3 4v8h10V4zm2 0h1.5v4H5zm4.5 0H11v4H9.5zM7.25 8.5h1.5V12h-1.5z" />
+        </svg>
+    );
+}
+
 export function StopIcon() {
     return (
         <svg
@@ -124,6 +139,21 @@ export function LoopIcon() {
             viewBox="0 0 16 16"
         >
             <path d="M11 5.466V4H5a4 4 0 0 0-3.584 5.777.5.5 0 1 1-.896.446A5 5 0 0 1 5 3h6V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192m3.81.086a.5.5 0 0 1 .67.225A5 5 0 0 1 11 13H5v1.466a.25.25 0 0 1-.41.192l-2.36-1.966a.25.25 0 0 1 0-.384l2.36-1.966a.25.25 0 0 1 .41.192V12h6a4 4 0 0 0 3.585-5.777.5.5 0 0 1 .225-.67Z" />
+        </svg>
+    );
+}
+
+export function PianoKeysIcon() {
+    return (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="currentColor"
+            className="bi bi-piano-keys"
+            viewBox="0 0 16 16"
+        >
+            <path d="M1.5 2A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2zM1 3.5a.5.5 0 0 1 .5-.5H3v5.5a.5.5 0 0 0 .5.5H4v4H1.5a.5.5 0 0 1-.5-.5zM5 9h.5a.5.5 0 0 0 .5-.5V3h1v5.5a.5.5 0 0 0 .5.5H8v4H5zm4 0h.5a.5.5 0 0 0 .5-.5V3h1v5.5a.5.5 0 0 0 .5.5h.5v4H9zm4 0h.5a.5.5 0 0 0 .5-.5V3h.5a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5H13z" />
         </svg>
     );
 }

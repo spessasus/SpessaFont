@@ -1,0 +1,198 @@
+:root[data-layout="phone"] .keyboard_drawer {
+    min-width: 0;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    border-top: solid 1px var(--track-border-color);
+}
+
+:root[data-layout="phone"] .drawer_handle {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: var(--flex-gap);
+    height: var(--phone-handle-height);
+    padding: 0 var(--flex-gap);
+    background: var(--drawer-handle-color);
+}
+
+:root[data-layout="phone"] .drawer_toggle {
+    /* The name gives way first, the toggles keep their labels */
+    flex-shrink: 0;
+    height: var(--phone-touch);
+    min-width: var(--phone-touch);
+    padding: 0 0.75rem;
+    font-size: var(--phone-text-button);
+}
+
+:root[data-layout="phone"] .drawer_toggle[aria-pressed="true"] {
+    background: var(--primary-color);
+    border-color: var(--border-color);
+}
+
+:root[data-layout="phone"] .drawer_name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-align: end;
+    font-size: var(--phone-text-small);
+    color: var(--font-color);
+}
+
+:root[data-layout="phone"] .drawer_name[hidden] {
+    display: none;
+}
+
+:root[data-layout="phone"] .drawer_voices {
+    flex-shrink: 0;
+    font-size: var(--phone-text-small);
+    color: var(--font-color);
+}
+
+:root[data-layout="phone"] .drawer_song_controls {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-width: 0;
+    flex: 1;
+}
+
+:root[data-layout="phone"] .drawer_song_open {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex: 1;
+    min-width: 0;
+    min-height: var(--phone-touch);
+    padding: 0;
+}
+
+:root[data-layout="phone"] .drawer_song_icon {
+    flex: none;
+    display: flex;
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .drawer_song_icon * {
+    color: inherit;
+}
+
+:root[data-layout="phone"] .drawer_song_icon svg {
+    width: 1.125rem;
+    height: 1.125rem;
+}
+
+:root[data-layout="phone"] .drawer_song_name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-align: start;
+    font-size: var(--phone-text-small);
+}
+
+/* A narrow phone gives the time an ellipsis before it runs under the pause button */
+:root[data-layout="phone"] .drawer_song_time {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--phone-text-small);
+}
+
+:root[data-layout="phone"] .drawer_song_toggle {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--phone-touch);
+    height: var(--phone-touch);
+    padding: 0;
+}
+
+:root[data-layout="phone"] .drawer_song_toggle svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+:root[data-layout="phone"] .drawer_keys {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+:root[data-layout="phone"] .drawer_strip {
+    display: flex;
+    align-items: center;
+    gap: var(--flex-gap);
+    height: var(--phone-strip-height);
+    padding: 0 var(--flex-gap);
+    flex-shrink: 0;
+}
+
+:root[data-layout="phone"] .drawer_song_note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--phone-keys-height);
+    margin: 0;
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .drawer_keyboard {
+    display: flex;
+    min-width: 0;
+}
+
+/*
+ * Landscape: the octave strip sits in the handle row between the toggles and the name, which
+ * gives way first. The minimap keeps a width that can still be dragged
+ */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .drawer_handle
+    .zone_minimap {
+    flex: 1 1 auto;
+    min-width: 8rem;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .drawer_handle:has(.zone_minimap)
+    .drawer_name {
+    flex: 0 1 auto;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .drawer_handle
+    .drawer_voices {
+    /* The row's gap is closed for the strip, the count keeps its own and its number */
+    margin-inline-start: 0.5rem;
+    flex-shrink: 0;
+}
+
+/* With the strip in the row a song keeps its time and pause, the name gives way */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .drawer_handle:has(.zone_minimap)
+    .drawer_song_name {
+    display: none;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .drawer_handle:has(.zone_minimap)
+    .drawer_song_controls {
+    flex: none;
+}
+
+/* The strip's buttons carry their own touch padding, so the crowded row closes its gaps */
+:root[data-layout="phone"][data-orientation="landscape"] .drawer_handle {
+    gap: 0.25rem;
+}
+
+/* A song's controls need the row too, so the minimap gets narrower (still draggable) */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .drawer_handle:has(.drawer_song_controls)
+    .zone_minimap {
+    min-width: 3.5rem;
+}

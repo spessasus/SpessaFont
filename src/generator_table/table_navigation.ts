@@ -38,6 +38,44 @@ export function parseCellKey(key: string) {
 }
 
 /**
+ * The table's Tab stop: the last focused item, or the first cell when that item is gone (a
+ * deleted zone).
+ */
+export function getTabKey(
+    activeKey: string | null,
+    shown: {
+        zoneIds: readonly number[];
+        modulatorZoneIds: readonly number[];
+        rows: readonly {
+            generator: GeneratorType;
+            zoneIds: readonly number[];
+        }[];
+        globalZoneId: number;
+    }
+) {
+    const shownKeys = new Set<string>([ADD_ZONE_KEY]);
+    for (const zoneId of shown.zoneIds) {
+        shownKeys.add(getZoneNameKey(zoneId));
+        shownKeys.add(getZoneDeleteKey(zoneId));
+    }
+    for (const zoneId of shown.modulatorZoneIds) {
+        shownKeys.add(getModulatorKey(zoneId));
+    }
+    for (const { generator, zoneIds } of shown.rows) {
+        for (const zoneId of zoneIds) {
+            shownKeys.add(getCellKey(generator, zoneId));
+        }
+    }
+    if (activeKey !== null && shownKeys.has(activeKey)) {
+        return activeKey;
+    }
+    const [firstRow] = shown.rows;
+    return firstRow
+        ? getCellKey(firstRow.generator, shown.globalZoneId)
+        : ADD_ZONE_KEY;
+}
+
+/**
  * The key of the item an event happened in.
  */
 export function getGridKey(target: EventTarget | null) {

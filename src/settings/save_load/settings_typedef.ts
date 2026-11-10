@@ -4,6 +4,11 @@ import {
     SAMPLE_RATE_LIMITS
 } from "../../utils/sample_rate_param.ts";
 import type { ThemeType } from "../../themes/theme_list.ts";
+import type { LayoutSetting } from "../../layout/layout_setting.ts";
+import type {
+    GeneratorGroup,
+    PhoneGridMode
+} from "../../generator_table/generator_groups.ts";
 
 export interface SavedSettingsType {
     lang: string;
@@ -28,6 +33,26 @@ export interface SavedSettingsType {
      * The MIDI input to listen to, selected again when it is plugged in. Empty for none.
      */
     midiInputId: string;
+
+    /**
+     * Which layout to use, automatic picks the phone layout on a phone.
+     */
+    layout: LayoutSetting;
+
+    /**
+     * The phone generator table as a grid of zones or one zone at a time.
+     */
+    phoneGridMode: PhoneGridMode;
+
+    /**
+     * Hides the generator rows without a value on the phone.
+     */
+    phoneValuesOnly: boolean;
+
+    /**
+     * The generator groups the phone grid shows collapsed.
+     */
+    phoneCollapsedGroups: GeneratorGroup[];
 }
 
 /**
@@ -35,7 +60,8 @@ export interface SavedSettingsType {
  */
 export const BOOLEAN_SETTINGS = [
     "removeImportSilence",
-    "trimImportAfterLoop"
+    "trimImportAfterLoop",
+    "phoneValuesOnly"
 ] as const satisfies readonly (keyof SavedSettingsType)[];
 
 export const UNSET_LANGUAGE = "UNSET";
@@ -60,7 +86,13 @@ export const DEFAULT_SETTINGS: SavedSettingsType = {
     removeImportSilence: false,
     trimImportAfterLoop: false,
 
-    midiInputId: ""
+    midiInputId: "",
+
+    layout: "auto",
+
+    phoneGridMode: "grid",
+    phoneValuesOnly: false,
+    phoneCollapsedGroups: []
 };
 
 type NumericSettingKey = {

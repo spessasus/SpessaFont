@@ -21,6 +21,11 @@ const FULL_RANGE: GenericRange = { min: 0, max: 127 };
 export interface KeySplit {
     keys: GenericRange;
     velocities: GenericRange;
+    /**
+     * The zone the split belongs to. Preset splits take their preset zone, so one zone has one
+     * color everywhere on the phone minimap.
+     */
+    zoneId: number;
 }
 
 /**
@@ -28,7 +33,7 @@ export interface KeySplit {
  * when it has none. The global range never narrows a zone's own range.
  * A range that is not set means every key or velocity.
  */
-function pickRange(
+export function pickRange(
     zoneRange: RangeView | undefined,
     globalRange: RangeView | undefined
 ) {
@@ -53,9 +58,10 @@ function intersectRanges(a: GenericRange, b: GenericRange) {
 }
 
 function getInstrumentSplits(instrument: InstrumentView) {
-    return instrument.zones.map((zone) =>
-        getZoneSplit(zone, instrument.globalZone)
-    );
+    return instrument.zones.map((zone) => ({
+        ...getZoneSplit(zone, instrument.globalZone),
+        zoneId: zone.id
+    }));
 }
 
 /**
@@ -83,7 +89,7 @@ function getPresetSplits(preset: PresetView, views: BankViews) {
                 instrumentSplit.velocities
             );
             if (keys && velocities) {
-                splits.push({ keys, velocities });
+                splits.push({ keys, velocities, zoneId: zone.id });
             }
         }
     }

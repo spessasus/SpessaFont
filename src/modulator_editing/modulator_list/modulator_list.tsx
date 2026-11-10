@@ -6,14 +6,21 @@ import {
 } from "../modulator/modulator_card.tsx";
 import "./modulator_list.css";
 import { useTranslation } from "react-i18next";
-import { useRef, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 import { useClipboard } from "../../clipboard/clipboard_context.ts";
 import toast from "react-hot-toast";
 import { getObjectId, shareObjectId } from "../../utils/object_id.ts";
 import type { ModulatorView as ModulatorData } from "../../core_backend/entity_views.ts";
-import { getClickedSelection } from "./modulator_selection.ts";
+import { getClickedSelection, selectBetween } from "./modulator_selection.ts";
+import { MODULATOR_LIST_BUTTON_CLASS } from "./modulator_list_button.ts";
 import { ModulatorListActions } from "./modulator_list_actions.tsx";
 import { isSameModulator } from "../same_modulator.ts";
+import { ModulatorNewButton } from "./modulator_new_button.tsx";
+import { useBackHandler } from "../../hooks/use_back_handler.ts";
+import { BACK_LEVELS } from "../../phone_shell/back_stack.ts";
+import { useLayout } from "../../layout/layout_context.ts";
+import { ModulatorSummary } from "../modulator/modulator_summary.tsx";
+import { useIsEditorCovered } from "../../phone_shell/use_is_editor_covered.ts";
 
 interface ModulatorListProps {
     modulatorList: readonly ModulatorData[];
@@ -21,12 +28,20 @@ interface ModulatorListProps {
      * The current modulators, read when an edit is applied. The list renders from the views.
      */
     getModulators: () => readonly Modulator[];
-    onModulatorListChange: (l: Modulator[]) => void;
+    /**
+     * A change with a merge key joins the previous change of the same key in one undo step.
+     */
+    onModulatorListChange: (l: Modulator[], mergeKey?: string) => void;
     defaultModulators: readonly ModulatorData[];
     /**
      * Extra buttons for the action bar, after the list's own.
      */
     extraActions?: React.ReactNode;
+    /**
+     * Phone only. A header at the top of the list that holds the New button, so the title is
+     * laid out next to it and the action bar keeps the rest.
+     */
+    renderHeader?: (newButton: React.ReactNode) => React.ReactNode;
 }
 
 function isTyping(target: EventTarget) {
@@ -48,7 +63,8 @@ export function ModulatorList({
     getModulators,
     onModulatorListChange,
     defaultModulators,
-    extraActions
+    extraActions,
+    renderHeader
 }: ModulatorListProps) {
     const { t } = useTranslation();
     const { clipboard, contents } = useClipboard();
@@ -56,6 +72,21 @@ export function ModulatorList({
         new Set()
     );
     const [anchorId, setAnchorId] = useState<number | null>(null);
+    const layout = useLayout();
+    // Phones show a summary per modulator, several may be open at once (spec 10)
+    const [expandedIds, setExpandedIds] = useState<ReadonlySet<number>>(
+        new Set()
+    );
+    const toggleExpanded = (id: number) =>
+        setExpandedIds((previous) => {
+            const next = new Set(previous);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
     const [openCurvePicker, setOpenCurvePicker] = useState<{
         id: number;
         slot: ModulatorSourceSlot;
@@ -67,6 +98,18 @@ export function ModulatorList({
     const selectedCount = modulatorList.filter((m) =>
         selectedIds.has(m.id)
     ).length;
+    const isEditorCovered = useIsEditorCovered();
+    // On a phone, back ends the selection before it closes the modulator layer. While the
+    // navigator covers the editor, back closes the navigator first, as the user cannot see
+    // the selection it would end
+    useBackHandler(
+        selectedCount > 0 && !isEditorCovered,
+        BACK_LEVELS.selection,
+        () => {
+            setSelectedIds(new Set());
+            return true;
+        }
+    );
 
     /**
      * Moves the focus off the modulators about to be removed, to the next one that stays, or
@@ -95,6 +138,9 @@ export function ModulatorList({
             0,
             0
         );
+        // A new modulator starts open, it has nothing to summarize yet
+        const id = getObjectId(mod);
+        setExpandedIds((previous) => new Set(previous).add(id));
         onModulatorListChange([mod, ...getModulators()]);
     };
 
@@ -205,7 +251,8 @@ export function ModulatorList({
 
     const replaceModulator = (
         id: number,
-        change: (copy: Modulator) => void
+        change: (copy: Modulator) => void,
+        mergeKey?: string
     ) => {
         const current = getModulators();
         const original = current.find((m) => getObjectId(m) === id);
@@ -220,9 +267,12 @@ export function ModulatorList({
         }
         shareObjectId(original, edited);
         onModulatorListChange(
-            current.map((m) => (m === original ? edited : m))
+            current.map((m) => (m === original ? edited : m)),
+            mergeKey
         );
     };
+
+    const newButton = <ModulatorNewButton onAdd={addModulator} />;
 
     return (
         <div
@@ -231,33 +281,83 @@ export function ModulatorList({
             tabIndex={-1}
             onKeyDown={handleKeyDown}
         >
+            {renderHeader?.(newButton)}
             <ModulatorListActions
                 count={modulatorList.length}
                 canPaste={contents.modulators > 0}
                 hasSelection={selectedCount > 0}
-                onAdd={addModulator}
+                newButton={renderHeader ? null : newButton}
                 onPaste={paste}
                 onCopy={copySelected}
                 onDelete={deleteSelected}
+                selectionActions={
+                    // Shift+click ranges and Ctrl+A have no touch stand-in, these are it
+                    layout === "phone" ? (
+                        <>
+                            <button
+                                type={"button"}
+                                className={MODULATOR_LIST_BUTTON_CLASS}
+                                aria-disabled={
+                                    modulatorList.length === 0
+                                        ? true
+                                        : undefined
+                                }
+                                onClick={() =>
+                                    setSelectedIds(
+                                        new Set(modulatorList.map((m) => m.id))
+                                    )
+                                }
+                            >
+                                {t("phoneLocale.selection.all")}
+                            </button>
+                            <button
+                                type={"button"}
+                                className={MODULATOR_LIST_BUTTON_CLASS}
+                                aria-disabled={
+                                    selectedCount < 2 ? true : undefined
+                                }
+                                onClick={() => {
+                                    if (selectedCount >= 2) {
+                                        setSelectedIds(
+                                            selectBetween(
+                                                modulatorList.map((m) => m.id),
+                                                selectedIds
+                                            )
+                                        );
+                                    }
+                                }}
+                            >
+                                {t("phoneLocale.selection.between")}
+                            </button>
+                        </>
+                    ) : null
+                }
             >
                 {extraActions}
             </ModulatorListActions>
             <div className={"list_contents"}>
                 {modulatorList.map((mod, i) => {
                     const { id } = mod;
-                    return (
+                    const registerNumber = (
+                        button: HTMLButtonElement | null
+                    ) => {
+                        if (button) {
+                            numberButtons.current.set(id, button);
+                        } else {
+                            numberButtons.current.delete(id);
+                        }
+                    };
+                    const card = (
                         <ModulatorCard
                             key={id}
-                            ref={(button) => {
-                                if (button) {
-                                    numberButtons.current.set(id, button);
-                                } else {
-                                    numberButtons.current.delete(id);
-                                }
-                            }}
+                            ref={
+                                layout === "phone" ? undefined : registerNumber
+                            }
                             modulatorNumber={i + 1}
                             mod={mod}
-                            onChange={(change) => replaceModulator(id, change)}
+                            onChange={(change, mergeKey) =>
+                                replaceModulator(id, change, mergeKey)
+                            }
                             onDelete={() => deleteOne(id)}
                             openCurvePicker={
                                 openCurvePicker?.id === id
@@ -273,6 +373,37 @@ export function ModulatorList({
                                 isSameModulator(m, mod, false)
                             )}
                         />
+                    );
+                    if (layout !== "phone") {
+                        return card;
+                    }
+                    const isExpanded = expandedIds.has(id);
+                    return (
+                        <Fragment key={id}>
+                            <ModulatorSummary
+                                ref={registerNumber}
+                                mod={mod}
+                                modulatorNumber={i + 1}
+                                isSelected={selectedIds.has(id)}
+                                isExpanded={isExpanded}
+                                onToggleExpanded={() => toggleExpanded(id)}
+                                onSelect={(e) => handleSelect(e, id)}
+                            />
+                            {isExpanded ? (
+                                <div className={"modulator_summary_form"}>
+                                    {card}
+                                    <button
+                                        type={"button"}
+                                        className={
+                                            "pretty_button modulator_summary_done"
+                                        }
+                                        onClick={() => toggleExpanded(id)}
+                                    >
+                                        {t("phoneLocale.modulators.done")}
+                                    </button>
+                                </div>
+                            ) : null}
+                        </Fragment>
                     );
                 })}
             </div>

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import toast from "react-hot-toast";
+import toast, { type Toast } from "react-hot-toast";
 import { ToastDialog, type ToastDialogButton } from "./toast_dialog.tsx";
 
 interface ToastDialogOptions {
@@ -23,8 +23,12 @@ export function showToastDialog({
     isError = false,
     id
 }: ToastDialogOptions) {
-    const render = ({ id: toastId }: { id: string }) => (
-        <ToastDialog buttons={buttons} onDismiss={() => toast.dismiss(toastId)}>
+    const render = ({ id: toastId, visible }: Toast) => (
+        <ToastDialog
+            buttons={buttons}
+            isVisible={visible}
+            onDismiss={() => toast.dismiss(toastId)}
+        >
             {content}
         </ToastDialog>
     );

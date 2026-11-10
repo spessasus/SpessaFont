@@ -1,25 +1,21 @@
 import "./equalizer_panel.css";
 import { useTranslation } from "react-i18next";
+import { useLayout } from "../../layout/layout_context.ts";
+import { EqualizerBandPicker } from "./equalizer_band_picker.tsx";
 import { EqualizerCurve } from "./equalizer_curve.tsx";
 import {
     EQ_FREQUENCIES,
     EQ_MAX_BAND_GAIN,
     EQ_MAX_GAIN,
-    type EqualizerState,
+    EQ_STEP,
+    type EqualizerPanelProps,
     FLAT_EQUALIZER,
+    formatFrequency,
+    formatGain,
     getBandGains,
-    isFlat
+    isFlat,
+    setEqualizerBand
 } from "./equalizer.ts";
-
-const STEP = 0.5;
-
-function formatGain(gain: number) {
-    return gain > 0 ? `+${gain}` : String(gain);
-}
-
-function formatFrequency(frequency: number) {
-    return frequency >= 1000 ? `${frequency / 1000}k` : String(frequency);
-}
 
 interface EqualizerSliderProps {
     value: number;
@@ -49,7 +45,7 @@ function EqualizerSlider({
                 type={"range"}
                 min={-max}
                 max={max}
-                step={STEP}
+                step={EQ_STEP}
                 value={value}
                 disabled={isDisabled}
                 aria-label={ariaLabel}
@@ -60,14 +56,6 @@ function EqualizerSlider({
             <span className={"equalizer_label"}>{label}</span>
         </div>
     );
-}
-
-interface EqualizerPanelProps {
-    state: EqualizerState;
-    sampleRate: number;
-    isDisabled: boolean;
-    onStateChange: (state: EqualizerState) => void;
-    onApply: () => void;
 }
 
 /**
@@ -82,6 +70,18 @@ export function EqualizerPanel({
     onApply
 }: EqualizerPanelProps) {
     const { t } = useTranslation();
+    const layout = useLayout();
+    if (layout === "phone") {
+        return (
+            <EqualizerBandPicker
+                state={state}
+                sampleRate={sampleRate}
+                isDisabled={isDisabled}
+                onStateChange={onStateChange}
+                onApply={onApply}
+            />
+        );
+    }
     const { settings, isPreviewing } = state;
     const isSettingsFlat = isFlat(settings);
     // Bands at or above this sample's Nyquist frequency change nothing, so Apply would only
@@ -93,10 +93,7 @@ export function EqualizerPanel({
     const setBand = (index: number, gain: number) =>
         onStateChange({
             ...state,
-            settings: {
-                ...settings,
-                bands: settings.bands.with(index, gain)
-            }
+            settings: setEqualizerBand(settings, index, gain)
         });
 
     const buttonClass = "pretty_button responsive_button hover_brightness";
@@ -166,7 +163,7 @@ export function EqualizerPanel({
                     onChange={(gain) =>
                         onStateChange({
                             ...state,
-                            settings: { ...settings, gain }
+                            settings: setEqualizerBand(settings, "gain", gain)
                         })
                     }
                 />

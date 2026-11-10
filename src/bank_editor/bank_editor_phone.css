@@ -1,0 +1,13 @@
+:root[data-layout="phone"] .bank_editor_content {
+    flex-direction: column;
+    /* The desktop gap would show the page between the element bar and the view bar */
+    gap: 0;
+    padding: 0;
+}
+
+:root[data-layout="phone"] .bank_editor_window {
+    /* The desktop's 64vh would make the editor wider than the phone */
+    min-width: 0;
+    flex: 1;
+    overflow: auto;
+}

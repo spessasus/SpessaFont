@@ -1,0 +1,110 @@
+:root[data-layout="phone"] .phone_app_bar {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: var(--flex-gap);
+    height: var(--phone-app-bar-height);
+    padding: 0 var(--flex-gap);
+    background: var(--menu-bar-color);
+    border-bottom: 1px solid var(--menu-border-color);
+}
+
+:root[data-layout="phone"] .phone_app_bar_button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--phone-touch);
+    height: var(--phone-touch);
+    padding: 0;
+    background: var(--menu-bar-color);
+    border: none;
+    color: var(--font-color);
+    font-size: var(--phone-text-body);
+    cursor: pointer;
+}
+
+:root[data-layout="phone"] .phone_app_bar_tools_slot {
+    display: contents;
+}
+
+:root[data-layout="phone"] .phone_app_bar_button svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+:root[data-layout="phone"] .phone_app_bar_button[aria-disabled="true"] {
+    opacity: 0.4;
+}
+
+:root[data-layout="phone"] .phone_app_bar_title {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    min-width: 0;
+    height: var(--phone-app-bar-height);
+    padding: 0;
+    background: var(--menu-bar-color);
+    border: none;
+    color: var(--font-color);
+    font: inherit;
+}
+
+/* Without the navigator button the text still starts at the gutter */
+:root[data-layout="phone"] .phone_app_bar_title:first-child {
+    padding-inline-start: calc(var(--phone-gutter) - var(--flex-gap));
+}
+
+:root[data-layout="phone"] button.phone_app_bar_title {
+    cursor: pointer;
+}
+
+:root[data-layout="phone"] .phone_app_bar_title_line {
+    overflow: hidden;
+    height: 2rem;
+    text-align: start;
+    line-height: 2rem;
+    font-size: var(--phone-text-title);
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+:root[data-layout="phone"] .phone_app_bar_subtitle {
+    overflow: hidden;
+    height: 1.25rem;
+    text-align: start;
+    line-height: 1.25rem;
+    font-size: var(--phone-text-caption);
+    color: var(--muted-font-color);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+:root[data-layout="phone"] .phone_app_bar_hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+}
+
+/* A long title gives way before the unsaved mark after it */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .phone_app_bar_title_line {
+    display: flex;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .phone_app_bar_title_text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .phone_app_bar_title_mark {
+    flex: none;
+    white-space: pre;
+}

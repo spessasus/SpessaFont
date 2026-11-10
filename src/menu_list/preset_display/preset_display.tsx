@@ -4,6 +4,8 @@ import type { BasicInstrument, BasicPreset } from "spessasynth_core";
 import { InstrumentDisplay } from "../instrument_display/instrument_display.tsx";
 import { useLinkDropTarget } from "../../drag_and_drop/use_link_drop_target.ts";
 import { ExpandButton } from "../expand_button.tsx";
+import { PresetPatch } from "./preset_patch.tsx";
+import { SelectionCheckbox } from "../selection_mode/selection_checkbox.tsx";
 import type { BankEditView, BankEntity } from "../../core_backend/bank_view.ts";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 import { usePresetView } from "../../hooks/use_preset_view.ts";
@@ -11,18 +13,6 @@ import { useEntityLookup } from "../../hooks/use_entity_lookup.ts";
 import { useTranslation } from "react-i18next";
 import { LinkIcon } from "../../utils/icons/edit_icons.tsx";
 import { getObjectId } from "../../utils/object_id.ts";
-
-interface PatchNumberProps {
-    n: number;
-}
-
-function PatchNumber({ n }: PatchNumberProps) {
-    return (
-        <span className={`monospaced ${n === 0 ? "patch_number_zero" : ""}`}>
-            {n.toString().padStart(3, "0")}
-        </span>
-    );
-}
 
 interface PresetDisplayProps {
     /**
@@ -32,6 +22,10 @@ interface PresetDisplayProps {
     preset: BasicPreset;
     view: BankEditView;
     isSelected: boolean;
+    /**
+     * Shows the phone's selection mode checkbox in front of the row.
+     */
+    isSelecting?: boolean;
     /**
      * Whether the preset is the shown element.
      */
@@ -66,6 +60,7 @@ export function PresetDisplay({
     preset,
     view,
     isSelected,
+    isSelecting = false,
     isShown,
     isOpen,
     onToggle,
@@ -102,24 +97,16 @@ export function PresetDisplay({
                 {...dropTarget}
                 title={presetView.name}
             >
+                {isSelecting ? (
+                    <SelectionCheckbox
+                        isChecked={isSelected}
+                        onClick={onClick}
+                    />
+                ) : null}
                 <div className={"preset_item_left"}>
                     {/* Clicking the patch expands the preset too */}
                     <ExpandButton isOpen={isOpen} onToggle={onToggle}>
-                        <span className={"monospaced preset_item_patch"}>
-                            {presetView.isGMGSDrum
-                                ? t("presetList.drumsPrefix")
-                                : null}
-                            {/* A drum kit shows its bank numbers only when it sets them */}
-                            {presetView.isGMGSDrum &&
-                            presetView.bankLSB === 0 &&
-                            presetView.bankMSB === 0 ? null : (
-                                <>
-                                    <PatchNumber n={presetView.bankLSB} />:
-                                    <PatchNumber n={presetView.bankMSB} />:
-                                </>
-                            )}
-                            <PatchNumber n={presetView.program} />
-                        </span>
+                        <PresetPatch patch={presetView} />
                     </ExpandButton>
                     {onLink ? (
                         <button

@@ -1,4 +1,5 @@
 import "./bank_check.css";
+import "./bank_check_phone.css";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
@@ -15,6 +16,7 @@ import {
     getFixedLoop,
     SF2_NAME_LENGTH
 } from "./check_bank.ts";
+import { useLayout } from "../../layout/layout_context.ts";
 
 type IssueKind = BankIssue["kind"];
 
@@ -120,6 +122,7 @@ interface BankCheckProps {
  */
 export function BankCheck({ issues }: BankCheckProps) {
     const { t } = useTranslation();
+    const layout = useLayout();
     const { session, apply, setView } = useBankEditor();
     const views = useBankSnapshot(session.store, (s) => s.views);
     const lookup = useEntityLookup(session.store);
@@ -261,9 +264,12 @@ export function BankCheck({ issues }: BankCheckProps) {
     const groups = groupByKind(issues);
     return (
         <div className={"bank_check"}>
-            <h2 className={"bank_check_title"}>
-                {t("bankInfo.check.title", { count: issues.length })}
-            </h2>
+            {/* On phones the panel's bar holds the title */}
+            {layout === "phone" ? null : (
+                <h2 className={"bank_check_title"}>
+                    {t("bankInfo.check.title", { count: issues.length })}
+                </h2>
+            )}
             {issues.length === 0 ? <p>{t("bankInfo.check.noIssues")}</p> : null}
             {hasUnused ? (
                 <button

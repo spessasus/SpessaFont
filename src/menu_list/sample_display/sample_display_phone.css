@@ -1,0 +1,62 @@
+/* The wrapper owns the divider and the row colors, the row button inside is transparent */
+:root[data-layout="phone"] .menu_list_main .phone_sample_row {
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    min-height: var(--phone-row-height);
+    padding-left: 0.25rem;
+    border-bottom: solid 1px
+        color-mix(in oklch, var(--track-border-color) 45%, transparent);
+}
+
+:root[data-layout="phone"] .menu_list_main .phone_sample_row:active,
+:root[data-layout="phone"]
+    .menu_list_main
+    .phone_sample_row:has(> .sample_display.selected) {
+    background: var(--selection-color);
+}
+
+:root[data-layout="phone"]
+    .menu_list_main
+    .phone_sample_row:has(> .sample_display[aria-current="true"]) {
+    box-shadow: inset 3px 0 0 var(--focus-color);
+}
+
+:root[data-layout="phone"] .menu_list_main .phone_sample_row .sample_display {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+    min-height: var(--phone-row-height);
+    padding-left: 0;
+    border-bottom: none;
+    background: none;
+    box-shadow: none;
+}
+
+/* The play button takes the place of the row's speaker glyph */
+:root[data-layout="phone"]
+    .menu_list_main
+    .phone_sample_row
+    .sample_display
+    svg {
+    display: none;
+}
+
+:root[data-layout="phone"] .phone_sample_play {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--phone-touch);
+    min-height: var(--phone-touch);
+}
+
+:root[data-layout="phone"] .phone_sample_play svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    margin: 0;
+}
+
+:root[data-layout="phone"] .phone_sample_play svg * {
+    color: var(--sample-item-color);
+}

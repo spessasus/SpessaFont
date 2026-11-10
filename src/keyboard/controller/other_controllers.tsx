@@ -1,3 +1,4 @@
+import "./controller_phone.css";
 import { ControllerRange } from "../../fancy_inputs/controller_range/controller_range.tsx";
 import { useTranslation } from "react-i18next";
 import { KEYBOARD_TARGET_CHANNEL } from "../target_channel.ts";

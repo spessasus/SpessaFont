@@ -1,0 +1,22 @@
+/* A phone shows two octaves and the drawer's strip scrolls, so touches play instead of panning.
+   Wins over the desktop pan-x rule for narrow windows */
+:root[data-layout="phone"] .keyboard {
+    overflow-x: auto;
+    align-self: stretch;
+    min-width: 0;
+    width: 100%;
+    scrollbar-width: none;
+    height: var(--phone-keys-height);
+    min-height: 0;
+    touch-action: none;
+}
+
+:root[data-layout="phone"] .keyboard::-webkit-scrollbar {
+    display: none;
+}
+
+:root[data-layout="phone"] .keyboard .key {
+    flex: 0 0 var(--phone-key-width);
+    min-width: 0;
+    touch-action: none;
+}

@@ -8,10 +8,11 @@ import type { BankEditView, BankEntity } from "../core_backend/bank_view.ts";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useClipboard } from "../clipboard/clipboard_context.ts";
 import { SampleDisplay } from "./sample_display/sample_display.tsx";
+import { PhoneSampleRow } from "./sample_display/phone_sample_row.tsx";
+import { useLayout } from "../layout/layout_context.ts";
 import { pickFiles } from "../utils/pick_file.ts";
 import { useSampleImport } from "./use_sample_import.ts";
 import { type FocusRequest, VirtualItemList } from "./virtual_item_list.tsx";
-import { useSectionOpen } from "./use_list_state.ts";
 import { useSelectionCommands } from "./use_selection_commands.ts";
 import { logError } from "../utils/core_utils.ts";
 
@@ -26,6 +27,20 @@ interface SampleListProps {
     focusRequest: FocusRequest | null;
     onItemClick: (sample: BasicSample, event: MouseEvent) => void;
     onItemContextMenu: (sample: BasicSample, event: MouseEvent) => void;
+    isOpen: boolean;
+    onOpenChange: (isOpen: boolean) => void;
+    /**
+     * Enters selection mode from the section menu's Select….
+     */
+    onStartSelection: () => void;
+    /**
+     * Whether the phone's selection mode is on, which shows a checkbox on each row.
+     */
+    isSelecting: boolean;
+    /**
+     * The estimated row height in pixels, for the virtual list.
+     */
+    rowEstimate?: number;
     onItemPointerDown: (sample: BasicSample, event: PointerEvent) => void;
 }
 
@@ -37,17 +52,19 @@ export function SampleList({
     focusRequest,
     onItemClick,
     onItemContextMenu,
-    onItemPointerDown
+    onItemPointerDown,
+    isOpen,
+    onOpenChange,
+    onStartSelection,
+    isSelecting,
+    rowEstimate
 }: SampleListProps) {
     const { t } = useTranslation();
     const importSamples = useSampleImport();
     const { session, apply, playSample } = useBankEditor();
     const { contents } = useClipboard();
     const commands = useSelectionCommands();
-    const [isOpen, setIsOpen] = useSectionOpen(
-        view,
-        view instanceof BasicSample
-    );
+    const layout = useLayout();
     const [isImporting, setIsImporting] = useState(false);
 
     // One import at a time, a second one would race the first for the free names
@@ -59,7 +76,7 @@ export function SampleList({
         setIsImporting(true);
         try {
             if ((await importSamples(files, session.document, apply)) > 0) {
-                setIsOpen(true);
+                onOpenChange(true);
             }
         } catch (error) {
             logError("Failed to import the audio files.", error);
@@ -74,7 +91,7 @@ export function SampleList({
             <DropdownHeader
                 text={t("presetList.samples")}
                 isOpen={isOpen}
-                onToggle={() => setIsOpen((open) => !open)}
+                onToggle={() => onOpenChange(!isOpen)}
                 addLabel={t("presetList.importSamples")}
                 onAdd={isImporting ? undefined : () => void addSamples()}
                 onCopy={
@@ -83,6 +100,8 @@ export function SampleList({
                         : undefined
                 }
                 onPaste={contents.samples > 0 ? commands.paste : undefined}
+                onSelect={onStartSelection}
+                count={samples.length}
             />
             {isOpen ? (
                 <VirtualItemList
@@ -91,17 +110,31 @@ export function SampleList({
                         cursor instanceof BasicSample ? cursor : undefined
                     }
                     focusRequest={focusRequest}
-                    renderItem={(sample) => (
-                        <SampleDisplay
-                            sampleId={getObjectId(sample)}
-                            isSelected={selected.has(sample)}
-                            isShown={view === sample}
-                            onClick={(e) => onItemClick(sample, e)}
-                            onContextMenu={(e) => onItemContextMenu(sample, e)}
-                            onPointerDown={(e) => onItemPointerDown(sample, e)}
-                            onDoubleClick={() => playSample(sample)}
-                        />
-                    )}
+                    rowEstimate={rowEstimate}
+                    renderItem={(sample) => {
+                        const rowProps = {
+                            sampleId: getObjectId(sample),
+                            isSelected: selected.has(sample),
+                            isShown: view === sample,
+                            onClick: (e: MouseEvent) => onItemClick(sample, e),
+                            onContextMenu: (e: MouseEvent) =>
+                                onItemContextMenu(sample, e),
+                            onPointerDown: (e: PointerEvent) =>
+                                onItemPointerDown(sample, e)
+                        };
+                        return layout === "phone" ? (
+                            <PhoneSampleRow
+                                {...rowProps}
+                                isSelecting={isSelecting}
+                                onPlay={() => playSample(sample)}
+                            />
+                        ) : (
+                            <SampleDisplay
+                                {...rowProps}
+                                onDoubleClick={() => playSample(sample)}
+                            />
+                        );
+                    }}
                 />
             ) : null}
         </>

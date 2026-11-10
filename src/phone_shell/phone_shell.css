@@ -1,0 +1,36 @@
+:root[data-layout="phone"] .phone_shell {
+    gap: 0;
+}
+
+:root[data-layout="phone"] .phone_upper {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+:root[data-layout="phone"] .phone_covered {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+/*
+ * The app bar, the editor and the drawer sit beside the docked lists in landscape. Padding on
+ * their containers, not margins on them, which would push full-width children past the edge
+ * and let scrollIntoView scroll the whole page sideways. The navigator is positioned against
+ * the padding box, so it stays at the start
+ */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .phone_shell[data-dock="expanded"]
+    :is(.phone_upper, .keyboard_drawer) {
+    padding-inline-start: var(--phone-dock-width);
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .phone_shell[data-dock="collapsed"]
+    :is(.phone_upper, .keyboard_drawer) {
+    padding-inline-start: var(--phone-touch);
+}

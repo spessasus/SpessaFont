@@ -6,6 +6,7 @@ import { getObjectId } from "../utils/object_id.ts";
 import { useLinkDropTarget } from "../drag_and_drop/use_link_drop_target.ts";
 import { INSTRUMENT_ROWS } from "./instrument_rows.ts";
 import { ZoneToolsMenu } from "../generator_table/tools/zone_tools_menu.tsx";
+import { useLayout } from "../layout/layout_context.ts";
 
 interface InstrumentEditorProps {
     instrument: BasicInstrument;
@@ -14,6 +15,7 @@ interface InstrumentEditorProps {
 export function InstrumentEditor({ instrument }: InstrumentEditorProps) {
     // The whole editor takes dropped children, not only the table
     const dropTarget = useLinkDropTarget(instrument);
+    const layout = useLayout();
     return (
         <div className={"instrument_editor"} {...dropTarget}>
             <ZoneToolsMenu element={instrument} />
@@ -22,7 +24,10 @@ export function InstrumentEditor({ instrument }: InstrumentEditorProps) {
                 rows={INSTRUMENT_ROWS}
                 element={instrument}
             />
-            <LinkedPresets instrument={instrument} />
+            {/* Phones show the bar in the properties sheet */}
+            {layout === "phone" ? null : (
+                <LinkedPresets instrument={instrument} />
+            )}
         </div>
     );
 }

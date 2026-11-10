@@ -1,0 +1,65 @@
+/* One column, the label above a full-width field. Only size and arrangement change, the fields
+   keep the desktop look */
+:root[data-layout="phone"] .sample_properties {
+    grid-template-columns: 1fr;
+    max-width: none;
+    gap: var(--phone-gutter);
+}
+
+:root[data-layout="phone"] .sample_editor_field {
+    gap: 0.25rem;
+}
+
+:root[data-layout="phone"] .sample_editor_field span {
+    font-size: var(--phone-text-secondary);
+}
+
+:root[data-layout="phone"] .sample_editor_field input,
+:root[data-layout="phone"] .sample_editor_field select,
+:root[data-layout="phone"] .sample_editor_field button {
+    min-height: var(--phone-touch);
+    font-size: var(--phone-text-body);
+}
+
+/* Touch screens show no title, so the partner's full name wraps instead of ending in dots */
+:root[data-layout="phone"] .sample_link_button {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+}
+
+/* Values are end-aligned, and a native select ignores text-align for its shown value */
+:root[data-layout="phone"] .sample_editor_field select {
+    text-align-last: end;
+}
+
+/* The name sits above the fields and takes the column's width */
+:root[data-layout="phone"] .sample_editor_name_field {
+    margin-bottom: var(--phone-gutter);
+}
+
+/* The desktop flex basis of 12rem would become its height in this column */
+:root[data-layout="phone"] .sample_sections_body .sample_editor_name {
+    flex: none;
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: var(--phone-touch);
+    font-size: var(--phone-text-body);
+    text-align: start;
+}
+
+/* Set from piano, under the original key field */
+:root[data-layout="phone"] .original_key_from_piano {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--flex-gap);
+    min-height: var(--phone-touch);
+    font-size: var(--phone-text-button);
+}
+
+:root[data-layout="phone"] .original_key_from_piano svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}

@@ -1,4 +1,6 @@
 import { type ReactNode, useEffect, useId, useRef } from "react";
+import { useBackHandler } from "../hooks/use_back_handler.ts";
+import { BACK_LEVELS } from "../phone_shell/back_stack.ts";
 import { rememberFocus } from "../utils/focus_return.ts";
 
 export interface ToastDialogButton {
@@ -13,6 +15,11 @@ interface ToastDialogProps {
      * the safe choice there.
      */
     buttons: ToastDialogButton[];
+    /**
+     * False once dismissed. The toast stays mounted for its exit animation, and back must not
+     * reach it then. Asking again with the same id makes it visible again.
+     */
+    isVisible: boolean;
     onDismiss: () => void;
 }
 
@@ -23,6 +30,7 @@ interface ToastDialogProps {
 export function ToastDialog({
     children,
     buttons,
+    isVisible,
     onDismiss
 }: ToastDialogProps) {
     const labelId = useId();
@@ -50,6 +58,17 @@ export function ToastDialog({
     };
 
     const safeButton = buttons.at(-1);
+    useBackHandler(
+        safeButton !== undefined && isVisible,
+        BACK_LEVELS.transient,
+        () => {
+            if (!safeButton) {
+                return false;
+            }
+            answer(safeButton);
+            return true;
+        }
+    );
     return (
         <div
             ref={dialogRef}

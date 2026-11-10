@@ -11,6 +11,11 @@ export interface BankEditorContextType {
      * Quick repeats with the same merge key become one undo step (see `HistoryManager.do`).
      */
     apply: (actions: HistoryActionGroup, mergeKey?: string) => void;
+    /**
+     * Runs actions that make a new element from the list selection and shows it like a pick
+     * in the lists, which closes the phone navigator unless it is pinned. Falls back to `apply`.
+     */
+    applyCreate?: (actions: HistoryActionGroup) => void;
     setView: (view: BankEditView) => void;
     /**
      * Shows the sample and plays it once from the start.

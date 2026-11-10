@@ -1,0 +1,216 @@
+/* Rows a finger can hit. A long press must not select text or open the browser's callout */
+:root[data-layout="phone"] .menu_list_main * {
+    -webkit-touch-callout: none;
+}
+
+:root[data-layout="phone"] .menu_list_main .preset_item,
+:root[data-layout="phone"] .menu_list_main .instrument_item,
+:root[data-layout="phone"] .menu_list_main .sample_display {
+    box-sizing: border-box;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: var(--phone-row-height);
+    padding: 0 0.5rem 0 0.25rem;
+    border-bottom: solid 1px
+        color-mix(in oklch, var(--track-border-color) 45%, transparent);
+    user-select: none;
+}
+
+:root[data-layout="phone"] .menu_list_main .sample_display {
+    padding-left: var(--phone-gutter);
+}
+
+/* Children, indented by their containers */
+:root[data-layout="phone"] .menu_list_main .preset_instruments,
+:root[data-layout="phone"] .menu_list_main .instrument_samples {
+    margin: 0 0 0 1rem;
+}
+
+:root[data-layout="phone"] .menu_list_main .preset_instruments .instrument_item,
+:root[data-layout="phone"] .menu_list_main .instrument_samples .sample_display {
+    min-height: var(--phone-child-row-height);
+}
+
+/* A touch leaves the hover on, so only the selection and a press color the row */
+:root[data-layout="phone"] .menu_list_main .preset_item:hover,
+:root[data-layout="phone"] .menu_list_main .instrument_item:hover,
+:root[data-layout="phone"] .menu_list_main .sample_display:hover {
+    background: none;
+}
+
+:root[data-layout="phone"] .menu_list_main .preset_item:active,
+:root[data-layout="phone"] .menu_list_main .instrument_item:active,
+:root[data-layout="phone"] .menu_list_main .sample_display:active,
+:root[data-layout="phone"] .menu_list_main .preset_item.selected,
+:root[data-layout="phone"] .menu_list_main .instrument_item.selected,
+:root[data-layout="phone"] .menu_list_main .sample_display.selected {
+    background: var(--selection-color);
+}
+
+:root[data-layout="phone"]
+    .menu_list_main
+    .preset_item:has(> [aria-current="true"]),
+:root[data-layout="phone"]
+    .menu_list_main
+    .instrument_item:has(> [aria-current="true"]),
+:root[data-layout="phone"]
+    .menu_list_main
+    .sample_display[aria-current="true"] {
+    box-shadow: inset 3px 0 0 var(--focus-color);
+}
+
+/* Names start-aligned in the main font, one line */
+:root[data-layout="phone"] .menu_list_main .preset_item_name,
+:root[data-layout="phone"] .menu_list_main .instrument_item_name {
+    flex: 1;
+    min-width: 0;
+    text-align: start;
+    font-family: var(--main-font);
+    font-size: var(--phone-text-body);
+}
+
+:root[data-layout="phone"] .menu_list_main .preset_item_name,
+:root[data-layout="phone"] .menu_list_main .instrument_item_name,
+:root[data-layout="phone"] .menu_list_main .sample_display span {
+    display: block;
+    line-height: var(--phone-child-row-height);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+:root[data-layout="phone"] .menu_list_main .sample_display span {
+    flex: 1;
+    min-width: 0;
+    text-align: start;
+    font-size: var(--phone-text-button);
+}
+
+:root[data-layout="phone"] .menu_list_main .sample_display svg {
+    flex: none;
+    width: 1.125rem;
+    height: 1.125rem;
+    margin: 0;
+}
+
+/* The expand triangle and the link buttons are their own targets */
+:root[data-layout="phone"] .menu_list_main .triangle,
+:root[data-layout="phone"] .menu_list_main .preset_item_left > button,
+:root[data-layout="phone"]
+    .menu_list_main
+    .instrument_item
+    .left_buttons
+    > button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--phone-touch);
+    min-height: var(--phone-touch);
+}
+
+:root[data-layout="phone"] .menu_list_main .preset_item_left .triangle {
+    justify-content: start;
+    gap: 0.5rem;
+    padding-left: 0.75rem;
+}
+
+:root[data-layout="phone"] .menu_list_main .preset_item_left,
+:root[data-layout="phone"] .menu_list_main .instrument_item .left_buttons {
+    flex: none;
+    gap: 0;
+}
+
+:root[data-layout="phone"] .menu_list_main .preset_item_patch,
+:root[data-layout="phone"] .menu_list_main .preset_item_patch span {
+    font-size: var(--phone-text-secondary);
+}
+
+:root[data-layout="phone"] .menu_list_main .left_buttons svg,
+:root[data-layout="phone"] .menu_list_main .preset_item_left svg {
+    width: 1.125rem;
+    height: 1.125rem;
+}
+
+/* The disclosure chevron is muted, the row's own kind color stays off it */
+:root[data-layout="phone"] .menu_list_main .triangle,
+:root[data-layout="phone"] .menu_list_main .triangle_glyph,
+:root[data-layout="phone"] .menu_list_main .triangle_glyph * {
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .menu_list_main .triangle svg {
+    width: var(--phone-disclosure-size);
+    height: var(--phone-disclosure-size);
+}
+
+/* The search bar stays at the bottom, above the drawer and the soft keyboard */
+:root[data-layout="phone"] .menu_list_main .list_search_bar {
+    flex: none;
+    gap: var(--flex-gap);
+    box-sizing: border-box;
+    min-height: var(--phone-row-height);
+    padding: 0.125rem 0.25rem;
+    background: var(--lighter-color-end);
+    border-top: solid 1px var(--track-border-color);
+}
+
+:root[data-layout="phone"] .menu_list_main .list_search_bar input {
+    min-width: 0;
+    min-height: var(--phone-touch);
+    text-align: start;
+    font-size: var(--phone-text-body);
+}
+
+:root[data-layout="phone"] .menu_list_main .list_search_bar button {
+    min-width: var(--phone-touch);
+    padding: 0 0.75rem;
+    font-size: var(--phone-text-button);
+}
+
+/* The clear button is a plain icon button like the other closes */
+:root[data-layout="phone"] .menu_list_main .list_search_bar .list_search_clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    background: none;
+}
+
+:root[data-layout="phone"]
+    .menu_list_main
+    .list_search_bar
+    .list_search_clear
+    svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+:root[data-layout="phone"] .menu_list_unused_note {
+    flex: none;
+    padding: 0 var(--phone-gutter) 0.25rem;
+    background: var(--lighter-color-end);
+    text-align: start;
+    font-size: var(--phone-text-caption);
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .menu_list_main .menu_list_empty {
+    font-size: var(--phone-text-secondary);
+}
+
+/* The docked lists are narrow, so the field gives way to the clear button and Unused */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .menu_list_main
+    .list_search_bar
+    input {
+    flex: 1 1 0;
+    width: 0;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .menu_list_main
+    .list_search_bar
+    button {
+    flex: none;
+}

@@ -1,0 +1,51 @@
+:root[data-layout="phone"] .generator_cell {
+    width: auto;
+    padding: 0;
+}
+
+:root[data-layout="phone"] .generator_cell input {
+    min-height: var(--phone-cell-height);
+    padding: 0 0.5rem;
+    box-sizing: border-box;
+    border-radius: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+}
+
+:root[data-layout="phone"] .generator_cell input::placeholder {
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .generator_cell.modulated input {
+    outline: 1px solid var(--focus-color);
+    outline-offset: -1px;
+}
+
+:root[data-layout="phone"] .generator_cell input:focus {
+    outline: 2px solid var(--light-primary-color);
+    outline-offset: -2px;
+}
+
+:root[data-layout="phone"] .generator_cell.selected input {
+    background: var(--cell-selection-color);
+}
+
+:root[data-layout="phone"] .modulator_cell .modulator_count {
+    min-width: var(--phone-touch);
+    min-height: var(--phone-touch);
+    font-size: 1rem;
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+    padding: 0 0.5rem;
+    border-radius: 0;
+}
+
+:root[data-layout="phone"] .modulator_cell.modulated .modulator_count {
+    font-weight: 600;
+    outline: 1px solid var(--focus-color);
+    outline-offset: -1px;
+}

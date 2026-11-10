@@ -1,5 +1,14 @@
 import "./dialogs.css";
-import { type MouseEvent, type ReactNode, useEffect, useRef } from "react";
+import "./dialogs_phone.css";
+import {
+    type MouseEvent,
+    type ReactNode,
+    useEffect,
+    useEffectEvent,
+    useRef
+} from "react";
+import { useBackHandler } from "../hooks/use_back_handler.ts";
+import { BACK_LEVELS } from "../phone_shell/back_stack.ts";
 import { rememberFocus } from "../utils/focus_return.ts";
 
 interface ModalDialogProps {
@@ -10,6 +19,11 @@ interface ModalDialogProps {
      * Escape and a click outside the dialog cancel it.
      */
     onCancel: () => void;
+    /**
+     * Keeps the focus on the dialog itself when it opens, so no field takes it and raises the
+     * soft keyboard.
+     */
+    doesSkipFocus?: boolean;
 }
 
 /**
@@ -37,15 +51,28 @@ export function ModalDialog({
     title,
     className,
     children,
-    onCancel
+    onCancel,
+    doesSkipFocus = false
 }: ModalDialogProps) {
     const dialogRef = useRef<HTMLDialogElement>(null);
     const backdropPress = useRef(false);
+    useBackHandler(true, BACK_LEVELS.transient, () => {
+        onCancel();
+        return true;
+    });
+    // Read when the dialog opens only, a later change must not show it again
+    const focusDialog = useEffectEvent(() => {
+        if (doesSkipFocus) {
+            // showModal focuses the first field, which would raise the soft keyboard
+            dialogRef.current?.focus();
+        }
+    });
     useEffect(() => {
         const dialog = dialogRef.current;
         // The browser would return the focus itself, but React removes the dialog first
         const restoreFocus = rememberFocus();
         dialog?.showModal();
+        focusDialog();
         return () => {
             dialog?.close();
             restoreFocus();
@@ -56,6 +83,7 @@ export function ModalDialog({
             ref={dialogRef}
             className={`modal_dialog ${className}`}
             aria-label={title}
+            tabIndex={doesSkipFocus ? -1 : undefined}
             onCancel={(e) => {
                 e.preventDefault();
                 onCancel();

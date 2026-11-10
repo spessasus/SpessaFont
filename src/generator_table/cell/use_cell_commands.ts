@@ -13,6 +13,7 @@ import {
     type CellContext,
     createCellEditActions,
     createSetCellActions,
+    createTextEditActions,
     formatCell,
     nudgeCellValue,
     readColumnCell
@@ -160,6 +161,35 @@ export function useCellCommands(
     };
 
     /**
+     * Commits typed text to the cell, or to all selected cells when it is one of them, each
+     * from its own value. False when a cell cannot take the text, which keeps the edit open.
+     * @param column the edited cell's column
+     * @param text the typed text
+     * @param shownText what the cell showed, which a lone cell keeps without an edit
+     */
+    const didCommitText = (
+        column: ZoneColumn,
+        text: string,
+        shownText: string
+    ) => {
+        const targets =
+            selectedColumns.length > 1 && selectedColumns.includes(column)
+                ? selectedColumns
+                : [column];
+        if (text === shownText && targets.length === 1) {
+            return true;
+        }
+        const actions = createTextEditActions(context, targets, text);
+        if (!actions) {
+            return false;
+        }
+        if (actions.length > 0) {
+            apply(actions);
+        }
+        return true;
+    };
+
+    /**
      * The commands of one cell's input.
      */
     const getInputCommands = (column: ZoneColumn): CellInputCommands => ({
@@ -170,10 +200,22 @@ export function useCellCommands(
         nudge: (direction, steps) => nudge(column, direction, steps)
     });
 
+    /**
+     * Copies the cells to the cell clipboard and the system one.
+     */
+    const copyCells = (column: ZoneColumn) =>
+        void writeSystemText(copy(column));
+
+    /**
+     * Pastes the system clipboard's text, or the copied cells, into the cells.
+     */
+    const pasteCells = (column: ZoneColumn) =>
+        void readSystemText().then((text) => paste(column, text));
+
     const getMenuEntries = (column: ZoneColumn): ContextMenuEntry[] => [
         {
             label: t("contextMenu.copy"),
-            onSelect: () => void writeSystemText(copy(column))
+            onSelect: () => copyCells(column)
         },
         {
             label: t("contextMenu.cut"),
@@ -181,8 +223,7 @@ export function useCellCommands(
         },
         {
             label: t("contextMenu.paste"),
-            onSelect: () =>
-                void readSystemText().then((text) => paste(column, text))
+            onSelect: () => pasteCells(column)
         },
         {
             label: t("toolsLocale.cells.clear"),
@@ -195,7 +236,7 @@ export function useCellCommands(
      * shortcuts act on the cell like the menu does.
      */
     const handleSelectKeyDown = (
-        e: React.KeyboardEvent<HTMLSelectElement>,
+        e: React.KeyboardEvent<HTMLElement>,
         column: ZoneColumn
     ) => {
         if (e.key === "Delete" || e.key === "Backspace") {
@@ -209,7 +250,7 @@ export function useCellCommands(
         switch (e.key.toLowerCase()) {
             case "c": {
                 e.preventDefault();
-                void writeSystemText(copy(column));
+                copyCells(column);
                 break;
             }
             case "x": {
@@ -219,11 +260,19 @@ export function useCellCommands(
             }
             case "v": {
                 e.preventDefault();
-                void readSystemText().then((text) => paste(column, text));
+                pasteCells(column);
                 break;
             }
         }
     };
 
-    return { getInputCommands, getMenuEntries, handleSelectKeyDown, pick };
+    return {
+        didCommitText,
+        getInputCommands,
+        getMenuEntries,
+        handleSelectKeyDown,
+        pick,
+        copyCells,
+        pasteCells
+    };
 }

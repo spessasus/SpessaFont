@@ -1,0 +1,239 @@
+// @vitest-environment jsdom
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+    GeneratorTypes,
+    MIDIControllers,
+    Modulator,
+    ModulatorSource
+} from "spessasynth_core";
+import {
+    createTestSession,
+    publishSetUp
+} from "../../test_utils/bank_fixture.ts";
+import type { BankSession } from "../../core_backend/bank_session.ts";
+import { BankEditorContext } from "../../bank_editor/bank_editor_context.ts";
+import { ClipboardContext } from "../../clipboard/clipboard_context.ts";
+import { ClipboardManager } from "../../core_backend/clipboard_manager.ts";
+import { LayoutContext } from "../../layout/layout_context.ts";
+import type { LayoutMode } from "../../layout/layout_setting.ts";
+import { TranslatedOptionsContext } from "../../utils/translated_options/translated_options_context.ts";
+import { useInstrumentView } from "../../hooks/use_instrument_view.ts";
+import { getObjectId } from "../../utils/object_id.ts";
+import { ModulatorEditor } from "./modulator_editor.tsx";
+import i18next, { type i18n } from "i18next";
+import { I18nextProvider } from "react-i18next";
+import { LocaleList } from "../../locale/locale_list.ts";
+
+afterEach(cleanup);
+
+/**
+ * The editor of the first instrument's global zone, following the store like the grid does.
+ */
+function GlobalModulators({ session }: { session: BankSession }) {
+    const [instrument] = session.document.instruments;
+    const view = useInstrumentView(session.store, getObjectId(instrument));
+    if (!view) {
+        return null;
+    }
+    return (
+        <ModulatorEditor
+            name={"Global"}
+            column={{
+                zone: view.globalZone,
+                linkedZone: undefined,
+                colSpan: 1,
+                isStereo: false,
+                name: "Global",
+                sample: undefined,
+                linkedSample: undefined
+            }}
+            onClose={vi.fn()}
+            element={instrument}
+            defaultModulators={[]}
+        />
+    );
+}
+
+function renderEditor(
+    layout: LayoutMode,
+    amount: number,
+    i18n?: i18n,
+    secondAmount?: number
+) {
+    const session = createTestSession();
+    const [instrument] = session.document.instruments;
+    instrument.globalZone.modulators.length = 0;
+    instrument.globalZone.modulators.push(
+        new Modulator(
+            new ModulatorSource(MIDIControllers.modulationWheel, 0, true),
+            new ModulatorSource(),
+            GeneratorTypes.vibLfoToPitch,
+            amount,
+            0
+        )
+    );
+    if (secondAmount !== undefined) {
+        instrument.globalZone.modulators.push(
+            new Modulator(
+                new ModulatorSource(MIDIControllers.modulationWheel, 0, true),
+                new ModulatorSource(),
+                GeneratorTypes.modLfoToPitch,
+                secondAmount,
+                0
+            )
+        );
+    }
+    publishSetUp(session);
+    const tree = (
+        <LayoutContext value={layout}>
+            <BankEditorContext
+                value={{
+                    session,
+                    apply: (actions, mergeKey) =>
+                        session.history.do(actions, mergeKey),
+                    setView: () => undefined,
+                    playSample: () => undefined
+                }}
+            >
+                <ClipboardContext value={new ClipboardManager()}>
+                    <TranslatedOptionsContext
+                        value={{ controllers: [], destinations: [] }}
+                    >
+                        <GlobalModulators session={session} />
+                    </TranslatedOptionsContext>
+                </ClipboardContext>
+            </BankEditorContext>
+        </LayoutContext>
+    );
+    render(i18n ? <I18nextProvider i18n={i18n}>{tree}</I18nextProvider> : tree);
+    // Phones show the form once its summary is open
+    const summary = document.querySelector(".modulator_summary_toggle");
+    if (summary) {
+        fireEvent.click(summary);
+    }
+    const readAmount = () =>
+        instrument.globalZone.modulators[0].transformAmount;
+    const readAmounts = () =>
+        instrument.globalZone.modulators.map((m) => m.transformAmount);
+    return { session, readAmount, readAmounts };
+}
+
+describe("ModulatorEditor amount steppers", () => {
+    it("makes ten + taps on the amount one undo step", () => {
+        const { session, readAmount } = renderEditor("phone", 47);
+        const raise = screen.getByRole("button", {
+            name: "phoneLocale.modulators.amountUp"
+        });
+        for (let i = 0; i < 10; i++) {
+            fireEvent.click(raise);
+        }
+        expect(readAmount()).toBe(57);
+        session.history.undo();
+        expect(readAmount()).toBe(47);
+        expect(session.history.canUndo).toBe(false);
+        cleanup();
+        session.close();
+    });
+
+    it("steps by ten with ×10 and stops at the limit", () => {
+        const { session, readAmount } = renderEditor("phone", 32_760);
+        fireEvent.click(
+            screen.getByRole("button", {
+                name: "phoneLocale.cellSheet.times10"
+            })
+        );
+        fireEvent.click(
+            screen.getByRole("button", {
+                name: "phoneLocale.modulators.amountUp"
+            })
+        );
+        expect(readAmount()).toBe(32_767);
+        cleanup();
+        session.close();
+    });
+
+    it("shows no amount steppers on desktop", () => {
+        const { session } = renderEditor("desktop", 47);
+        expect(
+            screen.queryByRole("button", {
+                name: "phoneLocale.modulators.amountUp"
+            })
+        ).toBeNull();
+        cleanup();
+        session.close();
+    });
+});
+
+describe("ModulatorEditor zone layer title", () => {
+    it("titles the layer with the zone and no count", async () => {
+        const instance = i18next.createInstance();
+        await instance.init({
+            resources: LocaleList,
+            lng: "en",
+            fallbackLng: "en"
+        });
+        const { session } = renderEditor("phone", 47, instance);
+        expect(screen.getByText("Modulators: Global")).toBeDefined();
+        cleanup();
+        session.close();
+        await instance.changeLanguage("pl");
+        const polish = renderEditor("phone", 47, instance);
+        expect(screen.getByText("Modulatory: Global")).toBeDefined();
+        cleanup();
+        polish.session.close();
+    });
+});
+
+/**
+ * Taps the + of an open modulator form, by its place in the list.
+ */
+function tapRaise(form: number) {
+    fireEvent.click(
+        screen.getAllByRole("button", {
+            name: "phoneLocale.modulators.amountUp"
+        })[form]
+    );
+}
+
+describe("ModulatorEditor amount undo steps", () => {
+    it("makes steps on two modulators two undo steps", () => {
+        const { session, readAmounts } = renderEditor(
+            "phone",
+            10,
+            undefined,
+            20
+        );
+        tapRaise(0);
+        tapRaise(0);
+        // Open the second modulator's form too
+        const toggles = document.querySelectorAll(".modulator_summary_toggle");
+        fireEvent.click(toggles[1]);
+        tapRaise(1);
+        tapRaise(1);
+        expect(readAmounts()).toEqual([12, 22]);
+        session.history.undo();
+        expect(readAmounts()).toEqual([12, 20]);
+        session.history.undo();
+        expect(readAmounts()).toEqual([10, 20]);
+        cleanup();
+        session.close();
+    });
+
+    it("makes a step and then typing two undo steps", () => {
+        const { session, readAmount } = renderEditor("phone", 10);
+        tapRaise(0);
+        const field = screen.getByRole("textbox", {
+            name: "modulatorLocale.amount"
+        });
+        fireEvent.change(field, { target: { value: "30" } });
+        fireEvent.blur(field);
+        expect(readAmount()).toBe(30);
+        session.history.undo();
+        expect(readAmount()).toBe(11);
+        session.history.undo();
+        expect(readAmount()).toBe(10);
+        cleanup();
+        session.close();
+    });
+});

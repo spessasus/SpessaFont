@@ -158,3 +158,21 @@ export function getViewZones({ zone, linkedZone }: ZoneColumn) {
 export function getViewGenerator(zone: ZoneView, type: number) {
     return zone.generators.find((g) => g.type === type)?.value ?? null;
 }
+
+/**
+ * The table column index of each zone id, as the generator table lays them out (a stereo pair
+ * shares one column).
+ */
+export function getColumnIndexes(
+    zones: readonly ZoneView[],
+    children: ZoneChildren
+) {
+    const indexes = new Map<number, number>();
+    for (const [index, column] of getZoneColumns(zones, children).entries()) {
+        indexes.set(column.zone.id, index);
+        if (column.linkedZone) {
+            indexes.set(column.linkedZone.id, index);
+        }
+    }
+    return indexes;
+}

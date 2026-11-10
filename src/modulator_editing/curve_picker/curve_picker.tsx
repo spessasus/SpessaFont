@@ -1,23 +1,13 @@
-import { ModulatorCurveTypes } from "spessasynth_core";
 import "./curve_picker.css";
 import { type RefObject, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useEventListener } from "../../hooks/use_event_listener.ts";
 import { CurvePicture } from "./curve_picture.tsx";
 import { getCurveLabel } from "./curve_label.ts";
+import { ALL_CURVE_TYPES, curveKey } from "./curve_shape.ts";
 import type { SpessaFontModulatorCurveType } from "./curve_shape.ts";
-
-const ALL_CURVE_TYPES = Object.values(ModulatorCurveTypes).flatMap(
-    (curveType) => [
-        { curveType, positive: true, bipolar: false },
-        { curveType, positive: false, bipolar: false },
-        { curveType, positive: true, bipolar: true },
-        { curveType, positive: false, bipolar: true }
-    ]
-);
-
-const curveKey = (c: SpessaFontModulatorCurveType) =>
-    `${c.curveType}-${c.bipolar}-${c.positive}`;
+import { CurveSheet } from "./curve_sheet.tsx";
+import { useLayout } from "../../layout/layout_context.ts";
 
 interface CurveOptionsProps {
     label: string;
@@ -99,6 +89,7 @@ export function CurvePicker({
     onOpenChange
 }: CurvePickerProps) {
     const { t } = useTranslation();
+    const layout = useLayout();
     const pickerRef = useRef<HTMLDivElement>(null);
     const toggleRef = useRef<HTMLButtonElement>(null);
     const currentKey = curveKey(curveType);
@@ -107,6 +98,14 @@ export function CurvePicker({
     const close = () => {
         onOpenChange(false);
         toggleRef.current?.focus();
+    };
+
+    const handlePick = (c: SpessaFontModulatorCurveType) => {
+        close();
+        // Picking the current curve only closes the options
+        if (curveKey(c) !== currentKey) {
+            onChange(c);
+        }
     };
 
     return (
@@ -133,20 +132,23 @@ export function CurvePicker({
                 <CurvePicture curve={curveType} />
             </button>
             {isOpen ? (
-                <CurveOptions
-                    label={label}
-                    currentKey={currentKey}
-                    pickerRef={pickerRef}
-                    onPick={(c) => {
-                        close();
-                        // Picking the current curve only closes the options
-                        if (curveKey(c) !== currentKey) {
-                            onChange(c);
-                        }
-                    }}
-                    // A press outside keeps the focus where it went
-                    onClose={() => onOpenChange(false)}
-                />
+                layout === "phone" ? (
+                    <CurveSheet
+                        label={label}
+                        currentKey={currentKey}
+                        onPick={handlePick}
+                        onClose={() => onOpenChange(false)}
+                    />
+                ) : (
+                    <CurveOptions
+                        label={label}
+                        currentKey={currentKey}
+                        pickerRef={pickerRef}
+                        onPick={handlePick}
+                        // A press outside keeps the focus where it went
+                        onClose={() => onOpenChange(false)}
+                    />
+                )
             ) : null}
         </div>
     );

@@ -1,4 +1,10 @@
-import { createContext, type MouseEvent, useContext } from "react";
+import {
+    createContext,
+    type MouseEvent,
+    type ReactNode,
+    useContext
+} from "react";
+import type { MenuIconName } from "./menu_icon_name.ts";
 
 export interface ContextMenuItem {
     label: string;
@@ -8,6 +14,37 @@ export interface ContextMenuItem {
      * The keys that do the same, shown next to the label.
      */
     shortcut?: string;
+    /**
+     * A second line under the label, shown in the phone action sheet.
+     */
+    description?: string;
+    /**
+     * Why the entry is disabled, shown under the label in the phone action sheet.
+     */
+    disabledReason?: string;
+    icon?: MenuIconName;
+    /**
+     * A ready-made icon, shown when there is no named one.
+     */
+    iconNode?: ReactNode;
+    isDestructive?: boolean;
+    /**
+     * The entry opens another sheet, so the phone action sheet ends its row with a chevron.
+     * The desktop menu ignores it.
+     */
+    hasSubmenu?: boolean;
+    /**
+     * The entry is the current choice, so the phone action sheet marks it and opens scrolled
+     * to it. The desktop menu ignores it.
+     */
+    isCurrent?: boolean;
+}
+
+export interface ContextMenuOptions {
+    /**
+     * What the menu acts on, the action sheet's title.
+     */
+    title?: string;
 }
 
 /**
@@ -19,7 +56,11 @@ export interface ContextMenuAPI {
     /**
      * Opens the menu at the pointer, or under the element for the keyboard menu key.
      */
-    openMenu: (event: MouseEvent, entries: readonly ContextMenuEntry[]) => void;
+    openMenu: (
+        event: MouseEvent,
+        entries: readonly ContextMenuEntry[],
+        options?: ContextMenuOptions
+    ) => void;
 }
 
 export const ContextMenuContext = createContext<ContextMenuAPI | null>(null);

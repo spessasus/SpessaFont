@@ -1,5 +1,7 @@
 import type { RefObject } from "react";
 import { useTranslation } from "react-i18next";
+import { useLayout } from "../layout/layout_context.ts";
+import { CloseIcon } from "../utils/icons/app_icons.tsx";
 
 interface ListSearchBarProps {
     inputRef: RefObject<HTMLInputElement | null>;
@@ -25,6 +27,7 @@ export function ListSearchBar({
     onFocusResults
 }: ListSearchBarProps) {
     const { t } = useTranslation();
+    const layout = useLayout();
     return (
         <div className={"list_search_bar"}>
             <input
@@ -47,7 +50,7 @@ export function ListSearchBar({
             {query === "" ? null : (
                 <button
                     type={"button"}
-                    className={"pretty_button"}
+                    className={"pretty_button list_search_clear"}
                     aria-label={t("presetList.clearSearch")}
                     title={t("presetList.clearSearch")}
                     onClick={() => {
@@ -55,7 +58,7 @@ export function ListSearchBar({
                         inputRef.current?.focus();
                     }}
                 >
-                    &times;
+                    {layout === "phone" ? <CloseIcon /> : <>&times;</>}
                 </button>
             )}
             <button

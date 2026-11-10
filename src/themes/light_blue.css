@@ -26,6 +26,21 @@
 
     /* accents */
     --menu-bar-color: #6fa3d8;
+    --drawer-handle-color: color-mix(
+        in oklab,
+        var(--menu-bar-color) 90%,
+        black
+    );
+    --minimap-window-color: rgb(0 0 0 / 15%);
+    --zone-color-1: #c0392b;
+    --zone-color-2: #1f6fb2;
+    --zone-color-3: #9a6b00;
+    --zone-color-4: #2e8b57;
+    --grid-group-color: color-mix(
+        in oklch,
+        var(--menu-bar-color) 45%,
+        var(--lighter-color-start)
+    );
     --menu-border-color: #2f5f94;
     --primary-color: #6fa3d8;
     --border-color: #2f5f94;
@@ -58,4 +73,8 @@
 
     /* extras */
     --scrollbar-colors: #9fb4c9 #eef3f8;
+
+    /* sheets */
+    --sheet-scrim-color: rgb(0 0 0 / 30%);
+    --destructive-color: #c62828;
 }

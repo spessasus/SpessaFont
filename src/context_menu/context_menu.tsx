@@ -2,19 +2,50 @@ import "./context_menu.css";
 import { type KeyboardEvent, useEffect, useRef } from "react";
 import type { ContextMenuEntry } from "./context_menu_context.ts";
 import { useEventListener } from "../hooks/use_event_listener.ts";
+import { useLayout } from "../layout/layout_context.ts";
+import { ActionSheet } from "./action_sheet.tsx";
 
 interface ContextMenuProps {
     x: number;
     y: number;
     entries: readonly ContextMenuEntry[];
+    /**
+     * The action sheet's title, desktop ignores it.
+     */
+    title?: string;
     onClose: () => void;
 }
+
+/**
+ * The right-click menu on desktop, a bottom action sheet on a phone.
+ */
+export function ContextMenu({
+    x,
+    y,
+    entries,
+    title,
+    onClose
+}: ContextMenuProps) {
+    const layout = useLayout();
+    return layout === "phone" ? (
+        <ActionSheet title={title} entries={entries} onClose={onClose} />
+    ) : (
+        <DesktopContextMenu x={x} y={y} entries={entries} onClose={onClose} />
+    );
+}
+
+type DesktopContextMenuProps = Omit<ContextMenuProps, "title">;
 
 /**
  * Keeps the menu on screen (see the CSS), focuses the first item, and closes on a click
  * outside, Escape, scrolling, resizing, or leaving the window.
  */
-export function ContextMenu({ x, y, entries, onClose }: ContextMenuProps) {
+function DesktopContextMenu({
+    x,
+    y,
+    entries,
+    onClose
+}: DesktopContextMenuProps) {
     const menuRef = useRef<HTMLDivElement>(null);
     const getItems = () =>
         Array.from(

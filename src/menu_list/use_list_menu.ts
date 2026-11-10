@@ -5,7 +5,14 @@ import type { BankEntity } from "../core_backend/bank_view.ts";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useClipboard } from "../clipboard/clipboard_context.ts";
 import { useDialogs } from "../dialogs/dialogs_context.ts";
-import type { ContextMenuEntry } from "../context_menu/context_menu_context.ts";
+import {
+    type ContextMenuAPI,
+    type ContextMenuEntry,
+    useContextMenu
+} from "../context_menu/context_menu_context.ts";
+import { useLayout } from "../layout/layout_context.ts";
+import { useOpenBanks } from "../tab_list/open_banks_context.ts";
+import { useCopyToBank } from "../hooks/use_copy_to_bank.ts";
 import {
     isInstrument,
     isPreset,
@@ -47,14 +54,59 @@ import { useElementTools } from "../generator_table/tools/use_element_tools.tsx"
  * Builds the right-click menu of the element lists for a selection.
  */
 export function useListMenu() {
+    // The event that opened a menu, which a sub-sheet opens with too
+    type MenuEvent = Parameters<ContextMenuAPI["openMenu"]>[0];
     const { t } = useTranslation();
-    const { session, apply, playSample } = useBankEditor();
+    const {
+        session,
+        apply,
+        applyCreate: create = apply,
+        playSample
+    } = useBankEditor();
     const { contents } = useClipboard();
     const { pickElement, askNumber } = useDialogs();
     const commands = useSelectionCommands();
     const sampleTools = useSampleTools();
     const elementTools = useElementTools();
+    const layout = useLayout();
+    const { openMenu } = useContextMenu();
+    const openBanks = useOpenBanks();
+    const copyToBank = useCopyToBank();
     const { document } = session;
+
+    /**
+     * Phones have no tabs to drop on, so the selection menu copies to another open bank: a
+     * second sheet lists them, and the copy is an undo step in that bank, as a drop is.
+     */
+    const getCopyToBankEntry = (
+        selection: ReadonlySet<BankEntity>,
+        event: MenuEvent
+    ): ContextMenuEntry => {
+        const otherBanks = openBanks.sessions.filter((s) => s !== session);
+        const label = t("phoneLocale.selection.copyToBank");
+        return {
+            label,
+            icon: "copy",
+            hasSubmenu: true,
+            isDisabled: otherBanks.length === 0,
+            disabledReason: t("phoneLocale.selection.copyToBankNone"),
+            onSelect: () =>
+                openMenu(
+                    event,
+                    otherBanks.map((bank) => {
+                        // Read when the sheet opens, a rename since then shows
+                        const name = bank.store.getSnapshot().info.name;
+                        return {
+                            label:
+                                name.length > 0 ? name : t("bankInfo.unnamed"),
+                            onSelect: () =>
+                                copyToBank(session, bank, [...selection])
+                        };
+                    }),
+                    { title: label }
+                )
+        };
+    };
 
     /**
      * The tools for many zones, the same for presets and instruments.
@@ -64,14 +116,17 @@ export function useListMenu() {
     ): ContextMenuEntry[] => [
         {
             label: t("toolsLocale.keyCurve.menu"),
+            icon: "edit",
             onSelect: () => void elementTools.openKeyCurve(elements)
         },
         {
             label: t("toolsLocale.attenuation.menu"),
+            icon: "edit",
             onSelect: () => void elementTools.openAttenuation(elements)
         },
         {
             label: t("toolsLocale.split.menu"),
+            icon: "edit",
             onSelect: () => void elementTools.openSplitZones(elements)
         }
     ];
@@ -257,34 +312,45 @@ export function useListMenu() {
         });
 
     const getEntries = (
-        selection: ReadonlySet<BankEntity>
+        selection: ReadonlySet<BankEntity>,
+        event: MenuEvent
     ): ContextMenuEntry[] => {
         const hasClipboard =
             contents.presets + contents.instruments + contents.samples > 0;
         const editEntries: ContextMenuEntry[] = [
             {
                 label: t("contextMenu.copy"),
+                icon: "copy",
                 onSelect: () => commands.copy(selection),
                 shortcut: shortcutText("C")
             },
             {
                 label: t("contextMenu.cut"),
+                icon: "cut",
                 onSelect: () => commands.cut(selection),
                 shortcut: shortcutText("X")
             },
             {
                 label: t("contextMenu.paste"),
+                icon: "paste",
                 onSelect: commands.paste,
                 isDisabled: !hasClipboard,
+                disabledReason: t("presetList.pasteHint"),
                 shortcut: shortcutText("V")
             },
             {
                 label: t("contextMenu.duplicate"),
+                icon: "duplicate",
                 onSelect: () => commands.duplicate(selection),
                 shortcut: shortcutText("D")
             },
+            ...(layout === "phone"
+                ? [getCopyToBankEntry(selection, event)]
+                : []),
             {
                 label: t("contextMenu.delete"),
+                icon: "delete",
+                isDestructive: true,
                 onSelect: () => commands.remove(selection),
                 shortcut: DELETE_KEY_TEXT
             }
@@ -297,6 +363,7 @@ export function useListMenu() {
                     ? [
                           {
                               label: t("contextMenu.play"),
+                              icon: "play" as const,
                               onSelect: () => playSample(first)
                           },
                           "separator" as const
@@ -306,48 +373,60 @@ export function useListMenu() {
                 "separator",
                 {
                     label: t("contextMenu.addToInstrument"),
+                    icon: "link",
                     onSelect: () => void addSamplesToInstrument(samples),
-                    isDisabled: document.instruments.length === 0
+                    isDisabled: document.instruments.length === 0,
+                    disabledReason: t("phoneLocale.selection.noInstruments")
                 },
                 {
                     label: t("contextMenu.newInstrument"),
+                    icon: "add",
                     onSelect: () =>
-                        apply([createInstrumentFromSamples(document, samples)])
+                        create([createInstrumentFromSamples(document, samples)])
                 },
                 "separator",
                 {
                     label: t("contextMenu.normalize"),
+                    icon: "edit",
                     onSelect: () => void normalize(samples)
                 },
                 {
                     label: t("contextMenu.autoLoop"),
+                    icon: "edit",
                     onSelect: () => void autoLoop(samples)
                 },
                 {
                     label: t("contextMenu.gain"),
+                    icon: "edit",
                     onSelect: () => void changeGain(samples)
                 },
                 {
                     label: t("contextMenu.rootKeysFromNames"),
+                    icon: "edit",
                     onSelect: () => setRootKeysFromNames(samples)
                 },
                 {
                     label: t("toolsLocale.shift.menu"),
+                    icon: "edit",
                     onSelect: () => void sampleTools.shift(samples)
                 },
                 "separator",
                 {
                     label: t("toolsLocale.trim.removeSilence"),
+                    icon: "edit",
                     onSelect: () => void sampleTools.removeSilence(samples)
                 },
                 {
                     label: t("toolsLocale.trim.trimAfterLoop"),
+                    icon: "edit",
                     onSelect: () => void sampleTools.trimAfterLoop(samples)
                 },
                 {
                     label: t("toolsLocale.merge.menuSelection"),
+                    icon: "edit",
                     onSelect: () => void sampleTools.mergeDuplicates(samples),
-                    isDisabled: samples.size < 2
+                    isDisabled: samples.size < 2,
+                    disabledReason: t("phoneLocale.selection.selectTwo")
                 }
             ];
         }
@@ -358,34 +437,41 @@ export function useListMenu() {
                 "separator",
                 {
                     label: t("contextMenu.addToPreset"),
+                    icon: "link",
                     onSelect: () => void addInstrumentsToPreset(instruments),
-                    isDisabled: document.presets.length === 0
+                    isDisabled: document.presets.length === 0,
+                    disabledReason: t("phoneLocale.selection.noPresets")
                 },
                 {
                     label: t("contextMenu.newPreset"),
+                    icon: "add",
                     onSelect: () =>
-                        apply([
+                        create([
                             createPresetFromInstruments(document, instruments)
                         ])
                 },
                 "separator",
                 {
                     label: t("contextMenu.spreadSamples"),
+                    icon: "edit",
                     onSelect: () => elementTools.spread([...instruments])
                 },
                 ...getZoneToolEntries([...instruments]),
                 {
                     label: t("toolsLocale.naturalRelease.menu"),
+                    icon: "edit",
                     onSelect: () =>
                         void elementTools.openNaturalRelease([...instruments])
                 },
                 {
                     label: t("contextMenu.drumMap"),
+                    icon: "edit",
                     onSelect: () =>
                         void elementTools.openDrumMap([...instruments])
                 },
                 {
                     label: t("contextMenu.batchGenerator"),
+                    icon: "edit",
                     onSelect: () => void editGenerator(instruments)
                 }
             ];
@@ -398,6 +484,7 @@ export function useListMenu() {
                   ...getZoneToolEntries([...presets]),
                   {
                       label: t("contextMenu.batchGenerator"),
+                      icon: "edit",
                       onSelect: () => void editGenerator(presets)
                   }
               ]
@@ -406,8 +493,11 @@ export function useListMenu() {
 
     // The menu stays open while the bank changes (an undo from the menu bar), so a picked entry
     // acts on the part of the selection still in the bank, and does nothing when none is left
-    return (selection: ReadonlySet<BankEntity>): ContextMenuEntry[] =>
-        getEntries(selection).map((entry) =>
+    return (
+        selection: ReadonlySet<BankEntity>,
+        event: MenuEvent
+    ): ContextMenuEntry[] =>
+        getEntries(selection, event).map((entry) =>
             entry === "separator"
                 ? entry
                 : {
@@ -423,7 +513,7 @@ export function useListMenu() {
                           if (live.size === 0) {
                               return;
                           }
-                          const current = getEntries(live).find(
+                          const current = getEntries(live, event).find(
                               (e) =>
                                   e !== "separator" && e.label === entry.label
                           );

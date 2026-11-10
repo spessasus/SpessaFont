@@ -5,7 +5,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { getObjectId } from "../utils/object_id.ts";
 import { DRAG_SCROLL_ATTRIBUTE } from "../drag_and_drop/drag_controller.ts";
 
-const ESTIMATED_ROW_HEIGHT = 30;
+const DEFAULT_ROW_ESTIMATE = 30;
 const OVERSCAN = 5;
 /**
  * The rows mark the button that takes the focus with this attribute.
@@ -31,6 +31,10 @@ interface VirtualItemListProps<T extends object> {
      */
     focusRequest?: FocusRequest | null;
     renderItem: (item: T) => ReactNode;
+    /**
+     * The row height in pixels before a row is measured.
+     */
+    rowEstimate?: number;
 }
 
 /**
@@ -40,7 +44,8 @@ export function VirtualItemList<T extends object>({
     items,
     focusedItem,
     focusRequest = null,
-    renderItem
+    renderItem,
+    rowEstimate = DEFAULT_ROW_ESTIMATE
 }: VirtualItemListProps<T>) {
     const parentRef = useRef<HTMLDivElement>(null);
     // A list that mounts later (an opened section) does not take an old request
@@ -48,7 +53,7 @@ export function VirtualItemList<T extends object>({
     const virtualizer = useVirtualizer({
         count: items.length,
         getScrollElement: () => parentRef.current,
-        estimateSize: () => ESTIMATED_ROW_HEIGHT,
+        estimateSize: () => rowEstimate,
         overscan: OVERSCAN,
         getItemKey: (index) => getObjectId(items[index])
     });

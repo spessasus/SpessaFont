@@ -1,0 +1,109 @@
+/*
+ * The desktop bottom bars as the properties sheet shows them, the editors leave them out on
+ * phones
+ */
+:root[data-layout="phone"] .bottom_sheet .bottom_bar {
+    flex-flow: row wrap;
+    align-items: stretch;
+    gap: 0.75rem;
+    overflow: visible;
+    padding: 1rem;
+    border-top: none;
+    margin-top: 0;
+}
+
+:root[data-layout="phone"] .bottom_sheet .bottom_bar > div,
+:root[data-layout="phone"] .bottom_sheet .bottom_bar > label,
+:root[data-layout="phone"] .bottom_sheet .bottom_bar > button {
+    padding: 0;
+    border-right: none;
+    text-align: start;
+    white-space: normal;
+}
+
+:root[data-layout="phone"] .bottom_sheet .bottom_bar label > span,
+:root[data-layout="phone"] .bottom_sheet .bottom_bar .linked_presets_label {
+    text-align: start;
+    font-size: var(--phone-text-secondary);
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .bottom_sheet .bottom_bar > div,
+:root[data-layout="phone"] .bottom_sheet .bottom_bar > label {
+    flex: 1 1 100%;
+}
+
+:root[data-layout="phone"] .bottom_sheet .bottom_bar > label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+:root[data-layout="phone"] .bottom_sheet .bottom_bar > label:hover,
+:root[data-layout="phone"] .bottom_sheet .bottom_bar > button:hover {
+    background: none;
+}
+
+:root[data-layout="phone"] .bottom_sheet .bottom_bar input {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: none;
+    min-height: var(--phone-touch);
+    padding: 0 0.5rem;
+    text-align: start;
+    color: inherit;
+    border: solid 1px var(--track-border-color);
+    border-radius: var(--primary-border-radius);
+}
+
+:root[data-layout="phone"] .bottom_sheet .bottom_bar .drums_toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: var(--phone-touch);
+}
+
+/* The switch goes to the end of the row, with a hit area of the touch size */
+:root[data-layout="phone"]
+    .bottom_sheet
+    .bottom_bar
+    .drums_toggle
+    .controller_switch_wrapper {
+    flex: none;
+}
+
+:root[data-layout="phone"]
+    .bottom_sheet
+    .bottom_bar
+    .drums_toggle
+    .controller_switch::after {
+    content: "";
+    position: absolute;
+    inset: calc((var(--track-height) - var(--phone-touch)) / 2)
+        calc((var(--track-width) - var(--phone-touch)) / 2);
+}
+
+/* Used by is a wrapping list of buttons, and Delete is set apart at the end */
+:root[data-layout="phone"] .bottom_sheet .bottom_bar > button {
+    display: flex;
+    align-items: center;
+    min-height: var(--phone-touch);
+    padding: 0 0.75rem;
+    border: solid 1px var(--track-border-color);
+    border-radius: var(--primary-border-radius);
+}
+
+:root[data-layout="phone"] .bottom_sheet .bottom_bar > button:has(.warning) {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+    margin-top: 0.5rem;
+}
+
+/*
+ * The global .warning rule is !important, so this one is too and wins by its specificity
+ * (the same destructive color and weight as Delete in the selection bar)
+ */
+:root[data-layout="phone"] .bottom_sheet .bottom_bar .warning {
+    color: var(--destructive-color) !important;
+    font-weight: 400;
+}

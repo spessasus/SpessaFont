@@ -1,0 +1,16 @@
+/* The whole song name, wrapped, as the drawer cuts it */
+:root[data-layout="phone"]
+    .bottom_sheet:has(.player_sheet)
+    .bottom_sheet_title {
+    overflow: visible;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+:root[data-layout="phone"] .player_sheet_time {
+    margin: 0;
+    padding: 0.25rem var(--phone-gutter) 0.5rem;
+    font-size: var(--phone-text-small);
+    color: var(--muted-font-color);
+    text-align: start;
+}

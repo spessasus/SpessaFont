@@ -1,0 +1,39 @@
+/* The overview's Default modulators and bank check panels, opened over the overview */
+:root[data-layout="phone"] .overview_panel {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+/* The panel keeps its bar fixed and the list scrolls under it, like the modulator layer */
+:root[data-layout="phone"] .overview_panel .default_modulators {
+    align-items: stretch;
+    flex: 1;
+    gap: 0;
+    min-height: 0;
+}
+
+:root[data-layout="phone"] .overview_panel .default_modulators .modulator_list {
+    min-height: 0;
+}
+
+/* The panel scrolls, its bar stays at the top */
+:root[data-layout="phone"] .overview_panel .phone_layer_header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+/* The check's own scroller and padding would keep the bar from sticking to the panel's top */
+:root[data-layout="phone"] .overview_panel .bank_check {
+    overflow: visible;
+    padding: 0 0 var(--phone-gutter);
+}
+
+/* The bar goes to the edges, the check takes its own gutter */
+:root[data-layout="phone"] .overview_panel .bank_check > * {
+    margin-inline: var(--phone-gutter);
+}

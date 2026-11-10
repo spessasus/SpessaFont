@@ -1,16 +1,13 @@
 import "./tab_list.css";
+import "./tab_list_phone.css";
 import { useTranslation } from "react-i18next";
 import type { BankSession } from "../core_backend/bank_session.ts";
 import { useHistoryState } from "../hooks/use_history_state.ts";
 import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
-import toast from "react-hot-toast";
-import { useClipboard } from "../clipboard/clipboard_context.ts";
 import { useDropTarget } from "../drag_and_drop/drag_context.ts";
-import {
-    isInstrument,
-    isPreset,
-    isSample
-} from "../menu_list/menu_selection.ts";
+import { useCopyToBank } from "../hooks/use_copy_to_bank.ts";
+import { useLayout } from "../layout/layout_context.ts";
+import { CloseIcon } from "../utils/icons/app_icons.tsx";
 
 export interface TabListProps {
     tabs: readonly BankSession[];
@@ -28,46 +25,16 @@ interface TabProps {
 
 function Tab({ session, isActive, onSelect, onClose }: TabProps) {
     const { t } = useTranslation();
+    const layout = useLayout();
     const { isDirty } = useHistoryState(session.store);
     const name = useBankSnapshot(session.store, (s) => s.info.name);
     const displayName = name.length > 0 ? name : t("bankInfo.unnamed");
-    const { clipboard } = useClipboard();
+    const copyToBank = useCopyToBank();
     // Elements of another bank dropped on the tab are copied into this bank, like a paste
     const dropTarget = useDropTarget({
         accepts: (payload) => payload.session !== session,
-        onDrop: ({ entities, session: source }) => {
-            // An undo or a delete during the drag may have removed some
-            const dropped = entities.filter((e) => source.document.contains(e));
-            if (dropped.length === 0) {
-                return;
-            }
-            const presets = dropped.filter(isPreset);
-            // Counted before the copy, after it the copies take the patches
-            const moved = clipboard.countMovedPresets(
-                session.document,
-                presets
-            );
-            session.history.do(
-                clipboard.cloneElements(
-                    session,
-                    {
-                        presets,
-                        instruments: dropped.filter(isInstrument),
-                        samples: dropped.filter(isSample)
-                    },
-                    source
-                )
-            );
-            toast.success(
-                t("clipboardLocale.copiedToBank", {
-                    count: dropped.length,
-                    name: displayName
-                })
-            );
-            if (moved > 0) {
-                toast(t("clipboardLocale.movedPresets", { count: moved }));
-            }
-        }
+        onDrop: ({ entities, session: source }) =>
+            copyToBank(source, session, entities)
     });
     return (
         <div className={`tab ${isActive ? "active" : ""}`} {...dropTarget}>
@@ -86,7 +53,7 @@ function Tab({ session, isActive, onSelect, onClose }: TabProps) {
                 title={t("closeTab", { name: displayName })}
                 onClick={() => onClose(session)}
             >
-                ×
+                {layout === "phone" ? <CloseIcon /> : "×"}
             </button>
         </div>
     );

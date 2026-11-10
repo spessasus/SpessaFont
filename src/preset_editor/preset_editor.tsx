@@ -6,6 +6,7 @@ import { getObjectId } from "../utils/object_id.ts";
 import { useLinkDropTarget } from "../drag_and_drop/use_link_drop_target.ts";
 import { PRESET_ROWS } from "./preset_rows.ts";
 import { ZoneToolsMenu } from "../generator_table/tools/zone_tools_menu.tsx";
+import { useLayout } from "../layout/layout_context.ts";
 
 interface PresetEditorProps {
     preset: BasicPreset;
@@ -14,6 +15,7 @@ interface PresetEditorProps {
 export function PresetEditor({ preset }: PresetEditorProps) {
     // The whole editor takes dropped children, not only the table
     const dropTarget = useLinkDropTarget(preset);
+    const layout = useLayout();
     return (
         <div className={"preset_editor"} {...dropTarget}>
             <ZoneToolsMenu element={preset} />
@@ -22,7 +24,8 @@ export function PresetEditor({ preset }: PresetEditorProps) {
                 rows={PRESET_ROWS}
                 element={preset}
             />
-            <BottomBar preset={preset} />
+            {/* Phones show the bar in the properties sheet */}
+            {layout === "phone" ? null : <BottomBar preset={preset} />}
         </div>
     );
 }

@@ -10,6 +10,7 @@ import { LinkIcon } from "../../utils/icons/edit_icons.tsx";
 import { getObjectId } from "../../utils/object_id.ts";
 import { useLinkDropTarget } from "../../drag_and_drop/use_link_drop_target.ts";
 import { ExpandButton } from "../expand_button.tsx";
+import { SelectionCheckbox } from "../selection_mode/selection_checkbox.tsx";
 
 interface InstrumentDisplayProps {
     /**
@@ -18,6 +19,10 @@ interface InstrumentDisplayProps {
     instrumentId: number;
     view: BankEditView;
     isSelected: boolean;
+    /**
+     * Shows the phone's selection mode checkbox in front of the row.
+     */
+    isSelecting?: boolean;
     /**
      * Whether the instrument is the shown element.
      */
@@ -47,6 +52,7 @@ export function InstrumentDisplay({
     instrumentId,
     view,
     isSelected,
+    isSelecting = false,
     isShown,
     isOpen,
     onToggle,
@@ -81,6 +87,12 @@ export function InstrumentDisplay({
                 {...dropTarget}
                 title={instrument.name}
             >
+                {isSelecting ? (
+                    <SelectionCheckbox
+                        isChecked={isSelected}
+                        onClick={onClick}
+                    />
+                ) : null}
                 <div className={"left_buttons"}>
                     <ExpandButton isOpen={isOpen} onToggle={onToggle} />
                     {onLink ? (

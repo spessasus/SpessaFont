@@ -1,0 +1,108 @@
+:root[data-layout="phone"] .editor_sheet {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    height: var(--phone-sheet-height);
+    min-height: 0;
+    background: var(--lighter-color-end);
+    color: var(--font-color);
+    border-top: 1px solid var(--track-border-color);
+    border-radius: 1rem 1rem 0 0;
+}
+
+:root[data-layout="phone"] .editor_sheet[data-full="true"] {
+    height: 100%;
+}
+
+:root[data-layout="phone"] .editor_sheet_grab {
+    flex: none;
+    display: flex;
+    justify-content: center;
+    padding: 0.5rem 0 0.25rem;
+    touch-action: none;
+    cursor: grab;
+}
+
+:root[data-layout="phone"] .editor_sheet_grab_bar {
+    width: 2.5rem;
+    height: 0.25rem;
+    border-radius: 0.125rem;
+    background: var(--track-border-color);
+}
+
+:root[data-layout="phone"] .editor_sheet_header {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: var(--phone-row-height, 3rem);
+    padding: 0 0.5rem 0 1rem;
+    border-bottom: 1px solid var(--track-border-color);
+}
+
+:root[data-layout="phone"] .editor_sheet_title {
+    flex: 1;
+    min-width: 0;
+}
+
+:root[data-layout="phone"] .editor_sheet_close {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--phone-touch, 2.75rem);
+    min-height: var(--phone-touch, 2.75rem);
+}
+
+:root[data-layout="phone"] .editor_sheet_close svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+:root[data-layout="phone"] .editor_sheet_body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+/*
+ * Landscape is short, so the sheet gives way to the grid above it and its body scrolls. It
+ * keeps its grab bar, header and one row, and the grid gives way below that (see
+ * generator_table_phone.css)
+ */
+:root[data-layout="phone"][data-orientation="landscape"] .editor_sheet {
+    flex: 0 1 var(--phone-sheet-height);
+    height: auto;
+    min-height: calc(1rem + 2 * var(--phone-row-height));
+}
+
+/*
+ * While a sheet is docked in landscape the drawer's keys get shorter, still playable for an
+ * audition, so the sheet's body and the grid above it keep a usable height
+ */
+:root[data-layout="phone"][data-orientation="landscape"]:has(.editor_sheet) {
+    --phone-keys-height: 3.5rem;
+}
+
+/*
+ * The same for a modulator list (zone layer or the overview's defaults), where Controls give way
+ * too, or the open keys or controls leave it a sliver
+ */
+:root[data-layout="phone"][data-orientation="landscape"]:has(
+        .modulator_layer,
+        .default_modulators
+    ) {
+    --phone-keys-height: 3.5rem;
+    --phone-controls-height: 28dvh;
+}
+
+/*
+ * A capture or the Keys… view needs the sheet's fields more than the grid, so in landscape the
+ * sheet takes the height and the grid yields
+ */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .editor_sheet:has(.piano_capture_bar, .cell_sheet_key_span) {
+    flex: 1 1 0;
+    min-height: 0;
+}

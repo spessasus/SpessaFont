@@ -1,0 +1,60 @@
+:root[data-layout="phone"] .modulator_list .action_buttons {
+    flex-wrap: wrap;
+    justify-content: start;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0 var(--phone-gutter);
+}
+
+:root[data-layout="phone"]
+    .modulator_list
+    .action_buttons
+    .modulator_list_button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--phone-touch);
+    margin: 0;
+    padding: 0 0.75rem;
+    font-size: var(--phone-text-button);
+}
+
+/* New ends a layer's header row (zone and default modulators), the title takes what is left */
+:root[data-layout="phone"] .phone_layer_header .modulator_new_button {
+    flex-shrink: 0;
+    min-width: var(--phone-touch);
+    min-height: var(--phone-touch);
+    margin: 0;
+}
+
+/* Buttons that cannot act yet, as Between below two selected */
+:root[data-layout="phone"]
+    .modulator_list
+    .action_buttons
+    .modulator_list_button[aria-disabled="true"] {
+    opacity: 0.4;
+}
+
+/* Rows with dividers, no gaps where the pane shows through */
+:root[data-layout="phone"] .modulator_list .list_contents {
+    gap: 0;
+}
+
+/*
+ * Landscape has no height for a fixed header, action bar and rows, so the whole list scrolls as
+ * one and only the layer header stays
+ */
+:root[data-layout="phone"][data-orientation="landscape"]
+    .modulator_list
+    .list_contents {
+    flex: none;
+    overflow: visible;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .modulator_list
+    > .phone_layer_header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}

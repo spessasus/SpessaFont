@@ -6,8 +6,9 @@ import { writeFileSync } from "node:fs";
 import path from "node:path";
 
 // The app and spessasynth_core chunks load at startup, and the Worker carries its own core.
-// The app is the largest, a bit under 870 kB with the React Compiler's caches
-const CHUNK_SIZE_LIMIT_KB = 870;
+// The Worker is the largest, about 773 kB. The phone shell is a lazy chunk, so the code it
+// shares with the desktop app lands in a shared chunk of about 664 kB
+const CHUNK_SIZE_LIMIT_KB = 780;
 
 /**
  * The folders the app is built from. The dev server watches only these and the files in the
@@ -120,8 +121,19 @@ export default defineConfig({
         setupFiles: ["src/test_utils/setup.ts"],
         // Restores navigator and other globals that individual tests stub
         unstubGlobals: true,
-        // The theme test reads the theme files as text, other CSS stays unprocessed
-        css: { include: [/src\/themes\//] },
+        // The theme test and the phone CSS scope test read their files as text, other CSS stays
+        // unprocessed (an unprocessed file reads as an empty string)
+        css: {
+            include: [
+                /src\/themes\//,
+                /_phone\.css/,
+                /src\/index_phone\.css/,
+                /src\/context_menu\/action_sheet\.css/,
+                /src\/fancy_inputs\/(segmented_control|stepper_button)\//,
+                /src\/menu_list\/selection_mode\//,
+                /src\/phone_shell\//
+            ]
+        },
         // History and core logging is noise unless a test fails
         silent: "passed-only"
     }

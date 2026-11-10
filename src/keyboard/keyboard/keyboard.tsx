@@ -2,6 +2,7 @@ import type * as React from "react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./keyboard.css";
+import "./keyboard_phone.css";
 import { KEYBOARD_TARGET_CHANNEL } from "../target_channel.ts";
 import { useAudioEngine } from "../../core_backend/audio_engine_context.ts";
 import { useEventListener } from "../../hooks/use_event_listener.ts";
@@ -39,10 +40,14 @@ interface KeyboardProps {
      * Called with the key under the pointer and the velocity a press there would have.
      */
     onKeyHover: (midiNote: number, velocity: number) => void;
+    /**
+     * The `.keyboard` element. The phone drawer scrolls it, the desktop passes none.
+     */
+    ref?: React.Ref<HTMLDivElement>;
 }
 
 // most of this code is ported over from spessasynth web app
-export function Keyboard({ splits, onKeyHover }: KeyboardProps) {
+export function Keyboard({ splits, onKeyHover, ref }: KeyboardProps) {
     const { t } = useTranslation();
     const { audioEngine } = useAudioEngine();
     const pressedNotes = usePressedNotes();
@@ -150,6 +155,7 @@ export function Keyboard({ splits, onKeyHover }: KeyboardProps) {
 
     return (
         <div
+            ref={ref}
             className="keyboard"
             role={"slider"}
             tabIndex={0}

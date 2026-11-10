@@ -1,6 +1,7 @@
 import { useDeferredValue, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ModalDialog } from "./modal_dialog.tsx";
+import { useLayout } from "../layout/layout_context.ts";
 import { VirtualItemList } from "../menu_list/virtual_item_list.tsx";
 
 export interface PickerOption {
@@ -10,6 +11,7 @@ export interface PickerOption {
 
 interface ElementPickerProps {
     title: string;
+    kind?: "sample";
     options: readonly PickerOption[];
     onAnswer: (index: number | undefined) => void;
 }
@@ -21,10 +23,12 @@ interface ElementPickerProps {
  */
 export function ElementPicker({
     title,
+    kind,
     options,
     onAnswer
 }: ElementPickerProps) {
     const { t } = useTranslation();
+    const layout = useLayout();
     const listId = useId();
     const [query, setQuery] = useState("");
     const deferredQuery = useDeferredValue(query.toLowerCase());
@@ -51,6 +55,7 @@ export function ElementPicker({
         <ModalDialog
             title={title}
             className={"element_picker"}
+            doesSkipFocus={layout === "phone"}
             onCancel={() => onAnswer(undefined)}
         >
             <input
@@ -63,7 +68,8 @@ export function ElementPicker({
                 aria-activedescendant={
                     current ? getOptionId(current) : undefined
                 }
-                autoFocus={true}
+                // The soft keyboard would cover the list the moment the picker opens
+                autoFocus={layout !== "phone"}
                 placeholder={t("presetList.search")}
                 aria-label={t("presetList.search")}
                 value={query}
@@ -103,6 +109,7 @@ export function ElementPicker({
                 id={listId}
                 className={"element_picker_list"}
                 role={"listbox"}
+                data-kind={layout === "phone" ? kind : undefined}
                 aria-label={title}
             >
                 {matches.length === 0 ? (

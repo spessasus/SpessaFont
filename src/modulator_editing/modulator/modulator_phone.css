@@ -1,0 +1,312 @@
+:root[data-layout="phone"] .modulator_main:not(.modulator_list_button) {
+    display: grid;
+    /* Each label sits above its field, so the selects get the whole card width and show their values */
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas:
+        "note diagram delete"
+        "srcLabel srcLabel srcCurve"
+        "src src src"
+        "secLabel secLabel secCurve"
+        "sec sec sec"
+        "amtLabel amtLabel amtLabel"
+        "amount amount amount"
+        "trLabel trLabel trLabel"
+        "transform transform transform"
+        "dstLabel dstLabel dstLabel"
+        "dest dest dest";
+    align-items: center;
+    column-gap: 0.5rem;
+    row-gap: 0.25rem;
+    /* Inset like the desktop cards, so the rounded corners and borders stay off the screen edge */
+    margin: 0 var(--phone-gutter);
+    padding: 0.25rem 0.5rem 0.5rem;
+    box-sizing: border-box;
+    width: calc(100% - 2 * var(--phone-gutter));
+}
+
+:root[data-layout="phone"] .modulator_main .modulator_diagram {
+    grid-area: diagram;
+    width: 4rem;
+    height: 4rem;
+    margin: 0;
+}
+
+:root[data-layout="phone"] .modulator_main .modulator_title_right {
+    position: static;
+    grid-area: delete;
+    color: var(--destructive-color);
+    width: var(--phone-touch);
+    height: var(--phone-touch);
+    min-height: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+:root[data-layout="phone"] .modulator_main .modulator_title_right svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* The global font color rule would paint the icon over the button's color */
+:root[data-layout="phone"] .modulator_main .modulator_title_right * {
+    color: inherit;
+}
+
+:root[data-layout="phone"] .modulator_main .modulator_overrides_note {
+    grid-area: note;
+    min-width: 0;
+    text-align: start;
+    font-size: var(--phone-text-secondary);
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .modulator_main .modulator_field_label {
+    min-height: 0;
+    padding-top: 0.5rem;
+    display: flex;
+    align-items: flex-end;
+    align-self: end;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    text-align: start;
+    font-size: var(--phone-text-secondary);
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .modulator_label_source {
+    grid-area: srcLabel;
+}
+
+:root[data-layout="phone"] .modulator_label_secondary {
+    grid-area: secLabel;
+}
+
+:root[data-layout="phone"] .modulator_label_amount {
+    grid-area: amtLabel;
+}
+
+:root[data-layout="phone"] .modulator_label_transform {
+    grid-area: trLabel;
+}
+
+:root[data-layout="phone"] .modulator_label_destination {
+    grid-area: dstLabel;
+}
+
+:root[data-layout="phone"] .modulator_main .source_pair,
+:root[data-layout="phone"] .modulator_main .pretty_input {
+    display: contents;
+}
+
+:root[data-layout="phone"] .modulator_main .pretty_input > span {
+    display: none;
+}
+
+:root[data-layout="phone"]
+    .modulator_main
+    .source_pair:nth-of-type(1)
+    > :nth-child(1) {
+    grid-area: src;
+}
+
+:root[data-layout="phone"]
+    .modulator_main
+    .source_pair:nth-of-type(1)
+    > :nth-child(2) {
+    grid-area: sec;
+}
+
+:root[data-layout="phone"]
+    .modulator_main
+    .source_pair:nth-of-type(2)
+    > :nth-child(1) {
+    grid-area: srcCurve;
+}
+
+:root[data-layout="phone"]
+    .modulator_main
+    .source_pair:nth-of-type(2)
+    > :nth-child(2) {
+    grid-area: secCurve;
+}
+
+:root[data-layout="phone"] .modulator_main .modulator_amount_input {
+    grid-area: amount;
+}
+
+:root[data-layout="phone"] .modulator_main .transform_selector {
+    grid-area: transform;
+}
+
+:root[data-layout="phone"] .modulator_main .destination_picker {
+    grid-area: dest;
+}
+
+:root[data-layout="phone"] .modulator_main .source_picker,
+:root[data-layout="phone"] .modulator_main .transform_selector,
+:root[data-layout="phone"] .modulator_main .destination_picker,
+:root[data-layout="phone"] .modulator_main .modulator_amount_input {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: var(--phone-touch);
+    font-size: var(--phone-text-body);
+}
+
+:root[data-layout="phone"] .modulator_main .modulator_amount_input {
+    text-align: end;
+}
+
+:root[data-layout="phone"] .modulator_main .modulator_curve_picker {
+    display: flex;
+    justify-content: center;
+}
+
+:root[data-layout="phone"] .modulator_main .modulator_curve_picker > button {
+    width: var(--phone-touch);
+    height: var(--phone-touch);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+/* The wrapper has no box of its own here, so the fields carry its desktop look */
+:root[data-layout="phone"] .modulator_main .pretty_input select,
+:root[data-layout="phone"] .modulator_main .pretty_input input {
+    background: var(--lighter-color-end);
+    border: 1px solid var(--track-border-color);
+    border-radius: var(--primary-border-radius);
+    color: var(--font-color);
+    padding: 0.3rem;
+}
+
+:root[data-layout="phone"] .modulator_main .source_picker,
+:root[data-layout="phone"] .modulator_main .transform_selector,
+:root[data-layout="phone"] .modulator_main .destination_picker {
+    text-align: start;
+    text-align-last: start;
+}
+
+/* The phone modulator rows (spec 10): 56 px, the number then the sources over the destination */
+:root[data-layout="phone"] .modulator_summary {
+    display: flex;
+    align-items: stretch;
+    box-sizing: border-box;
+    min-height: 3.5rem;
+    /* A list row on the pane, like the navigator's */
+    border-bottom: 1px solid
+        color-mix(in oklch, var(--track-border-color) 45%, transparent);
+}
+
+:root[data-layout="phone"] .modulator_summary[data-selected="true"] {
+    background: var(--cell-selection-color);
+}
+
+:root[data-layout="phone"] .modulator_summary_number {
+    flex: none;
+    min-width: 3rem;
+    min-height: var(--phone-touch);
+    font-size: var(--phone-text-small);
+}
+
+:root[data-layout="phone"] .modulator_summary_toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--flex-gap);
+    flex: 1;
+    min-width: 0;
+    padding: 0 0.5rem 0 0;
+}
+
+:root[data-layout="phone"] .modulator_summary_lines {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+:root[data-layout="phone"] .modulator_summary_source,
+:root[data-layout="phone"] .modulator_summary_destination {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: start;
+}
+
+:root[data-layout="phone"] .modulator_summary_source {
+    font-size: var(--phone-text-body);
+}
+
+:root[data-layout="phone"] .modulator_summary_destination {
+    font-size: var(--phone-text-secondary);
+    color: var(--muted-font-color);
+}
+
+/* The amount never gives way, the lines do */
+:root[data-layout="phone"] .modulator_summary .modulator_summary_amount {
+    flex: none;
+    font-size: var(--phone-text-small);
+    text-align: end;
+}
+
+:root[data-layout="phone"] .modulator_summary_chevron {
+    display: flex;
+    flex: none;
+    color: var(--muted-font-color);
+}
+
+:root[data-layout="phone"] .modulator_summary_chevron * {
+    color: inherit;
+}
+
+:root[data-layout="phone"] .modulator_summary_chevron svg {
+    width: var(--phone-disclosure-size);
+    height: var(--phone-disclosure-size);
+}
+
+:root[data-layout="phone"] .modulator_summary_form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--flex-gap);
+    padding-block: var(--flex-gap);
+    border-bottom: 1px solid
+        color-mix(in oklch, var(--track-border-color) 45%, transparent);
+}
+
+:root[data-layout="phone"] .modulator_summary_done {
+    align-self: flex-end;
+    min-height: var(--phone-touch);
+    margin-inline-end: var(--phone-gutter);
+    font-size: var(--phone-text-button);
+}
+
+/* The amount with its − and + steppers and ×10, one row in the amount's grid area */
+:root[data-layout="phone"] .modulator_main .modulator_amount_steppers {
+    grid-area: amount;
+    display: flex;
+    align-items: center;
+    gap: var(--flex-gap);
+    min-width: 0;
+}
+
+:root[data-layout="phone"]
+    .modulator_main
+    .modulator_amount_steppers
+    .modulator_amount_input {
+    flex: 1;
+}
+
+:root[data-layout="phone"] .modulator_amount_times10 {
+    flex: none;
+    white-space: nowrap;
+    min-width: var(--phone-touch);
+    min-height: var(--phone-touch);
+    font-size: var(--phone-text-button);
+}
+
+:root[data-layout="phone"] .modulator_amount_times10[aria-pressed="true"] {
+    background: var(--primary-color);
+    border-color: var(--border-color);
+}

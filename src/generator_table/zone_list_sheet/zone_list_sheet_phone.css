@@ -1,0 +1,141 @@
+:root[data-layout="phone"] .zone_list_title {
+    font-size: var(--phone-text-sheet-title);
+    font-weight: 600;
+    text-align: start;
+}
+
+:root[data-layout="phone"] .zone_list_hint {
+    margin-inline-start: 0.5rem;
+    font-size: var(--phone-text-secondary);
+    color: var(--muted-font-color);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .editor_sheet_title:has(.zone_list_title) {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    overflow: hidden;
+}
+
+:root[data-layout="phone"] .zone_list_sheet {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+:root[data-layout="phone"] .zone_list_find {
+    flex: none;
+    display: flex;
+    gap: var(--flex-gap);
+    padding: 0.5rem var(--phone-gutter) 0;
+}
+
+:root[data-layout="phone"] .zone_list_find_input {
+    flex: 1;
+    min-width: 0;
+    min-height: var(--phone-touch);
+    box-sizing: border-box;
+    padding: 0 0.75rem;
+    font-size: var(--phone-text-body);
+    text-align: start;
+    background: var(--darker-color-end);
+}
+
+:root[data-layout="phone"] .zone_list_find_input[aria-invalid="true"] {
+    border-color: var(--destructive-color);
+}
+
+:root[data-layout="phone"] .zone_list_add {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-height: var(--phone-touch);
+    padding: 0 0.75rem;
+    font-size: var(--phone-text-button);
+    white-space: nowrap;
+}
+
+:root[data-layout="phone"] .zone_list_add svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+:root[data-layout="phone"] .zone_list_note {
+    flex: none;
+    margin: 0;
+    padding: 0.25rem var(--phone-gutter) 0.5rem;
+    font-size: var(--phone-text-caption);
+    color: var(--muted-font-color);
+    text-align: start;
+}
+
+/* The list sits on the grid's color, the sheet's own is lighter */
+:root[data-layout="phone"] .zone_list_sheet .menu_list_scrollable {
+    background: var(--darker-color-end);
+    border-top: 1px solid var(--track-border-color);
+}
+
+:root[data-layout="phone"] .zone_list_row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    min-height: var(--phone-row-height);
+    box-sizing: border-box;
+    padding: 0 var(--phone-gutter);
+    text-align: start;
+    border-bottom: 1px solid
+        color-mix(in oklch, var(--track-border-color) 45%, transparent);
+}
+
+:root[data-layout="phone"] .zone_list_row:active,
+:root[data-layout="phone"] .zone_list_row:focus-visible {
+    background: var(--phone-pressed-color);
+}
+
+:root[data-layout="phone"] .zone_list_row[data-found="true"] {
+    background: var(--cell-selection-color);
+}
+
+:root[data-layout="phone"] .zone_list_swatch {
+    flex: none;
+    width: 0.5rem;
+    height: 1.5rem;
+    border-radius: 0.25rem;
+}
+
+:root[data-layout="phone"] .zone_list_name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--phone-text-body);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .zone_list_range {
+    flex: none;
+    font-size: var(--phone-text-body);
+    font-variant-numeric: tabular-nums;
+    color: var(--muted-font-color);
+    text-align: end;
+}
+
+/* Landscape: the finder and the list scroll together, so the list never shrinks away */
+:root[data-layout="phone"][data-orientation="landscape"] .zone_list_sheet {
+    overflow-y: auto;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"] .zone_list_sheet > * {
+    flex-shrink: 0;
+}
+
+:root[data-layout="phone"][data-orientation="landscape"]
+    .zone_list_sheet
+    .menu_list_scrollable {
+    flex: 1 0 calc(2 * var(--phone-row-height));
+}

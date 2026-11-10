@@ -27,6 +27,21 @@
 
     /* accents */
     --menu-bar-color: #320056ff;
+    --drawer-handle-color: color-mix(
+        in oklab,
+        var(--menu-bar-color) 90%,
+        black
+    );
+    --minimap-window-color: rgb(255 255 255 / 25%);
+    --zone-color-1: #e0605e;
+    --zone-color-2: #4fa3e0;
+    --zone-color-3: #e0b84f;
+    --zone-color-4: #5fc28a;
+    --grid-group-color: color-mix(
+        in oklch,
+        var(--menu-bar-color) 45%,
+        var(--lighter-color-start)
+    );
     --menu-border-color: #4c037a;
     --primary-color: #320056ff;
     --border-color: #4c037a;
@@ -57,4 +72,8 @@
     --piano-white-key: linear-gradient(90deg, #bbb, #fff);
     --piano-black-key: linear-gradient(140deg, #222, #000);
     --piano-disabled-key: linear-gradient(65deg, #333, #888);
+
+    /* sheets */
+    --sheet-scrim-color: rgb(0 0 0 / 50%);
+    --destructive-color: #ff6b6b;
 }

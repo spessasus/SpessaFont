@@ -1,6 +1,9 @@
 import { useTranslation } from "react-i18next";
 import "./stats.css";
+import "./stats_phone.css";
 import type { ZoneView } from "../core_backend/entity_views.ts";
+import { ChevronRightIcon } from "../utils/icons/app_icons.tsx";
+import { useLayout } from "../layout/layout_context.ts";
 import { EditIcon } from "../utils/icons/edit_icons.tsx";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
@@ -65,6 +68,7 @@ export function BankInfoStats({
     onTogglePanel
 }: BankInfoStatsProps) {
     const { t } = useTranslation();
+    const layout = useLayout();
     const { session } = useBankEditor();
     const views = useBankSnapshot(session.store, (s) => s.views);
     const info = useBankSnapshot(session.store, (s) => s.info);
@@ -111,7 +115,7 @@ export function BankInfoStats({
                     label={t("bankInfo.defaultModulators")}
                     value={views.defaultModulators.length}
                 />
-                <EditIcon />
+                {layout === "phone" ? <ChevronRightIcon /> : <EditIcon />}
             </button>
 
             <button
@@ -121,7 +125,7 @@ export function BankInfoStats({
                 className={"stats_panel_button single_stat"}
             >
                 <Stat label={t("bankInfo.checkButton")} value={issueCount} />
-                <InfoIcon />
+                {layout === "phone" ? <ChevronRightIcon /> : <InfoIcon />}
             </button>
 
             <div className={"stat_group single_stat"}>

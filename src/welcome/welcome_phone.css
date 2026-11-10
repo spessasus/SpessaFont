@@ -1,0 +1,40 @@
+/* One column of full width touch buttons, the desktop button look stays */
+:root[data-layout="phone"] .welcome {
+    padding: var(--phone-gutter);
+}
+
+:root[data-layout="phone"] .welcome .welcome_group {
+    align-self: stretch;
+    align-items: stretch;
+}
+
+:root[data-layout="phone"] .welcome .welcome_actions {
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+
+:root[data-layout="phone"] .welcome .welcome_action {
+    width: 100%;
+    height: auto;
+    min-height: 3.5rem;
+    justify-content: flex-start;
+}
+
+:root[data-layout="phone"] .welcome .welcome_action span {
+    font-size: var(--phone-text-body);
+    padding: 0.5rem 0.75rem;
+    text-align: start;
+}
+
+:root[data-layout="phone"] .welcome .welcome_note {
+    margin: 0;
+    font-size: var(--phone-text-secondary);
+    color: var(--muted-font-color);
+    text-align: start;
+}
+
+:root[data-layout="phone"] .welcome h1 {
+    font-size: var(--phone-text-heading);
+    font-weight: 600;
+    text-align: start;
+}

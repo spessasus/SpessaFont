@@ -1,39 +1,27 @@
 import "./dropdown_header.css";
+import "./dropdown_header_phone.css";
 import { useTranslation } from "react-i18next";
 import { CopyIcon, PasteIcon } from "../../utils/icons/edit_icons.tsx";
+import { useLayout } from "../../layout/layout_context.ts";
+import type { DropdownHeaderProps } from "./dropdown_header_props.ts";
+import { PhoneDropdownHeader } from "./phone_dropdown_header.tsx";
 
-interface DropdownHeaderProps {
-    text: string;
-    isOpen: boolean;
-    onToggle: () => void;
-    /**
-     * What the add button does, the list's own words ("Import Audio Files…").
-     */
-    addLabel: string;
-    /**
-     * Why the add button is disabled, shown on it instead of the label.
-     */
-    addHint?: string;
-    /**
-     * The add button is disabled when this is not set. The buttons stay in place, so the header
-     * does not change its layout with the selection.
-     */
-    onAdd?: () => void;
-    onCopy?: () => void;
-    onPaste?: () => void;
-}
-
-export function DropdownHeader({
-    text,
-    isOpen,
-    onToggle,
-    addLabel,
-    addHint = addLabel,
-    onAdd,
-    onCopy,
-    onPaste
-}: DropdownHeaderProps) {
+export function DropdownHeader(props: DropdownHeaderProps) {
     const { t } = useTranslation();
+    const layout = useLayout();
+    if (layout === "phone") {
+        return <PhoneDropdownHeader {...props} />;
+    }
+    const {
+        text,
+        isOpen,
+        onToggle,
+        addLabel,
+        addHint = addLabel,
+        onAdd,
+        onCopy,
+        onPaste
+    } = props;
     return (
         <div className={`item_group_header hover_brightness`}>
             <h2>

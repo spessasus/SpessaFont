@@ -35,3 +35,19 @@ export function getClickedSelection(
     }
     return next;
 }
+
+/**
+ * Every id from the first selected one to the last, in list order. A selection of fewer than
+ * two has no gap, so it comes back as it is.
+ * @param ids the ids of the list, in order
+ * @param selected the selected ids
+ */
+export function selectBetween(
+    ids: readonly number[],
+    selected: ReadonlySet<number>
+) {
+    const first = ids.findIndex((id) => selected.has(id));
+    const last = ids.findLastIndex((id) => selected.has(id));
+    // With nothing selected both are -1 and the slice is empty
+    return new Set([...selected, ...ids.slice(first, last + 1)]);
+}

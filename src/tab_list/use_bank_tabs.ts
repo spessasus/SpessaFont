@@ -146,6 +146,9 @@ export function useBankTabs() {
     };
 
     return {
+        canGoForward:
+            activeId !== undefined &&
+            (state.trails.get(activeId)?.forward.length ?? 0) > 0,
         goBack: () => navigate("goBack"),
         goForward: () => navigate("goForward"),
         tabs,
@@ -158,3 +161,5 @@ export function useBankTabs() {
         setSessionView
     };
 }
+
+export type BankTabs = ReturnType<typeof useBankTabs>;

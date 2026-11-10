@@ -1,51 +1,14 @@
 import "./keyboard_controller.css";
 import { Keyboard } from "./keyboard/keyboard.tsx";
 import { useState } from "react";
-import { type MIDIController, MIDIControllers } from "spessasynth_core";
-import { Controller } from "./controller/controller.tsx";
 import { OtherControllers } from "./controller/other_controllers.tsx";
+import { ControllerKnobs } from "./controller/controller_knobs.tsx";
 import { useTranslation } from "react-i18next";
 import type { BankSession } from "../core_backend/bank_session.ts";
 import type { BankEditView } from "../core_backend/bank_view.ts";
 import { useViewSplits } from "./use_view_splits.ts";
 
-const INITIAL_CC_LIST: readonly MIDIController[] = [
-    MIDIControllers.modulationWheel,
-    MIDIControllers.mainVolume,
-    MIDIControllers.pan,
-    MIDIControllers.expression,
-    MIDIControllers.sustainPedal,
-    MIDIControllers.filterResonance,
-    MIDIControllers.brightness,
-
-    MIDIControllers.reverbDepth,
-    MIDIControllers.chorusDepth
-];
-
 const NUMBER_WIDTH = 3;
-
-/**
- * Its own component (it has no props), so the compiler can skip it when the pointer moves over
- * the keyboard, instead of re-rendering the controller selects with their 128 options each.
- */
-function ControllerKnobs() {
-    const [controllers, setControllers] = useState(INITIAL_CC_LIST);
-    return (
-        <div className={"controller_row"}>
-            {controllers.map((cc, i) => (
-                <Controller
-                    // A fixed set of slots, never reordered, so the slot is the identity
-                    key={i}
-                    number={i + 1}
-                    cc={cc}
-                    onCCChange={(newCC) =>
-                        setControllers((prev) => prev.with(i, newCC))
-                    }
-                />
-            ))}
-        </div>
-    );
-}
 
 interface KeyboardControllerProps {
     /**
