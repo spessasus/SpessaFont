@@ -1,6 +1,10 @@
 import { MenuBar } from "./menu_bar/menu_bar.tsx";
 import { useTranslation } from "react-i18next";
-import { lazy, Suspense, useRef, useState } from "react";
+import { useRef, useState } from "react";
+// Not a lazy chunk: one would move the components it shares with desktop into a common chunk
+// whose CSS loads before index.css, and the .plain_button reset there then wins over their rules
+// (the keyboard panel's sustain switch spread over the page in production builds)
+import { PhoneShell } from "./phone_shell/phone_shell.tsx";
 import { Settings } from "./settings/settings.tsx";
 import { TabList } from "./tab_list/tab_list.tsx";
 import { KeyboardController } from "./keyboard/keyboard_controller.tsx";
@@ -31,12 +35,6 @@ import { renderPartError } from "./error_boundary/render_part_error.tsx";
 import { rememberFocus } from "./utils/focus_return.ts";
 import { ToolsMenuSlotContext } from "./menu_bar/tools_menu_slot.ts";
 import { useLayout } from "./layout/layout_context.ts";
-
-// Desktop never loads the phone shell
-const PhoneShell = lazy(async () => {
-    const { PhoneShell } = await import("./phone_shell/phone_shell.tsx");
-    return { default: PhoneShell };
-});
 
 const SOUND_BANK_EXTENSIONS = ACCEPTED_SOUNDBANK_FORMATS.split(",");
 
@@ -180,20 +178,18 @@ export function App() {
 
     if (layout === "phone") {
         return (
-            // A chunk that fails to load breaks only the shell, the open banks stay in App
             <OpenBanksProvider sessions={tabs} activeId={activeSession?.id}>
+                {/* A shell that fails breaks only the shell, the open banks stay in App */}
                 <ErrorBoundary fallback={renderPartError}>
-                    <Suspense fallback={null}>
-                        <PhoneShell
-                            bankTabs={bankTabs}
-                            areSettingsShown={areSettingsShown}
-                            onToggleSettings={toggleSettings}
-                            onCloseSettings={closeSettings}
-                            onOpenFile={() => void handleOpenFile()}
-                            onNewFile={() => void openBankFile()}
-                            onCloseFile={handleCloseFile}
-                        />
-                    </Suspense>
+                    <PhoneShell
+                        bankTabs={bankTabs}
+                        areSettingsShown={areSettingsShown}
+                        onToggleSettings={toggleSettings}
+                        onCloseSettings={closeSettings}
+                        onOpenFile={() => void handleOpenFile()}
+                        onNewFile={() => void openBankFile()}
+                        onCloseFile={handleCloseFile}
+                    />
                 </ErrorBoundary>
             </OpenBanksProvider>
         );

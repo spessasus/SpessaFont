@@ -6,9 +6,9 @@ import { writeFileSync } from "node:fs";
 import path from "node:path";
 
 // The app and spessasynth_core chunks load at startup, and the Worker carries its own core.
-// The Worker is the largest, about 773 kB. The phone shell is a lazy chunk, so the code it
-// shares with the desktop app lands in a shared chunk of about 664 kB
-const CHUNK_SIZE_LIMIT_KB = 780;
+// The app chunk is the largest, about 1063 kB, as it holds the phone shell too (a lazy phone shell
+// split the shared components into a chunk whose CSS loaded before index.css, see app.tsx)
+const CHUNK_SIZE_LIMIT_KB = 1070;
 
 /**
  * The folders the app is built from. The dev server watches only these and the files in the
