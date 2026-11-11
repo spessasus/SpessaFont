@@ -25,6 +25,7 @@ export class ChangeSet {
     private readonly touchedAudio = new Set<BasicSample>();
     private readonly restored = new Map<BasicSample, RestoredAudio>();
     private isBankInfoTouched = false;
+    private isFormatTouched = false;
     private readonly hints = new Array<BankEditView>();
 
     /**
@@ -64,6 +65,13 @@ export class ChangeSet {
     }
 
     /**
+     * True when the bank format (SF2 or SFE mode) changed.
+     */
+    public get hasFormatChanged() {
+        return this.isFormatTouched;
+    }
+
+    /**
      * The elements the actions asked the UI to select, in the order they asked.
      * The history picks one of them.
      */
@@ -75,7 +83,8 @@ export class ChangeSet {
         return (
             this.touchedEntities.size === 0 &&
             this.touchedLists.size === 0 &&
-            !this.isBankInfoTouched
+            !this.isBankInfoTouched &&
+            !this.isFormatTouched
         );
     }
 
@@ -105,6 +114,10 @@ export class ChangeSet {
 
     public touchBankInfo() {
         this.isBankInfoTouched = true;
+    }
+
+    public touchFormat() {
+        this.isFormatTouched = true;
     }
 
     /**

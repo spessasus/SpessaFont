@@ -29,8 +29,9 @@ export function SoundBankInfo({ panel, onPanelChange }: SoundBankInfoProps) {
     const { session } = useBankEditor();
     const views = useBankSnapshot(session.store, (s) => s.views);
     const info = useBankSnapshot(session.store, (s) => s.info);
+    const format = useBankSnapshot(session.store, (s) => s.format);
     // The stats show the count and the panel the list, so the check runs once for both
-    const issues = checkBank(views, info);
+    const issues = checkBank(views, info, format);
 
     let content;
     switch (panel) {

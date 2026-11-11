@@ -71,7 +71,10 @@ export function useElementTools() {
         elements: readonly Element[],
         generator?: GeneratorType
     ) => {
-        const rows = getElementRows(elements[0]).filter((r) => isCurveRow(r));
+        const rows = getElementRows(
+            elements[0],
+            session.document.format === "sfe"
+        ).filter((r) => isCurveRow(r));
         const [firstRow] = rows;
         if (!firstRow) {
             return;
@@ -126,9 +129,10 @@ export function useElementTools() {
 
     const openAttenuation = async (elements: readonly Element[]) => {
         const stats = getAttenuationStats(elements);
-        const row = getElementRows(elements[0]).find(
-            (r) => r.generator === GeneratorTypes.initialAttenuation
-        );
+        const row = getElementRows(
+            elements[0],
+            session.document.format === "sfe"
+        ).find((r) => r.generator === GeneratorTypes.initialAttenuation);
         if (!stats || !row) {
             toast(t("toolsLocale.noZones"));
             return;

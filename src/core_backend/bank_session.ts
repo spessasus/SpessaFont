@@ -36,6 +36,7 @@ import {
     type SampleConversion
 } from "./convert_samples_action.ts";
 import { setSampleFormWithoutData } from "./sample_form.ts";
+import { SetBankFormatAction } from "./set_bank_format_action.ts";
 
 let nextSessionId = 1;
 
@@ -265,15 +266,23 @@ export class BankSession implements SampleDataSource {
                 "The bank has compressed samples, which a .sf2 file cannot hold."
             );
         }
-        const commits = result.conversion
+        let commits = result.conversion
             ? this.recordConversion(result.conversion, start.views.samples)
             : 0;
+        this.saveHandle = await writeFile(result.binary, name, handle);
+        this.writeFormat = target;
+        // The file holds everything SFE does now, so the editor shows it all. Recorded only
+        // once the file is written, a failed write leaves the format alone
+        if (target === "sf4" && this.document.format !== "sfe") {
+            this.history.do([
+                new SetBankFormatAction(this.document.format, "sfe")
+            ]);
+            commits++;
+        }
         // Any other change since the save started (an edit, an undo, a merged wheel notch) is
         // not in the file, so it keeps the bank dirty
         const expectedRevision = start.revision + commits;
         const savedPosition = this.history.position;
-        this.saveHandle = await writeFile(result.binary, name, handle);
-        this.writeFormat = target;
         this.hasUnsaved24BitData = false;
         if (this.store.getSnapshot().revision === expectedRevision) {
             this.history.markSaved(savedPosition);
@@ -363,7 +372,11 @@ export class BankSession implements SampleDataSource {
      * The format a save with this choice writes, "auto" meaning the last one.
      */
     public getWriteFormat(format: SaveFormat) {
-        return resolveWriteFormat(format, this.writeFormat);
+        return resolveWriteFormat(
+            format,
+            this.writeFormat,
+            this.document.format
+        );
     }
 
     /**

@@ -14,6 +14,7 @@ import { CreatePresetAction } from "../menu_list/create_actions/create_preset_ac
 import type { BankDocument } from "./bank_document.ts";
 import type { BankSession } from "./bank_session.ts";
 import { findFreePatch, getTakenPatches } from "./free_patch.ts";
+import { hasCopiedSFEData } from "./sfe_data.ts";
 import type { SampleCopyRef } from "../synth_host/protocol.ts";
 import { getObjectId } from "../utils/object_id.ts";
 import type { CellCopy } from "../generator_table/cell/cell_clipboard.ts";
@@ -413,6 +414,22 @@ export class ClipboardManager {
 
     public hasPresets() {
         return this.presetClipboard.size > 0;
+    }
+
+    /**
+     * Whether pasting the presets (with their instruments) or the instruments brings SFE data
+     * into the target. A paste into the bank they came from brings nothing new, like a
+     * duplicate, and shares the instruments that are still there.
+     */
+    public hasSFEData(kind: "presets" | "instruments", target: BankSession) {
+        return (
+            target.id !== this.sourceId &&
+            hasCopiedSFEData(
+                kind === "presets"
+                    ? this.presetClipboard
+                    : this.instrumentClipboard
+            )
+        );
     }
 
     public copyPresets(p: ReadonlySet<BasicPreset>, source: BankSession) {

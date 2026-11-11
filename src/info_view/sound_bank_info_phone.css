@@ -69,3 +69,11 @@
     font-size: var(--phone-text-body);
     text-align: start;
 }
+
+:root[data-layout="phone"] .sound_bank_info .bank_format_select {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: var(--phone-touch);
+    font-size: var(--phone-text-body);
+    text-align: start;
+}

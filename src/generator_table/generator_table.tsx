@@ -46,6 +46,7 @@ import { useZoneCommands } from "./use_zone_commands.ts";
 import { PhoneGridSheets } from "./phone_grid_sheets.tsx";
 import { GeneratorTableBody } from "./generator_table_body.tsx";
 import { useViewBarSlot } from "../phone_shell/view_bar_slot.ts";
+import { getShownRows } from "./tools/element_rows.ts";
 
 const NO_CELLS = new Set<number>();
 
@@ -61,7 +62,10 @@ interface GeneratorTableProps {
  * Rendered with a key per element, so the modulator editor closes when the element changes.
  * The table is one Tab stop, see `table_navigation.ts`.
  */
-export function GeneratorTable({ element, rows }: GeneratorTableProps) {
+export function GeneratorTable({
+    element,
+    rows: allRows
+}: GeneratorTableProps) {
     const { t } = useTranslation();
     const { session } = useBankEditor();
     const isInstrument = element instanceof BasicInstrument;
@@ -74,6 +78,8 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
         session.store,
         (s) => s.views.instruments
     );
+    const isSFE = useBankSnapshot(session.store, (s) => s.format === "sfe");
+    const rows = getShownRows(allRows, isSFE);
     const defaultModulators = useBankSnapshot(
         session.store,
         (s) => s.views.defaultModulators
@@ -232,6 +238,10 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
         );
 
     const sheetRow = rows.find((r) => r.generator === cellSelection?.generator);
+    // An undo back to SF2 mode can hide the selected row
+    if (cellSelection && !sheetRow) {
+        setCellSelection(null);
+    }
 
     const viewBar =
         layout === "phone" ? (
@@ -327,6 +337,7 @@ export function GeneratorTable({ element, rows }: GeneratorTableProps) {
                                     : undefined
                             }
                             onEditModulators={openModulators}
+                            isSFE={isSFE}
                         />
                     </thead>
                     <GeneratorTableBody

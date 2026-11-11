@@ -21,6 +21,10 @@ import { BACK_LEVELS } from "../../phone_shell/back_stack.ts";
 import { useLayout } from "../../layout/layout_context.ts";
 import { ModulatorSummary } from "../modulator/modulator_summary.tsx";
 import { useIsEditorCovered } from "../../phone_shell/use_is_editor_covered.ts";
+import {
+    getShownModulators,
+    mergeHiddenModulators
+} from "../../core_backend/sfe_data.ts";
 
 interface ModulatorListProps {
     modulatorList: readonly ModulatorData[];
@@ -33,6 +37,11 @@ interface ModulatorListProps {
      */
     onModulatorListChange: (l: Modulator[], mergeKey?: string) => void;
     defaultModulators: readonly ModulatorData[];
+    /**
+     * SF2 mode hides the modulators with an SFE destination. They stay in the list the parent
+     * gets, where they keep their places.
+     */
+    isSFE: boolean;
     /**
      * Extra buttons for the action bar, after the list's own.
      */
@@ -59,14 +68,24 @@ function isTyping(target: EventTarget) {
  * element list's shortcuts do not run while the focus is in it.
  */
 export function ModulatorList({
-    modulatorList,
-    getModulators,
-    onModulatorListChange,
-    defaultModulators,
+    modulatorList: allModulators,
+    getModulators: getAllModulators,
+    onModulatorListChange: onAllModulatorsChange,
+    defaultModulators: allDefaultModulators,
+    isSFE,
     extraActions,
     renderHeader
 }: ModulatorListProps) {
     const { t } = useTranslation();
+    // Everything below works on the shown modulators only
+    const modulatorList = getShownModulators(allModulators, isSFE);
+    const defaultModulators = getShownModulators(allDefaultModulators, isSFE);
+    const getModulators = () => getShownModulators(getAllModulators(), isSFE);
+    const onModulatorListChange = (list: Modulator[], mergeKey?: string) =>
+        onAllModulatorsChange(
+            isSFE ? list : mergeHiddenModulators(getAllModulators(), list),
+            mergeKey
+        );
     const { clipboard, contents } = useClipboard();
     const [selectedIds, setSelectedIds] = useState<ReadonlySet<number>>(
         new Set()
@@ -369,6 +388,7 @@ export function ModulatorList({
                             }
                             isSelected={selectedIds.has(id)}
                             onSelect={(e) => handleSelect(e, id)}
+                            isSFE={isSFE}
                             isOverridingDefault={defaultModulators.some((m) =>
                                 isSameModulator(m, mod, false)
                             )}

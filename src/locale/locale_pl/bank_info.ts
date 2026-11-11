@@ -24,6 +24,17 @@ export const BankInfoLocale = {
     defaultModulatorsForBank: "Domyślne modulatory dla <bank>{{name}}</bank>:",
     defaultModulators: "Domyślne modulatory:",
     resetDefaultModulators: "Przywróć domyślne",
+    format: {
+        label: "Format",
+        sf2: "SoundFont 2",
+        sfe: "SFE",
+        hideSFEData:
+            "Ten bank używa generatorów lub modulatorów SFE. Tryb SoundFont 2 ukrywa je, ale zapis jako cokolwiek innego niż SFE bezpowrotnie je usuwa!",
+        switchToSF2: "Przełącz na SoundFont 2",
+        switchedOnPaste:
+            "Dodane elementy używają danych SFE, więc bank jest teraz w trybie SFE.",
+        switchedOnSave: "Zapisano jako SFE, więc bank jest teraz w trybie SFE."
+    },
     checkButton: "Problemy:",
     check: {
         title: "Problemy: {{count}}",

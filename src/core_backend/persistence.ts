@@ -1,8 +1,10 @@
 import type { BasicSoundBank } from "spessasynth_core";
 import { downloadBlob } from "../utils/download_blob.ts";
+import type { BankFormat } from "./bank_format.ts";
 
 /**
- * "auto" saves in the format the bank was last written in (or loaded from).
+ * "auto" saves in the format the bank was last written in (or loaded from), see
+ * `resolveWriteFormat`.
  */
 export type SaveFormat = "auto" | "sf2" | "dls" | "sf3" | "sf4";
 
@@ -38,13 +40,21 @@ export function getInitialWriteFormat(bank: BasicSoundBank): WriteFormat {
 }
 
 /**
- * The format a save writes, with "auto" meaning the last one.
+ * The format a save writes. "auto" means SFE in SFE mode, and otherwise the last one, except
+ * that SF2 mode does not write SFE.
  */
 export function resolveWriteFormat(
     format: SaveFormat,
-    lastWriteFormat: WriteFormat
+    lastWriteFormat: WriteFormat,
+    bankFormat: BankFormat
 ) {
-    return format === "auto" ? lastWriteFormat : format;
+    if (format !== "auto") {
+        return format;
+    }
+    if (bankFormat === "sfe") {
+        return "sf4";
+    }
+    return lastWriteFormat === "sf4" ? "sf2" : lastWriteFormat;
 }
 
 /**

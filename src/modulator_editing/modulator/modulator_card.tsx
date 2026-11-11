@@ -29,6 +29,10 @@ interface ModulatorCardProps {
     isSelected: boolean;
     isOverridingDefault: boolean;
     /**
+     * SF2 mode offers no SFE destinations.
+     */
+    isSFE: boolean;
+    /**
      * Which curve picker of this modulator is open, if any.
      */
     openCurvePicker: ModulatorSourceSlot | null;
@@ -101,6 +105,7 @@ export function ModulatorCard({
     modulatorNumber,
     isSelected,
     isOverridingDefault,
+    isSFE,
     openCurvePicker,
     onOpenCurvePickerChange,
     onChange,
@@ -228,6 +233,7 @@ export function ModulatorCard({
             />
 
             <DestinationPicker
+                isSFE={isSFE}
                 destination={mod.destination}
                 onChange={(destination) =>
                     update((copy) => {

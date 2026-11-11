@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { BasicPreset, SampleTypes } from "spessasynth_core";
+import { BasicPreset, GeneratorTypes, SampleTypes } from "spessasynth_core";
 import {
     createTestHost,
     createTestSession,
@@ -16,6 +16,30 @@ import { DeletePresetAction } from "../preset_editor/bottom_bar/delete_preset_ac
 import { EditInstrumentNameAction } from "../instrument_editor/linked_presets/edit_instrument_name_action.ts";
 
 describe("ClipboardManager", () => {
+    it("says a paste brings SFE data only into another bank", () => {
+        const host = createTestHost();
+        const source = createTestSession(host);
+        const target = createTestSession(host);
+        const [preset] = source.document.presets;
+        preset.zones[0].instrument.zones[0].setGenerator(
+            GeneratorTypes.delayVoice,
+            -1200
+        );
+        publishSetUp(source);
+        const clipboard = new ClipboardManager();
+        clipboard.copyPresets(new Set([preset]), source);
+        expect(clipboard.hasSFEData("presets", target)).toBe(true);
+        // The bank they came from has them already, like a duplicate
+        expect(clipboard.hasSFEData("presets", source)).toBe(false);
+
+        clipboard.copyInstruments(
+            new Set([preset.zones[0].instrument]),
+            source
+        );
+        expect(clipboard.hasSFEData("instruments", target)).toBe(true);
+        expect(clipboard.hasSFEData("instruments", source)).toBe(false);
+    });
+
     it("pastes presets with their instruments and samples into another bank", () => {
         // The app opens every bank in one host, which copies sample data between them
         const host = createTestHost();

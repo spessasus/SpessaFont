@@ -15,6 +15,7 @@ import { nameSorter } from "../utils/name_sorter.ts";
 import type { BankEntity } from "./bank_view.ts";
 import { getObjectId } from "../utils/object_id.ts";
 import { isXGDrumBank } from "./xg_state.ts";
+import { type BankFormat, detectBankFormat } from "./bank_format.ts";
 
 /**
  * Inserts the item before the first item that sorts after it, and returns its index.
@@ -75,9 +76,14 @@ function replaceZones(
  */
 export class BankDocument {
     public readonly bank: BasicSoundBank;
+    /**
+     * Changed only by `SetBankFormatAction`.
+     */
+    public format: BankFormat;
 
     public constructor(bank: BasicSoundBank) {
         this.bank = bank;
+        this.format = detectBankFormat(bank);
         this.sortElements();
     }
 

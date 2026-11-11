@@ -65,6 +65,7 @@ export const MenuBarLocale = {
         addZone: "Add Zone",
         changeAudio: "Change Audio",
         changePatch: "Change Patch",
+        changeFormat: "Change Format",
         changeSampleType: "Change Sample Type",
         convertSamples: "Convert Samples",
         deleteInstrument: "Delete Instrument",

@@ -38,6 +38,7 @@ function renderCard(layout: LayoutMode) {
                         modulatorNumber={1}
                         isSelected={false}
                         isOverridingDefault={true}
+                        isSFE={true}
                         openCurvePicker={null}
                         onOpenCurvePickerChange={vi.fn()}
                         onChange={vi.fn()}

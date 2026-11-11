@@ -13,6 +13,9 @@ import type { ZoneColumn } from "../zone_columns.ts";
 import { findZone, getColumnZones } from "../cell/column_zones.ts";
 import { useLayout } from "../../layout/layout_context.ts";
 import { ModulatorLayerHeader } from "./modulator_layer_header.tsx";
+import { useBankSnapshot } from "../../hooks/use_bank_snapshot.ts";
+import { useSFESwitch } from "../../hooks/use_sfe_switch.ts";
+import { isSFEGenerator } from "../../core_backend/sfe_data.ts";
 
 interface ModulatorEditorProps {
     name: string;
@@ -33,13 +36,23 @@ export function ModulatorEditor({
     defaultModulators
 }: ModulatorEditorProps) {
     const { t } = useTranslation();
-    const { apply } = useBankEditor();
+    const { session, apply } = useBankEditor();
     const layout = useLayout();
+    const isSFE = useBankSnapshot(session.store, (s) => s.format === "sfe");
+    const applyWithSFESwitch = useSFESwitch();
+    const getModulators = () =>
+        findZone(element, column.zone.id)?.modulators ?? [];
 
     // A column has a stereo partner only while both zones have the same modulators (the
     // table splits the pair otherwise), so the partner gets copies of the same list
-    const setModulators = (mods: Modulator[], mergeKey?: string) =>
-        apply(
+    const setModulators = (mods: Modulator[], mergeKey?: string) => {
+        const before = getModulators();
+        // Only a paste brings one in, SF2 mode offers no SFE destination
+        const isAddingSFEData = mods.some(
+            (m) => isSFEGenerator(m.destination) && !before.includes(m)
+        );
+        applyWithSFESwitch(
+            session,
             getColumnZones(element, column).map(
                 ({ zone }, i) =>
                     new EditModulatorsAction(
@@ -48,8 +61,10 @@ export function ModulatorEditor({
                         i === 0 ? mods : mods.map((m) => Modulator.copyFrom(m))
                     )
             ),
-            mergeKey
+            isAddingSFEData,
+            (group) => apply(group, mergeKey)
         );
+    };
 
     return (
         <div className={"zone_modulators"}>
@@ -75,10 +90,9 @@ export function ModulatorEditor({
             )}
             <ModulatorList
                 modulatorList={column.zone.modulators}
-                getModulators={() =>
-                    findZone(element, column.zone.id)?.modulators ?? []
-                }
+                getModulators={getModulators}
                 onModulatorListChange={setModulators}
+                isSFE={isSFE}
                 defaultModulators={defaultModulators}
                 renderHeader={
                     layout === "phone"

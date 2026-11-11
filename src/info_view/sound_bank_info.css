@@ -61,3 +61,8 @@
     padding: 0.3rem;
     width: 100%;
 }
+
+.sound_bank_info .bank_format_select {
+    font-size: 1rem;
+    justify-self: start;
+}

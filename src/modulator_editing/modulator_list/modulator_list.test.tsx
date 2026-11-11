@@ -55,6 +55,7 @@ function renderList(layout: "phone" | "desktop" = "phone", count = 1) {
                             getModulators={() => modulators}
                             onModulatorListChange={vi.fn()}
                             defaultModulators={[]}
+                            isSFE={true}
                         />
                     </TranslatedOptionsContext>
                 </ClipboardContext>
@@ -96,6 +97,7 @@ function renderInShell(isCoveringEditor: boolean) {
                                 getModulators={() => modulators}
                                 onModulatorListChange={vi.fn()}
                                 defaultModulators={[]}
+                                isSFE={true}
                             />
                         </TranslatedOptionsContext>
                     </ClipboardContext>
@@ -287,6 +289,51 @@ describe("ModulatorList", () => {
                 name: "phoneLocale.selection.between"
             })
         ).toBeNull();
+    });
+
+    it("hides SFE modulators in SF2 mode and keeps them when the rest is deleted", () => {
+        const sfeModulator = createModulator();
+        sfeModulator.destination = GeneratorTypes.amplitude;
+        const modulators = [createModulator(), sfeModulator, createModulator()];
+        const onChange = vi.fn();
+        render(
+            <LayoutContext value={"phone"}>
+                <BackStackContext
+                    value={{
+                        stack: new BackStack(),
+                        releaseSentinel: vi.fn(),
+                        dropSentinel: vi.fn()
+                    }}
+                >
+                    <ClipboardContext value={new ClipboardManager()}>
+                        <TranslatedOptionsContext
+                            value={{ controllers: [], destinations: [] }}
+                        >
+                            <ModulatorList
+                                modulatorList={modulators.map((m) =>
+                                    buildModulatorView(m)
+                                )}
+                                getModulators={() => modulators}
+                                onModulatorListChange={onChange}
+                                defaultModulators={[]}
+                                isSFE={false}
+                            />
+                        </TranslatedOptionsContext>
+                    </ClipboardContext>
+                </BackStackContext>
+            </LayoutContext>
+        );
+        expect(
+            screen.getAllByRole("button", {
+                name: "modulatorLocale.modulatorNumber"
+            })
+        ).toHaveLength(2);
+
+        fireEvent.click(
+            screen.getByRole("button", { name: "phoneLocale.selection.all" })
+        );
+        fireEvent.click(screen.getByRole("button", { name: "delete" }));
+        expect(onChange).toHaveBeenCalledWith([sfeModulator], undefined);
     });
 
     it("keeps the cards on desktop", () => {

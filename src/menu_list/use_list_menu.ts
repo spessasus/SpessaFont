@@ -167,9 +167,10 @@ export function useListMenu() {
         elements: ReadonlySet<BasicPreset | BasicInstrument>
     ) => {
         const [first] = elements;
-        const rows = getElementRows(first).filter((row) =>
-            isBatchEditableRow(row)
-        );
+        const rows = getElementRows(
+            first,
+            session.document.format === "sfe"
+        ).filter((row) => isBatchEditableRow(row));
         const row = await pickElement({
             title: t("contextMenu.batchGeneratorTitle"),
             items: rows,

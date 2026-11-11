@@ -8,6 +8,7 @@ export type HistoryLabel =
     | "addZone"
     | "changeAudio"
     | "changePatch"
+    | "changeFormat"
     | "changeSampleType"
     | "convertSamples"
     | "deleteInstrument"

@@ -12,11 +12,12 @@ import {
 import { getObjectId } from "../../utils/object_id.ts";
 import { createRemoveUnusedActions } from "../../core_backend/bank_maintenance.ts";
 import { checkBank, getFixedLoop } from "./check_bank.ts";
+import { SetBankFormatAction } from "../../core_backend/set_bank_format_action.ts";
 
 function check(session: ReturnType<typeof createTestSession>) {
     publishSetUp(session);
-    const { views, info } = session.store.getSnapshot();
-    return checkBank(views, info);
+    const { views, info, format } = session.store.getSnapshot();
+    return checkBank(views, info, format);
 }
 
 function modWheelSource() {
@@ -162,6 +163,44 @@ describe("checkBank", () => {
                 "nonLatin1Info"
             ])
         );
+    });
+
+    it("does not report what SFE keeps in SFE mode", () => {
+        const session = createTestSession();
+        const [preset] = session.document.presets;
+        preset.bankMSB = 1;
+        preset.bankLSB = 2;
+        preset.name = "A preset name over twenty";
+        session.document.samples[1].name = "x".repeat(41);
+        const [instrument] = session.document.instruments;
+        instrument.zones[0].setGenerator(GeneratorTypes.modLfoRate, 100, false);
+        const defaultModulator = Modulator.copyFrom(
+            session.document.bank.defaultModulators[0]
+        );
+        defaultModulator.destination = GeneratorTypes.amplitude;
+        session.document.bank.defaultModulators = [defaultModulator];
+        expect(kindsOf(session)).toEqual(
+            expect.arrayContaining([
+                "bankNumberLost",
+                "longName",
+                "sfeOnlyData",
+                "sfeDefaultModulators"
+            ])
+        );
+
+        session.history.do([new SetBankFormatAction("sf2", "sfe")]);
+
+        const kinds = kindsOf(session);
+        for (const kind of [
+            "bankNumberLost",
+            "longName",
+            "sfeOnlyData",
+            "sfeDefaultModulators"
+        ]) {
+            expect(kinds).not.toContain(kind);
+        }
+        // SFE cuts names at 40 characters too
+        expect(kinds).toContain("cutName");
     });
 });
 

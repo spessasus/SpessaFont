@@ -104,7 +104,9 @@ export class HistoryManager {
                 return entity;
             }
         }
-        return changes.hasBankInfoChanged ? "info" : undefined;
+        return changes.hasBankInfoChanged || changes.hasFormatChanged
+            ? "info"
+            : undefined;
     }
 
     public get canUndo() {

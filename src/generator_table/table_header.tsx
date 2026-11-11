@@ -13,6 +13,8 @@ import { formatKeyRange, getColumnKeyRange } from "./zone_finder.ts";
 import { MENU_ICON_NAMES } from "../context_menu/menu_icon_name.ts";
 import { ChevronDownIcon } from "../utils/icons/app_icons.tsx";
 import { getZoneHeaderEntries, useZoneCommands } from "./use_zone_commands.ts";
+import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
+import { getShownModulators } from "../core_backend/sfe_data.ts";
 import {
     ADD_ZONE_KEY,
     getZoneDeleteKey,
@@ -66,17 +68,23 @@ export function TableHeader({
     const layout = useLayout();
     const { openMenu } = useContextMenu();
     const commands = useZoneCommands(element);
+    const { session } = useBankEditor();
     const getTabIndex = (key: string) => (key === activeKey ? 0 : -1);
     const getRangeText = (column: ZoneColumn) =>
         formatKeyRange(getColumnKeyRange(column, globalZone));
 
     // The phone sheet for a tap or long press on a zone header, with Modulators added
-    const openZoneSheet = (e: MouseEvent, column: ZoneColumn) =>
+    const openZoneSheet = (e: MouseEvent, column: ZoneColumn) => {
+        // SF2 mode does not count the hidden SFE modulators
+        const modulatorCount = getShownModulators(
+            column.zone.modulators,
+            session.document.format === "sfe"
+        ).length;
         openMenu(
             e,
             getZoneHeaderEntries(commands.getMenuEntries(column), {
                 label: t("phoneLocale.zoneHeader.modulators", {
-                    count: column.zone.modulators.length
+                    count: modulatorCount
                 }),
                 icon: MENU_ICON_NAMES.edit,
                 hasSubmenu: true,
@@ -89,6 +97,7 @@ export function TableHeader({
                 })
             }
         );
+    };
 
     return (
         <tr className={"generator_table_header_row"}>

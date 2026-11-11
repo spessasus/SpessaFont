@@ -46,6 +46,7 @@ export function useSaveBank() {
         session: BankSession,
         format: SaveFormat
     ): Promise<SaveResult> => {
+        const wasSFE = session.document.format === "sfe";
         const id = toast.loading(t("loadingAndSaving.savingSoundBank"));
         // Encoding blocks the main thread, so let the toast show first
         await yieldToPaint();
@@ -73,6 +74,9 @@ export function useSaveBank() {
             return "failed";
         }
         toast.success(t("loadingAndSaving.savedSuccessfully"), { id });
+        if (!wasSFE && session.document.format === "sfe") {
+            toast(t("bankInfo.format.switchedOnSave"));
+        }
         return "saved";
     };
 

@@ -12,6 +12,7 @@ import {
 } from "../../core_backend/latin1_text.ts";
 import { isBankNumberLostInSF2 } from "../../core_backend/sf2_bank_numbers.ts";
 import { hasZoneSFEData, isSFEGenerator } from "../../core_backend/sfe_data.ts";
+import type { BankFormat } from "../../core_backend/bank_format.ts";
 import { isSameModulator } from "../../modulator_editing/same_modulator.ts";
 import { isLinkedModulator } from "../../modulator_editing/linked_modulator.ts";
 
@@ -118,10 +119,15 @@ function findDuplicateZone(zones: readonly ZoneView[]) {
     );
 }
 
-function checkNames(issues: BankIssue[], target: MirrorTarget, name: string) {
+function checkNames(
+    issues: BankIssue[],
+    target: MirrorTarget,
+    name: string,
+    isSFE: boolean
+) {
     if (name.length > EXTENDED_NAME_LENGTH) {
         issues.push({ kind: "cutName", target });
-    } else if (name.length > SF2_NAME_LENGTH) {
+    } else if (!isSFE && name.length > SF2_NAME_LENGTH) {
         issues.push({ kind: "longName", target });
     }
     if (isOutsideLatin1(name)) {
@@ -139,7 +145,8 @@ function checkZones(
         readonly globalZone: ZoneView;
         readonly zones: readonly ZoneView[];
     },
-    getChildName: (id: number) => string
+    getChildName: (id: number) => string,
+    isSFE: boolean
 ) {
     if (element.zones.length === 0) {
         issues.push({ kind: "emptyElement", target });
@@ -153,7 +160,7 @@ function checkZones(
         });
     }
     const zones = [element.globalZone, ...element.zones];
-    if (zones.some((zone) => hasZoneSFEData(zone))) {
+    if (!isSFE && zones.some((zone) => hasZoneSFEData(zone))) {
         issues.push({ kind: "sfeOnlyData", target });
     }
     if (
@@ -165,19 +172,25 @@ function checkZones(
 
 /**
  * Lists the issues of a bank, from its views and info. Fast enough to run on every render of
- * the overview.
+ * the overview. In SFE mode what only SFE keeps (its generators, names up to 40 characters,
+ * both bank numbers) is no issue.
  */
 export function checkBank(
     views: BankViews,
-    info: Readonly<SoundBankInfoData>
+    info: Readonly<SoundBankInfoData>,
+    format: BankFormat
 ): BankIssue[] {
     const issues = new Array<BankIssue>();
+    const isSFE = format === "sfe";
     const unused = findUnusedIds(views);
 
     if (hasInfoTextOutsideLatin1(info)) {
         issues.push({ kind: "nonLatin1Info" });
     }
-    if (views.defaultModulators.some((m) => isSFEGenerator(m.destination))) {
+    if (
+        !isSFE &&
+        views.defaultModulators.some((m) => isSFEGenerator(m.destination))
+    ) {
         issues.push({ kind: "sfeDefaultModulators" });
     }
 
@@ -194,12 +207,13 @@ export function checkBank(
             issues,
             target,
             preset,
-            (childId) => views.instruments.get(childId)?.name ?? ""
+            (childId) => views.instruments.get(childId)?.name ?? "",
+            isSFE
         );
-        if (isBankNumberLostInSF2(preset)) {
+        if (!isSFE && isBankNumberLostInSF2(preset)) {
             issues.push({ kind: "bankNumberLost", presetId: id });
         }
-        checkNames(issues, target, preset.name);
+        checkNames(issues, target, preset.name, isSFE);
     }
     for (const [patch, presetIds] of byPatch) {
         if (presetIds.length > 1) {
@@ -220,9 +234,10 @@ export function checkBank(
             issues,
             target,
             instrument,
-            (childId) => views.samples.get(childId)?.name ?? ""
+            (childId) => views.samples.get(childId)?.name ?? "",
+            isSFE
         );
-        checkNames(issues, target, instrument.name);
+        checkNames(issues, target, instrument.name, isSFE);
     }
 
     for (const id of views.sampleOrder) {
@@ -263,7 +278,7 @@ export function checkBank(
                 });
             }
         }
-        checkNames(issues, { kind: "sample", id }, sample.name);
+        checkNames(issues, { kind: "sample", id }, sample.name, isSFE);
     }
     return issues;
 }

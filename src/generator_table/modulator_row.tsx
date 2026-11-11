@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { ZoneColumn } from "./zone_columns.ts";
 import { getModulatorKey } from "./table_navigation.ts";
+import { getShownModulators } from "../core_backend/sfe_data.ts";
 
 interface ModulatorRowProps {
     /**
@@ -16,12 +17,17 @@ interface ModulatorRowProps {
      * Opens the modulator editor of the zone with this view id.
      */
     onEditModulators: (zoneId: number) => void;
+    /**
+     * SF2 mode does not count the modulators with an SFE destination, which it hides.
+     */
+    isSFE: boolean;
 }
 
 export function ModulatorRow({
     columns,
     activeKey,
-    onEditModulators
+    onEditModulators,
+    isSFE
 }: ModulatorRowProps) {
     const { t } = useTranslation();
     return (
@@ -30,7 +36,7 @@ export function ModulatorRow({
                 {t("modulatorLocale.modulators")}
             </th>
             {columns.map(({ zone, name, colSpan }) => {
-                const count = zone.modulators.length;
+                const count = getShownModulators(zone.modulators, isSFE).length;
                 const key = getModulatorKey(zone.id);
                 return (
                     <th

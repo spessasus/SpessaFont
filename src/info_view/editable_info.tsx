@@ -7,6 +7,7 @@ import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
 import { WaitingInput } from "../fancy_inputs/waiting_input/waiting_input.tsx";
 import { WaitingTextArea } from "../fancy_inputs/waiting_input/waiting_text_area.tsx";
+import { BankFormatField } from "./bank_format_field.tsx";
 
 const MS_PER_MINUTE = 60_000;
 
@@ -183,6 +184,7 @@ export function EditableInfo() {
                 {getTextField("product", "IPRD", t("bankInfo.product"))}
                 {getTextField("copyright", "ICOP", t("bankInfo.copyright"))}
                 {getTextField("subject", "ISBJ", t("bankInfo.subject"))}
+                <BankFormatField />
             </div>
             <div className={"comment"}>
                 {layout === "phone" ? (

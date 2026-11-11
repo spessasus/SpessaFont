@@ -13,6 +13,7 @@ import type { BankDocument } from "./bank_document.ts";
 import type { ChangeSet, ElementList, RestoredAudio } from "./change_set.ts";
 import type { HistoryLabel } from "./history_label.ts";
 import type { BankEntity } from "./bank_view.ts";
+import type { BankFormat } from "./bank_format.ts";
 
 export interface HistoryState {
     readonly canUndo: boolean;
@@ -76,6 +77,10 @@ export interface BankSnapshot {
      * A copy of the bank info.
      */
     readonly info: Readonly<SoundBankInfoData>;
+    /**
+     * SF2 or SFE mode, see `BankFormat`.
+     */
+    readonly format: BankFormat;
     readonly history: HistoryState;
     /**
      * Plain, frozen copies of the elements, which keep their identity until their data
@@ -128,6 +133,7 @@ export class BankStore {
                 sample: createLookup(samples)
             },
             info: { ...bank.soundBankInfo },
+            format: document.format,
             history: {
                 canUndo: false,
                 canRedo: false,
@@ -226,6 +232,7 @@ export class BankStore {
             info: changes.hasBankInfoChanged
                 ? { ...bank.soundBankInfo }
                 : previous.info,
+            format: this.document.format,
             history: isHistoryChanged ? { ...history } : previous.history,
             views: updateBankViews(
                 bank,

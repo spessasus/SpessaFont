@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { GeneratorTypes, Modulator, SoundBankLoader } from "spessasynth_core";
+import {
+    type GeneratorType,
+    GeneratorTypes,
+    Modulator,
+    SoundBankLoader
+} from "spessasynth_core";
 import { createTestSession, getMirror } from "../test_utils/bank_fixture.ts";
-import { hasSFEOnlyData } from "./sfe_data.ts";
+import {
+    getShownModulators,
+    hasCopiedSFEData,
+    hasSFEOnlyData,
+    mergeHiddenModulators
+} from "./sfe_data.ts";
 
 describe("hasSFEOnlyData", () => {
     it("is false for a bank with SF2 generators only", () => {
@@ -55,5 +65,56 @@ describe("hasSFEOnlyData", () => {
         expect(hasSFEOnlyData(fromSF2)).toBe(false);
         const fromDLS = SoundBankLoader.fromArrayBuffer(bank.writeDLS());
         expect(hasSFEOnlyData(fromDLS)).toBe(false);
+    });
+});
+
+function modulatorTo(destination: GeneratorType) {
+    const modulator = new Modulator();
+    modulator.destination = destination;
+    return modulator;
+}
+
+describe("getShownModulators and mergeHiddenModulators", () => {
+    const attenuation = modulatorTo(GeneratorTypes.initialAttenuation);
+    const amplitude = modulatorTo(GeneratorTypes.amplitude);
+    const pan = modulatorTo(GeneratorTypes.pan);
+    const all = [attenuation, amplitude, pan];
+
+    it("hides the SFE destinations in SF2 mode only", () => {
+        expect(getShownModulators(all, true)).toBe(all);
+        expect(getShownModulators(all, false)).toEqual([attenuation, pan]);
+    });
+
+    it("keeps a hidden modulator in its place after an edit", () => {
+        const edited = modulatorTo(GeneratorTypes.fineTune);
+        expect(mergeHiddenModulators(all, [edited, pan])).toEqual([
+            edited,
+            amplitude,
+            pan
+        ]);
+    });
+
+    it("keeps the hidden ones when the shown ones are deleted or added", () => {
+        expect(mergeHiddenModulators(all, [])).toEqual([amplitude]);
+        const added = modulatorTo(GeneratorTypes.fineTune);
+        expect(mergeHiddenModulators(all, [added, attenuation, pan])).toEqual([
+            added,
+            amplitude,
+            attenuation,
+            pan
+        ]);
+    });
+});
+
+describe("hasCopiedSFEData", () => {
+    it("finds SFE data in an instrument a copied preset uses", () => {
+        const { document } = createTestSession();
+        const preset = document.presets[0];
+        expect(hasCopiedSFEData([preset])).toBe(false);
+        preset.zones[0].instrument.zones[0].setGenerator(
+            GeneratorTypes.delayVoice,
+            -1200
+        );
+        expect(hasCopiedSFEData([preset])).toBe(true);
     });
 });

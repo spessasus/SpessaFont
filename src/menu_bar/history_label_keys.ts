@@ -10,6 +10,7 @@ export const HISTORY_LABEL_KEYS = {
     addZone: "menuBarLocale.history.addZone",
     changeAudio: "menuBarLocale.history.changeAudio",
     changePatch: "menuBarLocale.history.changePatch",
+    changeFormat: "menuBarLocale.history.changeFormat",
     changeSampleType: "menuBarLocale.history.changeSampleType",
     convertSamples: "menuBarLocale.history.convertSamples",
     deleteInstrument: "menuBarLocale.history.deleteInstrument",
