@@ -8,6 +8,7 @@ import { ALL_CURVE_TYPES, curveKey } from "./curve_shape.ts";
 import type { SpessaFontModulatorCurveType } from "./curve_shape.ts";
 import { CurveSheet } from "./curve_sheet.tsx";
 import { useLayout } from "../../layout/layout_context.ts";
+import { Presence } from "../../presence/presence.tsx";
 
 interface CurveOptionsProps {
     label: string;
@@ -131,25 +132,27 @@ export function CurvePicker({
             >
                 <CurvePicture curve={curveType} />
             </button>
-            {isOpen ? (
-                layout === "phone" ? (
-                    <CurveSheet
-                        label={label}
-                        currentKey={currentKey}
-                        onPick={handlePick}
-                        onClose={() => onOpenChange(false)}
-                    />
-                ) : (
-                    <CurveOptions
-                        label={label}
-                        currentKey={currentKey}
-                        pickerRef={pickerRef}
-                        onPick={handlePick}
-                        // A press outside keeps the focus where it went
-                        onClose={() => onOpenChange(false)}
-                    />
-                )
-            ) : null}
+            <Presence>
+                {isOpen ? (
+                    layout === "phone" ? (
+                        <CurveSheet
+                            label={label}
+                            currentKey={currentKey}
+                            onPick={handlePick}
+                            onClose={() => onOpenChange(false)}
+                        />
+                    ) : (
+                        <CurveOptions
+                            label={label}
+                            currentKey={currentKey}
+                            pickerRef={pickerRef}
+                            onPick={handlePick}
+                            // A press outside keeps the focus where it went
+                            onClose={() => onOpenChange(false)}
+                        />
+                    )
+                ) : null}
+            </Presence>
         </div>
     );
 }

@@ -7,6 +7,12 @@
     flex-direction: column;
     min-height: 0;
     background: var(--darker-color-start);
+    animation: phone_rise_in var(--phone-enter-time) var(--phone-ease-enter);
+}
+
+:root[data-layout="phone"] .phone_settings_layer[data-state="closing"] {
+    animation: phone_sink_out var(--phone-exit-time) var(--phone-ease-exit)
+        forwards;
 }
 
 /*

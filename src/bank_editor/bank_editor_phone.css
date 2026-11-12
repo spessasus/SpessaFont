@@ -11,3 +11,47 @@
     flex: 1;
     overflow: auto;
 }
+
+/*
+ * Showing another element cross-fades the editor (runViewTransition). The rest of the page is
+ * not captured, so it stays live and takes taps while the editor fades
+ */
+:root[data-layout="phone"] {
+    view-transition-name: none;
+}
+
+:root[data-layout="phone"]::view-transition {
+    pointer-events: none;
+}
+
+:root[data-layout="phone"] .bank_editor_window {
+    view-transition-name: phone-editor;
+}
+
+/* The captured editor is drawn over everything, so it stays put under a sheet or the settings */
+:root[data-layout="phone"]:has(
+        .bottom_sheet,
+        .modal_dialog[open],
+        .phone_settings_layer
+    )
+    .bank_editor_window {
+    view-transition-name: none;
+}
+
+/* Toasts stay over the editor while it fades */
+:root[data-layout="phone"] .phone_toaster {
+    view-transition-name: phone-toasts;
+}
+
+:root[data-layout="phone"]::view-transition-group(phone-editor) {
+    animation-duration: var(--phone-enter-time);
+}
+
+:root[data-layout="phone"]::view-transition-old(phone-editor) {
+    animation: phone_fade_out var(--phone-exit-time) var(--phone-ease-exit) both;
+}
+
+:root[data-layout="phone"]::view-transition-new(phone-editor) {
+    animation: phone_rise_in var(--phone-enter-time) var(--phone-ease-enter)
+        both;
+}

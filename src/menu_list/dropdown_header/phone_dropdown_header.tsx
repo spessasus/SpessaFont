@@ -2,7 +2,6 @@ import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import {
     ChevronDownIcon,
-    ChevronUpIcon,
     MoreVerticalIcon,
     PlusIcon
 } from "../../utils/icons/app_icons.tsx";
@@ -97,9 +96,11 @@ export function PhoneDropdownHeader({
                     className={"plain_button dropdown_triangle"}
                     title={isOpen ? t("collapse") : t("expand")}
                     aria-label={isOpen ? t("collapse") : t("expand")}
+                    aria-expanded={isOpen}
                     onClick={onToggle}
                 >
-                    {isOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                    {/* The CSS turns it up when open */}
+                    <ChevronDownIcon />
                 </button>
             </div>
         </div>

@@ -93,11 +93,9 @@ describe("ModulatorCard", () => {
         expect(diagrams[0].getAttribute("aria-hidden")).toBe("true");
     });
 
-    it("renders one diagram in the expanded phone card", () => {
+    it("renders no diagram in the expanded phone card", () => {
         const { container } = renderCard("phone");
-        const diagrams = container.querySelectorAll("svg.modulator_diagram");
-        expect(diagrams).toHaveLength(1);
-        expect(diagrams[0].getAttribute("aria-hidden")).toBe("true");
+        expect(container.querySelector(".modulator_diagram")).toBeNull();
     });
 
     it("renders no diagram in the phone summary row", () => {

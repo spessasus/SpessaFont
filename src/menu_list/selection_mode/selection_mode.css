@@ -157,3 +157,12 @@
         display: none;
     }
 }
+
+/* Selection mode swaps the bars in place, the new ones settle in */
+:root[data-layout="phone"] .selection_bar {
+    animation: phone_drop_in var(--phone-fade-time) var(--phone-ease-enter);
+}
+
+:root[data-layout="phone"] .selection_action_bar {
+    animation: phone_rise_in var(--phone-fade-time) var(--phone-ease-enter);
+}

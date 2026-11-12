@@ -12,6 +12,21 @@
     border-width: 1px 0 0;
     border-radius: 1rem 1rem 0 0;
     overflow: hidden;
+    animation: phone_slide_up_in var(--phone-enter-time) var(--phone-ease-enter);
+}
+
+:root[data-layout="phone"] .modal_dialog::backdrop {
+    /* Older browsers do not pass the custom properties on to the backdrop */
+    animation: phone_fade_in var(--phone-enter-time, 240ms) ease-out;
+}
+
+:root[data-layout="phone"] .modal_dialog[data-state="closing"] {
+    animation: phone_slide_down_out var(--phone-exit-time)
+        var(--phone-ease-exit) forwards;
+}
+
+:root[data-layout="phone"] .modal_dialog[data-state="closing"]::backdrop {
+    animation: phone_fade_out var(--phone-exit-time, 170ms) ease-in forwards;
 }
 
 :root[data-layout="phone"] .modal_dialog[open] {

@@ -9,6 +9,7 @@ import {
 } from "../utils/icons/player_icons.tsx";
 import { formatTime } from "../utils/format_time.ts";
 import { PlayerSheet } from "./player_sheet.tsx";
+import { Presence } from "../presence/presence.tsx";
 
 /**
  * The loaded song in the drawer's handle, built on the logic of the desktop MIDI player.
@@ -51,9 +52,11 @@ export function DrawerSongControls() {
             >
                 {isPaused ? <PlayIcon /> : <PauseIcon />}
             </button>
-            {isSheetOpen ? (
-                <PlayerSheet onClose={() => setIsSheetOpen(false)} />
-            ) : null}
+            <Presence>
+                {isSheetOpen ? (
+                    <PlayerSheet onClose={() => setIsSheetOpen(false)} />
+                ) : null}
+            </Presence>
         </div>
     );
 }

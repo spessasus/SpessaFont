@@ -143,6 +143,19 @@
     height: var(--phone-disclosure-size);
 }
 
+:root[data-layout="phone"] .menu_list_main .triangle svg {
+    transition: transform var(--phone-fade-time) var(--phone-ease-enter);
+}
+
+:root[data-layout="phone"] .menu_list_main .triangle[aria-expanded="true"] svg {
+    transform: rotate(90deg);
+}
+
+/* An opened section's rows drop in, the list itself snaps to its height */
+:root[data-layout="phone"] .menu_list_main .menu_list_scrollable > .item_group {
+    animation: phone_drop_in var(--phone-fade-time) var(--phone-ease-enter);
+}
+
 /* The search bar stays at the bottom, above the drawer and the soft keyboard */
 :root[data-layout="phone"] .menu_list_main .list_search_bar {
     flex: none;

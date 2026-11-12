@@ -10,6 +10,7 @@ import type { ZoneColumn } from "./zone_columns.ts";
 import { CellSheet } from "./cell_sheet/cell_sheet.tsx";
 import { mapSelectionToRow } from "./cell_sheet/cell_sheet_selection.ts";
 import { ZoneListSheet } from "./zone_list_sheet/zone_list_sheet.tsx";
+import { Presence } from "../presence/presence.tsx";
 
 interface PhoneGridSheetsProps {
     element: BasicPreset | BasicInstrument;
@@ -55,43 +56,50 @@ export function PhoneGridSheets({
 }: PhoneGridSheetsProps) {
     return (
         <>
-            {cellSelection && sheetRow ? (
-                <CellSheet
-                    element={element}
-                    rows={rows}
-                    row={sheetRow}
-                    columns={getAllRowColumns(cellSelection.generator)}
-                    colorColumns={zoneColumns}
-                    globalZone={globalZone}
-                    checkedIds={cellSelection.zoneIds}
-                    onCheckedChange={(ids) =>
-                        onSelectionChange({ ...cellSelection, zoneIds: ids })
-                    }
-                    onRowChange={(generator) =>
-                        onSelectionChange({
-                            generator,
-                            zoneIds: mapSelectionToRow(
-                                cellSelection.zoneIds,
-                                getAllRowColumns(cellSelection.generator),
-                                getAllRowColumns(generator)
-                            ),
-                            anchorId: cellSelection.anchorId
-                        })
-                    }
-                    onEditModulators={onEditModulators}
-                    onClose={() => onSelectionChange(null)}
-                />
-            ) : null}
-            {isZoneSheetOpen ? (
-                <ZoneListSheet
-                    columns={zoneColumns}
-                    globalZone={globalZone}
-                    isInstrument={isInstrument}
-                    onJump={onJump}
-                    onAddZone={onAddZone}
-                    onClose={onCloseZoneSheet}
-                />
-            ) : null}
+            <Presence>
+                {cellSelection && sheetRow ? (
+                    <CellSheet
+                        element={element}
+                        rows={rows}
+                        row={sheetRow}
+                        columns={getAllRowColumns(cellSelection.generator)}
+                        colorColumns={zoneColumns}
+                        globalZone={globalZone}
+                        checkedIds={cellSelection.zoneIds}
+                        onCheckedChange={(ids) =>
+                            onSelectionChange({
+                                ...cellSelection,
+                                zoneIds: ids
+                            })
+                        }
+                        onRowChange={(generator) =>
+                            onSelectionChange({
+                                generator,
+                                zoneIds: mapSelectionToRow(
+                                    cellSelection.zoneIds,
+                                    getAllRowColumns(cellSelection.generator),
+                                    getAllRowColumns(generator)
+                                ),
+                                anchorId: cellSelection.anchorId
+                            })
+                        }
+                        onEditModulators={onEditModulators}
+                        onClose={() => onSelectionChange(null)}
+                    />
+                ) : null}
+            </Presence>
+            <Presence>
+                {isZoneSheetOpen ? (
+                    <ZoneListSheet
+                        columns={zoneColumns}
+                        globalZone={globalZone}
+                        isInstrument={isInstrument}
+                        onJump={onJump}
+                        onAddZone={onAddZone}
+                        onClose={onCloseZoneSheet}
+                    />
+                ) : null}
+            </Presence>
         </>
     );
 }

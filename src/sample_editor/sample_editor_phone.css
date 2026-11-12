@@ -166,3 +166,8 @@
     .loop_section_stepper_row {
     grid-template-columns: auto auto minmax(5rem, 1fr) auto auto;
 }
+
+/* Each section is keyed, so it fades in when another one is picked */
+:root[data-layout="phone"] .sample_sections_body {
+    animation: phone_fade_in var(--phone-fade-time) ease-out;
+}

@@ -21,6 +21,7 @@ import {
     type SampleSection
 } from "../sample_editor/sample_section.ts";
 import { PropertiesSheet } from "./properties_sheet.tsx";
+import { Presence } from "../presence/presence.tsx";
 
 interface ElementBarProps {
     view: BankEditView;
@@ -124,14 +125,16 @@ function PresetBar({ preset }: { preset: BasicPreset }) {
                 detail={t("phoneLocale.overflow.edit")}
                 onClick={() => setIsOpen(true)}
             />
-            {isOpen ? (
-                <PropertiesSheet
-                    title={view.name}
-                    onClose={() => setIsOpen(false)}
-                >
-                    <BottomBar preset={preset} />
-                </PropertiesSheet>
-            ) : null}
+            <Presence>
+                {isOpen ? (
+                    <PropertiesSheet
+                        title={view.name}
+                        onClose={() => setIsOpen(false)}
+                    >
+                        <BottomBar preset={preset} />
+                    </PropertiesSheet>
+                ) : null}
+            </Presence>
         </>
     );
 }
@@ -160,14 +163,16 @@ function InstrumentBar({ instrument }: { instrument: BasicInstrument }) {
                 }
                 onClick={() => setIsOpen(true)}
             />
-            {isOpen ? (
-                <PropertiesSheet
-                    title={view.name}
-                    onClose={() => setIsOpen(false)}
-                >
-                    <LinkedPresets instrument={instrument} />
-                </PropertiesSheet>
-            ) : null}
+            <Presence>
+                {isOpen ? (
+                    <PropertiesSheet
+                        title={view.name}
+                        onClose={() => setIsOpen(false)}
+                    >
+                        <LinkedPresets instrument={instrument} />
+                    </PropertiesSheet>
+                ) : null}
+            </Presence>
         </>
     );
 }

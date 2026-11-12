@@ -8,6 +8,18 @@
     color: var(--font-color);
     border-top: 1px solid var(--track-border-color);
     border-radius: 1rem 1rem 0 0;
+    transform: translateY(var(--editor-sheet-drag, 0px));
+    animation: phone_slide_up_in var(--phone-enter-time) var(--phone-ease-enter);
+}
+
+/* Released short of closing, the sheet slides back. While the finger holds it, it follows */
+:root[data-layout="phone"] .editor_sheet:not([data-dragging="true"]) {
+    transition: transform var(--phone-enter-time) var(--phone-ease-enter);
+}
+
+:root[data-layout="phone"] .editor_sheet[data-state="closing"] {
+    animation: phone_slide_down_out var(--phone-exit-time)
+        var(--phone-ease-exit) forwards;
 }
 
 :root[data-layout="phone"] .editor_sheet[data-full="true"] {

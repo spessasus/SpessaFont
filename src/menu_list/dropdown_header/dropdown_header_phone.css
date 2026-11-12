@@ -58,6 +58,14 @@
 :root[data-layout="phone"] .item_group_header .dropdown_triangle svg {
     width: var(--phone-disclosure-size);
     height: var(--phone-disclosure-size);
+    transition: transform var(--phone-fade-time) var(--phone-ease-enter);
+}
+
+:root[data-layout="phone"]
+    .item_group_header
+    .dropdown_triangle[aria-expanded="true"]
+    svg {
+    transform: rotate(180deg);
 }
 
 :root[data-layout="phone"] .item_group_header .dropdown_triangle,

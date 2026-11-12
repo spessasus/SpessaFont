@@ -6,6 +6,7 @@ import {
 } from "./context_menu_context.ts";
 import { ContextMenu } from "./context_menu.tsx";
 import { rememberFocus } from "../utils/focus_return.ts";
+import { Presence } from "../presence/presence.tsx";
 
 interface OpenMenu {
     x: number;
@@ -68,15 +69,17 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
     return (
         <ContextMenuContext value={api}>
             {children}
-            {menu ? (
-                <ContextMenu
-                    x={menu.x}
-                    y={menu.y}
-                    entries={menu.entries}
-                    title={menu.title}
-                    onClose={close}
-                />
-            ) : null}
+            <Presence>
+                {menu ? (
+                    <ContextMenu
+                        x={menu.x}
+                        y={menu.y}
+                        entries={menu.entries}
+                        title={menu.title}
+                        onClose={close}
+                    />
+                ) : null}
+            </Presence>
         </ContextMenuContext>
     );
 }

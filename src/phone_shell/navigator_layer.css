@@ -7,17 +7,44 @@
     inset: 0;
     z-index: 2;
     display: flex;
-    transform: translateX(-100%);
     visibility: hidden;
-    transition:
-        transform 0.2s ease-out,
-        visibility 0s linear 0.2s;
+    transition: visibility 0s linear var(--phone-exit-time);
 }
 
 :root[data-layout="phone"] .navigator_layer[data-open="true"] {
-    transform: none;
     visibility: visible;
-    transition: transform 0.2s ease-out;
+    transition: none;
+}
+
+/* In portrait the panel slides over the editor and the scrim beside it fades */
+:root[data-layout="phone"]:not([data-orientation="landscape"])
+    .navigator_layer
+    :is(.navigator_panel, .navigator_scrim) {
+    transition:
+        transform var(--phone-exit-time) var(--phone-ease-exit),
+        opacity var(--phone-exit-time) var(--phone-ease-exit);
+}
+
+:root[data-layout="phone"]:not([data-orientation="landscape"])
+    .navigator_layer
+    .navigator_panel {
+    transform: translateX(-100%);
+}
+
+:root[data-layout="phone"]:not([data-orientation="landscape"])
+    .navigator_layer
+    .navigator_scrim {
+    opacity: 0;
+}
+
+:root[data-layout="phone"]:not([data-orientation="landscape"])
+    .navigator_layer[data-open="true"]
+    :is(.navigator_panel, .navigator_scrim) {
+    transform: none;
+    opacity: 1;
+    transition:
+        transform var(--phone-enter-time) var(--phone-ease-enter),
+        opacity var(--phone-enter-time) var(--phone-ease-enter);
 }
 
 :root[data-layout="phone"] .navigator_panel {
@@ -145,7 +172,7 @@
 :root[data-layout="phone"][data-orientation="landscape"] .navigator_panel {
     flex: none;
     width: var(--phone-dock-width);
-    transition: transform 0.2s ease-out;
+    transition: transform var(--phone-enter-time) var(--phone-ease-enter);
 }
 
 :root[data-layout="phone"][data-orientation="landscape"]
@@ -156,8 +183,8 @@
     transform: translateX(-100%);
     visibility: hidden;
     transition:
-        transform 0.2s ease-out,
-        visibility 0s linear 0.2s;
+        transform var(--phone-exit-time) var(--phone-ease-exit),
+        visibility 0s linear var(--phone-exit-time);
 }
 
 :root[data-layout="phone"][data-orientation="landscape"] .navigator_strip {

@@ -3,6 +3,7 @@ import "../context_menu/action_sheet.css";
 import { BottomSheet } from "../phone_shell/bottom_sheet.tsx";
 import { WrenchIcon } from "../utils/icons/edit_icons.tsx";
 import "./menu_bar_phone.css";
+import { Presence } from "../presence/presence.tsx";
 
 interface MenuSheetButtonProps {
     main: string;
@@ -36,19 +37,21 @@ export function MenuSheetButton({ main, children }: MenuSheetButtonProps) {
             >
                 <WrenchIcon />
             </button>
-            {isOpen ? (
-                <BottomSheet title={main} onClose={() => setIsOpen(false)}>
-                    <div
-                        role="menu"
-                        aria-label={main}
-                        className="action_sheet"
-                        onClick={handleClick}
-                        onContextMenu={(e) => e.preventDefault()}
-                    >
-                        {children}
-                    </div>
-                </BottomSheet>
-            ) : null}
+            <Presence>
+                {isOpen ? (
+                    <BottomSheet title={main} onClose={() => setIsOpen(false)}>
+                        <div
+                            role="menu"
+                            aria-label={main}
+                            className="action_sheet"
+                            onClick={handleClick}
+                            onContextMenu={(e) => e.preventDefault()}
+                        >
+                            {children}
+                        </div>
+                    </BottomSheet>
+                ) : null}
+            </Presence>
         </>
     );
 }

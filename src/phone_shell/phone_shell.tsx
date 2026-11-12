@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useReducer, useState } from "react";
+import { useLayoutEffect, useMemo, useReducer, useRef, useState } from "react";
 import { Toaster } from "react-hot-toast";
 import "./phone_shell.css";
 import "../toasts/toasts_phone.css";
@@ -23,6 +23,7 @@ import { PhoneAppBar } from "./phone_app_bar.tsx";
 import { OverflowSheet } from "./overflow_sheet.tsx";
 import { getDrillTo } from "./drill_to.ts";
 import { PhoneSettingsLayer } from "./phone_settings_layer.tsx";
+import { Presence } from "../presence/presence.tsx";
 import { KeyboardDrawer } from "./keyboard_drawer.tsx";
 import { getDrawerOffset } from "./drawer_offset.ts";
 import { useBankCommands } from "../menu_bar/use_bank_commands.ts";
@@ -32,6 +33,8 @@ import { useInstallPrompt } from "../hooks/use_install_prompt.ts";
 import { logError } from "../utils/core_utils.ts";
 import { useIsLandscape } from "../layout/use_is_landscape.ts";
 import { applyOrientation } from "../layout/orientation.ts";
+import { runViewTransition } from "../utils/view_transition.ts";
+import type { BankEditView } from "../core_backend/bank_view.ts";
 
 interface PhoneShellProps {
     bankTabs: BankTabs;
@@ -110,6 +113,7 @@ export function PhoneShell({
         }
     }
 
+    const pendingDrillBack = useRef(false);
     const drillDepth =
         activeId === undefined ? 0 : getDrillDepth(state, activeId);
 
@@ -147,16 +151,40 @@ export function PhoneShell({
         if (activeId === undefined) {
             return false;
         }
-        goBack();
-        dispatch({ type: "drillBack", tabId: activeId });
+        // The step back runs a frame later, a second press meanwhile must not take another
+        if (pendingDrillBack.current) {
+            return true;
+        }
+        pendingDrillBack.current = true;
+        runViewTransition(() => {
+            pendingDrillBack.current = false;
+            goBack();
+            dispatch({ type: "drillBack", tabId: activeId });
+        });
         return true;
     });
     useLeaveFlow(tabs);
 
+    // The editor cross-fades to the next element. Not while the lists cover it, which slide
+    // away instead, as the cross-fade would be drawn over them
+    const isEditorCovered =
+        activeSession !== undefined && presence.isCoveringEditor;
+    const animateView =
+        (change: (view: BankEditView) => void) => (view: BankEditView) => {
+            if (isEditorCovered || view === activeView) {
+                change(view);
+            } else {
+                runViewTransition(() => change(view));
+            }
+        };
+    const setShownView = animateView(setActiveView);
+
     // The same view change as the app bar's undo and redo buttons
-    const showView = activeSession
-        ? getDrillTo(activeSession.id, activeView, setActiveView, dispatch)
-        : setActiveView;
+    const showView = animateView(
+        activeSession
+            ? getDrillTo(activeSession.id, activeView, setActiveView, dispatch)
+            : setActiveView
+    );
     const commands = useBankCommands(activeSession, showView);
     useBankShortcutKeys(
         activeSession !== undefined,
@@ -194,6 +222,7 @@ export function PhoneShell({
             >
                 <Toaster
                     position={"bottom-center"}
+                    containerClassName={"phone_toaster"}
                     containerStyle={{
                         bottom: "calc(var(--phone-drawer-offset) + 1rem)"
                     }}
@@ -219,7 +248,7 @@ export function PhoneShell({
                                 onCloseFile={onCloseFile}
                                 onToggleSettings={onToggleSettings}
                                 onInstallApp={handleInstallApp}
-                                onViewChange={setActiveView}
+                                onViewChange={setShownView}
                             />
                         }
                     />
@@ -234,7 +263,7 @@ export function PhoneShell({
                                     <PhoneBankEditor
                                         session={activeSession}
                                         view={activeView}
-                                        onViewChange={setActiveView}
+                                        onViewChange={setShownView}
                                         isCovered={areSettingsShown}
                                         onOpenFile={onOpenFile}
                                         onNewFile={onNewFile}
@@ -257,12 +286,14 @@ export function PhoneShell({
                             />
                         )}
                     </div>
-                    {areSettingsShown && (
-                        <PhoneSettingsLayer
-                            openSessions={tabs}
-                            onClose={onCloseSettings}
-                        />
-                    )}
+                    <Presence>
+                        {areSettingsShown ? (
+                            <PhoneSettingsLayer
+                                openSessions={tabs}
+                                onClose={onCloseSettings}
+                            />
+                        ) : null}
+                    </Presence>
                 </div>
                 {activeSession && (
                     <ErrorBoundary fallback={renderPartError}>

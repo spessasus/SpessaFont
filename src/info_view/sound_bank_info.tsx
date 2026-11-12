@@ -13,6 +13,9 @@ import type { InfoPanel } from "./info_panel.ts";
 import { OverviewPanelHeader } from "./overview_panel_header.tsx";
 import { useLayout } from "../layout/layout_context.ts";
 import { useTranslation } from "react-i18next";
+import type { ReactNode } from "react";
+import { Presence } from "../presence/presence.tsx";
+import { usePresence } from "../hooks/use_presence.ts";
 
 interface SoundBankInfoProps {
     /**
@@ -52,19 +55,41 @@ export function SoundBankInfo({ panel, onPanelChange }: SoundBankInfoProps) {
         }
     }
 
-    if (layout === "phone" && panel !== "info") {
+    const stats = (
+        <BankInfoStats
+            issueCount={issues.length}
+            panel={panel}
+            // The buttons open their panel, or go back to the info when it is open
+            onTogglePanel={(target) =>
+                onPanelChange(panel === target ? "info" : target)
+            }
+        />
+    );
+
+    // A phone opens the panels over the info, which stays under them
+    if (layout === "phone") {
         return (
-            <div className={"overview_panel"}>
-                {/* The default modulators put New in their bar, so they render it */}
-                {panel === "check" ? (
-                    <OverviewPanelHeader
-                        onBack={() => onPanelChange("info")}
-                        title={t("bankInfo.check.title", {
-                            count: issues.length
-                        })}
-                    />
-                ) : null}
-                {content}
+            <div className={"overview_stack"}>
+                <div className={"sound_bank_info"} inert={panel !== "info"}>
+                    <EditableInfo />
+                    {stats}
+                </div>
+                <Presence>
+                    {panel === "info" ? null : (
+                        <OverviewPanel>
+                            {/* The default modulators put New in their bar, so they render it */}
+                            {panel === "check" ? (
+                                <OverviewPanelHeader
+                                    onBack={() => onPanelChange("info")}
+                                    title={t("bankInfo.check.title", {
+                                        count: issues.length
+                                    })}
+                                />
+                            ) : null}
+                            {content}
+                        </OverviewPanel>
+                    )}
+                </Presence>
             </div>
         );
     }
@@ -72,14 +97,24 @@ export function SoundBankInfo({ panel, onPanelChange }: SoundBankInfoProps) {
     return (
         <div className={"sound_bank_info"}>
             {content}
-            <BankInfoStats
-                issueCount={issues.length}
-                panel={panel}
-                // The buttons open their panel, or go back to the info when it is open
-                onTogglePanel={(target) =>
-                    onPanelChange(panel === target ? "info" : target)
-                }
-            />
+            {stats}
+        </div>
+    );
+}
+
+/**
+ * A phone panel over the overview, which slides away when closed.
+ */
+function OverviewPanel({ children }: { children: ReactNode }) {
+    const { ref, isClosing } = usePresence<HTMLDivElement>();
+    return (
+        <div
+            ref={ref}
+            className={"overview_panel"}
+            data-state={isClosing ? "closing" : "open"}
+            inert={isClosing}
+        >
+            {children}
         </div>
     );
 }

@@ -11,7 +11,6 @@ export function ModulatorDiagram() {
             className="modulator_diagram"
             width="100"
             height="100"
-            // The phone form draws it at 64 px, which scales it instead of cutting it
             viewBox="0 0 100 100"
             xmlns="http://www.w3.org/2000/svg"
             fill="currentColor"

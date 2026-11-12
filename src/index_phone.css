@@ -33,6 +33,15 @@
     --phone-text-small: 0.875rem;
     --phone-text-secondary: 0.8125rem;
     --phone-text-caption: 0.75rem;
+    /* Motion: things come in decelerating and leave accelerating, leaving is quicker */
+    --phone-ease-enter: cubic-bezier(0.2, 0.9, 0.3, 1);
+    --phone-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+    --phone-enter-time: 240ms;
+    --phone-exit-time: 170ms;
+    --phone-fade-time: 150ms;
+    --phone-press-time: 200ms;
+    /* Phones paint their own pressed states, not a blue box over whatever was tapped */
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* Landscape is the phone layout held sideways (spec 14.2) */
@@ -53,9 +62,134 @@
     overflow: hidden;
 }
 
-/* Only the sheets, the navigator and the drawer move on a phone */
+/*
+ * Nothing in the editor transitions by default, as the desktop's transition on everything would
+ * animate every grid cell on each commit. The controls below opt back in
+ */
 :root[data-layout="phone"] .spessafont_main * {
     transition: none;
+}
+
+/*
+ * Pressed states: on at once, so a quick tap still shows, and fading out on release. The grid
+ * and the piano keys stay instant
+ */
+:root[data-layout="phone"]
+    :is(.spessafont_main, .bottom_sheet, .modal_dialog)
+    :is(button, select, summary, [role="button"], [role="switch"]):not(
+        .zone_table *,
+        .keyboard *
+    ) {
+    transition:
+        background-color var(--phone-press-time) ease-out,
+        color var(--phone-press-time) ease-out,
+        box-shadow var(--phone-press-time) ease-out,
+        transform var(--phone-press-time) var(--phone-ease-enter),
+        opacity var(--phone-press-time) ease-out;
+}
+
+:root[data-layout="phone"]
+    :is(.spessafont_main, .bottom_sheet, .modal_dialog)
+    :is(button, select, summary, [role="button"], [role="switch"]):active {
+    transition-duration: 40ms;
+}
+
+/* Icon buttons light up as a round spot instead of their whole box */
+:root[data-layout="phone"]
+    .plain_button:has(> svg:only-child):active:not(
+        :disabled,
+        [aria-pressed="true"],
+        [aria-current="true"]
+    ) {
+    background-color: var(--phone-pressed-color);
+    border-radius: 999px;
+}
+
+/* Bordered buttons give a little under the finger */
+:root[data-layout="phone"]
+    :is(
+        .pretty_button,
+        .responsive_button,
+        .stepper_button,
+        .segmented_control_segment
+    ):active:not(:disabled) {
+    transform: scale(0.96);
+}
+
+/* Keyframes the phone's layers share, each named after what it does */
+@keyframes phone_slide_up_in {
+    from {
+        transform: translateY(100%);
+    }
+}
+
+@keyframes phone_slide_down_out {
+    to {
+        transform: translateY(100%);
+    }
+}
+
+@keyframes phone_fade_in {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes phone_fade_out {
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes phone_push_in {
+    from {
+        opacity: 0;
+        transform: translateX(2rem);
+    }
+}
+
+@keyframes phone_push_out {
+    to {
+        opacity: 0;
+        transform: translateX(2rem);
+    }
+}
+
+@keyframes phone_rise_in {
+    from {
+        opacity: 0;
+        transform: translateY(0.75rem);
+    }
+}
+
+@keyframes phone_sink_out {
+    to {
+        opacity: 0;
+        transform: translateY(0.75rem);
+    }
+}
+
+@keyframes phone_drop_in {
+    from {
+        opacity: 0;
+        transform: translateY(-0.5rem);
+    }
+}
+
+/* Asked for by the system: things still change, they just do not move */
+@media (prefers-reduced-motion: reduce) {
+    :root[data-layout="phone"] *,
+    :root[data-layout="phone"] *::before,
+    :root[data-layout="phone"] *::after,
+    :root[data-layout="phone"] *::backdrop,
+    :root[data-layout="phone"]::view-transition-group(*),
+    :root[data-layout="phone"]::view-transition-old(*),
+    :root[data-layout="phone"]::view-transition-new(*) {
+        animation-duration: 1ms !important;
+        animation-delay: 0s !important;
+        transition-duration: 1ms !important;
+        transition-delay: 0s !important;
+    }
 }
 
 /* Android keeps :hover on the last tapped element, so the desktop hover brightness would stick */

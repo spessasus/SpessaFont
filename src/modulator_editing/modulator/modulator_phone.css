@@ -1,19 +1,19 @@
 :root[data-layout="phone"] .modulator_main:not(.modulator_list_button) {
     display: grid;
-    /* Each label sits above its field, so the selects get the whole card width and show their values */
-    grid-template-columns: minmax(0, 1fr) auto auto;
+    /* Each label sits above its field and each curve beside its source, the selects take the rest */
+    grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
-        "note diagram delete"
-        "srcLabel srcLabel srcCurve"
-        "src src src"
-        "secLabel secLabel secCurve"
-        "sec sec sec"
-        "amtLabel amtLabel amtLabel"
-        "amount amount amount"
-        "trLabel trLabel trLabel"
-        "transform transform transform"
-        "dstLabel dstLabel dstLabel"
-        "dest dest dest";
+        "note delete"
+        "srcLabel srcLabel"
+        "src srcCurve"
+        "secLabel secLabel"
+        "sec secCurve"
+        "amtLabel amtLabel"
+        "amount amount"
+        "trLabel trLabel"
+        "transform transform"
+        "dstLabel dstLabel"
+        "dest dest";
     align-items: center;
     column-gap: 0.5rem;
     row-gap: 0.25rem;
@@ -22,13 +22,6 @@
     padding: 0.25rem 0.5rem 0.5rem;
     box-sizing: border-box;
     width: calc(100% - 2 * var(--phone-gutter));
-}
-
-:root[data-layout="phone"] .modulator_main .modulator_diagram {
-    grid-area: diagram;
-    width: 4rem;
-    height: 4rem;
-    margin: 0;
 }
 
 :root[data-layout="phone"] .modulator_main .modulator_title_right {
@@ -309,4 +302,9 @@
 :root[data-layout="phone"] .modulator_amount_times10[aria-pressed="true"] {
     background: var(--primary-color);
     border-color: var(--border-color);
+}
+
+/* A summary row opens into the form */
+:root[data-layout="phone"] .modulator_main:not(.modulator_list_button) {
+    animation: phone_drop_in var(--phone-fade-time) var(--phone-ease-enter);
 }

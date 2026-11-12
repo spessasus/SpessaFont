@@ -5,6 +5,7 @@ import type { BankSession } from "../core_backend/bank_session.ts";
 import { Settings } from "../settings/settings.tsx";
 import { ErrorBoundary } from "../error_boundary/error_boundary.tsx";
 import { renderPartError } from "../error_boundary/render_part_error.tsx";
+import { usePresence } from "../hooks/use_presence.ts";
 
 interface PhoneSettingsLayerProps {
     openSessions: readonly BankSession[];
@@ -19,8 +20,14 @@ export function PhoneSettingsLayer({
     onClose
 }: PhoneSettingsLayerProps) {
     const { t } = useTranslation();
+    const { ref, isClosing } = usePresence<HTMLDivElement>();
     return (
-        <div className={"phone_settings_layer"}>
+        <div
+            ref={ref}
+            className={"phone_settings_layer"}
+            data-state={isClosing ? "closing" : "open"}
+            inert={isClosing}
+        >
             <PhoneLayerHeader
                 icon={"close"}
                 buttonLabel={t("settingsLocale.closeSettings")}

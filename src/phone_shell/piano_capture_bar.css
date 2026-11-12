@@ -41,3 +41,7 @@
     min-height: var(--phone-touch);
     font-size: var(--phone-text-button);
 }
+
+:root[data-layout="phone"] .piano_capture_bar {
+    animation: phone_drop_in var(--phone-fade-time) var(--phone-ease-enter);
+}

@@ -19,6 +19,8 @@ import { createPortal, flushSync } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { ModulatorRow } from "./modulator_row.tsx";
 import { ModulatorEditor } from "./modulator_edit/modulator_editor.tsx";
+import { ModulatorLayer } from "./modulator_edit/modulator_layer.tsx";
+import { Presence } from "../presence/presence.tsx";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
 import { getObjectId } from "../utils/object_id.ts";
@@ -390,29 +392,33 @@ export function GeneratorTable({
                     onEditModulators={openModulators}
                 />
             ) : null}
-            {editedColumn ? (
-                <div className={"modulator_layer"}>
-                    <ModulatorEditor
-                        name={editedColumn.name}
-                        column={editedColumn}
-                        onClose={() => {
-                            const key = getModulatorKey(editedColumn.zone.id);
-                            // The grid is inert until it renders without the layer
-                            flushSync(() => {
-                                setActiveKey(key);
-                                setEditedZoneId(null);
-                            });
-                            findGridItem(tableRef.current, key)?.focus({
-                                preventScroll: true
-                            });
-                        }}
-                        element={element}
-                        defaultModulators={
-                            isInstrument ? defaultModulators : []
-                        }
-                    />
-                </div>
-            ) : null}
+            <Presence>
+                {editedColumn ? (
+                    <ModulatorLayer>
+                        <ModulatorEditor
+                            name={editedColumn.name}
+                            column={editedColumn}
+                            onClose={() => {
+                                const key = getModulatorKey(
+                                    editedColumn.zone.id
+                                );
+                                // The grid is inert until it renders without the layer
+                                flushSync(() => {
+                                    setActiveKey(key);
+                                    setEditedZoneId(null);
+                                });
+                                findGridItem(tableRef.current, key)?.focus({
+                                    preventScroll: true
+                                });
+                            }}
+                            element={element}
+                            defaultModulators={
+                                isInstrument ? defaultModulators : []
+                            }
+                        />
+                    </ModulatorLayer>
+                ) : null}
+            </Presence>
         </>
     );
 }

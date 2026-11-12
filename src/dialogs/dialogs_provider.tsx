@@ -10,6 +10,7 @@ import { ElementPicker, type PickerOption } from "./element_picker.tsx";
 import { NumberDialog } from "./number_dialog.tsx";
 import { ErrorBoundary } from "../error_boundary/error_boundary.tsx";
 import { DialogErrorFallback } from "./dialog_error_fallback.tsx";
+import { Presence } from "../presence/presence.tsx";
 
 interface DialogsProviderProps {
     children?: ReactNode;
@@ -146,25 +147,30 @@ export function DialogsProvider({ children }: DialogsProviderProps) {
     return (
         <DialogsContext value={api}>
             {children}
-            {request ? (
-                <ErrorBoundary key={request.id} fallback={renderDialogError}>
-                    {request.type === "pick" ? (
-                        <ElementPicker
-                            title={request.title}
-                            kind={request.kind}
-                            options={request.options}
-                            onAnswer={answer}
-                        />
-                    ) : null}
-                    {request.type === "number" ? (
-                        <NumberDialog
-                            options={request.options}
-                            onAnswer={answer}
-                        />
-                    ) : null}
-                    {request.type === "custom" ? request.node : null}
-                </ErrorBoundary>
-            ) : null}
+            <Presence>
+                {request ? (
+                    <ErrorBoundary
+                        key={request.id}
+                        fallback={renderDialogError}
+                    >
+                        {request.type === "pick" ? (
+                            <ElementPicker
+                                title={request.title}
+                                kind={request.kind}
+                                options={request.options}
+                                onAnswer={answer}
+                            />
+                        ) : null}
+                        {request.type === "number" ? (
+                            <NumberDialog
+                                options={request.options}
+                                onAnswer={answer}
+                            />
+                        ) : null}
+                        {request.type === "custom" ? request.node : null}
+                    </ErrorBoundary>
+                ) : null}
+            </Presence>
         </DialogsContext>
     );
 }

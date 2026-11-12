@@ -210,8 +210,8 @@ export function ModulatorCard({
                     />
                 ))}
             </div>
-            {/* On phones the grid puts it at the header's end, beside the delete button */}
-            <ModulatorDiagram />
+            {/* The phone form's labels already say what goes where */}
+            {layout === "phone" ? null : <ModulatorDiagram />}
             <ModulatorTransform
                 amount={mod.transformAmount}
                 transformType={mod.transformType}

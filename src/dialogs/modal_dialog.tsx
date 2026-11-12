@@ -8,6 +8,7 @@ import {
     useRef
 } from "react";
 import { useBackHandler } from "../hooks/use_back_handler.ts";
+import { usePresence } from "../hooks/use_presence.ts";
 import { BACK_LEVELS } from "../phone_shell/back_stack.ts";
 import { rememberFocus } from "../utils/focus_return.ts";
 
@@ -45,7 +46,8 @@ function isOnBackdrop(e: MouseEvent<HTMLDialogElement>) {
 
 /**
  * A native modal dialog, shown while it is mounted. The focus goes back to where it was when
- * it closes.
+ * it closes. Inside `Presence` it plays its exit before it closes, still modal, so nothing
+ * under it takes a tap meanwhile.
  */
 export function ModalDialog({
     title,
@@ -54,8 +56,9 @@ export function ModalDialog({
     onCancel,
     doesSkipFocus = false
 }: ModalDialogProps) {
-    const dialogRef = useRef<HTMLDialogElement>(null);
+    const { ref: dialogRef, isClosing } = usePresence<HTMLDialogElement>();
     const backdropPress = useRef(false);
+    const handleCancel = isClosing ? () => undefined : onCancel;
     useBackHandler(true, BACK_LEVELS.transient, () => {
         onCancel();
         return true;
@@ -77,16 +80,18 @@ export function ModalDialog({
             dialog?.close();
             restoreFocus();
         };
-    }, []);
+    }, [dialogRef]);
     return (
         <dialog
             ref={dialogRef}
             className={`modal_dialog ${className}`}
+            data-state={isClosing ? "closing" : "open"}
+            inert={isClosing}
             aria-label={title}
             tabIndex={doesSkipFocus ? -1 : undefined}
             onCancel={(e) => {
                 e.preventDefault();
-                onCancel();
+                handleCancel();
             }}
             onPointerDown={(e) => {
                 backdropPress.current = isOnBackdrop(e);
@@ -95,7 +100,7 @@ export function ModalDialog({
                 // Both the press and the release, so a text selection dragged out of the
                 // search field does not close it
                 if (backdropPress.current && isOnBackdrop(e)) {
-                    onCancel();
+                    handleCancel();
                 }
             }}
         >

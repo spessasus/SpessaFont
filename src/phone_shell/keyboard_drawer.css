@@ -196,3 +196,53 @@
     .zone_minimap {
     min-width: 3.5rem;
 }
+
+/*
+ * A state change snaps the drawer's height, then slides the drawer from its old place
+ * (--drawer-shift is the new height minus the old). Two names, so every change restarts it
+ */
+:root[data-layout="phone"] .keyboard_drawer {
+    position: relative;
+    background: var(--darker-color-start);
+}
+
+:root[data-layout="phone"] .keyboard_drawer[data-shift="odd"] {
+    animation: phone_drawer_shift_odd var(--phone-enter-time)
+        var(--phone-ease-enter);
+}
+
+:root[data-layout="phone"] .keyboard_drawer[data-shift="even"] {
+    animation: phone_drawer_shift_even var(--phone-enter-time)
+        var(--phone-ease-enter);
+}
+
+:root[data-layout="phone"] .keyboard_drawer[data-shift-direction="shrink"] {
+    animation-duration: var(--phone-exit-time);
+    animation-timing-function: var(--phone-ease-exit);
+}
+
+@keyframes phone_drawer_shift_odd {
+    from {
+        transform: translateY(var(--drawer-shift));
+    }
+}
+
+@keyframes phone_drawer_shift_even {
+    from {
+        transform: translateY(var(--drawer-shift));
+    }
+}
+
+/*
+ * A pane that left sits under the drawer's box: right under the handle when the drawer
+ * collapses, so it goes down with it, and out of sight when the other pane took its place
+ */
+:root[data-layout="phone"] .drawer_pane[data-state="closing"] {
+    position: absolute;
+    inset: 100% 0 auto;
+    box-sizing: border-box;
+    padding-inline-start: inherit;
+    background: var(--darker-color-start);
+    animation: phone_fade_out var(--phone-exit-time) var(--phone-ease-exit)
+        forwards;
+}

@@ -13,6 +13,7 @@ import { useBankDisplayName } from "../hooks/use_bank_display_name.ts";
 import { usePhoneShell } from "./phone_shell_context.ts";
 import { MoreVerticalIcon } from "../utils/icons/app_icons.tsx";
 import { CloseFileIcon, DownloadIcon } from "../utils/icons/file_icons.tsx";
+import { Presence } from "../presence/presence.tsx";
 
 interface OverflowSheetProps {
     /**
@@ -270,14 +271,16 @@ export function OverflowSheet({
             >
                 <MoreVerticalIcon />
             </button>
-            {sheet === null ? null : (
-                <TitledSheet
-                    session={session}
-                    title={titles[sheet]}
-                    entries={entries}
-                    onClose={close}
-                />
-            )}
+            <Presence>
+                {sheet === null ? null : (
+                    <TitledSheet
+                        session={session}
+                        title={titles[sheet]}
+                        entries={entries}
+                        onClose={close}
+                    />
+                )}
+            </Presence>
         </>
     );
 }

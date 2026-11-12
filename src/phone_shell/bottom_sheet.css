@@ -3,6 +3,12 @@
     inset: 0;
     z-index: 100;
     background: var(--sheet-scrim-color);
+    animation: phone_fade_in var(--phone-enter-time) ease-out;
+}
+
+:root[data-layout="phone"] .bottom_sheet_scrim[data-state="closing"] {
+    pointer-events: none;
+    animation: phone_fade_out var(--phone-exit-time) ease-in forwards;
 }
 
 :root[data-layout="phone"] .bottom_sheet {
@@ -19,14 +25,12 @@
     border-bottom: none;
     border-radius: 1rem 1rem 0 0;
     box-shadow: 0 -0.5rem 2rem var(--shadow-color);
-    transform: translateY(0);
-    transition: transform 0.2s ease-out;
+    animation: phone_slide_up_in var(--phone-enter-time) var(--phone-ease-enter);
 }
 
-@starting-style {
-    :root[data-layout="phone"] .bottom_sheet {
-        transform: translateY(100%);
-    }
+:root[data-layout="phone"] .bottom_sheet[data-state="closing"] {
+    animation: phone_slide_down_out var(--phone-exit-time)
+        var(--phone-ease-exit) forwards;
 }
 
 :root[data-layout="phone"] .bottom_sheet_grab {

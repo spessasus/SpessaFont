@@ -77,3 +77,28 @@
     font-size: var(--phone-text-body);
     text-align: start;
 }
+
+/* The open panel covers the info in the same grid cell, so the info keeps its scroll under it */
+:root[data-layout="phone"] .overview_stack {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+}
+
+:root[data-layout="phone"] .overview_stack > * {
+    grid-area: 1 / 1;
+    min-height: 0;
+}
+
+:root[data-layout="phone"] .overview_stack > .overview_panel {
+    background: var(--darker-color-start);
+    animation: phone_push_in var(--phone-enter-time) var(--phone-ease-enter);
+}
+
+:root[data-layout="phone"]
+    .overview_stack
+    > .overview_panel[data-state="closing"] {
+    animation: phone_push_out var(--phone-exit-time) var(--phone-ease-exit)
+        forwards;
+}

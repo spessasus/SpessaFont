@@ -12,6 +12,12 @@
     min-height: 0;
     overflow-y: auto;
     background: var(--darker-color-start);
+    animation: phone_push_in var(--phone-enter-time) var(--phone-ease-enter);
+}
+
+:root[data-layout="phone"] .modulator_layer[data-state="closing"] {
+    animation: phone_push_out var(--phone-exit-time) var(--phone-ease-exit)
+        forwards;
 }
 
 /*
