@@ -12,6 +12,7 @@ import { PHONE_LAYOUT_QUERY, resolveLayout } from "./layout/layout_setting.ts";
 import { IS_ELECTRON } from "./utils/environment_detection.ts";
 import { logError, logInfo } from "./utils/core_utils.ts";
 import { syncElectronUnloadPrompt } from "./utils/electron_unload_prompt.ts";
+import { takeLaunchParam } from "./utils/launch_param.ts";
 
 async function registerServiceWorker() {
     // Service workers are unsafe on Electron
@@ -71,10 +72,12 @@ async function getControllingWorker() {
 
 /**
  * Prepares everything the first render needs: settings, theme, and translations.
- * Returns the loaded settings.
+ * Returns the loaded settings and what the installed app was opened for.
  */
 export async function init() {
     const settings = loadSettings();
+    // Taken before the back stack adds its history entry, which would keep the old address
+    const launchAction = takeLaunchParam();
     applyTheme(settings.theme);
     applyLayout(
         resolveLayout(settings.layout, matchMedia(PHONE_LAYOUT_QUERY).matches)
@@ -93,5 +96,5 @@ export async function init() {
     syncElectronUnloadPrompt();
     // The app works without it, so rendering does not wait for it
     void registerServiceWorker();
-    return settings;
+    return { settings, launchAction };
 }

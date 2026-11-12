@@ -88,7 +88,9 @@ export const localePolish = {
         unsupportedFile:
             "{{name}} nie jest bankiem dźwięków ani plikiem audio.",
         openBankForSamples:
-            "Otwórz lub utwórz bank dźwięków, aby dodać do niego próbki."
+            "Otwórz lub utwórz bank dźwięków, aby dodać do niego próbki.",
+        sharedFilesMissing:
+            "Nie udało się otworzyć udostępnionych plików. Spróbuj udostępnić je ponownie."
     },
 
     downloadDesktop: {

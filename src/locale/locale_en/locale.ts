@@ -79,7 +79,9 @@ export const localeEnglish = {
             "The Vorbis encoder for SF3 could not be loaded. Check your connection and try again.",
         saveRunning: "This sound bank is being saved already.",
         unsupportedFile: "{{name}} is neither a sound bank nor an audio file.",
-        openBankForSamples: "Open or create a sound bank to add samples to it."
+        openBankForSamples: "Open or create a sound bank to add samples to it.",
+        sharedFilesMissing:
+            "The shared files could not be opened. Try sharing them again."
     },
 
     downloadDesktop: {

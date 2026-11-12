@@ -35,6 +35,9 @@ import { renderPartError } from "./error_boundary/render_part_error.tsx";
 import { rememberFocus } from "./utils/focus_return.ts";
 import { ToolsMenuSlotContext } from "./menu_bar/tools_menu_slot.ts";
 import { useLayout } from "./layout/layout_context.ts";
+import type { LaunchAction } from "./utils/launch_param.ts";
+import { useLaunchAction } from "./hooks/use_launch_action.ts";
+import { takeSharedFiles } from "./utils/shared_files.ts";
 
 const SOUND_BANK_EXTENSIONS = ACCEPTED_SOUNDBANK_FORMATS.split(",");
 
@@ -43,7 +46,14 @@ function isSoundBankFile(file: File) {
     return SOUND_BANK_EXTENSIONS.some((extension) => name.endsWith(extension));
 }
 
-export function App() {
+interface AppProps {
+    /**
+     * What the installed app was opened for (a shortcut or the share sheet).
+     */
+    launchAction?: LaunchAction;
+}
+
+export function App({ launchAction }: AppProps) {
     const { t } = useTranslation();
     const { audioEngine } = useAudioEngine();
     const layout = useLayout();
@@ -108,6 +118,36 @@ export function App() {
         await openBankFile(file);
     };
     useLaunchQueue(openFileFromOS);
+
+    // Like the files from the OS, these arrive before the user touched the page
+    useLaunchAction(launchAction, async (action) => {
+        await audioEngine.context.resume();
+        if (action === "new") {
+            await openBankFile();
+            return;
+        }
+        let files: File[];
+        try {
+            files = await takeSharedFiles();
+        } catch (error) {
+            logError("Failed to read the shared files.", error);
+            files = [];
+        }
+        if (files.length === 0) {
+            toast.error(t("loadingAndSaving.sharedFilesMissing"));
+            return;
+        }
+        // The share sheet may offer any file, as banks have no common type
+        for (const file of files) {
+            if (isSoundBankFile(file)) {
+                await openBankFile(file);
+            } else {
+                toast.error(
+                    t("loadingAndSaving.unsupportedFile", { name: file.name })
+                );
+            }
+        }
+    });
     useElectronFileOpen(openFileFromOS, (path, error) => {
         logError(`Failed to open ${path}.`, error);
         toast.error(

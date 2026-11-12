@@ -157,8 +157,60 @@ async function tryCacheRequest(event) {
     );
 }
 
+// src/utils/shared_files.ts reads these. Not "spessafont-", which activate treats as old releases
+const SHARED_FILES_CACHE = "spessafont_shared_files";
+const FILE_NAME_HEADER = "X-File-Name";
+// The manifest's share_target action
+const SHARE_TARGET_PATH = "share-target";
+
+/**
+ * Keeps the files from the share sheet for the page, which cannot receive the POST itself, and
+ * opens the app to pick them up. The app opens even when storing fails, and says so.
+ * @param request {Request}
+ * @return {Promise<Response>}
+ */
+async function receiveSharedFiles(request) {
+    try {
+        const data = await request.formData();
+        await caches.delete(SHARED_FILES_CACHE);
+        const cache = await caches.open(SHARED_FILES_CACHE);
+        const files = data
+            .getAll("banks")
+            .filter((entry) => typeof entry !== "string");
+        await Promise.all(
+            files.map((file, index) =>
+                cache.put(
+                    `shared/${index}`,
+                    new Response(file, {
+                        headers: {
+                            "Content-Type":
+                                file.type || "application/octet-stream",
+                            [FILE_NAME_HEADER]: encodeURIComponent(file.name)
+                        }
+                    })
+                )
+            )
+        );
+    } catch (error) {
+        console.warn("Could not keep the shared files:", error);
+    }
+    return Response.redirect(
+        new URL("./?launch=shared", service.registration.scope).href,
+        303
+    );
+}
+
 service.addEventListener("fetch", (event) => {
-    if (event.request.method !== "GET") return;
+    const { request } = event;
+    if (
+        request.method === "POST" &&
+        request.url ===
+            new URL(SHARE_TARGET_PATH, service.registration.scope).href
+    ) {
+        event.respondWith(receiveSharedFiles(request));
+        return;
+    }
+    if (request.method !== "GET") return;
 
     const url = new URL(event.request.url);
     if (

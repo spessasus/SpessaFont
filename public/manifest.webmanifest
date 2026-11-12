@@ -8,22 +8,111 @@
     "id": "SpessaFont",
     "categories": ["music"],
     "orientation": "any",
-    "theme_color": "#320056ff",
+    "theme_color": "#000000",
+    "background_color": "#000000",
     "icons": [
         {
             "src": "favicon.ico",
             "sizes": "32x32",
             "type": "image/x-icon"
         },
-
+        {
+            "src": "icons/icon_192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/icon_512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/maskable_192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/maskable_512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
         {
             "src": "logo.png",
             "sizes": "940x940",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any"
         }
     ],
 
+    "shortcuts": [
+        {
+            "name": "New sound bank",
+            "short_name": "New bank",
+            "url": "./?launch=new",
+            "icons": [
+                {
+                    "src": "icons/icon_192.png",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                }
+            ]
+        }
+    ],
+
+    "share_target": {
+        "action": "./share-target",
+        "method": "POST",
+        "enctype": "multipart/form-data",
+        "params": {
+            "files": [
+                {
+                    "name": "banks",
+                    "accept": [
+                        "application/octet-stream",
+                        "audio/x-soundfont",
+                        "audio/x-sf2",
+                        "audio/sf2",
+                        "audio/dls",
+                        "audio/x-dls",
+                        ".sf2",
+                        ".sf3",
+                        ".sf4",
+                        ".sfogg",
+                        ".dls",
+                        ".dlp",
+                        ".rmi"
+                    ]
+                }
+            ]
+        }
+    },
+
     "screenshots": [
+        {
+            "src": "screenshots/phone_instrument.png",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "sizes": "412x915",
+            "label": "Editing an instrument's zones with the keyboard open"
+        },
+        {
+            "src": "screenshots/phone_lists.png",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "sizes": "412x915",
+            "label": "The sample, instrument and preset lists"
+        },
+        {
+            "src": "screenshots/phone_sample.png",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "sizes": "412x915",
+            "label": "Setting a sample's loop points"
+        },
         {
             "src": "https://github.com/user-attachments/assets/2efe807b-dc35-4108-a503-2d134a71bc2d",
             "type": "image/png",

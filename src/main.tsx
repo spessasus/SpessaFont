@@ -17,8 +17,12 @@ import { init } from "./init.ts";
 import { TranslatedOptionsProvider } from "./utils/translated_options/translated_options_provider.tsx";
 import { logError } from "./utils/core_utils.ts";
 import type { SavedSettingsType } from "./settings/save_load/settings_typedef.ts";
+import type { LaunchAction } from "./utils/launch_param.ts";
 
-function render(settings: SavedSettingsType) {
+function render(
+    settings: SavedSettingsType,
+    launchAction: LaunchAction | undefined
+) {
     const root = document.querySelector("#root");
     if (!(root instanceof HTMLElement)) {
         throw new TypeError("The #root element is missing from index.html.");
@@ -36,7 +40,11 @@ function render(settings: SavedSettingsType) {
                                             <ContextMenuProvider>
                                                 <DialogsProvider>
                                                     <DragProvider>
-                                                        <App />
+                                                        <App
+                                                            launchAction={
+                                                                launchAction
+                                                            }
+                                                        />
                                                     </DragProvider>
                                                 </DialogsProvider>
                                             </ContextMenuProvider>
@@ -53,7 +61,8 @@ function render(settings: SavedSettingsType) {
 }
 
 try {
-    render(await init());
+    const { settings, launchAction } = await init();
+    render(settings, launchAction);
 } catch (error) {
     logError("SpessaFont failed to start.", error);
 }
