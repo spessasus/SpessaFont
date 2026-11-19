@@ -18,16 +18,16 @@ interface ModulatorRowProps {
      */
     onEditModulators: (zoneId: number) => void;
     /**
-     * SF2 mode does not count the modulators with an SFE destination, which it hides.
+     * SF2 mode does not count the modulators with an SFe destination, which it hides.
      */
-    isSFE: boolean;
+    isSFe: boolean;
 }
 
 export function ModulatorRow({
     columns,
     activeKey,
     onEditModulators,
-    isSFE
+    isSFe
 }: ModulatorRowProps) {
     const { t } = useTranslation();
     return (
@@ -36,7 +36,7 @@ export function ModulatorRow({
                 {t("modulatorLocale.modulators")}
             </th>
             {columns.map(({ zone, name, colSpan }) => {
-                const count = getShownModulators(zone.modulators, isSFE).length;
+                const count = getShownModulators(zone.modulators, isSFe).length;
                 const key = getModulatorKey(zone.id);
                 return (
                     <th

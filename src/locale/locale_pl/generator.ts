@@ -3,7 +3,7 @@ export const GeneratorLocale = {
     velocityRange: "Zakres siły nacisku", // not modulated
 
     attenuation: "Wyciszenie",
-    amplitude: "Amplituda",
+    gain: "Wzmocnienie",
     pan: "Panorama",
     loopingMode: "Tryb pętli", // not modulated
     overridingRootKey: "Klawisz próbki", // not modulated
@@ -12,8 +12,10 @@ export const GeneratorLocale = {
     centTuning: "Strojenie centów",
     scaleTuning: "Strojenie skali", // not modulated
 
+    filterType: "Typ filtra", // not modulated
     filterCutoff: "Częstotliwość filtra",
     filterResonance: "Rezonans filtra",
+    filterResonanceOffset: "Przesunięcie rezonansu filtra",
     filterCutoffLimit: "Limit częstotliwości filtra",
 
     volEnvDelay: "Opóźnienie obw. głośń.",
@@ -52,7 +54,6 @@ export const GeneratorLocale = {
     modLfoDelay: "Opóźnienie LFO modulacji",
     modLfoFade: "Narastanie LFO modulacji",
     modLfoFrequency: "Częstotliwość LFO modulacji",
-    modLfoRateOffset: "Zmiana częstotliwości LFO modulacji",
     modLfoWaveform: "Kształt fali LFO modulacji", // not modulated
     modLfoStartPhase: "Faza początkowa LFO modulacji",
     modLfoToPitch: "LFO modulacji -> Wysokość dźwięku",
@@ -63,7 +64,6 @@ export const GeneratorLocale = {
     vibLfoDelay: "Opóźnienie LFO wibrata",
     vibLfoFade: "Narastanie LFO wibrata",
     vibLfoFrequency: "Częstotliwość LFO wibrata",
-    vibLfoRateOffset: "Zmiana częstotliwości LFO wibrata",
     vibLfoWaveform: "Kształt fali LFO wibrata", // not modulated
     vibLfoStartPhase: "Faza początkowa LFO wibrata",
     vibLfoToPitch: "LFO wibrata -> Wysokość dźwięku",
@@ -76,6 +76,7 @@ export const GeneratorLocale = {
     voiceDelay: "Opóźnienie głosu",
     chorusLevel: "Poziom chóru",
     reverbLevel: "Poziom pogłosu",
+    variationLevel: "Poziom wariacji",
 
     fixedKey: "Stały klawisz", // not modulated
     fixedVelocity: "Stała siła nacisku", // not modulated

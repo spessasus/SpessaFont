@@ -15,12 +15,12 @@ import { resolveWriteFormat } from "./persistence.ts";
 import { EditPresetAction } from "../preset_editor/bottom_bar/edit_preset_action.ts";
 
 /**
- * Opens what the mirror of a test session writes as SFE, after `edit` changed the mirror.
+ * Opens what the mirror of a test session writes as SFe, after `edit` changed the mirror.
  */
-function openAsSFE(edit?: (session: BankSession) => void) {
+function openAsSFe(edit?: (session: BankSession) => void) {
     const source = createTestSession();
     edit?.(source);
-    const file = getMirror(source).bank.writeSFE();
+    const file = getMirror(source).bank.writeSFe();
     return new BankSession(createTestHost().client, loadSoundBank(file));
 }
 
@@ -47,12 +47,12 @@ describe("detectBankFormat", () => {
         expect(session.store.getSnapshot().format).toBe("sf2");
     });
 
-    it("opens an SFE file in SFE mode, even without SFE generators", () => {
-        expect(openAsSFE().document.format).toBe("sfe");
+    it("opens an SFe file in SFe mode, even without SFe generators", () => {
+        expect(openAsSFe().document.format).toBe("sfe");
     });
 
-    it("opens a bank with SFE generators in SFE mode", () => {
-        const session = openAsSFE((source) => {
+    it("opens a bank with SFe generators in SFe mode", () => {
+        const session = openAsSFe((source) => {
             getMirror(source).bank.instruments[0].zones[0].setGenerator(
                 GeneratorTypes.delayVoice,
                 -1200
@@ -85,8 +85,8 @@ describe("SetBankFormatAction", () => {
         expect(session.store.getSnapshot().format).toBe("sfe");
     });
 
-    it("leaves SFE data in the bank when switching to SF2", () => {
-        const session = openAsSFE((source) => {
+    it("leaves SFe data in the bank when switching to SF2", () => {
+        const session = openAsSFe((source) => {
             getMirror(source).bank.instruments[0].zones[0].setGenerator(
                 GeneratorTypes.delayVoice,
                 -1200
@@ -101,12 +101,12 @@ describe("SetBankFormatAction", () => {
 });
 
 describe("resolveWriteFormat", () => {
-    it("saves auto as SFE in SFE mode", () => {
+    it("saves auto as SFe in SFe mode", () => {
         expect(resolveWriteFormat("auto", "sf2", "sfe")).toBe("sf4");
         expect(resolveWriteFormat("auto", "dls", "sfe")).toBe("sf4");
     });
 
-    it("keeps the last format in SF2 mode, but not SFE", () => {
+    it("keeps the last format in SF2 mode, but not SFe", () => {
         expect(resolveWriteFormat("auto", "sf3", "sf2")).toBe("sf3");
         expect(resolveWriteFormat("auto", "dls", "sf2")).toBe("dls");
         expect(resolveWriteFormat("auto", "sf4", "sf2")).toBe("sf2");
@@ -118,8 +118,8 @@ describe("resolveWriteFormat", () => {
     });
 });
 
-describe("saving as SFE", () => {
-    it("puts the bank in SFE mode and keeps it saved", async () => {
+describe("saving as SFe", () => {
+    it("puts the bank in SFe mode and keeps it saved", async () => {
         const session = createTestSession();
         stubSaveFile("bank.sf4");
         await session.save("sf4", "x");
@@ -140,7 +140,7 @@ describe("saving as SFE", () => {
         expect(session.history.canUndo).toBe(false);
     });
 
-    it("keeps an edit made while the SFE file is written unsaved", async () => {
+    it("keeps an edit made while the SFe file is written unsaved", async () => {
         const session = createTestSession();
         const [preset] = session.document.presets;
         const handle: SaveFileHandle = {

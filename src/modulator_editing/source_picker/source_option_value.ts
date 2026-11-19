@@ -18,7 +18,8 @@ export const NON_CC_SOURCES = [
     ModulatorControllerSources.polyPressure,
     ModulatorControllerSources.channelPressure,
     ModulatorControllerSources.pitchWheel,
-    ModulatorControllerSources.pitchWheelRange
+    ModulatorControllerSources.pitchWheelRange,
+    ModulatorControllerSources.modulationDepthRange
 ] as const;
 
 /**

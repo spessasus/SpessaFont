@@ -5,7 +5,7 @@ import type { GeneratorType } from "spessasynth_core";
 import { useWheelStep } from "../../hooks/use_wheel_step.ts";
 import { useLayout } from "../../layout/layout_context.ts";
 import { logInfo } from "../../utils/core_utils.ts";
-import type { getGeneratorOptions } from "../generator_options.ts";
+import type { GeneratorOptions } from "../generator_options.ts";
 import { getViewZones, type ZoneColumn } from "../zone_columns.ts";
 import { readViewCell } from "./cell_values.ts";
 import "./select_cell_phone.css";
@@ -13,7 +13,7 @@ import "./select_cell_phone.css";
 interface SelectCellProps {
     column: ZoneColumn;
     generator: GeneratorType;
-    options: NonNullable<ReturnType<typeof getGeneratorOptions>>;
+    options: GeneratorOptions;
     label: string;
     isSelected: boolean;
     gridKey: string;

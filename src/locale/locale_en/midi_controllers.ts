@@ -2,6 +2,8 @@
 export const MIDIControllersLocale = {
     // translate "Undefined", this is just so JS works fine
     notDefined: "Undefined",
+    // CC 33 to 63, the low byte of CC 1 to 31
+    lsb: "{{name}} LSB",
 
     modulationWheel: "Modulation Wheel",
     breathController: "Breath Controller",

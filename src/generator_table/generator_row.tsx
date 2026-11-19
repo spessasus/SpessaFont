@@ -11,7 +11,9 @@ import type { ZoneColumn } from "./zone_columns.ts";
 import type { ZoneView } from "../core_backend/entity_views.ts";
 import { GENERATOR_UNITS } from "./generator_unit.ts";
 import { useCellCommands } from "./cell/use_cell_commands.ts";
-import { getGeneratorOptions } from "./generator_options.ts";
+import { getShownGeneratorOptions } from "./generator_options.ts";
+import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
+import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
 import { getCellDisplay, getGlobalCellValue } from "./cell/cell_values.ts";
 import { getCellKey } from "./table_navigation.ts";
 import {
@@ -66,7 +68,9 @@ export function GeneratorRow({
     const { generator } = row;
     const name = t(generatorLocaleMap[generator]);
     const unit = row.unit ? GENERATOR_UNITS[row.unit] : undefined;
-    const options = getGeneratorOptions(generator);
+    const { session } = useBankEditor();
+    const isSFe = useBankSnapshot(session.store, (s) => s.format === "sfe");
+    const options = getShownGeneratorOptions(generator, isSFe);
     const isInstrument = element instanceof BasicInstrument;
     const selectedColumns = columns.filter((c) =>
         selectedZoneIds.has(c.zone.id)

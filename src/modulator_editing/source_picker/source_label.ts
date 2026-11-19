@@ -21,7 +21,9 @@ export const NON_CC_SOURCE_LABELS = {
     [ModulatorControllerSources.pitchWheel]:
         "modulatorLocale.sources.pitchWheel",
     [ModulatorControllerSources.pitchWheelRange]:
-        "modulatorLocale.sources.pitchWheelRange"
+        "modulatorLocale.sources.pitchWheelRange",
+    [ModulatorControllerSources.modulationDepthRange]:
+        "modulatorLocale.sources.modulationDepthRange"
 } as const;
 
 /**

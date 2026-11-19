@@ -9,7 +9,7 @@ export const MenuBarLocale = {
         saveSF2: "保存为SF2",
         saveDLS: "保存为DLS",
         saveSF3: "保存为SF3",
-        saveSFE: "保存为SFE",
+        saveSFe: "保存为SFe",
         warnSF2:
             "该音色库包含压缩后的采样。" +
             "保存为SF2会导致音质损失。您确定要继续吗？",

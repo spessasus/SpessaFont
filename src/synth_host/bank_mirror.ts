@@ -4,6 +4,7 @@ import {
     BasicSample,
     BasicSoundBank,
     type BasicZone,
+    CustomCurve,
     Generator,
     Modulator,
     ModulatorSource,
@@ -13,6 +14,7 @@ import {
     type SoundBankInfoData
 } from "spessasynth_core";
 import type {
+    CustomCurveView,
     InstrumentView,
     ModulatorSourceView,
     ModulatorView,
@@ -36,6 +38,7 @@ export interface MirrorIds {
     readonly presets: readonly number[];
     readonly instruments: readonly number[];
     readonly samples: readonly number[];
+    readonly curves: readonly number[];
 }
 
 /**
@@ -71,7 +74,6 @@ export interface SampleCopySource {
  */
 export interface MirrorState {
     readonly type: BasicSoundBank["type"];
-    readonly customDefaultModulators: boolean;
     readonly patch: MirrorPatch & { readonly info: SoundBankInfoData };
 }
 
@@ -107,29 +109,43 @@ export function shareOwnStoredData(stored: SampleStoredData) {
         : copyStoredData(stored);
 }
 
-function sourceToView(source: ModulatorSource): ModulatorSourceView {
+type CurveViews = ReadonlyMap<CustomCurve, CustomCurveView>;
+
+function sourceToView(
+    source: ModulatorSource,
+    curveViews: CurveViews
+): ModulatorSourceView {
+    const { curve } = source;
     return {
         index: source.index,
         curveType: source.curveType,
         isCC: source.isCC,
         isBipolar: source.isBipolar,
-        isNegative: source.isNegative
+        isNegative: source.isNegative,
+        curve: curve instanceof CustomCurve ? curveViews.get(curve) : undefined
     };
 }
 
 // The ids of zones and modulators only key the editor's rows, the mirror never reads them
-function modulatorToView(modulator: Modulator): ModulatorView {
+function modulatorToView(
+    modulator: Modulator,
+    curveViews: CurveViews
+): ModulatorView {
     return {
         id: 0,
-        primarySource: sourceToView(modulator.primarySource),
-        secondarySource: sourceToView(modulator.secondarySource),
+        primarySource: sourceToView(modulator.primarySource, curveViews),
+        secondarySource: sourceToView(modulator.secondarySource, curveViews),
         destination: modulator.destination,
         transformAmount: modulator.transformAmount,
         transformType: modulator.transformType
     };
 }
 
-function zoneToView(zone: BasicZone, childId: number | undefined): ZoneView {
+function zoneToView(
+    zone: BasicZone,
+    childId: number | undefined,
+    curveViews: CurveViews
+): ZoneView {
     return {
         id: 0,
         keyRange: zone.hasKeyRange ? { ...zone.keyRange } : undefined,
@@ -138,42 +154,13 @@ function zoneToView(zone: BasicZone, childId: number | undefined): ZoneView {
             type: g.type,
             value: g.value
         })),
-        modulators: zone.modulators.map((m) => modulatorToView(m)),
+        modulators: zone.modulators.map((m) => modulatorToView(m, curveViews)),
         childId
     };
 }
 
-function buildSource(view: ModulatorSourceView) {
-    return new ModulatorSource(
-        view.index,
-        view.curveType,
-        view.isCC,
-        view.isBipolar,
-        view.isNegative
-    );
-}
-
-function buildModulator(view: ModulatorView) {
-    return new Modulator(
-        buildSource(view.primarySource),
-        buildSource(view.secondarySource),
-        view.destination,
-        view.transformAmount,
-        view.transformType
-    );
-}
-
 function buildRange(view: RangeView | undefined) {
     return view ? { min: view.min, max: view.max } : { ...UNSET_RANGE };
-}
-
-function applyZone(zone: BasicZone, view: ZoneView) {
-    zone.keyRange = buildRange(view.keyRange);
-    zone.velRange = buildRange(view.velocityRange);
-    zone.generators = view.generators.map(
-        (g) => new Generator(g.type, g.value, false)
-    );
-    zone.modulators = view.modulators.map((m) => buildModulator(m));
 }
 
 /**
@@ -215,12 +202,13 @@ export class BankMirror {
      * Builds a mirror from another host's `exportState`. Its sample data is used as is.
      */
     public static fromState(state: MirrorState) {
-        const bank = new BasicSoundBank(state.type);
-        bank.customDefaultModulators = state.customDefaultModulators;
+        // The default modulators and their curves come with the patch
+        const bank = new BasicSoundBank(state.type, false);
         const mirror = new BankMirror(bank, {
             presets: [],
             instruments: [],
-            samples: []
+            samples: [],
+            curves: []
         });
         mirror.apply(state.patch);
         return mirror;
@@ -231,6 +219,8 @@ export class BankMirror {
     private readonly instruments = new Map<number, BasicInstrument>();
     private readonly samples = new Map<number, BasicSample>();
     private readonly sampleIds = new WeakMap<BasicSample, number>();
+    // Curves that left the bank stay too, an undo brings their modulators back
+    private readonly curves = new Map<number, CustomCurve>();
     /**
      * The last views applied, to rebuild zones only when they changed.
      */
@@ -246,7 +236,8 @@ export class BankMirror {
         const isSameShape =
             bank.presets.length === ids.presets.length &&
             bank.instruments.length === ids.instruments.length &&
-            bank.samples.length === ids.samples.length;
+            bank.samples.length === ids.samples.length &&
+            bank.customCurves.length === ids.curves.length;
         if (!isSameShape) {
             throw new Error("The mirror's bank does not match the editor's.");
         }
@@ -261,6 +252,60 @@ export class BankMirror {
             this.samples.set(ids.samples[i], sample);
             this.sampleIds.set(sample, ids.samples[i]);
         }
+        for (const [i, curve] of bank.customCurves.entries()) {
+            this.curves.set(ids.curves[i], curve);
+        }
+    }
+
+    private buildSource(view: ModulatorSourceView) {
+        return new ModulatorSource(
+            view.index,
+            view.curve
+                ? getOrThrow(this.curves, view.curve.id, "custom curve")
+                : view.curveType,
+            view.isCC,
+            view.isBipolar,
+            view.isNegative
+        );
+    }
+
+    private buildModulators(views: readonly ModulatorView[]) {
+        return views.map((view) => {
+            return new Modulator(
+                this.buildSource(view.primarySource),
+                this.buildSource(view.secondarySource),
+                view.destination,
+                view.transformAmount,
+                view.transformType
+            );
+        });
+    }
+
+    private applyZone(zone: BasicZone, view: ZoneView) {
+        zone.keyRange = buildRange(view.keyRange);
+        zone.velRange = buildRange(view.velocityRange);
+        zone.generators = view.generators.map(
+            (g) => new Generator(g.type, g.value, false)
+        );
+        zone.setModulators(this.buildModulators(view.modulators));
+    }
+
+    /**
+     * The bank's curve list, as the editor has it. A curve keeps its object, so the
+     * modulators that use it follow a change.
+     */
+    private applyCurves(views: readonly CustomCurveView[]) {
+        this.bank.customCurves = views.map((view) => {
+            let curve = this.curves.get(view.id);
+            if (curve) {
+                curve.name = view.name;
+                curve.setPoints(view.points);
+            } else {
+                curve = new CustomCurve(view.points, view.name);
+                this.curves.set(view.id, curve);
+            }
+            return curve;
+        });
     }
 
     private applySamples(diff: ElementDiff<SampleView>) {
@@ -320,7 +365,7 @@ export class BankMirror {
             const previous = this.instrumentViews.get(view.id);
             this.instrumentViews.set(view.id, view);
             if (previous?.globalZone !== view.globalZone) {
-                applyZone(instrument.globalZone, view.globalZone);
+                this.applyZone(instrument.globalZone, view.globalZone);
             }
             if (previous?.zones === view.zones) {
                 continue;
@@ -332,7 +377,7 @@ export class BankMirror {
                     zoneView.childId ?? -1,
                     "sample"
                 );
-                applyZone(instrument.createZone(sample), zoneView);
+                this.applyZone(instrument.createZone(sample), zoneView);
             }
         }
         if (diff.order) {
@@ -360,7 +405,7 @@ export class BankMirror {
             const previous = this.presetViews.get(view.id);
             this.presetViews.set(view.id, view);
             if (previous?.globalZone !== view.globalZone) {
-                applyZone(preset.globalZone, view.globalZone);
+                this.applyZone(preset.globalZone, view.globalZone);
             }
             if (previous?.zones === view.zones) {
                 continue;
@@ -372,7 +417,7 @@ export class BankMirror {
                     zoneView.childId ?? -1,
                     "instrument"
                 );
-                applyZone(preset.createZone(instrument), zoneView);
+                this.applyZone(preset.createZone(instrument), zoneView);
             }
         }
         if (diff.order) {
@@ -398,6 +443,10 @@ export class BankMirror {
      */
     public apply(patch: MirrorPatch) {
         const { views } = patch;
+        // Before the zones and the default modulators, which look their curves up
+        if (views.customCurves) {
+            this.applyCurves(views.customCurves);
+        }
         this.applySamples(views.samples);
         for (const [id, stored] of patch.sampleData) {
             getOrThrow(this.samples, id, "sample").setStoredData(stored);
@@ -418,8 +467,8 @@ export class BankMirror {
             this.bank.flush(false);
         }
         if (views.defaultModulators) {
-            this.bank.defaultModulators = views.defaultModulators.map((m) =>
-                buildModulator(m)
+            this.bank.defaultModulators = this.buildModulators(
+                views.defaultModulators
             );
         }
         if (patch.info) {
@@ -450,6 +499,21 @@ export class BankMirror {
             return id;
         };
         const { bank } = this;
+        const curveViews = new Map<CustomCurve, CustomCurveView>();
+        for (const [id, curve] of this.curves) {
+            curveViews.set(curve, {
+                id,
+                name: curve.name,
+                points: curve.points
+            });
+        }
+        const getCurveView = (curve: CustomCurve) => {
+            const view = curveViews.get(curve);
+            if (!view) {
+                throw new Error("The mirror's bank has a curve without an id.");
+            }
+            return view;
+        };
         const samples = new Array<SampleView>();
         const sampleData = new Map<number, SampleStoredData>();
         for (const [id, sample] of this.samples) {
@@ -478,9 +542,13 @@ export class BankMirror {
             (instrument): InstrumentView => ({
                 id: getId(instrument),
                 name: instrument.name,
-                globalZone: zoneToView(instrument.globalZone, undefined),
+                globalZone: zoneToView(
+                    instrument.globalZone,
+                    undefined,
+                    curveViews
+                ),
                 zones: instrument.zones.map((z) =>
-                    zoneToView(z, getId(z.sample))
+                    zoneToView(z, getId(z.sample), curveViews)
                 ),
                 usedBy: []
             })
@@ -496,12 +564,13 @@ export class BankMirror {
             library: preset.library,
             genre: preset.genre,
             morphology: preset.morphology,
-            globalZone: zoneToView(preset.globalZone, undefined),
-            zones: preset.zones.map((z) => zoneToView(z, getId(z.instrument)))
+            globalZone: zoneToView(preset.globalZone, undefined, curveViews),
+            zones: preset.zones.map((z) =>
+                zoneToView(z, getId(z.instrument), curveViews)
+            )
         }));
         return {
             type: bank.type,
-            customDefaultModulators: bank.customDefaultModulators,
             patch: {
                 views: {
                     presets: {
@@ -520,8 +589,9 @@ export class BankMirror {
                         order: bank.samples.map((s) => getId(s))
                     },
                     defaultModulators: bank.defaultModulators.map((m) =>
-                        modulatorToView(m)
-                    )
+                        modulatorToView(m, curveViews)
+                    ),
+                    customCurves: bank.customCurves.map((c) => getCurveView(c))
                 },
                 info: structuredClone(bank.soundBankInfo),
                 sampleData,

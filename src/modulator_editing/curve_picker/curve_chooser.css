@@ -1,0 +1,43 @@
+/* The segmented control only has phone styles of its own */
+.curve_chooser_kinds {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 0.3rem;
+}
+
+.curve_chooser_kinds .segmented_control {
+    display: flex;
+    border: 1px solid var(--track-border-color);
+    border-radius: var(--primary-border-radius);
+    overflow: hidden;
+}
+
+.curve_chooser_kinds .segmented_control_segment {
+    padding: 0.3rem 1rem;
+    border: none;
+    background: var(--lighter-color-end);
+    color: var(--font-color);
+    font-family: inherit;
+    font-size: inherit;
+    cursor: pointer;
+}
+
+.curve_chooser_kinds .segmented_control_segment + .segmented_control_segment {
+    border-inline-start: 1px solid var(--track-border-color);
+}
+
+.curve_chooser_kinds .segmented_control_segment[aria-checked="true"] {
+    background: var(--primary-color);
+}
+
+.curve_chooser_kinds .segmented_control_segment:focus-visible {
+    outline: 2px solid var(--focus-color);
+    outline-offset: -2px;
+}
+
+.modulator_curve_grid {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+}

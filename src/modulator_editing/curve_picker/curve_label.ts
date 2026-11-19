@@ -6,7 +6,8 @@ const SHAPE_KEYS = {
     [ModulatorCurveTypes.linear]: "modulatorLocale.curves.linear",
     [ModulatorCurveTypes.concave]: "modulatorLocale.curves.concave",
     [ModulatorCurveTypes.convex]: "modulatorLocale.curves.convex",
-    [ModulatorCurveTypes.switch]: "modulatorLocale.curves.switch"
+    [ModulatorCurveTypes.switch]: "modulatorLocale.curves.switch",
+    [ModulatorCurveTypes.custom]: "modulatorLocale.curves.custom"
 } as const;
 
 /**
@@ -14,10 +15,12 @@ const SHAPE_KEYS = {
  */
 export function getCurveLabel(
     t: TFunction,
-    { curveType, bipolar, positive }: SpessaFontModulatorCurveType
+    { curveType, bipolar, positive, name }: SpessaFontModulatorCurveType
 ) {
     return t("modulatorLocale.curves.label", {
-        shape: t(SHAPE_KEYS[curveType]),
+        shape: name
+            ? t("modulatorLocale.curves.customNamed", { name })
+            : t(SHAPE_KEYS[curveType]),
         polarity: t(
             bipolar
                 ? "modulatorLocale.curves.bipolar"

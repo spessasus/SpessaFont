@@ -1,4 +1,9 @@
-import { GeneratorTypes, Modulator, ModulatorSource } from "spessasynth_core";
+import {
+    CustomCurve,
+    GeneratorTypes,
+    Modulator,
+    ModulatorSource
+} from "spessasynth_core";
 import type * as React from "react";
 import {
     ModulatorCard,
@@ -10,7 +15,10 @@ import { Fragment, useRef, useState } from "react";
 import { useClipboard } from "../../clipboard/clipboard_context.ts";
 import toast from "react-hot-toast";
 import { getObjectId, shareObjectId } from "../../utils/object_id.ts";
-import type { ModulatorView as ModulatorData } from "../../core_backend/entity_views.ts";
+import type {
+    CustomCurveView,
+    ModulatorView as ModulatorData
+} from "../../core_backend/entity_views.ts";
 import { getClickedSelection, selectBetween } from "./modulator_selection.ts";
 import { MODULATOR_LIST_BUTTON_CLASS } from "./modulator_list_button.ts";
 import { ModulatorListActions } from "./modulator_list_actions.tsx";
@@ -38,10 +46,15 @@ interface ModulatorListProps {
     onModulatorListChange: (l: Modulator[], mergeKey?: string) => void;
     defaultModulators: readonly ModulatorData[];
     /**
-     * SF2 mode hides the modulators with an SFE destination. They stay in the list the parent
+     * SF2 mode hides the modulators with an SFe destination. They stay in the list the parent
      * gets, where they keep their places.
      */
-    isSFE: boolean;
+    isSFe: boolean;
+    /**
+     * The bank's custom curves and the curve of one's view id, for the curve pickers.
+     */
+    customCurves: readonly CustomCurveView[];
+    getCustomCurve: (id: number) => CustomCurve | undefined;
     /**
      * Extra buttons for the action bar, after the list's own.
      */
@@ -72,18 +85,20 @@ export function ModulatorList({
     getModulators: getAllModulators,
     onModulatorListChange: onAllModulatorsChange,
     defaultModulators: allDefaultModulators,
-    isSFE,
+    isSFe,
+    customCurves,
+    getCustomCurve,
     extraActions,
     renderHeader
 }: ModulatorListProps) {
     const { t } = useTranslation();
     // Everything below works on the shown modulators only
-    const modulatorList = getShownModulators(allModulators, isSFE);
-    const defaultModulators = getShownModulators(allDefaultModulators, isSFE);
-    const getModulators = () => getShownModulators(getAllModulators(), isSFE);
+    const modulatorList = getShownModulators(allModulators, isSFe);
+    const defaultModulators = getShownModulators(allDefaultModulators, isSFe);
+    const getModulators = () => getShownModulators(getAllModulators(), isSFe);
     const onModulatorListChange = (list: Modulator[], mergeKey?: string) =>
         onAllModulatorsChange(
-            isSFE ? list : mergeHiddenModulators(getAllModulators(), list),
+            isSFe ? list : mergeHiddenModulators(getAllModulators(), list),
             mergeKey
         );
     const { clipboard, contents } = useClipboard();
@@ -281,7 +296,16 @@ export function ModulatorList({
         const edited = Modulator.copyFrom(original);
         change(edited);
         // An edit that changes nothing (the same amount typed again) makes no undo step
-        if (Modulator.isIdentical(original, edited, true)) {
+        // Core compares custom curves by their points, a pick of an equal curve still counts
+        const hasOtherCurve = (
+            [
+                [original.primarySource, edited.primarySource],
+                [original.secondarySource, edited.secondarySource]
+            ] as const
+        ).some(
+            ([a, b]) => b.curve instanceof CustomCurve && a.curve !== b.curve
+        );
+        if (!hasOtherCurve && Modulator.isIdentical(original, edited, true)) {
             return;
         }
         shareObjectId(original, edited);
@@ -388,7 +412,9 @@ export function ModulatorList({
                             }
                             isSelected={selectedIds.has(id)}
                             onSelect={(e) => handleSelect(e, id)}
-                            isSFE={isSFE}
+                            isSFe={isSFe}
+                            customCurves={customCurves}
+                            getCustomCurve={getCustomCurve}
                             isOverridingDefault={defaultModulators.some((m) =>
                                 isSameModulator(m, mod, false)
                             )}

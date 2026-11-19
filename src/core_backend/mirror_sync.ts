@@ -88,7 +88,8 @@ export class MirrorSync {
                     removed: [],
                     order: views.sampleOrder
                 },
-                defaultModulators: undefined
+                defaultModulators: undefined,
+                customCurves: undefined
             },
             info: this.snapshot.info,
             sampleData: new Map(),

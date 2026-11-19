@@ -152,7 +152,7 @@ describe("createKeyCurveActions", () => {
 
         expect(
             getValues(instrument, GeneratorTypes.initialAttenuation)
-        ).toEqual([175, 75, 75]);
+        ).toEqual([130, 30, 30]);
     });
 
     it("leaves zones outside the velocity filter alone", () => {

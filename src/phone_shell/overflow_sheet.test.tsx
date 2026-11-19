@@ -84,7 +84,7 @@ describe("OverflowSheet", () => {
             "menuBarLocale.file.saveSF2",
             "menuBarLocale.file.saveSF3",
             "menuBarLocale.file.saveDLS",
-            "menuBarLocale.file.saveSFE"
+            "menuBarLocale.file.saveSFe"
         ]);
         session?.close();
     });

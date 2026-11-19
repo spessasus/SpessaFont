@@ -125,6 +125,29 @@ function isSameVersion(a: SF2VersionTag, b: SF2VersionTag) {
     return a.major === b.major && a.minor === b.minor;
 }
 
+/**
+ * The version of the file a save writes. Core's writers pick it from what they write and
+ * leave the bank's own version alone, so the editor's follows the save through this.
+ */
+function getWrittenVersion(bank: BasicSoundBank, format: WriteFormat) {
+    switch (format) {
+        case "sf2":
+        case "sf3": {
+            return bank.samples.some((s) => s.isCompressed)
+                ? { major: 3, minor: 0 }
+                : { major: 2, minor: 4 };
+        }
+
+        case "sf4": {
+            return { major: 4, minor: 0 };
+        }
+
+        case "dls": {
+            return { ...bank.soundBankInfo.version };
+        }
+    }
+}
+
 function writeBank(
     bank: BasicSoundBank,
     format: WriteFormat,
@@ -138,7 +161,7 @@ function writeBank(
         }
 
         case "sf4": {
-            return bank.writeSFE(options);
+            return bank.writeSFe(options);
         }
 
         case "dls": {
@@ -740,7 +763,7 @@ export class SynthHost {
         }
 
         const changed = getChanged();
-        const versionAfter = { ...bank.soundBankInfo.version };
+        const versionAfter = getWrittenVersion(bank, options.format);
         let conversion: ConversionReport | undefined;
         if (changed.length > 0 || !isSameVersion(versionBefore, versionAfter)) {
             const getId = (sample: BasicSample) => mirror.getSampleId(sample);

@@ -78,7 +78,7 @@ export interface BankSnapshot {
      */
     readonly info: Readonly<SoundBankInfoData>;
     /**
-     * SF2 or SFE mode, see `BankFormat`.
+     * SF2 or SFe mode, see `BankFormat`.
      */
     readonly format: BankFormat;
     readonly history: HistoryState;

@@ -4,7 +4,9 @@ import {
     BasicPreset,
     BasicPresetZone,
     BasicSample,
-    type BasicSoundBank
+    type BasicSoundBank,
+    CustomCurve,
+    type Modulator
 } from "spessasynth_core";
 import {
     reorderInstrumentZones,
@@ -336,5 +338,60 @@ export class BankDocument {
             throw new Error(`The zone order does not match ${element.name}.`);
         }
         replaceZones(element, zones);
+    }
+
+    /**
+     * Makes the custom curves the modulators use the bank's own: a curve from elsewhere (a
+     * paste from another bank, core's standard list) is swapped for an equal curve of the
+     * bank, or for a new copy.
+     * @returns the new copies, which the caller adds with `addCustomCurves`. An action does
+     * this once and keeps them, so a redo brings back the same curves
+     */
+    public adoptCurves(modulators: Iterable<Modulator>) {
+        const { customCurves } = this.bank;
+        const adopted = new Map<CustomCurve, CustomCurve>();
+        const added = new Array<CustomCurve>();
+        for (const modulator of modulators) {
+            for (const source of [
+                modulator.primarySource,
+                modulator.secondarySource
+            ]) {
+                const { curve } = source;
+                if (
+                    !(curve instanceof CustomCurve) ||
+                    customCurves.includes(curve)
+                ) {
+                    continue;
+                }
+                let own =
+                    adopted.get(curve) ??
+                    [...customCurves, ...added].find(
+                        (c) => c.name === curve.name && c.isIdentical(curve)
+                    );
+                if (!own) {
+                    own = new CustomCurve(curve.points, curve.name);
+                    added.push(own);
+                }
+                adopted.set(curve, own);
+                source.curve = own;
+            }
+        }
+        return added;
+    }
+
+    public addCustomCurves(curves: readonly CustomCurve[]) {
+        this.bank.addCustomCurves(...curves);
+    }
+
+    /**
+     * Takes curves out of the bank, for the undo of `addCustomCurves`. Their users are gone
+     * by then.
+     */
+    public removeCustomCurves(curves: readonly CustomCurve[]) {
+        if (curves.length > 0) {
+            this.bank.customCurves = this.bank.customCurves.filter(
+                (c) => !curves.includes(c)
+            );
+        }
     }
 }

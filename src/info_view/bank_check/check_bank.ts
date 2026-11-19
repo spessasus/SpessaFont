@@ -11,14 +11,17 @@ import {
     isOutsideLatin1
 } from "../../core_backend/latin1_text.ts";
 import { isBankNumberLostInSF2 } from "../../core_backend/sf2_bank_numbers.ts";
-import { hasZoneSFEData, isSFEGenerator } from "../../core_backend/sfe_data.ts";
+import {
+    hasZoneSFeData,
+    isLostSFeDefaultModulator
+} from "../../core_backend/sfe_data.ts";
 import type { BankFormat } from "../../core_backend/bank_format.ts";
 import { isSameModulator } from "../../modulator_editing/same_modulator.ts";
 import { isLinkedModulator } from "../../modulator_editing/linked_modulator.ts";
 
 /**
  * SF2 and SF3 keep 20 characters of a name for other players. SpessaSynth reads 20 more from
- * the extra chunk that SF2, SF3 and SFE saves write, and DLS keeps the whole name.
+ * the extra chunk that SF2, SF3 and SFe saves write, and DLS keeps the whole name.
  */
 export const SF2_NAME_LENGTH = 20;
 export const EXTENDED_NAME_LENGTH = 40;
@@ -123,11 +126,11 @@ function checkNames(
     issues: BankIssue[],
     target: MirrorTarget,
     name: string,
-    isSFE: boolean
+    isSFe: boolean
 ) {
     if (name.length > EXTENDED_NAME_LENGTH) {
         issues.push({ kind: "cutName", target });
-    } else if (!isSFE && name.length > SF2_NAME_LENGTH) {
+    } else if (!isSFe && name.length > SF2_NAME_LENGTH) {
         issues.push({ kind: "longName", target });
     }
     if (isOutsideLatin1(name)) {
@@ -136,7 +139,7 @@ function checkNames(
 }
 
 /**
- * The checks a preset and an instrument share: zones, data only SFE keeps, linked modulators.
+ * The checks a preset and an instrument share: zones, data only SFe keeps, linked modulators.
  */
 function checkZones(
     issues: BankIssue[],
@@ -146,7 +149,7 @@ function checkZones(
         readonly zones: readonly ZoneView[];
     },
     getChildName: (id: number) => string,
-    isSFE: boolean
+    isSFe: boolean
 ) {
     if (element.zones.length === 0) {
         issues.push({ kind: "emptyElement", target });
@@ -160,7 +163,7 @@ function checkZones(
         });
     }
     const zones = [element.globalZone, ...element.zones];
-    if (!isSFE && zones.some((zone) => hasZoneSFEData(zone))) {
+    if (!isSFe && zones.some((zone) => hasZoneSFeData(zone))) {
         issues.push({ kind: "sfeOnlyData", target });
     }
     if (
@@ -172,7 +175,7 @@ function checkZones(
 
 /**
  * Lists the issues of a bank, from its views and info. Fast enough to run on every render of
- * the overview. In SFE mode what only SFE keeps (its generators, names up to 40 characters,
+ * the overview. In SFe mode what only SFe keeps (its generators, names up to 40 characters,
  * both bank numbers) is no issue.
  */
 export function checkBank(
@@ -181,15 +184,15 @@ export function checkBank(
     format: BankFormat
 ): BankIssue[] {
     const issues = new Array<BankIssue>();
-    const isSFE = format === "sfe";
+    const isSFe = format === "sfe";
     const unused = findUnusedIds(views);
 
     if (hasInfoTextOutsideLatin1(info)) {
         issues.push({ kind: "nonLatin1Info" });
     }
     if (
-        !isSFE &&
-        views.defaultModulators.some((m) => isSFEGenerator(m.destination))
+        !isSFe &&
+        views.defaultModulators.some((m) => isLostSFeDefaultModulator(m))
     ) {
         issues.push({ kind: "sfeDefaultModulators" });
     }
@@ -208,12 +211,12 @@ export function checkBank(
             target,
             preset,
             (childId) => views.instruments.get(childId)?.name ?? "",
-            isSFE
+            isSFe
         );
-        if (!isSFE && isBankNumberLostInSF2(preset)) {
+        if (!isSFe && isBankNumberLostInSF2(preset)) {
             issues.push({ kind: "bankNumberLost", presetId: id });
         }
-        checkNames(issues, target, preset.name, isSFE);
+        checkNames(issues, target, preset.name, isSFe);
     }
     for (const [patch, presetIds] of byPatch) {
         if (presetIds.length > 1) {
@@ -235,9 +238,9 @@ export function checkBank(
             target,
             instrument,
             (childId) => views.samples.get(childId)?.name ?? "",
-            isSFE
+            isSFe
         );
-        checkNames(issues, target, instrument.name, isSFE);
+        checkNames(issues, target, instrument.name, isSFe);
     }
 
     for (const id of views.sampleOrder) {
@@ -278,7 +281,7 @@ export function checkBank(
                 });
             }
         }
-        checkNames(issues, { kind: "sample", id }, sample.name, isSFE);
+        checkNames(issues, { kind: "sample", id }, sample.name, isSFe);
     }
     return issues;
 }

@@ -123,7 +123,7 @@ describe("checkBank", () => {
         expect(kindsOf(session)).toContain("duplicateZone");
 
         // Mod wheel to pitch makes the copy play differently
-        copy.modulators = [
+        copy.setModulators([
             new Modulator(
                 modWheelSource(),
                 new ModulatorSource(),
@@ -131,20 +131,24 @@ describe("checkBank", () => {
                 50,
                 0
             )
-        ];
+        ]);
         expect(kindsOf(session)).not.toContain("duplicateZone");
     });
 
-    it("finds what a save warns about: lost bank numbers, SFE data, info text, linked modulators", () => {
+    it("finds what a save warns about: lost bank numbers, SFe data, info text, linked modulators", () => {
         const session = createTestSession();
         const [preset] = session.document.presets;
         preset.bankMSB = 1;
         preset.bankLSB = 2;
         const [instrument] = session.document.instruments;
-        // A SpessaSynth generator, above the SF2 ones
-        instrument.zones[0].setGenerator(GeneratorTypes.modLfoRate, 100, false);
+        // An SFe generator, above the SF2 ones
+        instrument.zones[0].setGenerator(
+            GeneratorTypes.modLfoStartPhase,
+            100,
+            false
+        );
         // A linked pair as core loads it: the sender has no destination
-        instrument.zones[0].modulators = [
+        instrument.zones[0].setModulators([
             new Modulator(
                 modWheelSource(),
                 new ModulatorSource(),
@@ -152,7 +156,7 @@ describe("checkBank", () => {
                 1000,
                 0
             )
-        ];
+        ]);
         session.document.bank.soundBankInfo.comment = "Żółw";
 
         expect(kindsOf(session)).toEqual(
@@ -165,7 +169,7 @@ describe("checkBank", () => {
         );
     });
 
-    it("does not report what SFE keeps in SFE mode", () => {
+    it("does not report what SFe keeps in SFe mode", () => {
         const session = createTestSession();
         const [preset] = session.document.presets;
         preset.bankMSB = 1;
@@ -173,11 +177,15 @@ describe("checkBank", () => {
         preset.name = "A preset name over twenty";
         session.document.samples[1].name = "x".repeat(41);
         const [instrument] = session.document.instruments;
-        instrument.zones[0].setGenerator(GeneratorTypes.modLfoRate, 100, false);
+        instrument.zones[0].setGenerator(
+            GeneratorTypes.modLfoStartPhase,
+            100,
+            false
+        );
         const defaultModulator = Modulator.copyFrom(
             session.document.bank.defaultModulators[0]
         );
-        defaultModulator.destination = GeneratorTypes.amplitude;
+        defaultModulator.destination = GeneratorTypes.gain;
         session.document.bank.defaultModulators = [defaultModulator];
         expect(kindsOf(session)).toEqual(
             expect.arrayContaining([
@@ -199,7 +207,7 @@ describe("checkBank", () => {
         ]) {
             expect(kinds).not.toContain(kind);
         }
-        // SFE cuts names at 40 characters too
+        // SFe cuts names at 40 characters too
         expect(kinds).toContain("cutName");
     });
 });

@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useBankEditor } from "../bank_editor/bank_editor_context.ts";
 import { useBankSnapshot } from "../hooks/use_bank_snapshot.ts";
 import { useScopedToastDialog } from "../hooks/use_scoped_toast_dialog.ts";
-import { hasSFEOnlyData } from "../core_backend/sfe_data.ts";
+import { hasSFeOnlyData } from "../core_backend/sfe_data.ts";
 import { SetBankFormatAction } from "../core_backend/set_bank_format_action.ts";
 import { BANK_FORMATS, type BankFormat } from "../core_backend/bank_format.ts";
 
@@ -16,7 +16,7 @@ function isBankFormat(value: string): value is BankFormat {
 }
 
 /**
- * Picks SF2 or SFE mode. Leaving SFE mode while the bank uses SFE data asks first, the data
+ * Picks SF2 or SFe mode. Leaving SFe mode while the bank uses SFe data asks first, the data
  * stays and only goes out of sight.
  */
 export function BankFormatField() {
@@ -34,12 +34,12 @@ export function BankFormatField() {
     };
 
     const handleChange = (next: BankFormat) => {
-        if (next === "sfe" || !hasSFEOnlyData(session.document.bank)) {
+        if (next === "sfe" || !hasSFeOnlyData(session.document.bank)) {
             setFormat(next);
             return;
         }
         showScopedToastDialog({
-            content: t("bankInfo.format.hideSFEData"),
+            content: t("bankInfo.format.hideSFeData"),
             buttons: [
                 {
                     label: t("bankInfo.format.switchToSF2"),

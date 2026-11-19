@@ -5,15 +5,15 @@ import { PRESET_ROWS } from "../../preset_editor/preset_rows.ts";
 import { getShownRows } from "./element_rows.ts";
 
 describe("getShownRows", () => {
-    it("shows every row in SFE mode", () => {
+    it("shows every row in SFe mode", () => {
         expect(getShownRows(INSTRUMENT_ROWS, true)).toBe(INSTRUMENT_ROWS);
     });
 
-    it("hides the SFE generators in SF2 mode and keeps the list's identity", () => {
+    it("hides the SFe generators in SF2 mode and keeps the list's identity", () => {
         const shown = getShownRows(PRESET_ROWS, false);
         const generators = shown.map((r) => r.generator);
         expect(generators).toContain(GeneratorTypes.initialAttenuation);
-        expect(generators).not.toContain(GeneratorTypes.amplitude);
+        expect(generators).not.toContain(GeneratorTypes.gain);
         expect(generators).not.toContain(GeneratorTypes.delayModEnv2);
         expect(generators.every((g) => g <= GeneratorTypes.endOper)).toBe(true);
         // The table and its memoized cells rely on it

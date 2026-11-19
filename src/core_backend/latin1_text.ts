@@ -44,7 +44,7 @@ export function hasInfoTextOutsideLatin1(info: Readonly<SoundBankInfoData>) {
 /**
  * Whether a name or an info text uses characters outside Latin-1 (Polish letters, CJK).
  * spessasynth_core writes every text as one byte per character, so these come back wrong
- * in SF2, SF3, SFE and DLS files. A UTF-8 option in core would remove the need to warn.
+ * in SF2, SF3, SFe and DLS files. A UTF-8 option in core would remove the need to warn.
  */
 export function hasTextOutsideLatin1(bank: BasicSoundBank) {
     const names = [

@@ -190,10 +190,15 @@ describe("getModulatorColumns", () => {
             [equal.zones[2].id, undefined, 1]
         ]);
 
-        const source = new ModulatorSource();
-        leftZone.modulators = [
-            new Modulator(source, source, GeneratorTypes.pan, 100, 0)
-        ];
+        leftZone.setModulators([
+            new Modulator(
+                new ModulatorSource(),
+                new ModulatorSource(),
+                GeneratorTypes.pan,
+                100,
+                0
+            )
+        ]);
         const differ = describeModulatorColumns(instrument, samples);
         expect(differ.described).toEqual([
             [differ.zones[0].id, undefined, 1],

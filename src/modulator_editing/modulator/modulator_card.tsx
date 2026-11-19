@@ -1,5 +1,8 @@
-import type { Modulator } from "spessasynth_core";
-import type { ModulatorView as ModulatorData } from "../../core_backend/entity_views.ts";
+import type { CustomCurve, Modulator } from "spessasynth_core";
+import type {
+    CustomCurveView,
+    ModulatorView as ModulatorData
+} from "../../core_backend/entity_views.ts";
 import type * as React from "react";
 import type { Ref } from "react";
 import "./modulator.css";
@@ -29,9 +32,17 @@ interface ModulatorCardProps {
     isSelected: boolean;
     isOverridingDefault: boolean;
     /**
-     * SF2 mode offers no SFE destinations.
+     * SF2 mode offers no SFe destinations.
      */
-    isSFE: boolean;
+    isSFe: boolean;
+    /**
+     * The bank's custom curves, which SFe mode's curve picker lists.
+     */
+    customCurves: readonly CustomCurveView[];
+    /**
+     * The bank's curve of a view id, read when one is picked.
+     */
+    getCustomCurve: (id: number) => CustomCurve | undefined;
     /**
      * Which curve picker of this modulator is open, if any.
      */
@@ -105,7 +116,9 @@ export function ModulatorCard({
     modulatorNumber,
     isSelected,
     isOverridingDefault,
-    isSFE,
+    isSFe,
+    customCurves,
+    getCustomCurve,
     openCurvePicker,
     onOpenCurvePickerChange,
     onChange,
@@ -135,9 +148,16 @@ export function ModulatorCard({
                     slot === "primary"
                         ? copy.primarySource
                         : copy.secondarySource;
-                source.curveType = c.curveType;
                 source.isBipolar = c.bipolar;
                 source.isNegative = !c.positive;
+                if (c.id === undefined) {
+                    source.curveType = c.curveType;
+                    return;
+                }
+                const curve = getCustomCurve(c.id);
+                if (curve) {
+                    source.curve = curve;
+                }
             });
 
     const sources = [
@@ -204,8 +224,13 @@ export function ModulatorCard({
                         curveType={{
                             curveType: source.curveType,
                             bipolar: source.isBipolar,
-                            positive: !source.isNegative
+                            positive: !source.isNegative,
+                            points: source.curve?.points,
+                            name: source.curve?.name,
+                            id: source.curve?.id
                         }}
+                        isSFe={isSFe}
+                        customCurves={customCurves}
                         onChange={getCurveSetter(slot)}
                     />
                 ))}
@@ -233,7 +258,7 @@ export function ModulatorCard({
             />
 
             <DestinationPicker
-                isSFE={isSFE}
+                isSFe={isSFe}
                 destination={mod.destination}
                 onChange={(destination) =>
                     update((copy) => {

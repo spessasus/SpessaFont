@@ -75,7 +75,7 @@ export function TableHeader({
 
     // The phone sheet for a tap or long press on a zone header, with Modulators added
     const openZoneSheet = (e: MouseEvent, column: ZoneColumn) => {
-        // SF2 mode does not count the hidden SFE modulators
+        // SF2 mode does not count the hidden SFe modulators
         const modulatorCount = getShownModulators(
             column.zone.modulators,
             session.document.format === "sfe"

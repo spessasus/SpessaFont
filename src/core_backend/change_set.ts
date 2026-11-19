@@ -65,7 +65,7 @@ export class ChangeSet {
     }
 
     /**
-     * True when the bank format (SF2 or SFE mode) changed.
+     * True when the bank format (SF2 or SFe mode) changed.
      */
     public get hasFormatChanged() {
         return this.isFormatTouched;

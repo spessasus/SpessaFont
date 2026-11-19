@@ -5,7 +5,7 @@ import { SaveError, type SaveFormat } from "../core_backend/persistence.ts";
 import { showToastDialog } from "../toasts/show_toast_dialog.tsx";
 import { yieldToPaint } from "../utils/yield_to_paint.ts";
 import { logError } from "../utils/core_utils.ts";
-import { hasSFEOnlyData } from "../core_backend/sfe_data.ts";
+import { hasSFeOnlyData } from "../core_backend/sfe_data.ts";
 import { hasBankNumbersLostInSF2 } from "../core_backend/sf2_bank_numbers.ts";
 import { hasTextOutsideLatin1 } from "../core_backend/latin1_text.ts";
 import {
@@ -17,7 +17,7 @@ const FORMAT_NAMES = {
     sf2: "SF2",
     sf3: "SF3",
     dls: "DLS",
-    sf4: "SFE"
+    sf4: "SFe"
 } as const;
 
 const FAILURE_KEYS = {
@@ -46,7 +46,7 @@ export function useSaveBank() {
         session: BankSession,
         format: SaveFormat
     ): Promise<SaveResult> => {
-        const wasSFE = session.document.format === "sfe";
+        const wasSFe = session.document.format === "sfe";
         const id = toast.loading(t("loadingAndSaving.savingSoundBank"));
         // Encoding blocks the main thread, so let the toast show first
         await yieldToPaint();
@@ -74,7 +74,7 @@ export function useSaveBank() {
             return "failed";
         }
         toast.success(t("loadingAndSaving.savedSuccessfully"), { id });
-        if (!wasSFE && session.document.format === "sfe") {
+        if (!wasSFe && session.document.format === "sfe") {
             toast(t("bankInfo.format.switchedOnSave"));
         }
         return "saved";
@@ -136,9 +136,9 @@ export function useSaveBank() {
         const target = session.getWriteFormat(format);
         const { bank } = session.document;
         const warnings = new Array<string>();
-        if (target !== "sf4" && hasSFEOnlyData(bank)) {
+        if (target !== "sf4" && hasSFeOnlyData(bank)) {
             warnings.push(
-                t("menuBarLocale.file.warnSFEData", {
+                t("menuBarLocale.file.warnSFeData", {
                     format: FORMAT_NAMES[target]
                 })
             );

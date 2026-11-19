@@ -179,7 +179,7 @@ describe("SynthClient bank sizes", () => {
         const client = new SynthClient(port, (size) => {
             order.push(`size ${size}`);
         });
-        const ids = { presets: [], instruments: [], samples: [] };
+        const ids = { presets: [], instruments: [], samples: [], curves: [] };
 
         void client.openBank(1, new ArrayBuffer(0), ids, 10);
         void client.openBank(2, new ArrayBuffer(0), ids, 5);

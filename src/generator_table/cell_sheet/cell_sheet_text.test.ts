@@ -129,15 +129,15 @@ describe("describeSheetValue", () => {
 
         expect(describeSheetValue(attenuation, own, globalZone)).toEqual({
             kind: "own",
-            text: "6.52"
+            text: "16.3"
         });
         expect(describeSheetValue(attenuation, stereo, globalZone)).toEqual({
             kind: "inherited",
-            text: "0.00",
+            text: "0.0",
             source: "default"
         });
         expect(describeSheetValue(attenuation, columns[0], globalZone)).toEqual(
-            { kind: "inherited", text: "0.00", source: "default" }
+            { kind: "inherited", text: "0.0", source: "default" }
         );
         expect(
             describeSheetValue(
@@ -156,10 +156,10 @@ describe("describeSheetValue", () => {
         const inheriting = findColumnIn(next.columns, getObjectId(leftZone));
         expect(
             describeSheetValue(attenuation, inheriting, next.globalZone)
-        ).toEqual({ kind: "inherited", text: "0.00", source: "global" });
+        ).toEqual({ kind: "inherited", text: "0.0", source: "global" });
         expect(
             describeSheetValue(attenuation, next.columns[0], next.globalZone)
-        ).toEqual({ kind: "own", text: "0.00" });
+        ).toEqual({ kind: "own", text: "0.0" });
     });
 });
 

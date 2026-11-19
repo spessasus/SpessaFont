@@ -8,15 +8,15 @@ export const MenuBarLocale = {
         saveSF2: "Zapisz SF2",
         saveDLS: "Zapisz DLS",
         saveSF3: "Zapisz SF3",
-        saveSFE: "Zapisz SFE",
+        saveSFe: "Zapisz SFe",
         warnSF2:
             "Ten bank dźwięków zawiera skompresowane próbki. " +
             "Zapisanie go w formacie SF2 bezpowrotnie pogorszy ich jakość. Czy na pewno chcesz kontynuować?",
         warnText:
             "Niektóre nazwy lub informacje o banku zawierają znaki spoza Latin-1 (np. ą, ż lub 日). " +
             "Pliki banków dźwięków nie mogą ich przechować, więc zostaną zapisane błędnie. Czy na pewno chcesz kontynuować?",
-        warnSFEData:
-            "Ten bank dźwięków używa generatorów lub modulatorów SpessaSynth, które zapisują tylko pliki SFE. " +
+        warnSFeData:
+            "Ten bank dźwięków używa generatorów, modulatorów lub pętli SFe, które zapisują tylko pliki SFe. " +
             "Zapis w formacie {{format}} je pominie. Czy na pewno chcesz kontynuować?",
         warnBankNumbers:
             "Niektóre zestawy perkusyjne ustawiają bank MSB lub LSB, albo niektóre presety ustawiają oba. " +

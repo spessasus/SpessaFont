@@ -98,7 +98,8 @@ export class BankSession implements SampleDataSource {
             {
                 presets: bank.presets.map((p) => getObjectId(p)),
                 instruments: bank.instruments.map((i) => getObjectId(i)),
-                samples: bank.samples.map((s) => getObjectId(s))
+                samples: bank.samples.map((s) => getObjectId(s)),
+                curves: bank.customCurves.map((c) => getObjectId(c))
             },
             size
         );
@@ -271,7 +272,7 @@ export class BankSession implements SampleDataSource {
             : 0;
         this.saveHandle = await writeFile(result.binary, name, handle);
         this.writeFormat = target;
-        // The file holds everything SFE does now, so the editor shows it all. Recorded only
+        // The file holds everything SFe does now, so the editor shows it all. Recorded only
         // once the file is written, a failed write leaves the format alone
         if (target === "sf4" && this.document.format !== "sfe") {
             this.history.do([

@@ -63,8 +63,7 @@ function renderEditor(
 ) {
     const session = createTestSession();
     const [instrument] = session.document.instruments;
-    instrument.globalZone.modulators.length = 0;
-    instrument.globalZone.modulators.push(
+    instrument.globalZone.setModulators([
         new Modulator(
             new ModulatorSource(MIDIControllers.modulationWheel, 0, true),
             new ModulatorSource(),
@@ -72,9 +71,9 @@ function renderEditor(
             amount,
             0
         )
-    );
+    ]);
     if (secondAmount !== undefined) {
-        instrument.globalZone.modulators.push(
+        instrument.globalZone.addModulators(
             new Modulator(
                 new ModulatorSource(MIDIControllers.modulationWheel, 0, true),
                 new ModulatorSource(),

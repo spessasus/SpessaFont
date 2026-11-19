@@ -23,6 +23,14 @@ describe("curve shape", () => {
         expect(getCurveValue(toggle, 0.6)).toBe(1);
     });
 
+    it("turns the switch on at the middle, and the negative one off there", () => {
+        const toggle = { ...linear, curveType: ModulatorCurveTypes.switch };
+        expect(getCurveValue(toggle, 0.5)).toBe(1);
+        const negative = { ...toggle, positive: false };
+        expect(getCurveValue(negative, 0.5)).toBe(0);
+        expect(getCurveValue(negative, 0.4)).toBe(1);
+    });
+
     it("draws a positive linear curve from the bottom left to the top right", () => {
         const points = getCurvePoints(linear).split(" ");
         expect(points[0]).toBe("15,85");

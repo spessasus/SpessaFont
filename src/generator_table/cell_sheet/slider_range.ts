@@ -6,6 +6,9 @@ import { isRangeGenerator } from "../cell/range_generator.ts";
 import { isOffsetGenerator } from "../cell/offset_generator.ts";
 import { type CellContext, createSetCellActions } from "../cell/cell_values.ts";
 
+const INSTANT_TIME = -32_768;
+const SHORTEST_TIME = -12_000;
+
 /**
  * The slider's range for a row, in generator units with a step of 1, so exponential rows
  * (timecents, absolute cents) keep their perceptual scale. Undefined for rows without a
@@ -18,7 +21,16 @@ export function getSliderRange(row: GeneratorRowType, isInstrument: boolean) {
         !isRangeGenerator(generator) &&
         !isOffsetGenerator(generator) &&
         !getGeneratorOptions(generator);
-    return hasSlider ? getGeneratorRange(generator, isInstrument) : undefined;
+    if (!hasSlider) {
+        return undefined;
+    }
+    const { min, max } = getGeneratorRange(generator, isInstrument);
+    // Envelope and LFO times play the same from -32767 to -12000 (1 ms), only -32768 is
+    // instant. The slider leaves that dead stretch out, typing 0 seconds still gives -32768
+    return {
+        min: isInstrument && min === INSTANT_TIME ? SHORTEST_TIME : min,
+        max
+    };
 }
 
 /**

@@ -14,17 +14,17 @@ export const PRESET_ROWS: GeneratorRowType[] = [
     },
     {
         generator: GeneratorTypes.initialAttenuation,
-        fromGenerator: (v) => v * 0.04,
-        toGenerator: (v) => v / 0.04,
-        unit: "dB",
-        precision: 2
-    },
-    {
-        generator: GeneratorTypes.amplitude,
         fromGenerator: (v) => v / 10,
         toGenerator: (v) => v * 10,
+        unit: "dB",
+        precision: 1
+    },
+    {
+        generator: GeneratorTypes.gain,
+        fromGenerator: cb2db,
+        toGenerator: db2cb,
         precision: 1,
-        unit: "percent"
+        unit: "dB"
     },
     {
         generator: GeneratorTypes.pan,
@@ -49,6 +49,13 @@ export const PRESET_ROWS: GeneratorRowType[] = [
     },
     {
         generator: GeneratorTypes.initialFilterQ,
+        fromGenerator: cb2db,
+        toGenerator: db2cb,
+        precision: 1,
+        unit: "dB"
+    },
+    {
+        generator: GeneratorTypes.filterQOffset,
         fromGenerator: cb2db,
         toGenerator: db2cb,
         precision: 1,
@@ -216,14 +223,6 @@ export const PRESET_ROWS: GeneratorRowType[] = [
         unit: "cent"
     },
     {
-        generator: GeneratorTypes.modLfoRate,
-        highlight: true,
-        fromGenerator: (v) => v / 100,
-        toGenerator: (v) => v * 100,
-        precision: 2,
-        unit: "Hz"
-    },
-    {
         generator: GeneratorTypes.modLfoStartPhase,
         highlight: true,
         unit: "degree"
@@ -247,7 +246,7 @@ export const PRESET_ROWS: GeneratorRowType[] = [
         unit: "dB"
     },
     {
-        generator: GeneratorTypes.modLfoAmplitudeDepth,
+        generator: GeneratorTypes.modLfoToAmplitude,
         highlight: true,
         fromGenerator: (v) => v / 10,
         toGenerator: (v) => v * 10,
@@ -265,13 +264,6 @@ export const PRESET_ROWS: GeneratorRowType[] = [
     {
         generator: GeneratorTypes.freqVibLFO,
         unit: "cent"
-    },
-    {
-        generator: GeneratorTypes.vibLfoRate,
-        fromGenerator: (v) => v / 100,
-        toGenerator: (v) => v * 100,
-        precision: 2,
-        unit: "Hz"
     },
     {
         generator: GeneratorTypes.vibLfoStartPhase,
@@ -293,7 +285,7 @@ export const PRESET_ROWS: GeneratorRowType[] = [
         unit: "dB"
     },
     {
-        generator: GeneratorTypes.vibLfoAmplitudeDepth,
+        generator: GeneratorTypes.vibLfoToAmplitude,
         fromGenerator: (v) => v / 10,
         toGenerator: (v) => v * 10,
         precision: 1,
@@ -309,6 +301,14 @@ export const PRESET_ROWS: GeneratorRowType[] = [
     },
     {
         generator: GeneratorTypes.reverbEffectsSend,
+        highlight: true,
+        fromGenerator: (v) => v / 10,
+        toGenerator: (v) => v * 10,
+        precision: 1,
+        unit: "percent"
+    },
+    {
+        generator: GeneratorTypes.variationEffectsSend,
         highlight: true,
         fromGenerator: (v) => v / 10,
         toGenerator: (v) => v * 10,

@@ -27,13 +27,13 @@ export const BankInfoLocale = {
     format: {
         label: "Format",
         sf2: "SoundFont 2",
-        sfe: "SFE",
-        hideSFEData:
-            "Ten bank używa generatorów lub modulatorów SFE. Tryb SoundFont 2 ukrywa je, ale zapis jako cokolwiek innego niż SFE bezpowrotnie je usuwa!",
+        sfe: "SFe",
+        hideSFeData:
+            "Ten bank używa generatorów lub modulatorów SFe. Tryb SoundFont 2 ukrywa je, ale zapis jako cokolwiek innego niż SFe bezpowrotnie je usuwa!",
         switchToSF2: "Przełącz na SoundFont 2",
         switchedOnPaste:
-            "Dodane elementy używają danych SFE, więc bank jest teraz w trybie SFE.",
-        switchedOnSave: "Zapisano jako SFE, więc bank jest teraz w trybie SFE."
+            "Dodane elementy używają danych SFe, więc bank jest teraz w trybie SFe.",
+        switchedOnSave: "Zapisano jako SFe, więc bank jest teraz w trybie SFe."
     },
     checkButton: "Problemy:",
     check: {
@@ -54,15 +54,15 @@ export const BankInfoLocale = {
         longName:
             "Dłuższa niż {{length}} znaków. Odtwarzacze inne niż SpessaSynth pokazują w plikach SF2 i SF3 tylko pierwsze {{length}}:",
         cutName:
-            "Dłuższa niż {{length}} znaków, zapis SF2, SF3 i SFE ją skraca (DLS zachowuje całą nazwę):",
+            "Dłuższa niż {{length}} znaków, zapis SF2, SF3 i SFe ją skraca (DLS zachowuje całą nazwę):",
         nonLatin1Name: "Ma znaki, których zapisane pliki nie zachowają:",
         nonLatin1Info:
             "Informacje o banku mają znaki, których zapisane pliki nie zachowają.",
         bankNumberLost: "Ma numery banku, które zapis SF2 lub SF3 zmieni:",
         sfeOnlyData:
-            "Używa generatorów lub modulatorów SpessaSynth, które zachowuje tylko zapis SFE:",
+            "Używa generatorów, modulatorów lub pętli SFe, które zachowuje tylko zapis SFe:",
         sfeDefaultModulators:
-            "Domyślne modulatory sterują generatorami SpessaSynth, które zachowuje tylko zapis SFE.",
+            "Niektóre domyślne modulatory używają generatorów lub krzywych SFe, które zachowuje tylko zapis SFe.",
         linkedModulator:
             "Ma połączone modulatory, których SpessaSynth nie odtwarza, a zapis je psuje:",
         showAll: "Pokaż wszystkie ({{count}})"

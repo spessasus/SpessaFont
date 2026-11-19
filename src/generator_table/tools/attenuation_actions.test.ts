@@ -12,8 +12,8 @@ import {
 } from "./attenuation_actions.ts";
 
 const ATTENUATION = GeneratorTypes.initialAttenuation;
-// What the table shows is centibels times 0.04, so a shown dB is 25 stored units
-const DB = 25;
+// The table shows centibels in dB, so a shown dB is 10 stored units
+const DB = 10;
 
 function getAttenuations(instrument: BasicInstrument) {
     return instrument.zones.map((z) => z.getGenerator(ATTENUATION, null));

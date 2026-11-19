@@ -40,8 +40,8 @@ export function getInitialWriteFormat(bank: BasicSoundBank): WriteFormat {
 }
 
 /**
- * The format a save writes. "auto" means SFE in SFE mode, and otherwise the last one, except
- * that SF2 mode does not write SFE.
+ * The format a save writes. "auto" means SFe in SFe mode, and otherwise the last one, except
+ * that SF2 mode does not write SFe.
  */
 export function resolveWriteFormat(
     format: SaveFormat,

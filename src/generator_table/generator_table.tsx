@@ -80,8 +80,8 @@ export function GeneratorTable({
         session.store,
         (s) => s.views.instruments
     );
-    const isSFE = useBankSnapshot(session.store, (s) => s.format === "sfe");
-    const rows = getShownRows(allRows, isSFE);
+    const isSFe = useBankSnapshot(session.store, (s) => s.format === "sfe");
+    const rows = getShownRows(allRows, isSFe);
     const defaultModulators = useBankSnapshot(
         session.store,
         (s) => s.views.defaultModulators
@@ -339,7 +339,7 @@ export function GeneratorTable({
                                     : undefined
                             }
                             onEditModulators={openModulators}
-                            isSFE={isSFE}
+                            isSFe={isSFe}
                         />
                     </thead>
                     <GeneratorTableBody

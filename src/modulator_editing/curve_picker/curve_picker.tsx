@@ -2,22 +2,31 @@ import "./curve_picker.css";
 import { type RefObject, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useEventListener } from "../../hooks/use_event_listener.ts";
+import type { CustomCurveView } from "../../core_backend/entity_views.ts";
+import { CurveChooser } from "./curve_chooser.tsx";
 import { CurvePicture } from "./curve_picture.tsx";
 import { getCurveLabel } from "./curve_label.ts";
-import { ALL_CURVE_TYPES, curveKey } from "./curve_shape.ts";
+import { curveKey } from "./curve_shape.ts";
+import { StandardCurves } from "./standard_curves.tsx";
 import type { SpessaFontModulatorCurveType } from "./curve_shape.ts";
 import { CurveSheet } from "./curve_sheet.tsx";
 import { useLayout } from "../../layout/layout_context.ts";
 import { Presence } from "../../presence/presence.tsx";
 
+const PICK_CLASS =
+    "plain_button modulator_curve_pick pretty_outline responsive_button";
+
 interface CurveOptionsProps {
     label: string;
-    currentKey: string;
+    current: SpessaFontModulatorCurveType;
+    isSFe: boolean;
+    customCurves: readonly CustomCurveView[];
     /**
      * The whole picker, toggle included. A press outside of it closes the options.
      */
     pickerRef: RefObject<HTMLDivElement | null>;
     onPick: (c: SpessaFontModulatorCurveType) => void;
+    onChange: (c: SpessaFontModulatorCurveType) => void;
     onClose: () => void;
 }
 
@@ -26,12 +35,14 @@ interface CurveOptionsProps {
  */
 function CurveOptions({
     label,
-    currentKey,
+    current,
+    isSFe,
+    customCurves,
     pickerRef,
     onPick,
+    onChange,
     onClose
 }: CurveOptionsProps) {
-    const { t } = useTranslation();
     useEventListener(document, "pointerdown", (e) => {
         if (
             e.target instanceof Node &&
@@ -46,23 +57,22 @@ function CurveOptions({
             role={"group"}
             aria-label={label}
         >
-            {ALL_CURVE_TYPES.map((c) => {
-                const key = curveKey(c);
-                const curveLabel = getCurveLabel(t, c);
-                return (
-                    <button
-                        type={"button"}
-                        key={key}
-                        aria-pressed={key === currentKey}
-                        aria-label={curveLabel}
-                        title={curveLabel}
-                        className={`plain_button modulator_curve_pick pretty_outline responsive_button ${key === currentKey ? "selected" : ""}`}
-                        onClick={() => onPick(c)}
-                    >
-                        <CurvePicture curve={c} />
-                    </button>
-                );
-            })}
+            {isSFe ? (
+                <CurveChooser
+                    current={current}
+                    customCurves={customCurves}
+                    gridClassName="modulator_curve_grid"
+                    pickClassName={PICK_CLASS}
+                    onPick={onPick}
+                    onChange={onChange}
+                />
+            ) : (
+                <StandardCurves
+                    currentKey={curveKey(current)}
+                    pickClassName={PICK_CLASS}
+                    onPick={onPick}
+                />
+            )}
         </div>
     );
 }
@@ -73,6 +83,11 @@ interface CurvePickerProps {
      */
     label: string;
     curveType: SpessaFontModulatorCurveType;
+    /**
+     * SFe mode also offers the bank's custom curves.
+     */
+    isSFe: boolean;
+    customCurves: readonly CustomCurveView[];
     onChange: (c: SpessaFontModulatorCurveType) => void;
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
@@ -85,6 +100,8 @@ interface CurvePickerProps {
 export function CurvePicker({
     label,
     curveType,
+    isSFe,
+    customCurves,
     onChange,
     isOpen,
     onOpenChange
@@ -137,16 +154,22 @@ export function CurvePicker({
                     layout === "phone" ? (
                         <CurveSheet
                             label={label}
-                            currentKey={currentKey}
+                            current={curveType}
+                            isSFe={isSFe}
+                            customCurves={customCurves}
                             onPick={handlePick}
+                            onChange={onChange}
                             onClose={() => onOpenChange(false)}
                         />
                     ) : (
                         <CurveOptions
                             label={label}
-                            currentKey={currentKey}
+                            current={curveType}
+                            isSFe={isSFe}
+                            customCurves={customCurves}
                             pickerRef={pickerRef}
                             onPick={handlePick}
+                            onChange={onChange}
                             // A press outside keeps the focus where it went
                             onClose={() => onOpenChange(false)}
                         />

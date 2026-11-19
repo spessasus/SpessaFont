@@ -1,0 +1,38 @@
+:root[data-layout="phone"] .custom_curves {
+    gap: 0.5rem;
+    padding: 0.25rem var(--phone-gutter) 1rem;
+}
+
+:root[data-layout="phone"] .custom_curves_controls {
+    flex-wrap: wrap;
+}
+
+:root[data-layout="phone"] .custom_curves_search {
+    flex: 1 0 100%;
+    min-height: var(--phone-touch);
+    font-size: var(--phone-text-body);
+}
+
+:root[data-layout="phone"] .custom_curves_switch {
+    min-height: var(--phone-touch);
+    font-size: var(--phone-text-body);
+}
+
+:root[data-layout="phone"] .custom_curves_list {
+    max-height: 40vh;
+}
+
+:root[data-layout="phone"] .custom_curves_pick {
+    min-height: var(--phone-touch);
+    font-size: var(--phone-text-body);
+}
+
+:root[data-layout="phone"] .custom_curves_pick .modulator_curve {
+    width: 3rem;
+    height: 3rem;
+}
+
+:root[data-layout="phone"] .custom_curves_switch input[type="checkbox"] {
+    width: 1.5rem;
+    height: 1.5rem;
+}

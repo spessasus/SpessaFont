@@ -1,5 +1,6 @@
 import type {
     BankViews,
+    CustomCurveView,
     InstrumentView,
     ModulatorView,
     PresetView,
@@ -33,6 +34,10 @@ export interface ViewDiff {
      * Only when they changed.
      */
     readonly defaultModulators: readonly ModulatorView[] | undefined;
+    /**
+     * Only when the list or a curve changed.
+     */
+    readonly customCurves: readonly CustomCurveView[] | undefined;
 }
 
 function diffElements<T>(
@@ -86,7 +91,11 @@ export function diffBankViews(previous: BankViews, next: BankViews): ViewDiff {
         defaultModulators:
             previous.defaultModulators === next.defaultModulators
                 ? undefined
-                : next.defaultModulators
+                : next.defaultModulators,
+        customCurves:
+            previous.customCurves === next.customCurves
+                ? undefined
+                : next.customCurves
     };
 }
 

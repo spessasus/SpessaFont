@@ -8,6 +8,7 @@ import { BackStackContext } from "../../phone_shell/back_stack_context.ts";
 import { BackStack } from "../../phone_shell/back_stack.ts";
 import { CurvePicker } from "./curve_picker.tsx";
 import type { SpessaFontModulatorCurveType } from "./curve_shape.ts";
+import type { CustomCurveView } from "../../core_backend/entity_views.ts";
 
 const CURRENT: SpessaFontModulatorCurveType = {
     curveType: ModulatorCurveTypes.linear,
@@ -15,7 +16,31 @@ const CURRENT: SpessaFontModulatorCurveType = {
     bipolar: false
 };
 
-function renderPicker(layout: LayoutMode, isOpen: boolean) {
+const CURVES: readonly CustomCurveView[] = [
+    {
+        id: 7,
+        name: "Attack time",
+        points: [
+            { x: 0, y: 0 },
+            { x: 16_384, y: 16_384 }
+        ]
+    },
+    {
+        id: 8,
+        name: "Release time",
+        points: [
+            { x: 0, y: 16_384 },
+            { x: 16_384, y: 0 }
+        ]
+    }
+];
+
+function renderPicker(
+    layout: LayoutMode,
+    isOpen: boolean,
+    isSFe = false,
+    curveType = CURRENT
+) {
     const onChange = vi.fn();
     const onOpenChange = vi.fn();
     render(
@@ -29,7 +54,9 @@ function renderPicker(layout: LayoutMode, isOpen: boolean) {
             >
                 <CurvePicker
                     label="Primary source curve"
-                    curveType={CURRENT}
+                    curveType={curveType}
+                    isSFe={isSFe}
+                    customCurves={CURVES}
                     onChange={onChange}
                     isOpen={isOpen}
                     onOpenChange={onOpenChange}
@@ -77,5 +104,70 @@ describe("CurvePicker", () => {
         fireEvent.click(current);
         expect(onChange).not.toHaveBeenCalled();
         expect(onOpenChange).toHaveBeenCalledWith(false);
+    });
+
+    it("offers the bank's custom curves in SFe mode only", () => {
+        renderPicker("desktop", true);
+        expect(screen.queryByRole("radiogroup")).toBeNull();
+        cleanup();
+        const { onChange, onOpenChange } = renderPicker("desktop", true, true);
+        // A standard curve opens on the standard ones
+        expect(
+            document.querySelectorAll(".modulator_curve_grid button")
+        ).toHaveLength(16);
+        fireEvent.click(
+            screen.getByRole("radio", { name: "modulatorLocale.curves.custom" })
+        );
+        expect(document.querySelector(".modulator_curve_grid")).toBeNull();
+        expect(
+            document.querySelectorAll(".custom_curves_list button")
+        ).toHaveLength(2);
+        fireEvent.change(screen.getByRole("searchbox"), {
+            target: { value: "rel" }
+        });
+        const picks = document.querySelectorAll(".custom_curves_list button");
+        expect(picks).toHaveLength(1);
+        // The switches say what the pick sets
+        fireEvent.click(
+            screen.getByRole("checkbox", {
+                name: "modulatorLocale.curves.negativeSwitch"
+            })
+        );
+        expect(onChange).not.toHaveBeenCalled();
+        fireEvent.click(picks[0]);
+        expect(onChange).toHaveBeenCalledWith(
+            expect.objectContaining({
+                curveType: ModulatorCurveTypes.custom,
+                id: 8,
+                positive: false,
+                bipolar: false
+            })
+        );
+        expect(onOpenChange).toHaveBeenCalledWith(false);
+    });
+
+    it("opens on a source's custom curve and changes its polarity in place", () => {
+        const { onChange, onOpenChange } = renderPicker("desktop", true, true, {
+            curveType: ModulatorCurveTypes.custom,
+            positive: true,
+            bipolar: false,
+            id: 7,
+            name: CURVES[0].name,
+            points: CURVES[0].points
+        });
+        const pressed = [
+            ...document.querySelectorAll(".custom_curves_list button")
+        ].filter((b) => b.getAttribute("aria-pressed") === "true");
+        expect(pressed).toHaveLength(1);
+        expect(pressed[0].textContent).toBe("Attack time");
+        fireEvent.click(
+            screen.getByRole("checkbox", {
+                name: "modulatorLocale.curves.bipolarSwitch"
+            })
+        );
+        expect(onChange).toHaveBeenCalledWith(
+            expect.objectContaining({ id: 7, bipolar: true, positive: true })
+        );
+        expect(onOpenChange).not.toHaveBeenCalled();
     });
 });

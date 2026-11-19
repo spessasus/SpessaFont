@@ -1,8 +1,4 @@
-import {
-    type BasicInstrument,
-    type BasicPreset,
-    Modulator
-} from "spessasynth_core";
+import { type BasicInstrument, BasicPreset, Modulator } from "spessasynth_core";
 import { ModulatorList } from "../../modulator_editing/modulator_list/modulator_list.tsx";
 import "./modulator_edit.css";
 import { useTranslation } from "react-i18next";
@@ -14,8 +10,10 @@ import { findZone, getColumnZones } from "../cell/column_zones.ts";
 import { useLayout } from "../../layout/layout_context.ts";
 import { ModulatorLayerHeader } from "./modulator_layer_header.tsx";
 import { useBankSnapshot } from "../../hooks/use_bank_snapshot.ts";
-import { useSFESwitch } from "../../hooks/use_sfe_switch.ts";
-import { isSFEGenerator } from "../../core_backend/sfe_data.ts";
+import { useSFeSwitch } from "../../hooks/use_sfe_switch.ts";
+import { useCustomCurves } from "../../hooks/use_custom_curves.ts";
+import { isLostSFeModulator } from "../../core_backend/sfe_data.ts";
+import { syncResonanceCompensators } from "../../core_backend/resonance_compensation.ts";
 
 interface ModulatorEditorProps {
     name: string;
@@ -38,20 +36,25 @@ export function ModulatorEditor({
     const { t } = useTranslation();
     const { session, apply } = useBankEditor();
     const layout = useLayout();
-    const isSFE = useBankSnapshot(session.store, (s) => s.format === "sfe");
-    const applyWithSFESwitch = useSFESwitch();
+    const isSFe = useBankSnapshot(session.store, (s) => s.format === "sfe");
+    const applyWithSFeSwitch = useSFeSwitch();
+    const { customCurves, getCustomCurve } = useCustomCurves(session);
     const getModulators = () =>
         findZone(element, column.zone.id)?.modulators ?? [];
 
     // A column has a stereo partner only while both zones have the same modulators (the
     // table splits the pair otherwise), so the partner gets copies of the same list
-    const setModulators = (mods: Modulator[], mergeKey?: string) => {
+    const setModulators = (shown: Modulator[], mergeKey?: string) => {
         const before = getModulators();
-        // Only a paste brings one in, SF2 mode offers no SFE destination
-        const isAddingSFEData = mods.some(
-            (m) => isSFEGenerator(m.destination) && !before.includes(m)
+        // SF2 mode hides the CC 71 to gain twins, which follow the shown modulators
+        const mods = isSFe
+            ? shown
+            : syncResonanceCompensators(shown, element instanceof BasicPreset);
+        // Only a paste brings one in, SF2 mode offers no SFe destination
+        const isAddingSFeData = mods.some(
+            (m) => isLostSFeModulator(m) && !before.includes(m)
         );
-        applyWithSFESwitch(
+        applyWithSFeSwitch(
             session,
             getColumnZones(element, column).map(
                 ({ zone }, i) =>
@@ -61,7 +64,7 @@ export function ModulatorEditor({
                         i === 0 ? mods : mods.map((m) => Modulator.copyFrom(m))
                     )
             ),
-            isAddingSFEData,
+            isAddingSFeData,
             (group) => apply(group, mergeKey)
         );
     };
@@ -92,7 +95,9 @@ export function ModulatorEditor({
                 modulatorList={column.zone.modulators}
                 getModulators={getModulators}
                 onModulatorListChange={setModulators}
-                isSFE={isSFE}
+                isSFe={isSFe}
+                customCurves={customCurves}
+                getCustomCurve={getCustomCurve}
                 defaultModulators={defaultModulators}
                 renderHeader={
                     layout === "phone"

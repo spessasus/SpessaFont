@@ -55,7 +55,9 @@ function renderList(layout: "phone" | "desktop" = "phone", count = 1) {
                             getModulators={() => modulators}
                             onModulatorListChange={vi.fn()}
                             defaultModulators={[]}
-                            isSFE={true}
+                            isSFe={true}
+                            customCurves={[]}
+                            getCustomCurve={() => undefined}
                         />
                     </TranslatedOptionsContext>
                 </ClipboardContext>
@@ -97,7 +99,9 @@ function renderInShell(isCoveringEditor: boolean) {
                                 getModulators={() => modulators}
                                 onModulatorListChange={vi.fn()}
                                 defaultModulators={[]}
-                                isSFE={true}
+                                isSFe={true}
+                                customCurves={[]}
+                                getCustomCurve={() => undefined}
                             />
                         </TranslatedOptionsContext>
                     </ClipboardContext>
@@ -291,9 +295,9 @@ describe("ModulatorList", () => {
         ).toBeNull();
     });
 
-    it("hides SFE modulators in SF2 mode and keeps them when the rest is deleted", () => {
+    it("hides SFe modulators in SF2 mode and keeps them when the rest is deleted", () => {
         const sfeModulator = createModulator();
-        sfeModulator.destination = GeneratorTypes.amplitude;
+        sfeModulator.destination = GeneratorTypes.gain;
         const modulators = [createModulator(), sfeModulator, createModulator()];
         const onChange = vi.fn();
         render(
@@ -316,7 +320,9 @@ describe("ModulatorList", () => {
                                 getModulators={() => modulators}
                                 onModulatorListChange={onChange}
                                 defaultModulators={[]}
-                                isSFE={false}
+                                isSFe={false}
+                                customCurves={[]}
+                                getCustomCurve={() => undefined}
                             />
                         </TranslatedOptionsContext>
                     </ClipboardContext>

@@ -36,7 +36,7 @@ describe("SplitZonesAction", () => {
         zone.keyRange = { min: 36, max: 38 };
         other.keyRange = { min: 60, max: 60 };
         zone.setGenerator(GeneratorTypes.initialAttenuation, 75);
-        zone.modulators.push(
+        zone.addModulators(
             Modulator.copyFrom(session.document.bank.defaultModulators[0])
         );
         publishSetUp(session);

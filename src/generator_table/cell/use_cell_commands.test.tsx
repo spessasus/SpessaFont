@@ -79,7 +79,7 @@ describe("useCellCommands", () => {
         act(() => {
             result.current.copyCells(columns[0]);
         });
-        expect(writeText).toHaveBeenCalledWith("6.00\t8.00");
+        expect(writeText).toHaveBeenCalledWith("15.0\t20.0");
         expect(clipboard.cells?.values).toEqual([150, 200]);
     });
 
@@ -93,7 +93,7 @@ describe("useCellCommands", () => {
             instrument.zones.map((z) =>
                 z.getGenerator(GeneratorTypes.initialAttenuation, null)
             )
-        ).toEqual([100, 100]);
+        ).toEqual([40, 40]);
     });
 
     it("keeps the desktop menu entries on the same code", () => {
@@ -112,6 +112,6 @@ describe("useCellCommands", () => {
         act(() => {
             copyEntry.onSelect();
         });
-        expect(writeText).toHaveBeenCalledWith("6.00\t8.00");
+        expect(writeText).toHaveBeenCalledWith("15.0\t20.0");
     });
 });

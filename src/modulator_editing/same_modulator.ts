@@ -1,7 +1,27 @@
 import type {
+    CustomCurveView,
     ModulatorSourceView,
     ModulatorView
 } from "../core_backend/entity_views.ts";
+
+/**
+ * Custom curves are the same when their points are, as in core.
+ */
+function isSameCurve(
+    a: CustomCurveView | undefined,
+    b: CustomCurveView | undefined
+) {
+    if (a === b) {
+        return true;
+    }
+    if (!a || !b) {
+        return false;
+    }
+    return (
+        a.points.length === b.points.length &&
+        a.points.every((p, i) => p.x === b.points[i].x && p.y === b.points[i].y)
+    );
+}
 
 function isSameSource(a: ModulatorSourceView, b: ModulatorSourceView) {
     return (
@@ -9,7 +29,8 @@ function isSameSource(a: ModulatorSourceView, b: ModulatorSourceView) {
         a.isCC === b.isCC &&
         a.isBipolar === b.isBipolar &&
         a.isNegative === b.isNegative &&
-        a.curveType === b.curveType
+        a.curveType === b.curveType &&
+        isSameCurve(a.curve, b.curve)
     );
 }
 

@@ -8,8 +8,8 @@ import {
     isPreset,
     isSample
 } from "../menu_list/menu_selection.ts";
-import { useSFESwitch } from "./use_sfe_switch.ts";
-import { hasCopiedSFEData } from "../core_backend/sfe_data.ts";
+import { useSFeSwitch } from "./use_sfe_switch.ts";
+import { hasCopiedSFeData } from "../core_backend/sfe_data.ts";
 
 /**
  * Copies elements of one bank into another, like a paste: a drop on a tab, or "Copy to bank…"
@@ -18,7 +18,7 @@ import { hasCopiedSFEData } from "../core_backend/sfe_data.ts";
 export function useCopyToBank() {
     const { t } = useTranslation();
     const { clipboard } = useClipboard();
-    const applyWithSFESwitch = useSFESwitch();
+    const applyWithSFeSwitch = useSFeSwitch();
     return (
         source: BankSession,
         target: BankSession,
@@ -42,10 +42,10 @@ export function useCopyToBank() {
             { presets, instruments, samples: copied.filter(isSample) },
             source
         );
-        applyWithSFESwitch(
+        applyWithSFeSwitch(
             target,
             actions,
-            hasCopiedSFEData([...presets, ...instruments]),
+            hasCopiedSFeData([...presets, ...instruments]),
             (group) => target.history.do(group)
         );
         const name = target.store.getSnapshot().info.name;

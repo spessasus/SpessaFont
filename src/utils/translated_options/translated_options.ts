@@ -11,19 +11,20 @@ export interface SelectOption {
 
 /**
  * Modulator destinations in the order the picker lists them.
- * The SpessaSynth generators (61 and up) sit next to their SF2 relatives. The switches among
- * them (ignore note off and the LFO waveforms) are left out, like the looping mode, the root key,
+ * The SFe generators (61 and up) sit next to their SF2 relatives. The ones that pick one of a
+ * few values (the filter type, ignore note off and the LFO waveforms) are left out, like the looping mode, the root key,
  * the exclusive class and the fixed key and velocity, which core reads before modulation.
  */
 const DESTINATION_ORDER = [
     GeneratorTypes.initialAttenuation,
-    GeneratorTypes.amplitude,
+    GeneratorTypes.gain,
     GeneratorTypes.pan,
     GeneratorTypes.coarseTune,
     GeneratorTypes.fineTune,
     GeneratorTypes.scaleTuning,
     GeneratorTypes.initialFilterFc,
     GeneratorTypes.initialFilterQ,
+    GeneratorTypes.filterQOffset,
     GeneratorTypes.maxFilterFc,
     GeneratorTypes.delayVolEnv,
     GeneratorTypes.attackVolEnv,
@@ -58,23 +59,22 @@ const DESTINATION_ORDER = [
     GeneratorTypes.delayModLFO,
     GeneratorTypes.fadeModLFO,
     GeneratorTypes.freqModLFO,
-    GeneratorTypes.modLfoRate,
     GeneratorTypes.modLfoStartPhase,
     GeneratorTypes.modLfoToPitch,
     GeneratorTypes.modLfoToFilterFc,
     GeneratorTypes.modLfoToVolume,
-    GeneratorTypes.modLfoAmplitudeDepth,
+    GeneratorTypes.modLfoToAmplitude,
     GeneratorTypes.delayVibLFO,
     GeneratorTypes.fadeVibLFO,
     GeneratorTypes.freqVibLFO,
-    GeneratorTypes.vibLfoRate,
     GeneratorTypes.vibLfoStartPhase,
     GeneratorTypes.vibLfoToPitch,
     GeneratorTypes.vibLfoToFilterFc,
     GeneratorTypes.vibLfoToVolume,
-    GeneratorTypes.vibLfoAmplitudeDepth,
+    GeneratorTypes.vibLfoToAmplitude,
     GeneratorTypes.chorusEffectsSend,
     GeneratorTypes.reverbEffectsSend,
+    GeneratorTypes.variationEffectsSend,
     GeneratorTypes.delayVoice,
     GeneratorTypes.startAddrsOffset,
     GeneratorTypes.startAddrsCoarseOffset,
@@ -106,7 +106,13 @@ function isControllerLocaleKey(
     return Object.hasOwn(MIDIControllersLocale, name);
 }
 
-function getControllerName(cc: number, t: TFunction) {
+function getControllerName(cc: number, t: TFunction): string {
+    // CC 33 to 63 are the low bytes of CC 1 to 31, which core names apart
+    if (cc > 32 && cc < 64) {
+        return t("MIDIControllersLocale.lsb", {
+            name: getControllerName(cc - 32, t)
+        });
+    }
     const name = (
         Object.keys(MIDIControllers) as (keyof typeof MIDIControllers)[]
     ).find((key) => MIDIControllers[key] === cc);

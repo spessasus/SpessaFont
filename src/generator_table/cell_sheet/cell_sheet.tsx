@@ -28,7 +28,8 @@ import {
 import { isRangeGenerator } from "../cell/range_generator.ts";
 import { useCellCommands } from "../cell/use_cell_commands.ts";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
-import { getGeneratorOptions } from "../generator_options.ts";
+import { getShownGeneratorOptions } from "../generator_options.ts";
+import { useBankSnapshot } from "../../hooks/use_bank_snapshot.ts";
 import {
     GENERATOR_GROUP_ORDER,
     GROUP_OF_GENERATOR
@@ -106,7 +107,8 @@ export function CellSheet({
 }: CellSheetProps) {
     const { t } = useTranslation();
     const { openMenu } = useContextMenu();
-    const { apply } = useBankEditor();
+    const { apply, session } = useBankEditor();
+    const isSFe = useBankSnapshot(session.store, (s) => s.format === "sfe");
     const labelId = useId();
     // Lives here so the editor can remount on a changed range and keep its mode
     const [rangeMode, setRangeMode] = useState<"set" | "shift">("set");
@@ -229,7 +231,7 @@ export function CellSheet({
         checked: checkedColumns.length,
         total: columns.length
     });
-    const options = getGeneratorOptions(generator);
+    const options = getShownGeneratorOptions(generator, isSFe);
     const sharedRange = getSharedRangeFields(
         checkedColumns.flatMap((c) =>
             getViewZones(c).map((zone) => readViewCell(zone, generator))

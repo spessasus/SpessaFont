@@ -3,7 +3,7 @@ export const GeneratorLocale = {
     velocityRange: "Velocity Range", // not modulated
 
     attenuation: "Attenuation",
-    amplitude: "Amplitude",
+    gain: "Gain",
     pan: "Pan",
     loopingMode: "Looping Mode", // not modulated
     overridingRootKey: "Root Key", // not modulated
@@ -12,8 +12,10 @@ export const GeneratorLocale = {
     centTuning: "Cent Tuning",
     scaleTuning: "Scale Tuning", // not modulated
 
+    filterType: "Filter Type", // not modulated
     filterCutoff: "Filter Cutoff",
     filterResonance: "Filter Resonance",
+    filterResonanceOffset: "Filter Resonance Offset",
     filterCutoffLimit: "Filter Cutoff Limit",
 
     volEnvDelay: "Vol Env Delay",
@@ -52,7 +54,6 @@ export const GeneratorLocale = {
     modLfoDelay: "Mod LFO Delay",
     modLfoFade: "Mod LFO Fade",
     modLfoFrequency: "Mod LFO Frequency",
-    modLfoRateOffset: "Mod LFO Rate Offset",
     modLfoWaveform: "Mod LFO Waveform", // not modulated
     modLfoStartPhase: "Mod LFO Start Phase",
     modLfoToPitch: "Mod LFO -> Pitch",
@@ -63,7 +64,6 @@ export const GeneratorLocale = {
     vibLfoDelay: "Vib LFO Delay",
     vibLfoFade: "Vib LFO Fade",
     vibLfoFrequency: "Vib LFO Frequency",
-    vibLfoRateOffset: "Vib LFO Rate Offset",
     vibLfoWaveform: "Vib LFO Waveform", // not modulated
     vibLfoStartPhase: "Vib LFO Start Phase",
     vibLfoToPitch: "Vib LFO -> Pitch",
@@ -76,6 +76,7 @@ export const GeneratorLocale = {
     voiceDelay: "Voice Delay",
     chorusLevel: "Chorus Level",
     reverbLevel: "Reverb Level",
+    variationLevel: "Variation Level",
 
     fixedKey: "Fixed Key", // not modulated
     fixedVelocity: "Fixed Velocity", // not modulated

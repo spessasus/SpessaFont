@@ -1,21 +1,66 @@
-import { type ModulatorCurveType, ModulatorCurveTypes } from "spessasynth_core";
+import {
+    type CustomCurvePoint,
+    type ModulatorCurveType,
+    ModulatorCurveTypes
+} from "spessasynth_core";
 
 export interface SpessaFontModulatorCurveType {
     curveType: ModulatorCurveType;
     bipolar: boolean;
     positive: boolean;
+    /**
+     * The points and the name of a custom curve.
+     */
+    points?: readonly Readonly<CustomCurvePoint>[];
+    name?: string;
+    /**
+     * The view id of the bank's custom curve. A pick with an id sets that curve.
+     */
+    id?: number;
 }
 
-export const ALL_CURVE_TYPES: readonly SpessaFontModulatorCurveType[] =
-    Object.values(ModulatorCurveTypes).flatMap((curveType) => [
-        { curveType, positive: true, bipolar: false },
-        { curveType, positive: false, bipolar: false },
-        { curveType, positive: true, bipolar: true },
-        { curveType, positive: false, bipolar: true }
-    ]);
+/**
+ * The standard curves. SFe mode also offers the bank's custom curves.
+ */
+export const ALL_CURVE_TYPES: readonly SpessaFontModulatorCurveType[] = [
+    ModulatorCurveTypes.linear,
+    ModulatorCurveTypes.concave,
+    ModulatorCurveTypes.convex,
+    ModulatorCurveTypes.switch
+].flatMap((curveType) => [
+    { curveType, positive: true, bipolar: false },
+    { curveType, positive: false, bipolar: false },
+    { curveType, positive: true, bipolar: true },
+    { curveType, positive: false, bipolar: true }
+]);
+
+/**
+ * The ends of a custom curve's axes: core reverses a source as 16384 - x.
+ */
+const CUSTOM_CURVE_SIZE = 16_384;
+
+/**
+ * A custom curve's y for an x, interpolated between its points like core does. At a vertical
+ * step the last point with that x counts.
+ */
+function getCustomCurveY(
+    points: readonly Readonly<CustomCurvePoint>[],
+    x: number
+) {
+    const next = points.findIndex((p) => p.x > x);
+    if (next === -1) {
+        return points.at(-1)?.y ?? 0;
+    }
+    if (next === 0) {
+        return points[0].y;
+    }
+    const a = points[next - 1];
+    const b = points[next];
+    return a.y + ((b.y - a.y) * (x - a.x)) / (b.x - a.x);
+}
 
 export const curveKey = (c: SpessaFontModulatorCurveType) =>
-    `${c.curveType}-${c.bipolar}-${c.positive}`;
+    `${c.curveType}-${c.bipolar}-${c.positive}-${c.id ?? ""}`;
 
 /**
  * The picture is drawn in a 100 by 100 view box.
@@ -34,7 +79,7 @@ const convex = (v: number) => Math.sqrt(1 - (1 - v) * (1 - v));
  * Unipolar curves output 0 to 1, bipolar ones -1 to 1.
  */
 export function getCurveValue(
-    { curveType, bipolar, positive }: SpessaFontModulatorCurveType,
+    { curveType, bipolar, positive, points }: SpessaFontModulatorCurveType,
     input: number
 ) {
     let value = positive ? input : 1 - input;
@@ -43,7 +88,8 @@ export function getCurveValue(
             return bipolar ? value * 2 - 1 : value;
         }
         case ModulatorCurveTypes.switch: {
-            value = value > 0.5 ? 1 : 0;
+            // On from the middle (CC 64), the negative direction is the exact opposite (SFe 7.2)
+            value = input >= 0.5 === positive ? 1 : 0;
             return bipolar ? value * 2 - 1 : value;
         }
         case ModulatorCurveTypes.concave: {
@@ -53,6 +99,15 @@ export function getCurveValue(
         case ModulatorCurveTypes.convex: {
             value = bipolar ? value * 2 - 1 : value;
             return value < 0 ? -convex(-value) : convex(value);
+        }
+        case ModulatorCurveTypes.custom: {
+            // A source that lost its curve outputs nothing
+            if (!points) {
+                return 0;
+            }
+            const y = getCustomCurveY(points, value * CUSTOM_CURVE_SIZE);
+            const half = CUSTOM_CURVE_SIZE / 2;
+            return bipolar ? (y - half) / half : y / CUSTOM_CURVE_SIZE;
         }
     }
 }

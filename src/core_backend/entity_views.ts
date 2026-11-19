@@ -1,19 +1,21 @@
-import type {
-    BasicInstrument,
-    BasicInstrumentZone,
-    BasicPreset,
-    BasicPresetZone,
-    BasicSample,
-    BasicSoundBank,
-    BasicZone,
-    GeneratorType,
-    Modulator,
-    ModulatorCurveType,
-    ModulatorSource,
-    ModulatorSourceIndex,
-    ModulatorTransformType,
-    SampleStoredData,
-    SampleType
+import {
+    type BasicInstrument,
+    type BasicInstrumentZone,
+    type BasicPreset,
+    type BasicPresetZone,
+    type BasicSample,
+    type BasicSoundBank,
+    type BasicZone,
+    CustomCurve,
+    type CustomCurvePoint,
+    type GeneratorType,
+    type Modulator,
+    type ModulatorCurveType,
+    type ModulatorSource,
+    type ModulatorSourceIndex,
+    type ModulatorTransformType,
+    type SampleStoredData,
+    type SampleType
 } from "spessasynth_core";
 import { getObjectId } from "../utils/object_id.ts";
 import type { BankEntity } from "./bank_view.ts";
@@ -32,12 +34,25 @@ export interface RangeView {
     readonly max: number;
 }
 
+/**
+ * A custom curve of the bank (SFe). Every source that uses the curve holds the same view.
+ */
+export interface CustomCurveView {
+    readonly id: number;
+    readonly name: string;
+    readonly points: readonly Readonly<CustomCurvePoint>[];
+}
+
 export interface ModulatorSourceView {
     readonly index: ModulatorSourceIndex;
     readonly isCC: boolean;
     readonly isBipolar: boolean;
     readonly isNegative: boolean;
     readonly curveType: ModulatorCurveType;
+    /**
+     * Set when the curve type is custom and the source has its curve.
+     */
+    readonly curve: CustomCurveView | undefined;
 }
 
 export interface ModulatorView {
@@ -139,6 +154,10 @@ export interface BankViews {
     readonly samples: ReadonlyMap<number, SampleView>;
     readonly defaultModulators: readonly ModulatorView[];
     /**
+     * The bank's custom curves in the order a file stores them, unused ones too.
+     */
+    readonly customCurves: readonly CustomCurveView[];
+    /**
      * Whether the presets on the XG drum banks are drums, which every preset's `isDrum` follows.
      */
     readonly isXGBank: boolean;
@@ -174,13 +193,36 @@ function buildRange(range: { min: number; max: number }, isSet: boolean) {
     return isSet ? { min: range.min, max: range.max } : undefined;
 }
 
+const CURVE_VIEWS = new WeakMap<CustomCurve, CustomCurveView>();
+
+/**
+ * One view per curve, replaced when its name or its points change (core replaces the frozen
+ * points array on a change), so the views that use it share it.
+ */
+function buildCurveView(curve: CustomCurve) {
+    const previous = CURVE_VIEWS.get(curve);
+    if (previous?.name === curve.name && previous.points === curve.points) {
+        return previous;
+    }
+    const view: CustomCurveView = {
+        id: getObjectId(curve),
+        name: curve.name,
+        points: curve.points
+    };
+    freezeNew(view);
+    CURVE_VIEWS.set(curve, view);
+    return view;
+}
+
 function buildSource(source: ModulatorSource) {
+    const { curve } = source;
     return {
         index: source.index,
         isCC: source.isCC,
         isBipolar: source.isBipolar,
         isNegative: source.isNegative,
-        curveType: source.curveType
+        curveType: source.curveType,
+        curve: curve instanceof CustomCurve ? buildCurveView(curve) : undefined
     };
 }
 
@@ -553,6 +595,15 @@ export function updateBankViews(
               )
             : previous.defaultModulators;
 
+    // No action touches the curves, the list is short enough to compare on every commit
+    const builtCurves = bank.customCurves.map((c) => buildCurveView(c));
+    const previousCurves = previous?.customCurves;
+    const customCurves =
+        previousCurves?.length === builtCurves.length &&
+        builtCurves.every((c, i) => c === previousCurves[i])
+            ? previousCurves
+            : builtCurves;
+
     const next: BankViews = {
         presetOrder: presets.order,
         instrumentOrder: instruments.order,
@@ -561,6 +612,7 @@ export function updateBankViews(
         instruments: instruments.views,
         samples: samples.views,
         defaultModulators,
+        customCurves,
         isXGBank: bank.isXGBank
     };
     if (

@@ -10,7 +10,7 @@ import {
     selectionOf
 } from "./menu_selection.ts";
 import { createDeleteSelectionActions } from "./delete_selection.ts";
-import { useSFESwitch } from "../hooks/use_sfe_switch.ts";
+import { useSFeSwitch } from "../hooks/use_sfe_switch.ts";
 
 /**
  * Copy, cut, paste, duplicate and delete for the selected elements, shared by the keyboard
@@ -19,7 +19,7 @@ import { useSFESwitch } from "../hooks/use_sfe_switch.ts";
 export function useSelectionCommands() {
     const { t } = useTranslation();
     const { session, apply } = useBankEditor();
-    const applyWithSFESwitch = useSFESwitch();
+    const applyWithSFeSwitch = useSFeSwitch();
     const { clipboard } = useClipboard();
 
     /**
@@ -69,10 +69,10 @@ export function useSelectionCommands() {
     const pastePresets = () => {
         // Counted before the paste, after it the copies take the patches
         const moved = clipboard.countMovedPresets(session.document);
-        applyWithSFESwitch(
+        applyWithSFeSwitch(
             session,
             clipboard.pastePresets(session),
-            clipboard.hasSFEData("presets", session),
+            clipboard.hasSFeData("presets", session),
             apply
         );
         toast.success(
@@ -90,10 +90,10 @@ export function useSelectionCommands() {
             pastePresets();
         }
         if (clipboard.hasInstruments()) {
-            applyWithSFESwitch(
+            applyWithSFeSwitch(
                 session,
                 clipboard.pasteInstruments(session),
-                clipboard.hasSFEData("instruments", session),
+                clipboard.hasSFeData("instruments", session),
                 apply
             );
             toast.success(

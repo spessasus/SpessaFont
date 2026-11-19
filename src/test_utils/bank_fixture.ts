@@ -1,7 +1,9 @@
 import {
     BasicSoundBank,
     type BasicZone,
+    CustomCurve,
     type Modulator,
+    type ModulatorCurve,
     type ModulatorSource,
     SoundBankLoader
 } from "spessasynth_core";
@@ -255,8 +257,15 @@ function sourceSnapshot(source: ModulatorSource) {
         isCC: source.isCC,
         isBipolar: source.isBipolar,
         isNegative: source.isNegative,
-        curveType: source.curveType
+        curveType: source.curveType,
+        curve: curveSnapshot(source.curve)
     };
+}
+
+function curveSnapshot(curve: ModulatorCurve) {
+    return curve instanceof CustomCurve
+        ? { name: curve.name, points: curve.points }
+        : undefined;
 }
 
 function modulatorSnapshot(modulator: Modulator) {
@@ -293,6 +302,7 @@ export function snapshotBank(bank: BasicSoundBank) {
         defaultModulators: bank.defaultModulators.map((m) =>
             modulatorSnapshot(m)
         ),
+        customCurves: bank.customCurves.map((c) => curveSnapshot(c)),
         presets: bank.presets.map((p) => ({
             name: p.name,
             program: p.program,

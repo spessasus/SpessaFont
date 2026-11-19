@@ -20,7 +20,8 @@ export const SoundBankLocale = {
         noLoop: "Brak pętli",
         loop: "Pętla",
         loopUntilRelease: "Do puszczenia klawisza",
-        startOnRelease: "Przy puszczeniu klawisza"
+        startOnRelease: "Przy puszczeniu klawisza",
+        alternating: "Naprzemienna"
     },
     switchStates: {
         off: "Wyłączone",
@@ -29,7 +30,15 @@ export const SoundBankLocale = {
     lfoWaveforms: {
         triangle: "Trójkąt",
         sawtooth: "Piła",
-        sine: "Sinus"
+        sine: "Sinus",
+        square: "Prostokąt"
+    },
+    filterTypes: {
+        lowpass: "Dolnoprzepustowy",
+        highpass: "Górnoprzepustowy",
+        bandpass: "Pasmowoprzepustowy",
+        peak: "Szczytowy",
+        notch: "Pasmowozaporowy"
     },
     units: {
         // keep the suffixes short

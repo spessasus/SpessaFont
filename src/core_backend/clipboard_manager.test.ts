@@ -16,7 +16,7 @@ import { DeletePresetAction } from "../preset_editor/bottom_bar/delete_preset_ac
 import { EditInstrumentNameAction } from "../instrument_editor/linked_presets/edit_instrument_name_action.ts";
 
 describe("ClipboardManager", () => {
-    it("says a paste brings SFE data only into another bank", () => {
+    it("says a paste brings SFe data only into another bank", () => {
         const host = createTestHost();
         const source = createTestSession(host);
         const target = createTestSession(host);
@@ -28,16 +28,16 @@ describe("ClipboardManager", () => {
         publishSetUp(source);
         const clipboard = new ClipboardManager();
         clipboard.copyPresets(new Set([preset]), source);
-        expect(clipboard.hasSFEData("presets", target)).toBe(true);
+        expect(clipboard.hasSFeData("presets", target)).toBe(true);
         // The bank they came from has them already, like a duplicate
-        expect(clipboard.hasSFEData("presets", source)).toBe(false);
+        expect(clipboard.hasSFeData("presets", source)).toBe(false);
 
         clipboard.copyInstruments(
             new Set([preset.zones[0].instrument]),
             source
         );
-        expect(clipboard.hasSFEData("instruments", target)).toBe(true);
-        expect(clipboard.hasSFEData("instruments", source)).toBe(false);
+        expect(clipboard.hasSFeData("instruments", target)).toBe(true);
+        expect(clipboard.hasSFeData("instruments", source)).toBe(false);
     });
 
     it("pastes presets with their instruments and samples into another bank", () => {

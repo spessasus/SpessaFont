@@ -27,13 +27,13 @@ export const BankInfoLocale = {
     format: {
         label: "Format",
         sf2: "SoundFont 2",
-        sfe: "SFE",
-        hideSFEData:
-            "This bank uses SFE generators or modulators. SoundFont 2 mode hides them, and saving as anything other than SFE removes them!",
+        sfe: "SFe",
+        hideSFeData:
+            "This bank uses SFe generators or modulators. SoundFont 2 mode hides them, and saving as anything other than SFe removes them!",
         switchToSF2: "Switch to SoundFont 2",
         switchedOnPaste:
-            "What you added uses SFE data, so the bank is now in SFE mode.",
-        switchedOnSave: "Saved as SFE, so the bank is now in SFE mode."
+            "What you added uses SFe data, so the bank is now in SFe mode.",
+        switchedOnSave: "Saved as SFe, so the bank is now in SFe mode."
     },
     checkButton: "Problems:",
     check: {
@@ -53,15 +53,15 @@ export const BankInfoLocale = {
         longName:
             "Longer than {{length}} characters. Players other than SpessaSynth show only the first {{length}} in SF2 and SF3 files:",
         cutName:
-            "Longer than {{length}} characters, which SF2, SF3 and SFE saves cut (DLS keeps the whole name):",
+            "Longer than {{length}} characters, which SF2, SF3 and SFe saves cut (DLS keeps the whole name):",
         nonLatin1Name: "Has characters that saved files cannot keep:",
         nonLatin1Info:
             "The bank information has characters that saved files cannot keep.",
         bankNumberLost: "Has bank numbers that an SF2 or SF3 save changes:",
         sfeOnlyData:
-            "Uses SpessaSynth generators or modulators, which only SFE saves keep:",
+            "Uses SFe generators, modulators or loops, which only SFe saves keep:",
         sfeDefaultModulators:
-            "The default modulators target SpessaSynth generators, which only SFE saves keep.",
+            "Some default modulators use SFe generators or curves, which only SFe saves keep.",
         linkedModulator:
             "Has linked modulators, which SpessaSynth does not play and a save breaks:",
         showAll: "Show all {{count}}"

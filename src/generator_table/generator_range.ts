@@ -18,7 +18,8 @@ const PRESET_TIME_RANGE = 21_000;
 /**
  * How far a preset zone may move a generator in either direction, where that is not the span of
  * the instrument range. Core keeps no preset ranges (CORE_WISHLIST.md, rejected item 2), so
- * these are the editor's own. The values are the ones core 4.4.7 had.
+ * these are the editor's own. The values are the ones core 4.4.7 had, and the SFe times
+ * follow the SF2 ones.
  */
 const PRESET_RANGES: Partial<Record<GeneratorType, number>> = {
     [GeneratorTypes.initialFilterFc]: 21_000,
@@ -36,7 +37,15 @@ const PRESET_RANGES: Partial<Record<GeneratorType, number>> = {
     [GeneratorTypes.attackVolEnv]: PRESET_TIME_RANGE,
     [GeneratorTypes.holdVolEnv]: PRESET_TIME_RANGE,
     [GeneratorTypes.decayVolEnv]: PRESET_TIME_RANGE,
-    [GeneratorTypes.releaseVolEnv]: PRESET_TIME_RANGE
+    [GeneratorTypes.releaseVolEnv]: PRESET_TIME_RANGE,
+    [GeneratorTypes.fadeModLFO]: PRESET_TIME_RANGE,
+    [GeneratorTypes.fadeVibLFO]: PRESET_TIME_RANGE,
+    [GeneratorTypes.delayModEnv2]: PRESET_TIME_RANGE,
+    [GeneratorTypes.attackModEnv2]: PRESET_TIME_RANGE,
+    [GeneratorTypes.holdModEnv2]: PRESET_TIME_RANGE,
+    [GeneratorTypes.decayModEnv2]: PRESET_TIME_RANGE,
+    [GeneratorTypes.releaseModEnv2]: PRESET_TIME_RANGE,
+    [GeneratorTypes.delayVoice]: PRESET_TIME_RANGE
 };
 
 /**

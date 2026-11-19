@@ -33,11 +33,11 @@ describe("createBatchGeneratorActions", () => {
             )
         );
 
-        // 6 dB is 150 centibels in the table's attenuation units
+        // 6 dB is 60 centibels
         for (const zone of instrument.zones) {
             expect(
                 zone.getGenerator(GeneratorTypes.initialAttenuation, null)
-            ).toBe(150);
+            ).toBe(60);
         }
     });
 

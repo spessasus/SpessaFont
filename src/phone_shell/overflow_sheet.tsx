@@ -145,7 +145,7 @@ export function OverflowSheet({
                     onSelect: () => save("dls")
                 },
                 {
-                    label: t("menuBarLocale.file.saveSFE"),
+                    label: t("menuBarLocale.file.saveSFe"),
                     icon: "save",
                     onSelect: () => save("sf4")
                 }

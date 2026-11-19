@@ -80,7 +80,7 @@ export function FileMenu({
                     </MenuBarIcon>
                     <MenuBarIcon
                         onClick={() => onSave("sf4")}
-                        text={t("menuBarLocale.file.saveSFE")}
+                        text={t("menuBarLocale.file.saveSFe")}
                     >
                         <SaveFileIcon format={"SFe"} />
                     </MenuBarIcon>

@@ -102,7 +102,7 @@ describe("the cell sheet's edits", () => {
                 buildCellText("add", "-2", false) ?? ""
             ) ?? []
         );
-        expect(readAttenuations(instrument)).toEqual([100, 150]);
+        expect(readAttenuations(instrument)).toEqual([130, 180]);
     });
 
     it("makes ten + taps within the merge window one undo step", () => {
@@ -137,7 +137,7 @@ describe("the cell sheet's edits", () => {
                 result.current.getInputCommands(columnA).nudge(1, 1);
             });
         }
-        // One visible step of 0.04 dB per tap
+        // One visible step of 0.1 dB per tap
         expect(readAttenuations(instrument)).toEqual([160, 200]);
         session.history.undo();
         expect(readAttenuations(instrument)).toEqual([150, 200]);
@@ -182,8 +182,8 @@ describe("the cell sheet's edits", () => {
                 buildCellText("set", "6", false) ?? ""
             ) ?? []
         );
-        // 6 dB is 150 in the bank's 0.04 dB steps
-        expect(readAttenuations(instrument)).toEqual([150, 150, 40]);
+        // 6 dB is 60 centibels
+        expect(readAttenuations(instrument)).toEqual([60, 60, 40]);
     });
 
     it("sends nothing for a lone minus from the sign button", () => {

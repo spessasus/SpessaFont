@@ -46,7 +46,7 @@ describe("getGridRows", () => {
             GeneratorTypes.scaleTuning,
             "group volume",
             GeneratorTypes.initialAttenuation,
-            GeneratorTypes.amplitude,
+            GeneratorTypes.gain,
             GeneratorTypes.pan
         ]);
         expect(rows.some((r) => r.type === "addGenerator")).toBe(false);
@@ -77,9 +77,7 @@ describe("getGridRows", () => {
             (r) => r.type === "addGenerator" && r.group === "volume"
         );
         expect(add?.type === "addGenerator" && add.hidden).toEqual([
-            INSTRUMENT_ROWS.find(
-                (r) => r.generator === GeneratorTypes.amplitude
-            ),
+            INSTRUMENT_ROWS.find((r) => r.generator === GeneratorTypes.gain),
             INSTRUMENT_ROWS.find((r) => r.generator === GeneratorTypes.pan)
         ]);
         const filterAt = rows.findIndex(
@@ -92,7 +90,7 @@ describe("getGridRows", () => {
         const filterAdd = rows[filterAt + 1];
         expect(
             filterAdd.type === "addGenerator" && filterAdd.hidden
-        ).toHaveLength(3);
+        ).toHaveLength(5);
     });
 
     it("shows only the header of a collapsed group", () => {

@@ -240,9 +240,9 @@ describe("applyTextToCell", () => {
                 applyTextToCell(releaseContext, -12_000, "0,5") as number
             )
         ).toBe("0.500");
-        // 18 dB is 450 centibels
+        // 45 dB is 450 centibels
         expect(applyTextToCell(attenuation, 450, "X2")).toBe(900);
-        expect(applyTextToCell(attenuation, 450, "1,5")).toBe(38);
+        expect(applyTextToCell(attenuation, 450, "1,5")).toBe(15);
         for (const text of ["1a", "0x10", "1e3", "1,5,0", "--3", "++3", "x"]) {
             expect(applyTextToCell(attenuation, 450, text), text).toBe(
                 undefined
@@ -513,15 +513,15 @@ describe("planCellPaste", () => {
         const fromPan = {
             generator: GeneratorTypes.pan,
             isInstrument: true,
-            values: [100],
-            text: "100"
+            values: [-200],
+            text: "200"
         };
-        const plan = planCellPaste(context, columns, [1], "100", fromPan);
+        const plan = planCellPaste(context, columns, [1], "200", fromPan);
         if (plan.kind !== "actions") {
             throw new Error("The paste was refused.");
         }
         session.history.do(plan.actions);
-        // "100" read as decibels, clamped to the 144 dB the row allows
+        // "200" read as decibels, clamped to the 144 dB the row allows
         expect(
             instrument.zones[0].getGenerator(
                 GeneratorTypes.initialAttenuation,

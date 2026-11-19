@@ -1,0 +1,63 @@
+.custom_curves {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.3rem;
+    cursor: default;
+}
+
+.custom_curves_controls {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.custom_curves_search {
+    flex: 1;
+    min-width: 0;
+}
+
+.custom_curves_switch {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.custom_curves_list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    max-height: 16rem;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+}
+
+.custom_curves_pick {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    box-sizing: border-box;
+    width: 100%;
+    cursor: pointer;
+}
+
+.custom_curves_pick.selected {
+    filter: brightness(1.8);
+}
+
+.custom_curves_name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.custom_curves_empty {
+    margin: 0.6rem 0;
+    color: var(--muted-font-color);
+    text-align: center;
+}

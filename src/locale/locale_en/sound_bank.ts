@@ -18,7 +18,8 @@ export const SoundBankLocale = {
         noLoop: "No Loop",
         loop: "Loop",
         loopUntilRelease: "Until Release",
-        startOnRelease: "On Release"
+        startOnRelease: "On Release",
+        alternating: "Alternating"
     },
     switchStates: {
         off: "Off",
@@ -27,7 +28,15 @@ export const SoundBankLocale = {
     lfoWaveforms: {
         triangle: "Triangle",
         sawtooth: "Sawtooth",
-        sine: "Sine"
+        sine: "Sine",
+        square: "Square"
+    },
+    filterTypes: {
+        lowpass: "Lowpass",
+        highpass: "Highpass",
+        bandpass: "Bandpass",
+        peak: "Peak",
+        notch: "Notch"
     },
     units: {
         // keep the suffixes short

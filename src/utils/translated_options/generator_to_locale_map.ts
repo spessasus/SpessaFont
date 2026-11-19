@@ -16,14 +16,16 @@ export const generatorLocaleMap: Record<number, GeneratorLocaleKey> = {
     [GeneratorTypes.velocity]: "generatorLocale.fixedVelocity",
 
     [GeneratorTypes.initialAttenuation]: "generatorLocale.attenuation",
-    [GeneratorTypes.amplitude]: "generatorLocale.amplitude",
+    [GeneratorTypes.gain]: "generatorLocale.gain",
     [GeneratorTypes.pan]: "generatorLocale.pan",
 
     [GeneratorTypes.coarseTune]: "generatorLocale.semitoneTuning",
     [GeneratorTypes.fineTune]: "generatorLocale.centTuning",
 
+    [GeneratorTypes.filterType]: "generatorLocale.filterType",
     [GeneratorTypes.initialFilterFc]: "generatorLocale.filterCutoff",
     [GeneratorTypes.initialFilterQ]: "generatorLocale.filterResonance",
+    [GeneratorTypes.filterQOffset]: "generatorLocale.filterResonanceOffset",
     [GeneratorTypes.maxFilterFc]: "generatorLocale.filterCutoffLimit",
 
     [GeneratorTypes.delayVolEnv]: "generatorLocale.volEnvDelay",
@@ -64,27 +66,26 @@ export const generatorLocaleMap: Record<number, GeneratorLocaleKey> = {
     [GeneratorTypes.delayModLFO]: "generatorLocale.modLfoDelay",
     [GeneratorTypes.fadeModLFO]: "generatorLocale.modLfoFade",
     [GeneratorTypes.freqModLFO]: "generatorLocale.modLfoFrequency",
-    [GeneratorTypes.modLfoRate]: "generatorLocale.modLfoRateOffset",
     [GeneratorTypes.modLfoWaveform]: "generatorLocale.modLfoWaveform",
     [GeneratorTypes.modLfoStartPhase]: "generatorLocale.modLfoStartPhase",
     [GeneratorTypes.modLfoToPitch]: "generatorLocale.modLfoToPitch",
     [GeneratorTypes.modLfoToFilterFc]: "generatorLocale.modLfoToFilter",
     [GeneratorTypes.modLfoToVolume]: "generatorLocale.modLfoToVolume",
-    [GeneratorTypes.modLfoAmplitudeDepth]: "generatorLocale.modLfoToAmplitude",
+    [GeneratorTypes.modLfoToAmplitude]: "generatorLocale.modLfoToAmplitude",
 
     [GeneratorTypes.delayVibLFO]: "generatorLocale.vibLfoDelay",
     [GeneratorTypes.fadeVibLFO]: "generatorLocale.vibLfoFade",
     [GeneratorTypes.freqVibLFO]: "generatorLocale.vibLfoFrequency",
-    [GeneratorTypes.vibLfoRate]: "generatorLocale.vibLfoRateOffset",
     [GeneratorTypes.vibLfoWaveform]: "generatorLocale.vibLfoWaveform",
     [GeneratorTypes.vibLfoStartPhase]: "generatorLocale.vibLfoStartPhase",
     [GeneratorTypes.vibLfoToPitch]: "generatorLocale.vibLfoToPitch",
     [GeneratorTypes.vibLfoToFilterFc]: "generatorLocale.vibLfoToFilter",
     [GeneratorTypes.vibLfoToVolume]: "generatorLocale.vibLfoToVolume",
-    [GeneratorTypes.vibLfoAmplitudeDepth]: "generatorLocale.vibLfoToAmplitude",
+    [GeneratorTypes.vibLfoToAmplitude]: "generatorLocale.vibLfoToAmplitude",
 
     [GeneratorTypes.chorusEffectsSend]: "generatorLocale.chorusLevel",
     [GeneratorTypes.reverbEffectsSend]: "generatorLocale.reverbLevel",
+    [GeneratorTypes.variationEffectsSend]: "generatorLocale.variationLevel",
 
     [GeneratorTypes.startAddrsOffset]: "generatorLocale.sampleStartOffset",
     [GeneratorTypes.startAddrsCoarseOffset]:

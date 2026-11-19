@@ -11,10 +11,11 @@ import {
 import { CreateSampleAction } from "../menu_list/create_actions/create_sample_action.ts";
 import { CreateInstrumentAction } from "../menu_list/create_actions/create_instrument_action.ts";
 import { CreatePresetAction } from "../menu_list/create_actions/create_preset_action.ts";
+import { AddCustomCurvesAction } from "./add_custom_curves_action.ts";
 import type { BankDocument } from "./bank_document.ts";
 import type { BankSession } from "./bank_session.ts";
 import { findFreePatch, getTakenPatches } from "./free_patch.ts";
-import { hasCopiedSFEData } from "./sfe_data.ts";
+import { hasCopiedSFeData } from "./sfe_data.ts";
 import type { SampleCopyRef } from "../synth_host/protocol.ts";
 import { getObjectId } from "../utils/object_id.ts";
 import type { CellCopy } from "../generator_table/cell/cell_clipboard.ts";
@@ -385,7 +386,18 @@ export class ClipboardManager {
             dataSources.set(copy, getDataSource(original));
         }
         target.copySampleData(dataSources);
-        return getCreateActions(created);
+        // The cloner copies every curve, the bank may have an equal one already
+        const curves = document.adoptCurves(
+            [...created.instruments, ...created.presets].flatMap((element) =>
+                [element.globalZone, ...element.zones].flatMap(
+                    (zone) => zone.modulators
+                )
+            )
+        );
+        const actions = getCreateActions(created);
+        return curves.length > 0
+            ? [new AddCustomCurvesAction(curves), ...actions]
+            : actions;
     }
 
     public get presetCount() {
@@ -417,14 +429,14 @@ export class ClipboardManager {
     }
 
     /**
-     * Whether pasting the presets (with their instruments) or the instruments brings SFE data
+     * Whether pasting the presets (with their instruments) or the instruments brings SFe data
      * into the target. A paste into the bank they came from brings nothing new, like a
      * duplicate, and shares the instruments that are still there.
      */
-    public hasSFEData(kind: "presets" | "instruments", target: BankSession) {
+    public hasSFeData(kind: "presets" | "instruments", target: BankSession) {
         return (
             target.id !== this.sourceId &&
-            hasCopiedSFEData(
+            hasCopiedSFeData(
                 kind === "presets"
                     ? this.presetClipboard
                     : this.instrumentClipboard

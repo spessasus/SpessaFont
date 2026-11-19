@@ -38,7 +38,7 @@ export const GENERATOR_GROUP_ORDER = Object.values(
 ) as readonly GeneratorGroup[];
 
 /**
- * The generators of each group. SFE generators sit inside their musical groups.
+ * The generators of each group. SFe generators sit inside their musical groups.
  */
 export const GROUP_GENERATORS: Record<
     GeneratorGroup,
@@ -51,8 +51,14 @@ export const GROUP_GENERATORS: Record<
         G.fineTune,
         G.scaleTuning
     ],
-    volume: [G.initialAttenuation, G.amplitude, G.pan],
-    filter: [G.initialFilterFc, G.initialFilterQ, G.maxFilterFc],
+    volume: [G.initialAttenuation, G.gain, G.pan],
+    filter: [
+        G.filterType,
+        G.initialFilterFc,
+        G.initialFilterQ,
+        G.filterQOffset,
+        G.maxFilterFc
+    ],
     volumeEnvelope: [
         G.delayVolEnv,
         G.attackVolEnv,
@@ -93,29 +99,28 @@ export const GROUP_GENERATORS: Record<
         G.delayModLFO,
         G.fadeModLFO,
         G.freqModLFO,
-        G.modLfoRate,
         G.modLfoWaveform,
         G.modLfoStartPhase,
         G.modLfoToPitch,
         G.modLfoToFilterFc,
         G.modLfoToVolume,
-        G.modLfoAmplitudeDepth
+        G.modLfoToAmplitude
     ],
     vibratoLFO: [
         G.delayVibLFO,
         G.fadeVibLFO,
         G.freqVibLFO,
-        G.vibLfoRate,
         G.vibLfoWaveform,
         G.vibLfoStartPhase,
         G.vibLfoToPitch,
         G.vibLfoToFilterFc,
         G.vibLfoToVolume,
-        G.vibLfoAmplitudeDepth
+        G.vibLfoToAmplitude
     ],
     effects: [
         G.chorusEffectsSend,
         G.reverbEffectsSend,
+        G.variationEffectsSend,
         G.delayVoice,
         G.ignoreNoteOff
     ],
