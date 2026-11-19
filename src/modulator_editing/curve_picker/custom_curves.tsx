@@ -36,7 +36,7 @@ export function CustomCurves({
     const { t } = useTranslation();
     const [query, setQuery] = useState("");
     // Until a custom curve is picked, the switches only say how the pictures are drawn and
-    // what a pick sets
+    // what a pick sets. They start from the source, as the picker mounts each time it opens
     const [pending, setPending] = useState({
         bipolar: current.bipolar,
         positive: current.positive

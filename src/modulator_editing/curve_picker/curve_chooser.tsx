@@ -33,6 +33,7 @@ export function CurveChooser({
     onChange
 }: CurveChooserProps) {
     const { t } = useTranslation();
+    // The picker mounts each time it opens, so it starts on the kind the source uses
     const [kind, setKind] = useState<"standard" | "custom">(
         current.id === undefined ? "standard" : "custom"
     );

@@ -1,4 +1,5 @@
 import { type GeneratorType, GeneratorTypes } from "spessasynth_core";
+import type { ZoneView } from "../core_backend/entity_views.ts";
 
 const SWITCH_OPTIONS = [
     { value: 0, label: "soundBankLocale.switchStates.off" },
@@ -65,13 +66,26 @@ const SF2_LOOPING_MODES: GeneratorOptions = GENERATOR_OPTIONS[
 ].filter((o) => o.value !== 4);
 
 /**
- * The values the editor offers for a generator. SF2 mode leaves out what only SFe stores.
+ * The values the editor offers for a generator. SF2 mode leaves out what only SFe stores,
+ * unless every zone the edit sets has it already, which would show as unset otherwise. So it
+ * never spreads to another zone.
+ * @param zones the zones a pick sets
  */
 export function getShownGeneratorOptions(
     generator: GeneratorType,
-    isSFe: boolean
+    isSFe: boolean,
+    zones: readonly ZoneView[]
 ): GeneratorOptions | undefined {
-    return !isSFe && generator === GeneratorTypes.sampleModes
+    const hasAlternatingLoop = () =>
+        zones.length > 0 &&
+        zones.every((z) =>
+            z.generators.some(
+                (g) => g.type === GeneratorTypes.sampleModes && g.value === 4
+            )
+        );
+    return !isSFe &&
+        generator === GeneratorTypes.sampleModes &&
+        !hasAlternatingLoop()
         ? SF2_LOOPING_MODES
         : getGeneratorOptions(generator);
 }

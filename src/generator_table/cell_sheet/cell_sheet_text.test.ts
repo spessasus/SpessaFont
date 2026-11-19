@@ -68,7 +68,7 @@ function getContext(
     if (!row) {
         throw new Error(`No row for ${generator}.`);
     }
-    return { element: instrument, row, isInstrument: true };
+    return { element: instrument, row, isInstrument: true, isSFe: true };
 }
 
 /**

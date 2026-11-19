@@ -142,7 +142,12 @@ export function ModulatorCard({
             });
 
     const getCurveSetter =
-        (slot: ModulatorSourceSlot) => (c: SpessaFontModulatorCurveType) =>
+        (slot: ModulatorSourceSlot) => (c: SpessaFontModulatorCurveType) => {
+            const curve = c.id === undefined ? undefined : getCustomCurve(c.id);
+            // A custom curve that left the bank since the picker drew it changes nothing
+            if (!curve && c.id !== undefined) {
+                return;
+            }
             update((copy) => {
                 const source =
                     slot === "primary"
@@ -150,15 +155,13 @@ export function ModulatorCard({
                         : copy.secondarySource;
                 source.isBipolar = c.bipolar;
                 source.isNegative = !c.positive;
-                if (c.id === undefined) {
-                    source.curveType = c.curveType;
-                    return;
-                }
-                const curve = getCustomCurve(c.id);
                 if (curve) {
                     source.curve = curve;
+                } else {
+                    source.curveType = c.curveType;
                 }
             });
+        };
 
     const sources = [
         {
@@ -204,6 +207,7 @@ export function ModulatorCard({
                     <SourcePicker
                         key={slot}
                         label={sourceLabel}
+                        isSFe={isSFe}
                         onChange={getSourceSetter(slot)}
                         source={{
                             usesCC: source.isCC,

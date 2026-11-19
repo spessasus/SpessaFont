@@ -206,7 +206,12 @@ async function setUp(layout: LayoutMode = "desktop", isStereo = false) {
             throw new Error(`No zone ${zoneId}.`);
         }
         const actions = createSetCellActions(
-            { element: instrument, row: ROWS[0], isInstrument: true },
+            {
+                element: instrument,
+                row: ROWS[0],
+                isInstrument: true,
+                isSFe: true
+            },
             {
                 zone,
                 linkedZone: undefined,

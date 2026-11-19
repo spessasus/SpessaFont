@@ -74,7 +74,8 @@ function setUpTwoZones() {
     const context: CellContext = {
         element: instrument,
         row: ATTENUATION,
-        isInstrument: true
+        isInstrument: true,
+        isSFe: true
     };
     return {
         session,
@@ -171,7 +172,8 @@ describe("the cell sheet's edits", () => {
         const context: CellContext = {
             element: instrument,
             row: ATTENUATION,
-            isInstrument: true
+            isInstrument: true,
+            isSFe: true
         };
 
         expectRoundTrip(

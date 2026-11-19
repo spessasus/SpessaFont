@@ -132,7 +132,8 @@ export function CellSheet({
     const context: CellContext = {
         element,
         row,
-        isInstrument: element instanceof BasicInstrument
+        isInstrument: element instanceof BasicInstrument,
+        isSFe
     };
     const [first] = checkedColumns;
     const unit = row.unit ? GENERATOR_UNITS[row.unit] : undefined;
@@ -231,7 +232,11 @@ export function CellSheet({
         checked: checkedColumns.length,
         total: columns.length
     });
-    const options = getShownGeneratorOptions(generator, isSFe);
+    const options = getShownGeneratorOptions(
+        generator,
+        isSFe,
+        checkedColumns.flatMap((c) => getViewZones(c))
+    );
     const sharedRange = getSharedRangeFields(
         checkedColumns.flatMap((c) =>
             getViewZones(c).map((zone) => readViewCell(zone, generator))

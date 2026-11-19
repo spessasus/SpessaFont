@@ -3,6 +3,8 @@ import {
     BasicPreset,
     type BasicSoundBank,
     GeneratorTypes,
+    MIDIControllers,
+    ModulatorControllerSources,
     ModulatorCurveTypes,
     SPESSASYNTH_DEFAULT_MODULATORS
 } from "spessasynth_core";
@@ -37,21 +39,55 @@ interface SourceLike {
     readonly curveType: number;
 }
 
+function isDepthRange(source: SourceLike) {
+    return (
+        !source.isCC &&
+        source.index === ModulatorControllerSources.modulationDepthRange
+    );
+}
+
 /**
- * Whether only an SFe file stores the modulator: it targets an SFe generator or a source has a
- * custom curve. SF2 mode hides these.
+ * Whether an SF2 file can store the Modulation Depth Range of the modulator. It can only as the
+ * plain amount source of a mod wheel vibrato, which core writes without it (its
+ * `withoutModulationDepth`, which is internal). The amount is left to core's count, as SF2
+ * rounds it to a step of 32, which is no reason to hide the modulator.
+ */
+function isStoredDepthRange({
+    primarySource,
+    secondarySource,
+    destination
+}: ModulatorLike) {
+    return (
+        primarySource.isCC &&
+        primarySource.index === MIDIControllers.modulationWheel &&
+        (destination === GeneratorTypes.modLfoToPitch ||
+            destination === GeneratorTypes.vibLfoToPitch) &&
+        secondarySource.curveType === ModulatorCurveTypes.linear &&
+        !secondarySource.isBipolar &&
+        !secondarySource.isNegative
+    );
+}
+
+/**
+ * Whether only an SFe file stores the modulator: it targets an SFe generator, a source has a
+ * custom curve, or it uses the Modulation Depth Range in a way SF2 cannot store. SF2 mode
+ * hides these.
  */
 export function isSFeModulator(modulator: ModulatorLike) {
     return (
         isSFeGenerator(modulator.destination) ||
         modulator.primarySource.curveType === ModulatorCurveTypes.custom ||
-        modulator.secondarySource.curveType === ModulatorCurveTypes.custom
+        modulator.secondarySource.curveType === ModulatorCurveTypes.custom ||
+        isDepthRange(modulator.primarySource) ||
+        (isDepthRange(modulator.secondarySource) &&
+            !isStoredDepthRange(modulator))
     );
 }
 
 /**
- * Whether the modulator is SFe data that a save in another format loses. Any CC 71 to gain
- * modulator counts as a twin here, `hasSFeOnlyData` asks core for the exact answer.
+ * Whether the modulator is SFe data that a save in another format loses. The CC 71 to gain
+ * twins are not, core's SF2 reader makes them again. `hasSFeOnlyData` asks core for the exact
+ * answer.
  */
 export function isLostSFeModulator(modulator: ModulatorLike) {
     return isSFeModulator(modulator) && !isResonanceCompensator(modulator);

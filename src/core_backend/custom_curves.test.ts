@@ -5,7 +5,8 @@ import {
     MIDIControllers,
     Modulator,
     ModulatorSource,
-    SoundBankLoader
+    SoundBankLoader,
+    SPESSASYNTH_DEFAULT_MODULATORS
 } from "spessasynth_core";
 import {
     createTestHost,
@@ -13,6 +14,7 @@ import {
     expectMirrorUpToDate,
     expectRoundTrip,
     getMirror,
+    moveTestHost,
     publishSetUp
 } from "../test_utils/bank_fixture.ts";
 import { BankSession } from "./bank_session.ts";
@@ -167,6 +169,88 @@ describe("custom curves", () => {
         const [own] = getCurves(pasted?.globalZone.modulators ?? []);
         expect(target.document.bank.customCurves).toContain(own);
         expect(own).not.toBe(curve);
+    });
+});
+
+describe("custom curves of a default modulator reset", () => {
+    it("brings the standard curves back to a bank that lost them", () => {
+        const session = createTestSession();
+        const { document } = session;
+        document.bank.defaultModulators = [];
+        document.removeCustomCurves([...document.bank.customCurves]);
+        publishSetUp(session);
+        expect(document.bank.customCurves).toHaveLength(0);
+
+        // Copies, as core's list is frozen
+        const standard = SPESSASYNTH_DEFAULT_MODULATORS.map((m) =>
+            Modulator.copyFrom(m)
+        );
+        expectRoundTrip(session, [
+            new SetDefaultModulatorsAction([], standard)
+        ]);
+
+        const used = getCurves(document.bank.defaultModulators);
+        expect(used.length).toBeGreaterThan(0);
+        for (const curve of used) {
+            expect(document.bank.customCurves).toContain(curve);
+        }
+        // One curve per standard curve, however many modulators share it
+        expect(document.bank.customCurves).toHaveLength(new Set(used).size);
+    });
+});
+
+describe("custom curves of a stereo column", () => {
+    it("gives both zones one adopted curve when a modulator from another bank is pasted", () => {
+        const session = createTestSession();
+        const [instrument] = session.document.instruments;
+        const [left, right] = instrument.zones;
+        const count = session.document.bank.customCurves.length;
+        // A curve of another bank, as the modulator editor pastes it into a pair
+        const foreign = curveModulator(new CustomCurve(POINTS, "Pair"));
+
+        expectRoundTrip(session, [
+            new EditModulatorsAction(instrument, left, [foreign]),
+            new EditModulatorsAction(instrument, right, [
+                Modulator.copyFrom(foreign)
+            ])
+        ]);
+
+        expect(session.document.bank.customCurves).toHaveLength(count + 1);
+        const [leftCurve] = getCurves(left.modulators);
+        const [rightCurve] = getCurves(right.modulators);
+        expect(leftCurve).toBe(rightCurve);
+        expect(session.document.bank.customCurves).toContain(leftCurve);
+    });
+});
+
+describe("custom curves after a host move", () => {
+    it("keeps a pasted curve through the move, an undo and a redo", async () => {
+        const host = createTestHost();
+        const source = createTestSession(host);
+        const target = createTestSession(host);
+        const [instrument] = source.document.instruments;
+        const curve = new CustomCurve(POINTS, "Moved");
+        source.document.bank.addCustomCurves(curve);
+        instrument.globalZone.setModulators([curveModulator(curve)]);
+        publishSetUp(source);
+        const clipboard = new ClipboardManager();
+        clipboard.copyInstruments(new Set([instrument]), source);
+        target.history.do(clipboard.pasteInstruments(target));
+        const count = target.document.bank.customCurves.length;
+
+        await moveTestHost(host);
+        expectMirrorUpToDate(target);
+        target.history.undo();
+        expect(target.document.bank.customCurves).toHaveLength(count - 1);
+        expectMirrorUpToDate(target);
+        target.history.redo();
+        expect(target.document.bank.customCurves).toHaveLength(count);
+        expectMirrorUpToDate(target);
+        const pasted = target.document.instruments.at(-1);
+        const [own] = getCurves(pasted?.globalZone.modulators ?? []);
+        expect(
+            getMirror(target).bank.customCurves.map((c) => c.name)
+        ).toContain(own?.name);
     });
 });
 

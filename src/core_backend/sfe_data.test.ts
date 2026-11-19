@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
     type GeneratorType,
     GeneratorTypes,
+    MIDIControllers,
     Modulator,
+    ModulatorControllerSources,
+    ModulatorSource,
     SoundBankLoader
 } from "spessasynth_core";
 import { createTestSession, getMirror } from "../test_utils/bank_fixture.ts";
@@ -10,6 +13,7 @@ import {
     getShownModulators,
     hasCopiedSFeData,
     hasSFeOnlyData,
+    isSFeModulator,
     mergeHiddenModulators
 } from "./sfe_data.ts";
 
@@ -116,5 +120,66 @@ describe("hasCopiedSFeData", () => {
             -1200
         );
         expect(hasCopiedSFeData([preset])).toBe(true);
+    });
+});
+
+describe("isSFeModulator and the Modulation Depth Range", () => {
+    const depthRange = () =>
+        new ModulatorSource(
+            ModulatorControllerSources.modulationDepthRange,
+            0,
+            false
+        );
+    const modWheel = () =>
+        new ModulatorSource(MIDIControllers.modulationWheel, 0, true);
+    const cases = {
+        "the mod wheel vibrato": new Modulator(
+            modWheel(),
+            depthRange(),
+            GeneratorTypes.vibLfoToPitch,
+            1600,
+            0
+        ),
+        "a bipolar range on the vibrato": new Modulator(
+            modWheel(),
+            new ModulatorSource(
+                ModulatorControllerSources.modulationDepthRange,
+                0,
+                false,
+                true
+            ),
+            GeneratorTypes.vibLfoToPitch,
+            1600,
+            0
+        ),
+        "the range to the filter": new Modulator(
+            modWheel(),
+            depthRange(),
+            GeneratorTypes.initialFilterFc,
+            1600,
+            0
+        ),
+        "the range as the primary source": new Modulator(
+            depthRange(),
+            new ModulatorSource(),
+            GeneratorTypes.vibLfoToPitch,
+            1600,
+            0
+        )
+    };
+
+    for (const [name, modulator] of Object.entries(cases)) {
+        it(`agrees with what core's SF2 save loses for ${name}`, () => {
+            const { bank } = createTestSession().document;
+            bank.instruments[0].globalZone.addModulators(modulator);
+            expect(isSFeModulator(modulator)).toBe(
+                bank.getSF2Losses().modulators > 0
+            );
+        });
+    }
+
+    it("keeps the mod wheel vibrato in SF2 mode", () => {
+        expect(isSFeModulator(cases["the mod wheel vibrato"])).toBe(false);
+        expect(isSFeModulator(cases["the range to the filter"])).toBe(true);
     });
 });

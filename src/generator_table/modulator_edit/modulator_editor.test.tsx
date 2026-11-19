@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import {
     GeneratorTypes,
@@ -196,6 +196,14 @@ function tapRaise(form: number) {
 }
 
 describe("ModulatorEditor amount undo steps", () => {
+    // The steps merge within a time window, so a slow test worker must not split them
+    beforeEach(() => {
+        vi.useFakeTimers({ toFake: ["Date"] });
+    });
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
     it("makes steps on two modulators two undo steps", () => {
         const { session, readAmounts } = renderEditor(
             "phone",

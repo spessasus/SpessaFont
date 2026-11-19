@@ -72,7 +72,7 @@ function getContext(
     instrument: BasicInstrument,
     row: GeneratorRowType
 ): CellContext {
-    return { element: instrument, row, isInstrument: true };
+    return { element: instrument, row, isInstrument: true, isSFe: true };
 }
 
 const ATTENUATION = getRow(GeneratorTypes.initialAttenuation);
@@ -390,7 +390,12 @@ describe("the global zone", () => {
             sample: undefined,
             linkedSample: undefined
         };
-        const context = { element: preset, row, isInstrument: false };
+        const context = {
+            element: preset,
+            row,
+            isInstrument: false,
+            isSFe: true
+        };
         expect(
             getCellDisplay(context, column, view.globalZone).placeholder
         ).toBe("10");
@@ -528,6 +533,26 @@ describe("planCellPaste", () => {
                 null
             )
         ).toBe(1440);
+    });
+});
+
+describe("the alternating loop in SF2 mode", () => {
+    const LOOP = getRow(GeneratorTypes.sampleModes);
+
+    it("is skipped by a notch and refused as text for a zone without it", () => {
+        const session = createTestSession();
+        const [instrument] = session.document.instruments;
+        const sf2 = { ...getContext(instrument, LOOP), isSFe: false };
+        expect(nudgeCellValue(sf2, 3, 3, 1, 1)).toBe(3);
+        expect(nudgeCellValue(sf2, 4, 4, -1, 1)).toBe(3);
+        expect(nudgeCellValue(getContext(instrument, LOOP), 3, 3, 1, 1)).toBe(
+            4
+        );
+        const [, column] = getColumns(session, instrument);
+        expect(createTextEditActions(sf2, [column], "4")).toBeUndefined();
+        expect(
+            createTextEditActions(getContext(instrument, LOOP), [column], "4")
+        ).toHaveLength(1);
     });
 });
 

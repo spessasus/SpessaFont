@@ -7,7 +7,7 @@ import { BasicInstrument, type BasicPreset } from "spessasynth_core";
 import { useTranslation } from "react-i18next";
 import { generatorLocaleMap } from "../utils/translated_options/generator_to_locale_map.ts";
 import type { GeneratorRowType } from "./generator_row_type.ts";
-import type { ZoneColumn } from "./zone_columns.ts";
+import { getViewZones, type ZoneColumn } from "./zone_columns.ts";
 import type { ZoneView } from "../core_backend/entity_views.ts";
 import { GENERATOR_UNITS } from "./generator_unit.ts";
 import { useCellCommands } from "./cell/use_cell_commands.ts";
@@ -70,7 +70,6 @@ export function GeneratorRow({
     const unit = row.unit ? GENERATOR_UNITS[row.unit] : undefined;
     const { session } = useBankEditor();
     const isSFe = useBankSnapshot(session.store, (s) => s.format === "sfe");
-    const options = getShownGeneratorOptions(generator, isSFe);
     const isInstrument = element instanceof BasicInstrument;
     const selectedColumns = columns.filter((c) =>
         selectedZoneIds.has(c.zone.id)
@@ -207,7 +206,11 @@ export function GeneratorRow({
                     row={row}
                     isInstrument={isInstrument}
                     generatorName={name}
-                    options={options}
+                    options={getShownGeneratorOptions(
+                        generator,
+                        isSFe,
+                        getViewZones(column)
+                    )}
                     zone={column.zone}
                     linkedZone={column.linkedZone}
                     sample={column.sample}

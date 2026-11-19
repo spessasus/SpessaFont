@@ -50,7 +50,8 @@ export function ModulatorEditor({
         const mods = isSFe
             ? shown
             : syncResonanceCompensators(shown, element instanceof BasicPreset);
-        // Only a paste brings one in, SF2 mode offers no SFe destination
+        // A paste brings one in, or an edit of the mod wheel vibrato that leaves its Modulation
+        // Depth Range where SF2 cannot store it. SF2 mode offers no SFe destination
         const isAddingSFeData = mods.some(
             (m) => isLostSFeModulator(m) && !before.includes(m)
         );

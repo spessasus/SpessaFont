@@ -24,18 +24,30 @@ interface SourceLike {
 
 interface ModulatorLike {
     readonly destination: number;
+    readonly transformType: number;
     readonly primarySource: SourceLike;
     readonly secondarySource: SourceLike;
 }
 
 /**
- * Whether the modulator is a twin: CC 71 to gain. A view or a core modulator.
+ * Whether the modulator is a twin as core makes them: bipolar linear CC 71 to gain, with CC 71
+ * as a switch for its amount. A CC 71 to gain modulator of another shape is the bank's own and
+ * stays. A view or a core modulator.
  */
 export function isResonanceCompensator(modulator: ModulatorLike) {
+    const { primarySource: primary, secondarySource: secondary } = modulator;
     return (
         modulator.destination === GeneratorTypes.gain &&
-        modulator.primarySource.isCC &&
-        modulator.primarySource.index === MIDIControllers.filterResonance
+        modulator.transformType === 0 &&
+        primary.isCC &&
+        primary.index === MIDIControllers.filterResonance &&
+        primary.isBipolar &&
+        !primary.isNegative &&
+        primary.curveType === ModulatorCurveTypes.linear &&
+        secondary.isCC &&
+        secondary.index === MIDIControllers.filterResonance &&
+        !secondary.isBipolar &&
+        secondary.curveType === ModulatorCurveTypes.switch
     );
 }
 

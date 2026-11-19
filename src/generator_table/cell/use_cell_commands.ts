@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { BasicInstrument, type BasicPreset } from "spessasynth_core";
 import { useBankEditor } from "../../bank_editor/bank_editor_context.ts";
 import { useClipboard } from "../../clipboard/clipboard_context.ts";
+import { useBankSnapshot } from "../../hooks/use_bank_snapshot.ts";
 import type { ContextMenuEntry } from "../../context_menu/context_menu_context.ts";
 import { logWarn } from "../../utils/core_utils.ts";
 import type { GeneratorRowType } from "../generator_row_type.ts";
@@ -58,13 +59,15 @@ export function useCellCommands(
     selectedColumns: readonly ZoneColumn[]
 ) {
     const { t } = useTranslation();
-    const { apply } = useBankEditor();
+    const { apply, session } = useBankEditor();
+    const isSFe = useBankSnapshot(session.store, (s) => s.format === "sfe");
     const { clipboard } = useClipboard();
     const { generator } = row;
     const context: CellContext = {
         element,
         row,
-        isInstrument: element instanceof BasicInstrument
+        isInstrument: element instanceof BasicInstrument,
+        isSFe
     };
 
     const getTargets = (column: ZoneColumn) =>

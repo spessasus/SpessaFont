@@ -6,7 +6,10 @@ import {
 import type { GeneratorRowType } from "../generator_table/generator_row_type.ts";
 import { SetGeneratorAction } from "../generator_table/cell/set_generator_action.ts";
 import type { CellEdit } from "../generator_table/cell/parse_generator_text.ts";
-import { applyEditToNumber } from "../generator_table/cell/cell_values.ts";
+import {
+    applyEditToNumber,
+    isRefusedInSF2
+} from "../generator_table/cell/cell_values.ts";
 import {
     getPlayedGenerator,
     isPlayedOff
@@ -41,13 +44,14 @@ export function createBatchGeneratorActions(
     elements: Iterable<BasicPreset | BasicInstrument>,
     row: GeneratorRowType,
     edit: CellEdit,
-    scope: BatchScope
+    scope: BatchScope,
+    isSFe: boolean
 ) {
     const { generator } = row;
     const actions = new Array<SetGeneratorAction>();
     for (const element of elements) {
         const isInstrument = element instanceof BasicInstrument;
-        const context = { element, row, isInstrument };
+        const context = { element, row, isInstrument, isSFe };
         const zones = scope === "global" ? [element.globalZone] : element.zones;
         for (const zone of zones) {
             const previous = zone.getGenerator(generator, null);
@@ -57,7 +61,11 @@ export function createBatchGeneratorActions(
             }
             const value = applyEditToNumber(context, played, edit);
             // An unset generator that would get the value it already plays stays unset
-            if (value !== undefined && value !== played) {
+            if (
+                value !== undefined &&
+                value !== played &&
+                !isRefusedInSF2(context, previous, value)
+            ) {
                 actions.push(
                     new SetGeneratorAction(
                         element,

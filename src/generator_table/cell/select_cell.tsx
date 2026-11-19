@@ -5,7 +5,10 @@ import type { GeneratorType } from "spessasynth_core";
 import { useWheelStep } from "../../hooks/use_wheel_step.ts";
 import { useLayout } from "../../layout/layout_context.ts";
 import { logInfo } from "../../utils/core_utils.ts";
-import type { GeneratorOptions } from "../generator_options.ts";
+import {
+    type GeneratorOptions,
+    getGeneratorOptions
+} from "../generator_options.ts";
 import { getViewZones, type ZoneColumn } from "../zone_columns.ts";
 import { readViewCell } from "./cell_values.ts";
 import "./select_cell_phone.css";
@@ -58,9 +61,11 @@ export function SelectCell({
     // A stereo column whose zones differ shows both, and a pick sets both
     const isMixed = values.some((v) => v !== first);
     const value = typeof first === "number" ? first : null;
+    // Named from every option, so a value SF2 mode does not offer still shows
+    const allOptions = getGeneratorOptions(generator) ?? options;
     const mixedText = values
         .map((v) => {
-            const option = options.find((o) => o.value === v);
+            const option = allOptions.find((o) => o.value === v);
             return option ? t(option.label) : "-";
         })
         .join(" / ");

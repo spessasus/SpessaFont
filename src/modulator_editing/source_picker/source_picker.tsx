@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { ChangeEvent } from "react";
+import { ModulatorControllerSources } from "spessasynth_core";
 import "./source_picker.css";
 import { OptionList } from "../../utils/translated_options/option_list.tsx";
 import { useTranslatedOptions } from "../../utils/translated_options/translated_options_context.ts";
@@ -16,17 +17,29 @@ export type { SpessaFontModulatorSource } from "./source_option_value.ts";
 interface SourcePickerProps {
     label: string;
     source: SpessaFontModulatorSource;
+    isSFe: boolean;
     onChange: (s: SpessaFontModulatorSource) => void;
 }
 
-export function SourcePicker({ label, source, onChange }: SourcePickerProps) {
+export function SourcePicker({
+    label,
+    source,
+    isSFe,
+    onChange
+}: SourcePickerProps) {
     const { t } = useTranslation();
     const { controllers } = useTranslatedOptions();
     const selectValue = toSourceOptionValue(source);
+    // SF2 stores the Modulation Depth Range only in the mod wheel vibrato, which keeps showing it
+    const offered = isSFe
+        ? NON_CC_SOURCES
+        : NON_CC_SOURCES.filter(
+              (s) => s !== ModulatorControllerSources.modulationDepthRange
+          );
     // A source the lists do not offer (a modulator link, an illegal CC) still shows as itself
     const isListed = source.usesCC
         ? controllers.some((c) => c.value === source.sourceIndex)
-        : NON_CC_SOURCES.some((s) => s === source.sourceIndex);
+        : offered.some((s) => s === source.sourceIndex);
     const unlistedLabel = isListed
         ? ""
         : getSourceLabel(source, controllers, t);
@@ -44,7 +57,7 @@ export function SourcePicker({ label, source, onChange }: SourcePickerProps) {
             {isListed ? null : (
                 <option value={selectValue}>{unlistedLabel}</option>
             )}
-            {NON_CC_SOURCES.map((index) => (
+            {offered.map((index) => (
                 <option
                     key={index}
                     value={toSourceOptionValue({

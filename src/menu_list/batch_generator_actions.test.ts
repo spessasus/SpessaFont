@@ -29,7 +29,8 @@ describe("createBatchGeneratorActions", () => {
                 [instrument],
                 row,
                 { kind: "set", value: 6 },
-                "zones"
+                "zones",
+                true
             )
         );
 
@@ -39,6 +40,20 @@ describe("createBatchGeneratorActions", () => {
                 zone.getGenerator(GeneratorTypes.initialAttenuation, null)
             ).toBe(60);
         }
+    });
+
+    it("gives no zone the alternating loop in SF2 mode", () => {
+        const session = createTestSession();
+        const [instrument] = session.document.instruments;
+        const row = getRow(GeneratorTypes.sampleModes);
+        const edit = { kind: "set", value: 4 } as const;
+        expect(
+            createBatchGeneratorActions([instrument], row, edit, "zones", false)
+        ).toHaveLength(0);
+        expect(
+            createBatchGeneratorActions([instrument], row, edit, "zones", true)
+                .length
+        ).toBeGreaterThan(0);
     });
 
     it("adds to each zone's own value and leaves zones that would not change", () => {
@@ -53,7 +68,8 @@ describe("createBatchGeneratorActions", () => {
             [instrument],
             row,
             { kind: "add", value: 0 },
-            "zones"
+            "zones",
+            true
         );
         expect(actions).toEqual([]);
 
@@ -63,7 +79,8 @@ describe("createBatchGeneratorActions", () => {
                 [instrument],
                 row,
                 { kind: "add", value: 50 },
-                "zones"
+                "zones",
+                true
             )
         );
         expect(first.getGenerator(GeneratorTypes.pan, null)).toBe(150);
@@ -81,7 +98,8 @@ describe("createBatchGeneratorActions", () => {
                 [instrument],
                 row,
                 { kind: "set", value: -20 },
-                "global"
+                "global",
+                true
             )
         );
         expect(
@@ -110,7 +128,8 @@ describe("createBatchGeneratorActions", () => {
                 [instrument],
                 getRow(GeneratorTypes.overridingRootKey),
                 { kind: "add", value: 12 },
-                "zones"
+                "zones",
+                true
             )
         );
 
@@ -135,7 +154,8 @@ describe("createBatchGeneratorActions", () => {
                 [instrument],
                 getRow(GeneratorTypes.pan),
                 { kind: "add", value: 50 },
-                "zones"
+                "zones",
+                true
             )
         );
 
@@ -152,7 +172,8 @@ describe("createBatchGeneratorActions", () => {
                 [instrument],
                 getRow(GeneratorTypes.keyNum),
                 { kind: "add", value: 12 },
-                "zones"
+                "zones",
+                true
             )
         ).toEqual([]);
     });

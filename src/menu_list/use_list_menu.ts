@@ -229,7 +229,8 @@ export function useListMenu() {
             elements,
             row,
             { kind: mode.kind, value },
-            mode.scope
+            mode.scope,
+            session.document.format === "sfe"
         );
         if (actions.length === 0) {
             toast(t("toolsLocale.nothingChanged"));

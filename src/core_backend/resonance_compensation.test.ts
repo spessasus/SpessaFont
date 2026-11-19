@@ -82,4 +82,22 @@ describe("syncResonanceCompensators", () => {
             syncResonanceCompensators([resonanceModulator(-100)], true)
         ).toHaveLength(2);
     });
+
+    it("keeps a CC 71 to gain modulator of the bank's own", () => {
+        const own = new Modulator(
+            new ModulatorSource(MIDIControllers.filterResonance, 0, true),
+            new ModulatorSource(),
+            GeneratorTypes.gain,
+            300,
+            0
+        );
+        expect(isResonanceCompensator(own)).toBe(false);
+        const synced = syncResonanceCompensators(
+            [own, resonanceModulator(200)],
+            false
+        );
+        expect(synced).toHaveLength(3);
+        expect(synced[0]).toBe(own);
+        expect(isResonanceCompensator(synced[2])).toBe(true);
+    });
 });

@@ -32,7 +32,7 @@ export const BankInfoLocale = {
             "Ten bank używa generatorów lub modulatorów SFe. Tryb SoundFont 2 ukrywa je, ale zapis jako cokolwiek innego niż SFe bezpowrotnie je usuwa!",
         switchToSF2: "Przełącz na SoundFont 2",
         switchedOnPaste:
-            "Dodane elementy używają danych SFe, więc bank jest teraz w trybie SFe.",
+            "Dodane lub zmienione elementy używają danych SFe, więc bank jest teraz w trybie SFe.",
         switchedOnSave: "Zapisano jako SFe, więc bank jest teraz w trybie SFe."
     },
     checkButton: "Problemy:",

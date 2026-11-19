@@ -51,6 +51,28 @@ export interface CellContext {
     element: BasicPreset | BasicInstrument;
     row: GeneratorRowType;
     isInstrument: boolean;
+    /**
+     * SF2 mode gives no zone the alternating loop, which only SFe stores.
+     */
+    isSFe: boolean;
+}
+
+const ALTERNATING_LOOP = 4;
+
+/**
+ * Whether SF2 mode refuses the value for a zone: the alternating loop, unless the zone has it.
+ */
+export function isRefusedInSF2(
+    { row, isSFe }: CellContext,
+    current: CellValue,
+    value: CellValue
+) {
+    return (
+        !isSFe &&
+        row.generator === GeneratorTypes.sampleModes &&
+        value === ALTERNATING_LOOP &&
+        current !== ALTERNATING_LOOP
+    );
 }
 
 /**
@@ -430,7 +452,7 @@ export function createCellEditActions(
             next === undefined
                 ? undefined
                 : fitZoneValue(context, columnZone.sample, next);
-        if (fitted === undefined) {
+        if (fitted === undefined || isRefusedInSF2(context, current, fitted)) {
             return undefined;
         }
         actions.push(...createZoneActions(context, columnZone.zone, fitted));
@@ -569,7 +591,9 @@ export function nudgeCellValue(
         // "-" (unset) is an option of its own
         const values: (number | null)[] = [
             null,
-            ...options.map((o) => o.value)
+            ...options
+                .map((o) => o.value)
+                .filter((v) => !isRefusedInSF2(context, current, v))
         ];
         const index = values.indexOf(current);
         return values[clamp(index + direction * steps, 0, values.length - 1)];
