@@ -1,77 +1,72 @@
 import {
+    BasicInstrument,
+    type BasicPreset,
     GeneratorTypes,
     MIDIControllers,
     Modulator,
+    ModulatorControllerSources,
     ModulatorCurveTypes,
-    ModulatorSource
+    ModulatorSource,
+    SPESSASYNTH_DEFAULT_MODULATORS
 } from "spessasynth_core";
+import { isIgnoredModulator } from "./ignored_modulator.ts";
+import type { BankDocument } from "./bank_document.ts";
+import type { ModulatorLike, SourceLike } from "./modulator_like.ts";
 
 /*
- * Core gives every CC 71 to resonance modulator of an SF2 or DLS file a CC 71 to gain twin
- * when it reads the file, so the filter does not get quieter, and leaves the twins out when
- * it writes one. SF2 mode hides the twins, so an edit of the shown modulators has to bring
- * them along, or the bank plays unlike the saved file and core counts the old twin as lost.
- * This is core's rule (`getResonantCompensators`, internal there), keep the two the same.
+ * Core's default CC 71 modulator raises filterQOffset, an SFe generator. When core reads an SF2
+ * file without a DMOD chunk, it gives every instrument zone with a CC 71 to initialFilterQ
+ * modulator of its own an amount 0 twin of that default, which turns it off in the zone, so the
+ * resonance is not doubled (SFe 4.0, section 9.2). The SF2 writer leaves the twins out. SF2 mode
+ * hides the twins, so an edit of the shown modulators has to bring them along, or the bank plays
+ * unlike the saved file. This is core's rule (`upgradeSF2Bank` and `hasResonanceModulator` in its
+ * sf2_compatibility.ts, internal there), keep the two the same.
  */
 
-interface SourceLike {
-    readonly index: number;
-    readonly isCC: boolean;
-    readonly isBipolar: boolean;
-    readonly isNegative: boolean;
-    readonly curveType: number;
-}
-
-interface ModulatorLike {
-    readonly destination: number;
-    readonly transformType: number;
-    readonly primarySource: SourceLike;
-    readonly secondarySource: SourceLike;
+function isController(source: SourceLike, controller: number) {
+    return source.isCC && source.index === controller;
 }
 
 /**
- * Whether the modulator is a twin as core makes them: bipolar linear CC 71 to gain, with CC 71
- * as a switch for its amount. A CC 71 to gain modulator of another shape is the bank's own and
- * stays. A view or a core modulator.
+ * Whether the modulator is a twin as core makes them: bipolar linear CC 71 to filterQOffset with
+ * CC 71 as a switch for its amount, and an amount of 0. A view or a core modulator.
  */
 export function isResonanceCompensator(modulator: ModulatorLike) {
     const { primarySource: primary, secondarySource: secondary } = modulator;
     return (
-        modulator.destination === GeneratorTypes.gain &&
+        modulator.destination === GeneratorTypes.filterQOffset &&
+        modulator.transformAmount === 0 &&
         modulator.transformType === 0 &&
-        primary.isCC &&
-        primary.index === MIDIControllers.filterResonance &&
+        isController(primary, MIDIControllers.filterResonance) &&
         primary.isBipolar &&
         !primary.isNegative &&
         primary.curveType === ModulatorCurveTypes.linear &&
-        secondary.isCC &&
-        secondary.index === MIDIControllers.filterResonance &&
+        isController(secondary, MIDIControllers.filterResonance) &&
         !secondary.isBipolar &&
+        !secondary.isNegative &&
         secondary.curveType === ModulatorCurveTypes.switch
     );
 }
 
 /**
- * The modulator core adds twins for: bipolar linear CC 71 to resonance with no second source.
+ * A CC 71 to initialFilterQ modulator with built-in curves that the SF2 writer keeps and that
+ * core does not ignore. For this destination the writer only drops the Modulation Depth Range
+ * as the amount source.
  */
-function isResonanceModulator(modulator: Modulator) {
+function isResonanceModulator(modulator: ModulatorLike) {
     const { primarySource: primary, secondarySource: secondary } = modulator;
     return (
         modulator.destination === GeneratorTypes.initialFilterQ &&
-        primary.isCC &&
-        primary.index === MIDIControllers.filterResonance &&
-        primary.isBipolar &&
-        !primary.isNegative &&
-        primary.curveType === ModulatorCurveTypes.linear &&
-        !secondary.isCC &&
-        secondary.index === 0 &&
-        !secondary.isBipolar &&
-        !secondary.isNegative &&
-        secondary.curveType === ModulatorCurveTypes.linear
+        isController(primary, MIDIControllers.filterResonance) &&
+        primary.curveType <= ModulatorCurveTypes.switch &&
+        secondary.curveType <= ModulatorCurveTypes.switch &&
+        !isIgnoredModulator(modulator) &&
+        (secondary.isCC ||
+            secondary.index !== ModulatorControllerSources.modulationDepthRange)
     );
 }
 
-function createCompensator(amount: number, isBelow64: boolean) {
+function createCompensator() {
     return new Modulator(
         new ModulatorSource(
             MIDIControllers.filterResonance,
@@ -79,53 +74,169 @@ function createCompensator(amount: number, isBelow64: boolean) {
             true,
             true
         ),
-        // CC 71 as a switch, so only one half of it counts
         new ModulatorSource(
             MIDIControllers.filterResonance,
             ModulatorCurveTypes.switch,
-            true,
-            false,
-            isBelow64
+            true
         ),
-        GeneratorTypes.gain,
-        amount,
+        GeneratorTypes.filterQOffset,
+        0,
         0
     );
 }
 
 /**
- * The list with the twins its CC 71 to resonance modulators need, at its end. Twins that are
- * right already keep their objects and places.
- * @param isPreset a preset's amounts add to the instrument's, and so do its twins
+ * Whether an SF2 save writes the default modulators (a DMOD chunk): the list is not core's
+ * standard one, matched one to one. Core's `sf2NeedsDefaultModulators`, internal there.
+ * Core gives no twins to the zones of such a file.
+ */
+export function hasOwnDefaultModulators(defaults: readonly Modulator[]) {
+    return !isStandardList(defaults, (standard, m) =>
+        Modulator.isIdentical(standard, m, true)
+    );
+}
+
+/**
+ * Whether the list is core's standard default list, matched one to one by `isSame`.
+ */
+export function isStandardList<T>(
+    defaults: readonly T[],
+    isSame: (standard: Modulator, m: T) => boolean
+) {
+    const unmatched = [...defaults];
+    for (const standard of SPESSASYNTH_DEFAULT_MODULATORS) {
+        const index = unmatched.findIndex((m) => isSame(standard, m));
+        if (index === -1) {
+            return false;
+        }
+        unmatched.splice(index, 1);
+    }
+    return unmatched.length === 0;
+}
+
+/**
+ * The list with the twin it needs at its end, or without twins. A list that is right already
+ * comes back with the same objects in the same places.
+ * @param isTwinNeeded an instrument zone of a bank that an SF2 save writes without default
+ * modulators. Preset zones never get one.
  */
 export function syncResonanceCompensators(
     modulators: readonly Modulator[],
-    isPreset: boolean
+    isTwinNeeded: boolean
 ) {
+    const twins = modulators.filter((m) => isResonanceCompensator(m));
+    const isNeeded =
+        isTwinNeeded && modulators.some((m) => isResonanceModulator(m));
+    if (twins.length === (isNeeded ? 1 : 0)) {
+        return [...modulators];
+    }
     const kept = modulators.filter((m) => !isResonanceCompensator(m));
-    const twins = new Array<Modulator>();
-    for (const modulator of kept) {
-        if (!isResonanceModulator(modulator)) {
-            continue;
-        }
-        const amount = modulator.transformAmount;
-        if (isPreset) {
-            if (amount !== 0) {
-                twins.push(createCompensator(Math.round(amount / 2), false));
+    return isNeeded ? [...kept, createCompensator()] : kept;
+}
+
+/**
+ * How much the default CC 71 to filterQOffset modulator adds in a zone: the amount of the last
+ * modulator of its kind in the zone, else in the global zone, else in the default list, as an
+ * identical modulator supersedes the one before it. A twin makes it 0.
+ */
+function getResonanceOffset(
+    defaults: readonly Modulator[],
+    global: readonly Modulator[],
+    local: readonly Modulator[]
+) {
+    const shape = createCompensator();
+    const find = (list: readonly Modulator[]) =>
+        list.findLast((m) => Modulator.isIdentical(shape, m))?.transformAmount;
+    return find(local) ?? find(global) ?? find(defaults) ?? 0;
+}
+
+/**
+ * Whether only an SFe-mode paste keeps how CC 71 plays in the instruments. SF2 mode syncs their
+ * twins, so a zone may play it unlike in the bank they came from, while SFe mode keeps their
+ * modulators. Zones that both modes change (the two default lists differ) do not count, and a
+ * zone only SF2 mode keeps makes it false, as converting would change that one. Preset zones do
+ * not count, a twin there adds nothing.
+ * @param instruments the instruments the paste adds to the bank, not the ones it shares
+ */
+export function isSoundKeptOnlyInSFe(
+    instruments: Iterable<BasicInstrument>,
+    sourceDefaults: readonly Modulator[],
+    targetDefaults: readonly Modulator[]
+) {
+    const isTwinNeeded = !hasOwnDefaultModulators(targetDefaults);
+    let keptOnlyInSFe = 0;
+    let keptOnlyInSF2 = 0;
+    for (const { globalZone, zones } of instruments) {
+        const global = globalZone.modulators;
+        const syncedGlobal = syncResonanceCompensators(global, isTwinNeeded);
+        for (const { modulators } of zones) {
+            const before = getResonanceOffset(
+                sourceDefaults,
+                global,
+                modulators
+            );
+            const isKeptInSFe =
+                getResonanceOffset(targetDefaults, global, modulators) ===
+                before;
+            const isKeptInSF2 =
+                getResonanceOffset(
+                    targetDefaults,
+                    syncedGlobal,
+                    syncResonanceCompensators(modulators, isTwinNeeded)
+                ) === before;
+            if (isKeptInSFe && !isKeptInSF2) {
+                keptOnlyInSFe++;
+            } else if (isKeptInSF2 && !isKeptInSFe) {
+                keptOnlyInSF2++;
             }
-            continue;
-        }
-        // Half the amount above 64, where the resonance goes up. A negative amount raises
-        // it below 64
-        const raised = Math.max(0, amount);
-        twins.push(createCompensator(Math.round(raised / 2), false));
-        if (amount < 0) {
-            twins.push(createCompensator(Math.round(amount / 2), true));
         }
     }
-    const old = modulators.filter((m) => isResonanceCompensator(m));
-    const isUpToDate =
-        old.length === twins.length &&
-        old.every((m, i) => Modulator.isIdentical(m, twins[i], true));
-    return isUpToDate ? [...modulators] : [...kept, ...twins];
+    return keptOnlyInSFe > 0 && keptOnlyInSF2 === 0;
+}
+
+/**
+ * Whether pasting or copying the instruments into the bank should ask to convert it to SFe,
+ * which alone keeps how they play CC 71 (`isSoundKeptOnlyInSFe`). Only an SF2-mode bank syncs
+ * the twins, and one that saves as DLS has none.
+ * @param instruments the instruments the paste adds to the bank
+ * @param sourceDefaults the default modulators of the bank they come from
+ */
+export function isTwinQuestionNeeded(
+    document: BankDocument,
+    instruments: Iterable<BasicInstrument>,
+    sourceDefaults: readonly Modulator[]
+) {
+    return (
+        document.format === "sf2" &&
+        document.writeFormat !== "dls" &&
+        isSoundKeptOnlyInSFe(
+            instruments,
+            sourceDefaults,
+            document.bank.defaultModulators
+        )
+    );
+}
+
+/**
+ * Whether an SF2-mode edit of a zone's modulators brings in a twin that the sync would take out
+ * again, where core would not make one (a preset zone, a zone without a CC 71 to Q modulator).
+ * Only SFe mode keeps it, like other SFe data.
+ */
+export function isLosingNewTwin(
+    document: BankDocument,
+    element: BasicPreset | BasicInstrument,
+    before: readonly Modulator[],
+    after: readonly Modulator[]
+) {
+    const isTwinNeeded =
+        element instanceof BasicInstrument &&
+        !hasOwnDefaultModulators(document.bank.defaultModulators);
+    // DLS has no default for a twin to turn off, so its save drops them and nothing changes
+    return (
+        document.writeFormat !== "dls" &&
+        after.some((m) => isResonanceCompensator(m) && !before.includes(m)) &&
+        syncResonanceCompensators(after, isTwinNeeded).every(
+            (m) => !isResonanceCompensator(m)
+        )
+    );
 }

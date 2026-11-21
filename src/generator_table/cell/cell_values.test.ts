@@ -24,6 +24,7 @@ import {
     createTextEditActions,
     formatNumberCell,
     getCellDisplay,
+    isRefusedInSF2,
     nudgeCellValue,
     readColumnCell
 } from "./cell_values.ts";
@@ -553,6 +554,27 @@ describe("the alternating loop in SF2 mode", () => {
         expect(
             createTextEditActions(getContext(instrument, LOOP), [column], "4")
         ).toHaveLength(1);
+    });
+
+    it("steps a reserved looping mode to its neighbor instead of clearing it", () => {
+        const session = createTestSession();
+        const [instrument] = session.document.instruments;
+        const context = getContext(instrument, LOOP);
+        expect(nudgeCellValue(context, 5, 5, -1, 1)).toBe(4);
+        expect(nudgeCellValue(context, 5, 5, 1, 1)).toBe(5);
+        expect(nudgeCellValue(context, 5, 5, -1, 3)).toBe(2);
+        expect(nudgeCellValue(context, -1, -1, -1, 1)).toBeNull();
+    });
+
+    it("refuses any other looping mode above 3 too, and allows 0 to 3", () => {
+        const session = createTestSession();
+        const [instrument] = session.document.instruments;
+        const sf2 = { ...getContext(instrument, LOOP), isSFe: false };
+        expect(isRefusedInSF2(sf2, 1, 5)).toBe(true);
+        expect(isRefusedInSF2(sf2, 5, 5)).toBe(false);
+        for (const mode of [0, 1, 2, 3]) {
+            expect(isRefusedInSF2(sf2, null, mode)).toBe(false);
+        }
     });
 });
 

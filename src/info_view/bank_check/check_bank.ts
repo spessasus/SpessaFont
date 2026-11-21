@@ -11,10 +11,8 @@ import {
     isOutsideLatin1
 } from "../../core_backend/latin1_text.ts";
 import { isBankNumberLostInSF2 } from "../../core_backend/sf2_bank_numbers.ts";
-import {
-    hasZoneSFeData,
-    isLostSFeDefaultModulator
-} from "../../core_backend/sfe_data.ts";
+import { hasZoneSFeData } from "../../core_backend/sfe_data.ts";
+import { getLostSFeDefaultModulators } from "../../core_backend/sf2_default_modulators.ts";
 import type { BankFormat } from "../../core_backend/bank_format.ts";
 import { isSameModulator } from "../../modulator_editing/same_modulator.ts";
 import { isLinkedModulator } from "../../modulator_editing/linked_modulator.ts";
@@ -192,7 +190,7 @@ export function checkBank(
     }
     if (
         !isSFe &&
-        views.defaultModulators.some((m) => isLostSFeDefaultModulator(m))
+        getLostSFeDefaultModulators(views.defaultModulators).length > 0
     ) {
         issues.push({ kind: "sfeDefaultModulators" });
     }

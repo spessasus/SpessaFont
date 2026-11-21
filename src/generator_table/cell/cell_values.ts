@@ -26,6 +26,7 @@ import {
     type OffsetGenerator
 } from "./offset_generator.ts";
 import { getGeneratorOptions } from "../generator_options.ts";
+import { isSF2LoopingMode } from "../../core_backend/sfe_data.ts";
 import {
     clamp,
     getGeneratorDefault,
@@ -52,15 +53,14 @@ export interface CellContext {
     row: GeneratorRowType;
     isInstrument: boolean;
     /**
-     * SF2 mode gives no zone the alternating loop, which only SFe stores.
+     * SF2 mode gives no zone a looping mode only SFe stores (the alternating loop).
      */
     isSFe: boolean;
 }
 
-const ALTERNATING_LOOP = 4;
-
 /**
- * Whether SF2 mode refuses the value for a zone: the alternating loop, unless the zone has it.
+ * Whether SF2 mode refuses the value for a zone: a looping mode only SFe stores, unless the zone
+ * has that one already.
  */
 export function isRefusedInSF2(
     { row, isSFe }: CellContext,
@@ -70,8 +70,9 @@ export function isRefusedInSF2(
     return (
         !isSFe &&
         row.generator === GeneratorTypes.sampleModes &&
-        value === ALTERNATING_LOOP &&
-        current !== ALTERNATING_LOOP
+        typeof value === "number" &&
+        !isSF2LoopingMode(value) &&
+        value !== current
     );
 }
 
@@ -595,8 +596,25 @@ export function nudgeCellValue(
                 .map((o) => o.value)
                 .filter((v) => !isRefusedInSF2(context, current, v))
         ];
-        const index = values.indexOf(current);
-        return values[clamp(index + direction * steps, 0, values.length - 1)];
+        let index = values.indexOf(current);
+        let remaining = steps;
+        if (index === -1 && typeof current === "number") {
+            // A value no option has (a reserved looping mode) takes its numeric neighbor as
+            // the first step
+            const neighbor =
+                direction > 0
+                    ? values.findIndex((v) => v !== null && v > current)
+                    : values.findLastIndex((v) => v !== null && v < current);
+            // Below every option a step down reaches "-", as it does from the lowest one
+            if (neighbor === -1) {
+                return direction > 0 ? current : null;
+            }
+            index = neighbor;
+            remaining--;
+        }
+        return values[
+            clamp(index + direction * remaining, 0, values.length - 1)
+        ];
     }
     const { min, max } = getGeneratorRange(generator, isInstrument);
     let raw = base ?? getGeneratorDefault(generator, isInstrument);

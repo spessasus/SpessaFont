@@ -24,11 +24,14 @@ export class SetDefaultModulatorsAction implements HistoryAction {
         document.bank.defaultModulators = this.newModulators;
         document.addCustomCurves(this.addedCurves);
         changes.touchBankInfo();
+        // The resonance twins it brings along touch instruments, the edit is still the list's
+        changes.focusOn("info");
     }
 
     public undo(document: BankDocument, changes: ChangeSet) {
         document.bank.defaultModulators = this.oldModulators;
         document.removeCustomCurves(this.addedCurves ?? []);
         changes.touchBankInfo();
+        changes.focusOn("info");
     }
 }

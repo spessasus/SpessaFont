@@ -43,5 +43,7 @@ export const ClipboardLocale = {
     copiedToBank_one: "Skopiowano {{count}} element do {{name}}.",
     copiedToBank_few: "Skopiowano {{count}} elementy do {{name}}.",
     copiedToBank_many: "Skopiowano {{count}} elementów do {{name}}.",
-    copiedToBank_other: "Skopiowano {{count}} elementu do {{name}}."
+    copiedToBank_other: "Skopiowano {{count}} elementu do {{name}}.",
+    copySourceGone:
+        "Nic nie skopiowano, elementów nie ma już w banku, z którego pochodzą."
 };

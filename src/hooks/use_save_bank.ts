@@ -8,10 +8,8 @@ import { logError } from "../utils/core_utils.ts";
 import { hasSFeOnlyData } from "../core_backend/sfe_data.ts";
 import { hasBankNumbersLostInSF2 } from "../core_backend/sf2_bank_numbers.ts";
 import { hasTextOutsideLatin1 } from "../core_backend/latin1_text.ts";
-import {
-    getDLSLosses,
-    hasCustomDefaultModulators
-} from "../core_backend/dls_data.ts";
+import { getDLSLosses } from "../core_backend/dls_data.ts";
+import { hasOwnDefaultModulators } from "../core_backend/resonance_compensation.ts";
 
 const FORMAT_NAMES = {
     sf2: "SF2",
@@ -174,7 +172,10 @@ export function useSaveBank() {
             );
         }
         // A DLS save leaves them out, which its own warning says
-        if (target !== "dls" && hasCustomDefaultModulators(bank)) {
+        if (
+            target !== "dls" &&
+            hasOwnDefaultModulators(bank.defaultModulators)
+        ) {
             warnings.push(t("menuBarLocale.file.warnDefaultModulators"));
         }
         if (format === "sf2" && session.hasCompressedSamples()) {

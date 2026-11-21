@@ -58,17 +58,23 @@ export function SelectCell({
     const zones = getViewZones(column);
     const values = zones.map((z) => readViewCell(z, generator));
     const [first] = values;
-    // A stereo column whose zones differ shows both, and a pick sets both
-    const isMixed = values.some((v) => v !== first);
+    // A stereo column whose zones differ shows both, and a pick sets both. A value no option
+    // has (a looping mode SFe reserves) shows the same way
     const value = typeof first === "number" ? first : null;
+    const isMixed =
+        values.some((v) => v !== first) ||
+        (value !== null && options.every((o) => o.value !== value));
     // Named from every option, so a value SF2 mode does not offer still shows
     const allOptions = getGeneratorOptions(generator) ?? options;
-    const mixedText = values
-        .map((v) => {
-            const option = allOptions.find((o) => o.value === v);
-            return option ? t(option.label) : "-";
-        })
-        .join(" / ");
+    // Both halves of a stereo column with one value name it once
+    const mixedTexts = values.map((v) => {
+        const option = allOptions.find((o) => o.value === v);
+        if (option) {
+            return t(option.label);
+        }
+        return typeof v === "number" ? v.toString() : "-";
+    });
+    const mixedText = [...new Set(mixedTexts)].join(" / ");
     const isModulated = zones.some((z) =>
         z.modulators.some((m) => m.destination === generator)
     );

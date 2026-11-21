@@ -6,7 +6,8 @@ import { showToastDialog } from "../toasts/show_toast_dialog.tsx";
  * Shows toast dialogs that belong to the calling component. They close when it unmounts (its
  * element or its tab is not shown any more), and a new one replaces the one before, so a
  * button never acts on an editor the user has left. The buttons should still check that what
- * they change is in the bank, as it can be removed while the toast is open.
+ * they change is in the bank, as it can be removed while the toast is open. Returns the toast's
+ * id.
  */
 export function useScopedToastDialog() {
     const shown = useRef(new Set<string>());
@@ -24,6 +25,8 @@ export function useScopedToastDialog() {
             toast.dismiss(id);
         }
         shown.current.clear();
-        shown.current.add(showToastDialog(options));
+        const id = showToastDialog(options);
+        shown.current.add(id);
+        return id;
     };
 }

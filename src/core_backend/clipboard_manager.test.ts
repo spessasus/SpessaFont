@@ -1,5 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
-import { BasicPreset, GeneratorTypes, SampleTypes } from "spessasynth_core";
+import {
+    BasicPreset,
+    GeneratorTypes,
+    MIDIControllers,
+    Modulator,
+    ModulatorSource,
+    SampleTypes
+} from "spessasynth_core";
 import {
     createTestHost,
     createTestSession,
@@ -478,5 +485,85 @@ describe("ClipboardManager in the same bank", () => {
         const before = target.document.instruments.length;
         expectRoundTrip(target, () => clipboard.pastePresets(target));
         expect(target.document.instruments).toHaveLength(before + 1);
+    });
+});
+
+/**
+ * An instrument with CC 71 to Q and no twin on the clipboard, and two banks.
+ */
+function setUpTwinPaste() {
+    const host = createTestHost();
+    const source = createTestSession(host);
+    const target = createTestSession(host);
+    const [instrument] = source.document.instruments;
+    // CC 71 to Q without its twin, as an SFe bank may have it
+    instrument.globalZone.setModulators([
+        new Modulator(
+            new ModulatorSource(MIDIControllers.filterResonance, 0, true, true),
+            new ModulatorSource(),
+            GeneratorTypes.initialFilterQ,
+            200,
+            0
+        )
+    ]);
+    publishSetUp(source);
+    const clipboard = new ClipboardManager();
+    clipboard.copyInstruments(new Set([instrument]), source);
+    return { source, target, clipboard };
+}
+
+describe("ClipboardManager.isTwinQuestionNeeded", () => {
+    it("asks for a paste into an SF2-mode bank whose sync would change the sound", () => {
+        const { source, target, clipboard } = setUpTwinPaste();
+        expect(target.document.format).toBe("sf2");
+        expect(clipboard.isTwinQuestionNeeded("instruments", target)).toBe(
+            true
+        );
+        // The pasted copies are new in their own bank too
+        expect(clipboard.isTwinQuestionNeeded("instruments", source)).toBe(
+            true
+        );
+    });
+
+    it("does not ask for an SFe-mode bank or one that saves as DLS", () => {
+        const { target, clipboard } = setUpTwinPaste();
+        target.document.writeFormat = "dls";
+        expect(clipboard.isTwinQuestionNeeded("instruments", target)).toBe(
+            false
+        );
+        target.document.writeFormat = "sf2";
+        target.document.format = "sfe";
+        expect(clipboard.isTwinQuestionNeeded("instruments", target)).toBe(
+            false
+        );
+    });
+
+    it("leaves out the instruments a preset paste into its own bank shares", () => {
+        const { source, target, clipboard } = setUpTwinPaste();
+        const preset = source.document.presets.find((p) =>
+            p.zones.some((z) => z.instrument === source.document.instruments[0])
+        );
+        if (!preset) {
+            throw new Error("No preset uses the first instrument.");
+        }
+        clipboard.copyPresets(new Set([preset]), source);
+        expect(clipboard.isTwinQuestionNeeded("presets", source)).toBe(false);
+        expect(clipboard.isTwinQuestionNeeded("presets", target)).toBe(true);
+    });
+});
+
+describe("ClipboardManager.changeSignal", () => {
+    it("aborts on the next copy, so a paste question ends with it", () => {
+        const { source, clipboard } = setUpTwinPaste();
+        const signal = clipboard.changeSignal;
+        // The modulator clipboard is another one, the paste stays the same
+        clipboard.copyModulators([]);
+        expect(signal.aborted).toBe(false);
+        clipboard.copyInstruments(
+            new Set(source.document.bank.instruments.slice(0, 1)),
+            source
+        );
+        expect(signal.aborted).toBe(true);
+        expect(clipboard.changeSignal.aborted).toBe(false);
     });
 });

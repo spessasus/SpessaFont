@@ -17,15 +17,13 @@ import { HistoryManager } from "./history.ts";
 import { ChangeSet } from "./change_set.ts";
 import type { SampleView } from "./entity_views.ts";
 import {
-    getInitialWriteFormat,
     getSaveExtension,
     pickSaveFile,
     resolveWriteFormat,
     SaveError,
     type SaveFileHandle,
     type SaveFormat,
-    writeFile,
-    type WriteFormat
+    writeFile
 } from "./persistence.ts";
 import type {
     ConversionReport,
@@ -46,7 +44,6 @@ let nextSessionId = 1;
  */
 export class BankSession implements SampleDataSource {
     private saveHandle: SaveFileHandle | undefined;
-    private writeFormat: WriteFormat;
     private readonly closeController = new AbortController();
     /**
      * The save running now, which the next one waits for.
@@ -105,7 +102,6 @@ export class BankSession implements SampleDataSource {
         );
         try {
             this.document = new BankDocument(bank);
-            this.writeFormat = getInitialWriteFormat(this.document.bank);
             this.store = new BankStore(this.document);
             this.mirrorSync = new MirrorSync(
                 client,
@@ -271,7 +267,7 @@ export class BankSession implements SampleDataSource {
             ? this.recordConversion(result.conversion, start.views.samples)
             : 0;
         this.saveHandle = await writeFile(result.binary, name, handle);
-        this.writeFormat = target;
+        this.document.writeFormat = target;
         // The file holds everything SFe does now, so the editor shows it all. Recorded only
         // once the file is written, a failed write leaves the format alone
         if (target === "sf4" && this.document.format !== "sfe") {
@@ -375,7 +371,7 @@ export class BankSession implements SampleDataSource {
     public getWriteFormat(format: SaveFormat) {
         return resolveWriteFormat(
             format,
-            this.writeFormat,
+            this.document.writeFormat,
             this.document.format
         );
     }

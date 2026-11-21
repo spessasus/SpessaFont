@@ -1,25 +1,10 @@
-import { BasicSoundBank, Modulator } from "spessasynth_core";
+import type { BasicSoundBank } from "spessasynth_core";
+import { hasOwnDefaultModulators } from "./resonance_compensation.ts";
 
 /**
  * What a DLS save leaves out.
  */
 export type DLSLoss = "stereoLinks" | "unusedInstruments" | "defaultModulators";
-
-const STANDARD_MODULATORS = new BasicSoundBank().defaultModulators;
-
-/**
- * Whether the default modulators differ from core's, as core's SF2 writer decides when it
- * writes them.
- */
-export function hasCustomDefaultModulators(bank: BasicSoundBank) {
-    const modulators = bank.defaultModulators;
-    return (
-        modulators.length !== STANDARD_MODULATORS.length ||
-        modulators.some((m) =>
-            STANDARD_MODULATORS.every((s) => !Modulator.isIdentical(s, m, true))
-        )
-    );
-}
 
 /**
  * What a DLS save of the bank would leave out. DLS samples are mono, it writes the presets
@@ -34,7 +19,7 @@ export function getDLSLosses(bank: BasicSoundBank) {
     if (bank.instruments.some((i) => i.linkedTo.length === 0)) {
         losses.push("unusedInstruments");
     }
-    if (hasCustomDefaultModulators(bank)) {
+    if (hasOwnDefaultModulators(bank.defaultModulators)) {
         losses.push("defaultModulators");
     }
     return losses;

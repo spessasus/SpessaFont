@@ -12,9 +12,10 @@ import type { HistoryLabel } from "./history_label.ts";
 export interface HistoryAction {
     /**
      * A group is named after its last action, the one that finishes it (a paste ends with the
-     * presets, after their instruments and samples).
+     * presets, after their instruments and samples). Undefined for a follow-up that keeps
+     * something in step after the others, which the group is not named after.
      */
-    readonly label: HistoryLabel;
+    readonly label: HistoryLabel | undefined;
 
     do(document: BankDocument, changes: ChangeSet): void;
 
@@ -126,8 +127,8 @@ export class HistoryManager {
             canUndo: this.canUndo,
             canRedo: this.canRedo,
             isDirty: this.isDirty,
-            undoLabel: this.done.at(-1)?.at(-1)?.label,
-            redoLabel: this.undone.at(-1)?.at(-1)?.label
+            undoLabel: this.done.at(-1)?.findLast((a) => a.label)?.label,
+            redoLabel: this.undone.at(-1)?.findLast((a) => a.label)?.label
         };
     }
 

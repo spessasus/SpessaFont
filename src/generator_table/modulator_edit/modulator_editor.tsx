@@ -1,4 +1,8 @@
-import { type BasicInstrument, BasicPreset, Modulator } from "spessasynth_core";
+import {
+    type BasicInstrument,
+    type BasicPreset,
+    Modulator
+} from "spessasynth_core";
 import { ModulatorList } from "../../modulator_editing/modulator_list/modulator_list.tsx";
 import "./modulator_edit.css";
 import { useTranslation } from "react-i18next";
@@ -13,7 +17,7 @@ import { useBankSnapshot } from "../../hooks/use_bank_snapshot.ts";
 import { useSFeSwitch } from "../../hooks/use_sfe_switch.ts";
 import { useCustomCurves } from "../../hooks/use_custom_curves.ts";
 import { isLostSFeModulator } from "../../core_backend/sfe_data.ts";
-import { syncResonanceCompensators } from "../../core_backend/resonance_compensation.ts";
+import { isLosingNewTwin } from "../../core_backend/resonance_compensation.ts";
 
 interface ModulatorEditorProps {
     name: string;
@@ -46,15 +50,13 @@ export function ModulatorEditor({
     // table splits the pair otherwise), so the partner gets copies of the same list
     const setModulators = (shown: Modulator[], mergeKey?: string) => {
         const before = getModulators();
-        // SF2 mode hides the CC 71 to gain twins, which follow the shown modulators
-        const mods = isSFe
-            ? shown
-            : syncResonanceCompensators(shown, element instanceof BasicPreset);
         // A paste brings one in, or an edit of the mod wheel vibrato that leaves its Modulation
-        // Depth Range where SF2 cannot store it. SF2 mode offers no SFe destination
-        const isAddingSFeData = mods.some(
-            (m) => isLostSFeModulator(m) && !before.includes(m)
-        );
+        // Depth Range where SF2 cannot store it, or a pasted twin the sync would take out. SF2 mode
+        // offers no SFe destination. In SF2 mode the SFe switch puts the hidden resonance twins in
+        // step after the edit
+        const isAddingSFeData =
+            shown.some((m) => isLostSFeModulator(m) && !before.includes(m)) ||
+            isLosingNewTwin(session.document, element, before, shown);
         applyWithSFeSwitch(
             session,
             getColumnZones(element, column).map(
@@ -62,10 +64,12 @@ export function ModulatorEditor({
                     new EditModulatorsAction(
                         element,
                         zone,
-                        i === 0 ? mods : mods.map((m) => Modulator.copyFrom(m))
+                        i === 0
+                            ? shown
+                            : shown.map((m) => Modulator.copyFrom(m))
                     )
             ),
-            isAddingSFeData,
+            isAddingSFeData ? "sfeData" : undefined,
             (group) => apply(group, mergeKey)
         );
     };

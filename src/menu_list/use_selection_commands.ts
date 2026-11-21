@@ -10,7 +10,8 @@ import {
     selectionOf
 } from "./menu_selection.ts";
 import { createDeleteSelectionActions } from "./delete_selection.ts";
-import { useSFeSwitch } from "../hooks/use_sfe_switch.ts";
+import { getSwitchCause, useSFeSwitch } from "../hooks/use_sfe_switch.ts";
+import { useTwinPasteQuestion } from "../hooks/use_twin_paste_question.ts";
 
 /**
  * Copy, cut, paste, duplicate and delete for the selected elements, shared by the keyboard
@@ -20,6 +21,7 @@ export function useSelectionCommands() {
     const { t } = useTranslation();
     const { session, apply } = useBankEditor();
     const applyWithSFeSwitch = useSFeSwitch();
+    const askAboutTwins = useTwinPasteQuestion("paste");
     const { clipboard } = useClipboard();
 
     /**
@@ -66,14 +68,19 @@ export function useSelectionCommands() {
         }
     };
 
-    const pastePresets = () => {
+    // Runs when the user acts, or once they answered the question about resonance twins
+    const pastePresets = (isConverting: boolean) => {
         // Counted before the paste, after it the copies take the patches
         const moved = clipboard.countMovedPresets(session.document);
         applyWithSFeSwitch(
             session,
             clipboard.pastePresets(session),
-            clipboard.hasSFeData("presets", session),
-            apply
+            getSwitchCause(
+                isConverting,
+                clipboard.hasSFeData("presets", session)
+            ),
+            apply,
+            true
         );
         toast.success(
             t("clipboardLocale.pastedPresets", {
@@ -85,21 +92,43 @@ export function useSelectionCommands() {
         }
     };
 
+    const pasteInstruments = (isConverting: boolean) => {
+        applyWithSFeSwitch(
+            session,
+            clipboard.pasteInstruments(session),
+            getSwitchCause(
+                isConverting,
+                clipboard.hasSFeData("instruments", session)
+            ),
+            apply,
+            true
+        );
+        toast.success(
+            t("clipboardLocale.pastedInstruments", {
+                count: clipboard.instrumentCount
+            })
+        );
+    };
+
     const paste = () => {
+        // A paste that brings SFe data switches to SFe mode anyway, so it asks nothing. A copy
+        // while the question is open ends it, Convert would paste the new copy
         if (clipboard.hasPresets()) {
-            pastePresets();
+            askAboutTwins(
+                session,
+                !clipboard.hasSFeData("presets", session) &&
+                    clipboard.isTwinQuestionNeeded("presets", session),
+                pastePresets,
+                [clipboard.changeSignal]
+            );
         }
         if (clipboard.hasInstruments()) {
-            applyWithSFeSwitch(
+            askAboutTwins(
                 session,
-                clipboard.pasteInstruments(session),
-                clipboard.hasSFeData("instruments", session),
-                apply
-            );
-            toast.success(
-                t("clipboardLocale.pastedInstruments", {
-                    count: clipboard.instrumentCount
-                })
+                !clipboard.hasSFeData("instruments", session) &&
+                    clipboard.isTwinQuestionNeeded("instruments", session),
+                pasteInstruments,
+                [clipboard.changeSignal]
             );
         }
         if (!clipboard.hasSamples()) {
@@ -126,7 +155,6 @@ export function useSelectionCommands() {
 
     return {
         copy,
-        pastePresets,
         // Elements still in use stay, so the cut says that they were only copied
         cut: (selection: ReadonlySet<BankEntity>) => {
             const message = copyToClipboard(selection);

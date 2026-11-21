@@ -21,5 +21,7 @@ export const ClipboardLocale = {
     pastedModulators_one: "Pasted {{count}} modulator.",
     pastedModulators_other: "Pasted {{count}} modulators.",
     copiedToBank_one: "Copied {{count}} element to {{name}}.",
-    copiedToBank_other: "Copied {{count}} elements to {{name}}."
+    copiedToBank_other: "Copied {{count}} elements to {{name}}.",
+    copySourceGone:
+        "Nothing was copied, the elements are no longer in the bank they came from."
 };

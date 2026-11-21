@@ -15,6 +15,7 @@ import { AddCustomCurvesAction } from "./add_custom_curves_action.ts";
 import type { BankDocument } from "./bank_document.ts";
 import type { BankSession } from "./bank_session.ts";
 import { findFreePatch, getTakenPatches } from "./free_patch.ts";
+import { isTwinQuestionNeeded } from "./resonance_compensation.ts";
 import { hasCopiedSFeData } from "./sfe_data.ts";
 import type { SampleCopyRef } from "../synth_host/protocol.ts";
 import { getObjectId } from "../utils/object_id.ts";
@@ -234,6 +235,10 @@ export class ClipboardManager {
      */
     private sourceId: number | undefined;
     /**
+     * The default modulators of the bank the elements came from, which decide how they play.
+     */
+    private sourceDefaults = new Array<Modulator>();
+    /**
      * The id of the sample each copied sample was copied from, which the host kept the data of.
      */
     private sampleOrigins = new Map<BasicSample, number>();
@@ -242,6 +247,7 @@ export class ClipboardManager {
      */
     private instrumentOrigins = new Map<BasicInstrument, number>();
     private readonly listeners = new Set<() => void>();
+    private changeController = new AbortController();
     private contents: ClipboardContents = {
         presets: 0,
         instruments: 0,
@@ -257,6 +263,14 @@ export class ClipboardManager {
     };
 
     public readonly getSnapshot = () => this.contents;
+
+    /**
+     * Ends the questions about pasting the elements the clipboard held.
+     */
+    private changeElements() {
+        this.changeController.abort();
+        this.changeController = new AbortController();
+    }
 
     private notify() {
         this.contents = {
@@ -293,6 +307,7 @@ export class ClipboardManager {
         this.instrumentOrigins = getOriginIds(copies.instruments);
         source.copyToClipboard(copies.samples.values());
         this.sourceId = source.id;
+        this.sourceDefaults = [...source.document.bank.defaultModulators];
         return new Set(pairs.map(([, copy]) => copy));
     }
 
@@ -400,6 +415,14 @@ export class ClipboardManager {
             : actions;
     }
 
+    /**
+     * Aborts on the next copy of elements, which ends a question about pasting the ones the
+     * clipboard holds now.
+     */
+    public get changeSignal() {
+        return this.changeController.signal;
+    }
+
     public get presetCount() {
         return this.presetClipboard.size;
     }
@@ -444,6 +467,35 @@ export class ClipboardManager {
         );
     }
 
+    /**
+     * Whether pasting the presets or the instruments into the bank should ask to convert it to
+     * SFe first, which alone keeps how they play CC 71 (`isTwinQuestionNeeded`). A preset paste
+     * into the bank it came from shares the instruments still there, which stay as they are.
+     */
+    public isTwinQuestionNeeded(
+        kind: "presets" | "instruments",
+        target: BankSession
+    ) {
+        const { document } = target;
+        const isSameBank = target.id === this.sourceId;
+        const instruments =
+            kind === "instruments"
+                ? this.instrumentClipboard
+                : new Set(
+                      [...this.presetClipboard]
+                          .flatMap((p) => p.zones.map((z) => z.instrument))
+                          .filter((copy) => {
+                              const id = this.instrumentOrigins.get(copy);
+                              return (
+                                  !isSameBank ||
+                                  id === undefined ||
+                                  !document.getInstrument(id)
+                              );
+                          })
+                  );
+        return isTwinQuestionNeeded(document, instruments, this.sourceDefaults);
+    }
+
     public copyPresets(p: ReadonlySet<BasicPreset>, source: BankSession) {
         this.presetClipboard = this.keepCopies(p, source, (cloner, preset) => {
             const copy = cloner.clonePreset(preset);
@@ -453,6 +505,7 @@ export class ClipboardManager {
         });
         this.sampleClipboard = new Set();
         this.instrumentClipboard = new Set();
+        this.changeElements();
         this.notify();
     }
 
@@ -465,6 +518,7 @@ export class ClipboardManager {
         );
         this.sampleClipboard = new Set();
         this.presetClipboard = new Set();
+        this.changeElements();
         this.notify();
     }
 
@@ -474,6 +528,7 @@ export class ClipboardManager {
         );
         this.instrumentClipboard = new Set();
         this.presetClipboard = new Set();
+        this.changeElements();
         this.notify();
     }
 

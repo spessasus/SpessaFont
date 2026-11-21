@@ -33,5 +33,9 @@ describe("getShownGeneratorOptions", () => {
         expect(values([zoneWithLoop(1), zoneWithLoop(4)], false)).not.toContain(
             4
         );
+        // Another SFe looping mode is no reason to offer it, a pick of 4 would be refused there
+        expect(values([zoneWithLoop(7), zoneWithLoop(4)], false)).not.toContain(
+            4
+        );
     });
 });

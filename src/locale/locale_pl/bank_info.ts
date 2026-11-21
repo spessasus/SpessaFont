@@ -31,6 +31,9 @@ export const BankInfoLocale = {
         hideSFeData:
             "Ten bank używa generatorów lub modulatorów SFe. Tryb SoundFont 2 ukrywa je, ale zapis jako cokolwiek innego niż SFe bezpowrotnie je usuwa!",
         switchToSF2: "Przełącz na SoundFont 2",
+        twinPaste:
+            "Dodawane elementy grają CC 71 (rezonans) inaczej w banku SoundFont 2. Przekonwertować bank {{name}} na SFe, aby zachować ich brzmienie?",
+        convertToSFe: "Konwertuj na SFe",
         switchedOnPaste:
             "Dodane lub zmienione elementy używają danych SFe, więc bank jest teraz w trybie SFe.",
         switchedOnSave: "Zapisano jako SFe, więc bank jest teraz w trybie SFe."

@@ -18,6 +18,7 @@ import type { BankEntity } from "./bank_view.ts";
 import { getObjectId } from "../utils/object_id.ts";
 import { isXGDrumBank } from "./xg_state.ts";
 import { type BankFormat, detectBankFormat } from "./bank_format.ts";
+import { getInitialWriteFormat, type WriteFormat } from "./persistence.ts";
 
 /**
  * Inserts the item before the first item that sorts after it, and returns its index.
@@ -82,10 +83,16 @@ export class BankDocument {
      * Changed only by `SetBankFormatAction`.
      */
     public format: BankFormat;
+    /**
+     * The format the next save writes, set by the session after a save. Whether the bank saves
+     * as DLS decides if SF2 mode follows core's SF2 reader (resonance twins, the default list).
+     */
+    public writeFormat: WriteFormat;
 
     public constructor(bank: BasicSoundBank) {
         this.bank = bank;
         this.format = detectBankFormat(bank);
+        this.writeFormat = getInitialWriteFormat(bank);
         this.sortElements();
     }
 

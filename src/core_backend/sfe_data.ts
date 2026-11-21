@@ -5,12 +5,18 @@ import {
     GeneratorTypes,
     MIDIControllers,
     ModulatorControllerSources,
-    ModulatorCurveTypes,
-    SPESSASYNTH_DEFAULT_MODULATORS
+    ModulatorCurveTypes
 } from "spessasynth_core";
 import { isResonanceCompensator } from "./resonance_compensation.ts";
+import type { ModulatorLike, SourceLike } from "./modulator_like.ts";
 
-const ALTERNATING_LOOP = 4;
+/**
+ * Whether SF2 stores the looping mode. The alternating loop (4) and any other value outside 0 to
+ * 3 are SFe's, an SF2 save writes 4 as a plain loop and the rest as no loop.
+ */
+export function isSF2LoopingMode(value: number) {
+    return value >= 0 && value <= 3;
+}
 
 /**
  * Generators above `endOper` are SFe's (61 to 89). Only SFe files store them, so SF2, SF3 and
@@ -18,25 +24,6 @@ const ALTERNATING_LOOP = 4;
  */
 export function isSFeGenerator(type: number) {
     return type > GeneratorTypes.endOper;
-}
-
-/**
- * What the SFe checks read of a modulator, so they take core modulators and views alike.
- */
-interface ModulatorLike {
-    readonly destination: number;
-    readonly transformAmount: number;
-    readonly transformType: number;
-    readonly primarySource: SourceLike;
-    readonly secondarySource: SourceLike;
-}
-
-interface SourceLike {
-    readonly index: number;
-    readonly isCC: boolean;
-    readonly isBipolar: boolean;
-    readonly isNegative: boolean;
-    readonly curveType: number;
 }
 
 function isDepthRange(source: SourceLike) {
@@ -85,52 +72,18 @@ export function isSFeModulator(modulator: ModulatorLike) {
 }
 
 /**
- * Whether the modulator is SFe data that a save in another format loses. The CC 71 to gain
- * twins are not, core's SF2 reader makes them again. `hasSFeOnlyData` asks core for the exact
+ * Whether the modulator is SFe data that a save in another format loses. The resonance twins
+ * (amount 0 CC 71 to filterQOffset) are not: in SF2 mode `SyncResonanceTwinsAction` keeps them
+ * where core's SF2 reader makes them again. `hasSFeOnlyData` asks core for the exact
  * answer.
  */
 export function isLostSFeModulator(modulator: ModulatorLike) {
     return isSFeModulator(modulator) && !isResonanceCompensator(modulator);
 }
 
-function isSameSource(a: SourceLike, b: SourceLike) {
-    return (
-        a.index === b.index &&
-        a.isCC === b.isCC &&
-        a.isBipolar === b.isBipolar &&
-        a.isNegative === b.isNegative &&
-        a.curveType === b.curveType
-    );
-}
-
-/**
- * Whether a default modulator is SFe data that a save in another format loses. Core's SF2
- * reader puts the standard SFe default modulators back by itself, so those are not. The points
- * of a custom curve are not compared, only core can tell a changed curve.
- */
-export function isLostSFeDefaultModulator(modulator: ModulatorLike) {
-    return (
-        isLostSFeModulator(modulator) &&
-        SPESSASYNTH_DEFAULT_MODULATORS.every(
-            (standard) =>
-                standard.destination !== modulator.destination ||
-                standard.transformAmount !== modulator.transformAmount ||
-                standard.transformType !== modulator.transformType ||
-                !isSameSource(
-                    standard.primarySource,
-                    modulator.primarySource
-                ) ||
-                !isSameSource(
-                    standard.secondarySource,
-                    modulator.secondarySource
-                )
-        )
-    );
-}
-
 /**
  * Whether a zone, or its view, sets something only an SFe save keeps. The alternating loop is
- * a value of an SF2 generator that only SFe has.
+ * a value of an SF2 generator that only SFe has, like any other looping mode above 3.
  */
 export function hasZoneSFeData(zone: {
     readonly generators: readonly {
@@ -144,7 +97,7 @@ export function hasZoneSFeData(zone: {
             (g) =>
                 isSFeGenerator(g.type) ||
                 (g.type === GeneratorTypes.sampleModes &&
-                    g.value === ALTERNATING_LOOP)
+                    !isSF2LoopingMode(g.value))
         ) || zone.modulators.some((m) => isLostSFeModulator(m))
     );
 }
@@ -212,8 +165,8 @@ export function mergeHiddenModulators<M extends ModulatorLike>(
 
 /**
  * Whether the bank holds something that only an SFe save keeps. Core counts what an SF2 save
- * and a load would lose, which leaves out what its SF2 reader adds by itself (the CC 71 to
- * gain twins and the default modulators SF2 cannot store). The bank numbers and the changed
+ * and a load would lose, which leaves out what its SF2 reader adds by itself (the resonance
+ * twins and the default modulators SF2 cannot store). The bank numbers and the changed
  * send amounts are not SFe data, the first have a warning of their own. A lost curve that a
  * modulator uses counts with that modulator, and one that nothing uses is no loss.
  */

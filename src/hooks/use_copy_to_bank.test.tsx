@@ -15,7 +15,7 @@ import { useOpenBanks } from "../tab_list/open_banks_context.ts";
 import { useCopyToBank } from "./use_copy_to_bank.ts";
 
 vi.mock("react-hot-toast", () => ({
-    default: Object.assign(vi.fn(), { success: vi.fn() })
+    default: Object.assign(vi.fn(), { success: vi.fn(), dismiss: vi.fn() })
 }));
 
 function ClipboardWrapper({ children }: { children: ReactNode }) {

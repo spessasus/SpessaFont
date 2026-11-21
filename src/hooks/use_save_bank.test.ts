@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from "vitest";
+import { getSF2DefaultModulators } from "../core_backend/sf2_default_modulators.ts";
 import { renderHook } from "@testing-library/react";
 import toast from "react-hot-toast";
 import { createTestSession } from "../test_utils/bank_fixture.ts";
@@ -85,7 +86,10 @@ describe("useSaveBank", () => {
     it("warns about edited default modulators on an SF2 save", () => {
         const session = createTestSession();
         const { bank } = session.document;
-        bank.defaultModulators = bank.defaultModulators.slice(1);
+        // As an edit in SF2 mode leaves them, without the hidden ones SF2 does not get back
+        bank.defaultModulators = getSF2DefaultModulators(
+            bank.defaultModulators.slice(1)
+        );
         vi.stubGlobal("showSaveFilePicker", () =>
             Promise.resolve(createHandle("bank.sf2"))
         );

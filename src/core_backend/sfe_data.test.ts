@@ -13,6 +13,7 @@ import {
     getShownModulators,
     hasCopiedSFeData,
     hasSFeOnlyData,
+    hasZoneSFeData,
     isSFeModulator,
     mergeHiddenModulators
 } from "./sfe_data.ts";
@@ -181,5 +182,20 @@ describe("isSFeModulator and the Modulation Depth Range", () => {
     it("keeps the mod wheel vibrato in SF2 mode", () => {
         expect(isSFeModulator(cases["the mod wheel vibrato"])).toBe(false);
         expect(isSFeModulator(cases["the range to the filter"])).toBe(true);
+    });
+});
+
+function zoneWith(value: number) {
+    return {
+        generators: [{ type: GeneratorTypes.sampleModes, value }],
+        modulators: []
+    };
+}
+
+describe("hasZoneSFeData and the looping modes", () => {
+    it("counts every looping mode outside 0 to 3", () => {
+        expect(hasZoneSFeData(zoneWith(3))).toBe(false);
+        expect(hasZoneSFeData(zoneWith(4))).toBe(true);
+        expect(hasZoneSFeData(zoneWith(5))).toBe(true);
     });
 });

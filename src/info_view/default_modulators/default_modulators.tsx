@@ -8,10 +8,13 @@ import { useBankSnapshot } from "../../hooks/use_bank_snapshot.ts";
 import { OverviewPanelHeader } from "../overview_panel_header.tsx";
 import { useSFeSwitch } from "../../hooks/use_sfe_switch.ts";
 import { useCustomCurves } from "../../hooks/use_custom_curves.ts";
-import { syncResonanceCompensators } from "../../core_backend/resonance_compensation.ts";
+import {
+    getLostSFeDefaultModulators,
+    getMissingHiddenDefaults,
+    getSF2DefaultModulators
+} from "../../core_backend/sf2_default_modulators.ts";
 import {
     getShownModulators,
-    isLostSFeDefaultModulator,
     mergeHiddenModulators
 } from "../../core_backend/sfe_data.ts";
 
@@ -37,21 +40,42 @@ export function DefaultModulators({ onBack }: DefaultModulatorsProps) {
     const applyWithSFeSwitch = useSFeSwitch();
     const { customCurves, getCustomCurve } = useCustomCurves(session);
 
-    const setDefaultModulators = (shown: Modulator[], mergeKey?: string) => {
+    // What an edit of the default list sets, read when the user acts. A reset's copies of the
+    // standard list are no SFe data the user brought in, the SF2 rules decide what stays
+    const planDefaults = (all: Modulator[], isReset: boolean) => {
         const before = getModulators();
-        // SF2 mode hides the CC 71 to gain twins, which follow the shown modulators
-        const modulators = isSFe
-            ? shown
-            : syncResonanceCompensators(shown, false);
+        // A paste of SFe data switches the bank to SFe mode, so the SF2 rules do not apply
+        const isAddingSFeData =
+            !isReset &&
+            getLostSFeDefaultModulators(all).some((m) => !before.includes(m));
+        // A bank that saves as DLS keeps its list, core's SF2 reader does not read it
+        const isSF2Edit =
+            !isSFe &&
+            !isAddingSFeData &&
+            session.document.writeFormat !== "dls";
+        // SF2 mode drops the hidden defaults an SF2 file would not get back. The SFe switch
+        // then puts the resonance twins of the instrument zones in step with the new list
+        const modulators = isSF2Edit ? getSF2DefaultModulators(all) : all;
+        return { before, isAddingSFeData, modulators };
+    };
+
+    const applyDefaults = (
+        {
+            before,
+            isAddingSFeData,
+            modulators
+        }: ReturnType<typeof planDefaults>,
+        mergeKey?: string
+    ) =>
         applyWithSFeSwitch(
             session,
             [new SetDefaultModulatorsAction(before, modulators)],
-            modulators.some(
-                (m) => isLostSFeDefaultModulator(m) && !before.includes(m)
-            ),
+            isAddingSFeData ? "sfeData" : undefined,
             (group) => apply(group, mergeKey)
         );
-    };
+
+    const setDefaultModulators = (all: Modulator[], mergeKey?: string) =>
+        applyDefaults(planDefaults(all, false), mergeKey);
 
     const resetDefaultModulators = () => {
         // Copies of core's standard list, which is frozen. The action swaps their custom
@@ -61,17 +85,21 @@ export function DefaultModulators({ onBack }: DefaultModulatorsProps) {
             isSFe
         ).map((m) => Modulator.copyFrom(m));
         const current = getModulators();
-        // SF2 mode resets the shown ones and keeps the hidden SFe ones where they are
-        const shown = getShownModulators(current, isSFe);
-        const isStandard =
-            shown.length === standard.length &&
-            shown.every((mod, i) =>
-                Modulator.isIdentical(mod, standard[i], true)
+        // SF2 mode resets the shown ones, keeps the hidden SFe ones where they are and puts
+        // back the hidden standard ones an earlier edit dropped
+        const merged = mergeHiddenModulators(current, standard);
+        const plan = planDefaults(
+            isSFe ? standard : [...merged, ...getMissingHiddenDefaults(merged)],
+            true
+        );
+        // Nothing to do when the SF2 rules give the same list back
+        const isUnchanged =
+            plan.modulators.length === current.length &&
+            plan.modulators.every((mod, i) =>
+                Modulator.isIdentical(mod, current[i], true)
             );
-        if (!isStandard) {
-            setDefaultModulators(
-                isSFe ? standard : mergeHiddenModulators(current, standard)
-            );
+        if (!isUnchanged) {
+            applyDefaults(plan);
         }
     };
 
