@@ -1,0 +1,21 @@
+version: 2
+updates:
+    - package-ecosystem: "github-actions"
+      directory: "/"
+      schedule:
+          interval: "monthly"
+      groups:
+          actions:
+              patterns:
+                  - "*"
+    - package-ecosystem: "npm"
+      directory: "/"
+      schedule:
+          interval: "monthly"
+      open-pull-requests-limit: 5
+      # spessasynth_core is kept on "latest" on purpose (debug_scripts/npm_core.sh)
+      ignore:
+          - dependency-name: "spessasynth_core"
+      groups:
+          dev-dependencies:
+              dependency-type: "development"

@@ -108,7 +108,7 @@ export default defineConfig({
                     groups: [
                         {
                             name: "spessasynth_core",
-                            // Also matches a linked ../spessasynth_core (npm run debug)
+                            // Also matches a linked ../spessasynth_core (npm run deps:local)
                             test: /[/\\]spessasynth_core[/\\]/
                         }
                     ]
