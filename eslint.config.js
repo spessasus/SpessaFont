@@ -92,6 +92,8 @@ export default defineConfig(
                 "warn",
                 { allowConstantExport: true }
             ],
+            "@typescript-eslint/no-unused-vars": "error",
+            "@typescript-eslint/explicit-member-accessibility": "error",
             "@typescript-eslint/no-deprecated": "error",
             "@typescript-eslint/no-misused-promises": [
                 "error",

@@ -1,9 +1,14 @@
 version: 2
 updates:
     - package-ecosystem: "github-actions"
-      directory: "/"
+      # "/" only covers the workflows, the setup action has to be listed too
+      directories:
+          - "/"
+          - "/.github/actions/*"
       schedule:
           interval: "monthly"
+      cooldown:
+          default-days: 7
       groups:
           actions:
               patterns:
@@ -12,6 +17,8 @@ updates:
       directory: "/"
       schedule:
           interval: "monthly"
+      cooldown:
+          default-days: 7
       open-pull-requests-limit: 5
       # spessasynth_core is kept on "latest" on purpose (debug_scripts/npm_core.sh)
       ignore:

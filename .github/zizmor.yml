@@ -1,0 +1,6 @@
+rules:
+    self-repository:
+        disable: true
+    # The release action is fine, rewriting it as a gh call is not worth it
+    superfluous-actions:
+        disable: true
